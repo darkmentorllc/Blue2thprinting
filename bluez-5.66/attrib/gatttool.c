@@ -148,6 +148,8 @@ static gboolean primary(gpointer user_data)
 static void char_discovered_cb(uint8_t status, GSList *characteristics, void *user_data)
 {
 	GSList *l;
+	unsigned int last_handle=0;
+
 
 	if (status) {
 		g_printerr("Discover all characteristics failed: %s\n", att_ecode2str(status));
@@ -156,6 +158,8 @@ static void char_discovered_cb(uint8_t status, GSList *characteristics, void *us
 
 	for (l = characteristics; l; l = l->next) {
 		struct gatt_char *chars = l->data;
+
+		last_handle = chars->value_handle;
 
 /*
 		g_print("handle = 0x%04x, char properties = 0x%02x, char value "
@@ -175,6 +179,14 @@ static void char_discovered_cb(uint8_t status, GSList *characteristics, void *us
 			g_print("Skipping handle %d because it's not readable\n", chars->value_handle);
 		}
 	}
+	// Many devices return 0xffff as max handle in 'primary' and also keep connection after we finish service discovery.
+	// This causes timeout in central_app_launcher - the script wrongfully marks the GATT printing as unsuccessful and tries again.
+	// As a workaround we can adjust the g_max_handle to the last characteristic value handle just discovered.
+	if (g_max_handle == 0xffff) {
+//		g_print("ADJUSTING g_max_handle to: 0x%04x\n",last_handle);
+		g_max_handle = last_handle;
+	}
+
 }
 
 static gboolean characteristics(gpointer user_data)
