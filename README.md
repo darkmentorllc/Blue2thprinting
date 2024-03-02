@@ -136,7 +136,7 @@ Install *Ubuntu 22.04* on the UP^2.
 ```
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install -y python3-pip tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server python2.7
+sudo apt-get install -y python3-pip python3-mysql.connector tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server python2.7
 ```
 Wireshark/tshark/dumpcap will prompt for whether non-super-users should be able to capture packets. Select yes.  
 
@@ -204,38 +204,8 @@ Then issue the following commands to copy the folder to Downloads (where other s
 ```
 cp -r ~/Blue2thprinting/bluez-5.66 ~/Downloads/bluez-5.66
 cd ~/Downloads/bluez-5.66
-./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental
+./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
 ```
-Now you need to edit the Makefile and uncomment every line (and enclosing statement) that has a reference to "gatttool" or "sdptool" on it. (I don't know at the moment how to call ./configure in a way that will include it. If you know, LMK!)  
-
-***Note***: There is one tricky entry with sdptool. When you find the entry under the `am__EXEEXT_6` heading like this...  
-
-```
-am__EXEEXT_3 = tools/rctest$(EXEEXT) tools/l2test$(EXEEXT) \
-        tools/l2ping$(EXEEXT) tools/bluemoon$(EXEEXT) \
-        tools/hex2hcd$(EXEEXT) tools/mpris-proxy$(EXEEXT) \
-        tools/btattach$(EXEEXT) tools/isotest$(EXEEXT)
-##am__EXEEXT_4 = tools/meshctl$(EXEEXT)
-#am__EXEEXT_5 = tools/mesh-cfgclient$(EXEEXT) \
-#       tools/mesh-cfgtest$(EXEEXT)
-#am__EXEEXT_6 = tools/hciattach$(EXEEXT) \
-#       tools/hciconfig$(EXEEXT) \
-#       tools/hcitool$(EXEEXT) \
-#       tools/hcidump$(EXEEXT) \
-#       tools/rfcomm$(EXEEXT) \
-#       tools/sdptool$(EXEEXT) \
-```
-
-don't uncomment everything in `am__EXEEXT_6` (to not introduce more prerequisites), just modify the `am__EXEEXT_3 entry` (don't forget to add \ at the end of the line before the sdptool line too):
-
-```
-am__EXEEXT_3 = tools/rctest$(EXEEXT) tools/l2test$(EXEEXT) \
-        tools/l2ping$(EXEEXT) tools/bluemoon$(EXEEXT) \
-        tools/hex2hcd$(EXEEXT) tools/mpris-proxy$(EXEEXT) \
-        tools/btattach$(EXEEXT) tools/isotest$(EXEEXT) \
-        tools/sdptool$(EXEEXT)
-```
-
 
 If you have a username other than 'pi', update `~/Downloads/bluez-5.66/attrib/gatttool.c` and `~/Downloads/bluez-5.66/tools/sdptool.c` to correct the path in `g_log_name`.
 
@@ -317,8 +287,8 @@ static int rx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
 If you have a username other than 'pi', update `~/Blue2thprint/Braktooth_module/LMP2thprint.cpp` to correct the path in the `BTC2TH_LOG_PATH` variable.
 
 ```
-cd ~/Downloads/braktooth_esp32_bluetooth_classic_attacks
-cp ~/Blue2thprint/Braktooth_module/LMP2thprint.cpp ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/modules/exploits/bluetooth/
+cd ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector
+cp ~/Blue2thprinting/Braktooth_module/LMP2thprint.cpp ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/modules/exploits/bluetooth/
 sudo ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter --exploit=LMP2thprint --target=AA:BB:CC:11:22:33
 ```
 
@@ -331,7 +301,7 @@ Once you have confirmed this works, you should set `btc_2thprint_enabled = True`
 Place the Sweyntooth code in the location assumed by `central_app_launcher2.py`:  
 
 ```
-cp -r ~/Blue2thprint/sweyntooth_bluetooth_low_energy_attacks ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
+cp -r ~/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
 ```
 
 You are required to setup Sweyntooth to work **[by following the instructions in the Sweyntooth repository](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks)**. 
@@ -342,9 +312,10 @@ Once you get the custom firmware onto the Nordic device, the theoretical minimal
 cd ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
 sudo apt-get install python2.7
 wget -c https://bootstrap.pypa.io/pip/2.7/get-pip.py
-python2.7 get-pip.py
-# It will then warn you that it installed pip2.7 in a location that's not in your path, e.g. /home/pi/.local/bin/. Add that location to your PATH with "export PATH=$PATH:/home/pi/.local/bin/"
-pip2.7 install -r requirements.txt
+# need to install the Python 2.7 requirements in /root (sudo) because the Sweyntooth script will run with sudo
+sudo python2.7 get-pip.py
+# In case it warns you that it installed pip2.7 in a location that's not in your path, e.g. /home/pi/.local/bin/, add that location to your PATH with "export PATH=$PATH:/home/pi/.local/bin/"
+sudo pip2.7 install -r requirements.txt
 ```
 
 **Manually confirm that Sweyntooth is working before attempting to run it from within central_app_launcher2.py:**
@@ -369,18 +340,30 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 # Capture Scripts Setup
 
 ### Setup automatic script execution at boot:
-Download the "Scripts" folder from this repository into /home/pi/ home directory.
+Copy the "Scripts" folder from this repository into your home directory.
 
 ```
+cp -r ~/Blue2thprinting/Scripts ~
 cp ~/Scripts/central_app_launcher2.py ~/central_app_launcher2.py
 sudo su
 cd Scripts
 chmod +x *.sh
+```
+
+If your username is different than `pi`, adjust accordingly the scripts from `Scripts` folder:
+
+```
+for i in ~/Scripts/*.sh; do sed -i "s/\home\/pi/\/home\/YOURUSERNAME/g" $i; done
+```
+
+Edit the crontab to start the scripts on reboot:
+```
 crontab -e
 ```
+
 Select nano, the best editor! :P  
 Add to the bottom of the file:  
-`@reboot /home/pi/Scripts/runall.sh`  
+`@reboot /home/YOURUSERNAME/Scripts/runall.sh`  
 Save and exit  
 `sudo reboot`  
 After the system comes back up, run:  
@@ -405,7 +388,7 @@ If you want to manually restart the collection without a reboot, you can run: `s
 
 # Analysis Scripts Usage
 
-After you have sniffed some traffic, you will have files in /home/pi/Scripts/logs/btmon/ and /home/pi/Scripts/logs/gpspipe/, that should be named the same as each other (timestamp followed by hostname) except that GPS files end in .txt and btmon in .bin.
+After you have sniffed some traffic, you will have files in ~/Scripts/logs/btmon/ and ~/Scripts/logs/gpspipe/, that should be named the same as each other (timestamp followed by hostname) except that GPS files end in .txt and btmon in .bin.
 
 **Note:** Because data parsing and database lookups can be CPU/IO intensive, it is generally recommended to *not* perform data import or analysis on the capture device (the UP^2 in this case.) Rather, it is recommended to copy all data off to a separate, faster, analysis system, and perform the subsequent steps there.
 
@@ -414,7 +397,7 @@ After you have sniffed some traffic, you will have files in /home/pi/Scripts/log
 Often the GPS log will be continuing to log metadata even when it can't get a GPS coordinate fix. You should periodically deliminate any useless files that have no lat/long coordinates by running the following:
 
 ```
-python3 delete_gps_files_lacking_lat_long.py /home/pi/Scripts/logs/gpspipe/
+python3 delete_gps_files_lacking_lat_long.py ~/Scripts/logs/gpspipe/
 ```
 
 Any files that are deleted will be printed out. No output means no files were deleted.
@@ -599,6 +582,10 @@ You will need Python3 installed, and you may need to change the path to the pyth
 Issue `python3 ./TellMeEverything.py --help` for the latest usage.
 
 **If you get an error like "public/path/something can't be found"**, make sure your `~/Blue2thprinting/Analysis/public` folder is not empty. If it is empty, that implies you didn't check out the Bluetooth assigned numbers sub-module at git repository clone time. This can be corrected by issuing `git submodule update --init --recursive`.
+
+Create folders to store the resulting text 2thprints:
+
+`mkdir BTC2thprints BLE2thprints GATTPrints`
 
 **Printing information for a specific BDADDR**:
 
