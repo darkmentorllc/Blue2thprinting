@@ -186,3 +186,8 @@
 "1D14D6EEFD634FA1BFA48F47B42119F0","ASSOCIATED WITH: GATT_Service: Silicon Labs: OTA Firmware Update (https://blog.quarkslab.com/breaking-secur-eboot-on-the-silicon-labs-gecko-platform.html)"
 "F7BF3564FB6D4E5388A45E37E0326063","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: OTA Firmware Update Control Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
 "984227F334FC4045A5D02C581F81A153","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: OTA Firmware Update Data Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+
+"da2b84f1627948debdc0afbea0226079","ASSOCIATED WITH: GATT_Service: Blue Radios (Modules): AT Serial Service (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"a87988b9694c479c900e95dfa6c00a24","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service Commands (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"18cda7844bd3437085bbbfed91ec86af","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service RX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"bf03260c72054c25af4393b1c299d159","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service TX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"

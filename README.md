@@ -136,7 +136,7 @@ Install *Ubuntu 22.04* on the UP^2.
 ```
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install -y python3-pip python3-mysql.connector tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server python2.7
+sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
 ```
 Wireshark/tshark/dumpcap will prompt for whether non-super-users should be able to capture packets. Select yes.  
 
@@ -193,13 +193,7 @@ Confirm you are running version 3.17 (newer versions like 3.22 which is bundled 
 
 I collect GATT data via a modified `gatttool` from the BlueZ tools. I also use the unmodified, but not compiled by default, `sdptool` to collect SDP info. If you want to use this, you will have to compile it on the target system (e.g. Raspberry Pi). My modified BlueZ-5.66 code is in this repository in the `bluez-5.66` folder.
 
-Install the prerequisite software for compiling the custom BlueZ:  
-
-```
-sudo apt-get install -y libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-docutils
-```
-
-Then issue the following commands to copy the folder to Downloads (where other scripts will assume it's located), and then begin the Makefile generation:  
+Issue the following commands to copy the folder to Downloads (where other scripts will assume it's located), and then begin the Makefile generation:  
 
 ```
 cp -r ~/Blue2thprinting/bluez-5.66 ~/Downloads/bluez-5.66
