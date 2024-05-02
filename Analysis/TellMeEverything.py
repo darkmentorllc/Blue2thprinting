@@ -5,6 +5,7 @@ import mysql.connector
 import yaml
 import re
 import csv
+import struct
 
 ########################################
 # BEGIN FILL DATA FROM CSVs ############
@@ -157,9 +158,57 @@ def create_gatt_services_uuid16_names():
 
     #print(gatt_services_uuid16_names)
 
-def get_uuid16_gatt_services_string(uuid16):
+def get_uuid16_gatt_service_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT services
     return gatt_services_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+#########################################
+# Get data from declarations.yaml
+#########################################
+gatt_declarations_uuid16_names = {}
+
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def create_gatt_declarations_uuid16_names():
+    global gatt_declarations_uuid16_names
+    with open('./public/assigned_numbers/uuids/declarations.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+    
+    for entry in data['uuids']:
+        uuid = entry['uuid']
+        name = entry['name']
+        gatt_declarations_uuid16_names[uuid] = name
+
+    #print(gatt_declarations_uuid16_names)
+
+def get_uuid16_gatt_declaration_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT declarations
+    return gatt_declarations_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+#########################################
+# Get data from descriptors.yaml
+#########################################
+gatt_descriptors_uuid16_names = {}
+
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def create_gatt_descriptors_uuid16_names():
+    global gatt_descriptors_uuid16_names
+    with open('./public/assigned_numbers/uuids/descriptors.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+    
+    for entry in data['uuids']:
+        uuid = entry['uuid']
+        name = entry['name']
+        gatt_descriptors_uuid16_names[uuid] = name
+
+    #print(gatt_descriptors_uuid16_names)
+
+def get_uuid16_gatt_descriptor_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT descriptors
+    return gatt_descriptors_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
 #########################################
 # Get data from characteristic_uuids.yaml
@@ -1258,7 +1307,7 @@ def print_uuid16s(device_bdaddr):
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             service_by_uuid16 = get_uuid16_service_string(uuid16)
-            gatt_service_by_uuid16 = get_uuid16_gatt_services_string(uuid16)
+            gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
             company_by_uuid16 = get_company_by_uuid16(uuid16)
             if(service_by_uuid16 != "Unknown"):
@@ -1279,7 +1328,7 @@ def print_uuid16s(device_bdaddr):
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             service_by_uuid16 = get_uuid16_service_string(uuid16)
-            gatt_service_by_uuid16 = get_uuid16_gatt_services_string(uuid16)
+            gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
             company_by_uuid16 = get_company_by_uuid16(uuid16)
             if(service_by_uuid16 != "Unknown"):
@@ -1314,7 +1363,7 @@ def print_service_solicit_uuid16s(device_bdaddr):
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             service_by_uuid16 = get_uuid16_service_string(uuid16)
-            gatt_service_by_uuid16 = get_uuid16_gatt_services_string(uuid16)
+            gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
             company_by_uuid16 = get_company_by_uuid16(uuid16)
             if(service_by_uuid16 != "Unknown"):
@@ -1898,7 +1947,7 @@ def print_BTC_2thprint(bdaddr):
 # GATT Info
 ########################################
 
-def match_GATT_services(uuid128):
+def match_known_GATT_UUID_or_custom_UUID(uuid128):
     global custom_uuid128_hash
     uuid128.strip().lower()
     uuid128_no_dash = uuid128.replace('-','')
@@ -1907,41 +1956,31 @@ def match_GATT_services(uuid128):
     if match:
         common_part = match.group()  # Extract the matched part
         uuid16 = common_part[4:8]
-        str_name = get_uuid16_gatt_services_string(uuid16)
+        # Try to see if it's a known Service
+        str_name = get_uuid16_gatt_service_string(uuid16)
         if(str_name != "Unknown"):
-            return str_name
+            return f"Service: {str_name}"
         else:
-            str = get_custom_uuid128_string(uuid128_no_dash)
-            if(str == "Unknown UUID128"):
-                return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
+            # Try to see if it's a known Characteristic
+            str_name = get_uuid16_gatt_characteristic_string(uuid16)
+            if(str_name != "Unknown"):
+                return f"Characteristic: {str_name}"
             else:
-                return str
-    else:
-        return get_custom_uuid128_string(uuid128_no_dash)
-#    elif(uuid128_no_dash in custom_uuid128_hash):
-#        return custom_uuid128_hash[uuid128_no_dash]
-#    else:
-#        return "Non-standard UUID128"
-
-def match_GATT_characteristic(uuid128):
-    global custom_uuid128_hash
-    uuid128.strip().lower()
-    uuid128_no_dash = uuid128.replace('-','')
-    #print(f"uuid128_no_dash = {uuid128_no_dash}")
-    pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb'
-    match = re.match(pattern, uuid128)
-    if match:
-        common_part = match.group()  # Extract the matched part
-        uuid16 = common_part[4:8]
-        str_name = get_uuid16_gatt_characteristic_string(uuid16)
-        if(str_name != "Unknown"):
-            return str_name
-        else:
-            str = get_custom_uuid128_string(uuid128_no_dash)
-            if(str == "Unknown UUID128"):
-                return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
-            else:
-                return str
+                # Try to see if it's a known Declaration
+                str_name = get_uuid16_gatt_declaration_string(uuid16)
+                if(str_name != "Unknown"):
+                    return f"Declaration: {str_name}"
+                else:
+                    # Try to see if it's a known Descriptor
+                    str_name = get_uuid16_gatt_descriptor_string(uuid16)
+                    if(str_name != "Unknown"):
+                        return f"Descriptor: {str_name}"
+                    else:
+                        str = get_custom_uuid128_string(uuid128_no_dash)
+                        if(str == "Unknown UUID128"):
+                            return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
+                        else:
+                            return str
     else:
         return get_custom_uuid128_string(uuid128_no_dash)
 #    elif(uuid128_no_dash in custom_uuid128_hash):
@@ -1980,6 +2019,22 @@ def characteristic_extended_properties_to_string(number):
 def is_characteristic_readable(number):
     return (number & 0b00000010) != 0
 
+	
+# Decode some misc things just because
+def characteristic_value_decoding(char_UUID128, bytes):
+    str = match_known_GATT_UUID_or_custom_UUID(char_UUID128)
+    if(str == "Characteristic: Appearance"):
+        value = int.from_bytes(bytes, byteorder='little')
+        #print(f"Value = {value}")
+        print(f"Appearance decodes as: {appearance_uint16_to_string(value)}")
+    elif(str == "Characteristic: Peripheral Preferred Connection Parameters" and len(bytes) == 8):
+        Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<hhhh', bytes)
+        print(f"PPCP decodes as: Interval_Min:0x{Interval_Min:04X}, Interval_Max:0x{Interval_Max:04X}, Latency:0x{Latency:04X}, Timeout:0x{Timeout:04X}")
+    elif(str == "Characteristic: Central Address Resolution" and len(bytes) == 1):
+        addr_res_support = struct.unpack('<b', bytes)
+        addr_res_support = "True" if addr_res_support == (1,) else "False"
+        print(f"Central Address Resolution decodes as: Address Resolution Supported = {addr_res_support}")
+
 def print_GATT_info(bdaddr):
     # Query the database for all GATT services
     query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
@@ -2002,22 +2057,21 @@ def print_GATT_info(bdaddr):
     if(len(GATT_services_result) != 0):
         print("\tGATT Information:")
 
+    # TODO: It would be nice if this printed out characteristics even when there's no corresponding descriptor within the given handle range (example: cf:3a:ad:09:ca:14)
     # Print semantically-meaningful information
     for begin_handle,end_handle,UUID128 in GATT_services_result:
-        print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_GATT_services(UUID128)})")
+        print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
         for descriptor_handle, UUID128_2 in GATT_descriptors_result:
             if(descriptor_handle <= end_handle and descriptor_handle >= begin_handle):
-                print(f"\t\t\tGATT Descriptor: {UUID128_2}, Descriptor Handle: {descriptor_handle}")
+                print(f"\t\t\tGATT Descriptor: {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
                 for declaration_handle, char_properties, char_value_handle, char_UUID128 in GATT_characteristics_result:
                     if(descriptor_handle == char_value_handle):
-                        print(f"\t\t\t\tGATT Characteristic: {char_UUID128} ({match_GATT_characteristic(char_UUID128)}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
+                        print(f"\t\t\t\tGATT Characteristic: {char_UUID128} ({match_known_GATT_UUID_or_custom_UUID(char_UUID128)}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
                         if(is_characteristic_readable(char_properties)):
                             if(char_value_handle in char_byte_vals_dict):
                                 print(f"\t\t\t\tGATT Characteristic value read as {char_byte_vals_dict[char_value_handle]}")
-                                if(match_GATT_characteristic(char_UUID128) == "Appearance"):
-                                    value = int.from_bytes(char_byte_vals_dict[char_value_handle], byteorder='little')
-                                    #print(f"Value = {value}")
-                                    print(f"\t\t\t\t\tAppearance decodes as: {appearance_uint16_to_string(value)}")
+                                print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
+                                characteristic_value_decoding(char_UUID128, char_byte_vals_dict[char_value_handle])
                             else:
                                 print(f"\t\t\t\tNo GATT characteristic value was read and stored in the database (despite characteristic being readable)")
 
@@ -2026,11 +2080,11 @@ def print_GATT_info(bdaddr):
         print(f"\n\t\tGATTPrint:")
         with open(f"./GATTPrints/{bdaddr}.gattprint", 'w') as file:
             for begin_handle,end_handle,UUID128 in GATT_services_result:
-                print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_GATT_services(UUID128)})")
+                print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
                 file.write(f"Svc: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128}\n")
             for descriptor_handle, UUID128_2 in GATT_descriptors_result:
-                print(f"\t\tGATT Descriptor: {UUID128_2}, Descriptor Handle: {descriptor_handle}")
-                file.write(f"Desc: {UUID128_2}, Descriptor Handle: {descriptor_handle}\n")
+                print(f"\t\tGATT Descriptor: Descriptor Handle: {descriptor_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
+                file.write(f"Descriptor Handle: {descriptor_handle}, {UUID128_2}\n")
             for declaration_handle, char_properties, char_value_handle, char_UUID128 in GATT_characteristics_result:
                 print(f"\t\tGATT Characteristic: {char_UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}")
                 file.write(f"Char: {char_UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
@@ -2085,6 +2139,8 @@ def main():
     create_uuid16_service_names()
     create_uuid16_protocol_names()
     create_gatt_services_uuid16_names()
+    create_gatt_declarations_uuid16_names()
+    create_gatt_descriptors_uuid16_names()
     create_gatt_characteristic_uuid16_names()
     create_appearance_yaml_data()
 
