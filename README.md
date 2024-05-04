@@ -150,7 +150,7 @@ sudo pip3 install gmplot inotify_simple
 git clone --recurse-submodules https://github.com/darkmentorllc/Blue2thprinting.git ~/Blue2thprinting
 ```
 
-Ensure that the Bluetooth assigned numbers sub-repository was successfully checked out by confirming that `~/Blue2thprinting/Analysis/public` is not empty.
+***BEWARE!*** If you don't include the `--recurse-submodules`, stuff won't work later! Ensure that the Bluetooth assigned numbers sub-repository was successfully checked out by confirming that `~/Blue2thprinting/Analysis/public` is not empty.
 
 ### Test GPS module:
 
