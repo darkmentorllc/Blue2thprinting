@@ -930,6 +930,38 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
 
     return bdaddr_hash.keys()
 
+def get_bdaddrs_by_uuid16_regex(uuid16regex):
+
+    # To make my life easier when searching for things I've already removed the - from
+    try_with_dashes = True
+
+    print(f"{uuid16regex} in get_bdaddrs_by_uuid16_regex")
+    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
+
+    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '{uuid16regex}'"
+    eir_result = execute_query(eir_query)
+    for (bdaddr,) in eir_result:
+        bdaddr_hash[bdaddr] = 1
+    print(f"get_bdaddrs_by_uuid16_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
+    print(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '{uuid16regex}'"
+    le_result = execute_query(le_query)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    print(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s")
+    print(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP '{uuid16regex}'"
+    le_result = execute_query(le_query)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    print(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")
+    print(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+    return bdaddr_hash.keys()
+
+
 
 # Function to get the string representation of le_evt_type
 def get_le_event_type_string(le_evt_type):
@@ -2034,6 +2066,28 @@ def characteristic_value_decoding(char_UUID128, bytes):
         addr_res_support = struct.unpack('<b', bytes)
         addr_res_support = "True" if addr_res_support == (1,) else "False"
         print(f"Central Address Resolution decodes as: Address Resolution Supported = {addr_res_support}")
+    else:
+        print("") # basically just force a newline so next line isn't double-indented
+
+# Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
+def device_has_GATT_info(bdaddr):
+    # Query the database for all GATT services
+    query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
+    GATT_services_result = execute_query(query)
+
+    query = f"SELECT descriptor_handle,UUID128 FROM GATT_descriptors WHERE device_bdaddr = '{bdaddr}'";
+    GATT_descriptors_result = execute_query(query)
+
+    query = f"SELECT declaration_handle, char_properties, char_value_handle, char_UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
+    GATT_characteristics_result = execute_query(query)
+
+    query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
+    GATT_characteristics_values_result = execute_query(query)
+
+    if(len(GATT_services_result) != 0 or len(GATT_descriptors_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
+        return 1;
+    else:
+        return 0;
 
 def print_GATT_info(bdaddr):
     # Query the database for all GATT services
@@ -2071,7 +2125,7 @@ def print_GATT_info(bdaddr):
                             if(char_value_handle in char_byte_vals_dict):
                                 print(f"\t\t\t\tGATT Characteristic value read as {char_byte_vals_dict[char_value_handle]}")
                                 print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
-                                characteristic_value_decoding(char_UUID128, char_byte_vals_dict[char_value_handle])
+                                characteristic_value_decoding(char_UUID128, char_byte_vals_dict[char_value_handle]) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
                             else:
                                 print(f"\t\t\t\tNo GATT characteristic value was read and stored in the database (despite characteristic being readable)")
 
@@ -2109,9 +2163,11 @@ def main():
     parser.add_argument('--companyregex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     parser.add_argument('--NOTcompanyregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --companyregex, and then remove them from the final results.')
     parser.add_argument('--UUID128regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
+    parser.add_argument('--UUID16regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
     parser.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
-    parser.add_argument('--UUID128stats', type=str, default='', help='Parse the UUID128 data, and output statistics about the most common entries ')
-    parser.add_argument('--UUID16stats', type=str, default='', help='Parse the UUID16 data, and output statistics about the most common entries ')
+    parser.add_argument('--UUID128stats', type=str, default='', help='Parse the UUID128 data, and output statistics about the most common entries')
+    parser.add_argument('--UUID16stats', type=str, default='', help='Parse the UUID16 data, and output statistics about the most common entries')
+    parser.add_argument('--requireGATT', type=str, default='', help='If this argument is given with a value, only print out information for devices which have GATT info')
 
     args = parser.parse_args()
     bdaddr = args.bdaddr
@@ -2123,9 +2179,11 @@ def main():
     companyregex = args.companyregex
     notcompanyregex = args.NOTcompanyregex
     uuid128regex = args.UUID128regex
+    uuid16regex = args.UUID16regex
     msdregex = args.MSDregex
     uuid16stats = args.UUID16stats
     uuid128stats = args.UUID128stats
+    requireGATT = args.requireGATT
 
     # Import any data from CSV files as necessary
     create_nameprint_CSV_data()
@@ -2199,6 +2257,13 @@ def main():
             bdaddrs += bdaddrs_tmp
         print(f"{len(bdaddrs)} bdaddrs after uuid128regex processing: {bdaddrs}")
 
+    if(uuid16regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_uuid16_regex(uuid16regex)
+        print(f"bdaddrs_tmp = {bdaddrs_tmp}")
+        if(bdaddrs_tmp is not None):
+            bdaddrs += bdaddrs_tmp
+        print(f"{len(bdaddrs)} bdaddrs after uuid16regex processing: {bdaddrs}")
+
     if(notcompanyregex != ""):
         bdaddrs_to_remove = get_bdaddrs_by_company_regex(notcompanyregex)
         print(bdaddrs_to_remove)
@@ -2229,6 +2294,9 @@ def main():
 
 
     for bdaddr in bdaddrs:
+        if(requireGATT != ""):
+            if(device_has_GATT_info(bdaddr) != 1):
+                continue
         print("================================================================================")
         print(f"For bdaddr = {bdaddr}:")
         print_company_name_from_bdaddr(bdaddr)
