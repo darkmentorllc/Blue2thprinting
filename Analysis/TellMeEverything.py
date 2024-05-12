@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/python3
 
 import argparse
 import mysql.connector
@@ -2060,7 +2060,7 @@ def characteristic_value_decoding(char_UUID128, bytes):
         #print(f"Value = {value}")
         print(f"Appearance decodes as: {appearance_uint16_to_string(value)}")
     elif(str == "Characteristic: Peripheral Preferred Connection Parameters" and len(bytes) == 8):
-        Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<hhhh', bytes)
+        Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<HHHH', bytes)
         print(f"PPCP decodes as: Interval_Min:0x{Interval_Min:04X}, Interval_Max:0x{Interval_Max:04X}, Latency:0x{Latency:04X}, Timeout:0x{Timeout:04X}")
     elif(str == "Characteristic: Central Address Resolution" and len(bytes) == 1):
         addr_res_support = struct.unpack('<b', bytes)
