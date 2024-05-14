@@ -51,7 +51,11 @@ with open(file_path, 'r') as file:
             continue
 
         bdaddr = tokens[1]
-        bdaddr_type = int(tokens[2])
+        try:
+            bdaddr_type = int(tokens[2])
+        except ValueError:
+            print(f"invalid token {tokens[2]}")
+            continue
         response_type = tokens[3]
 
         print("2THPRINT for " + bdaddr)

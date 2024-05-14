@@ -112,10 +112,14 @@ def func_LMP_OP_0x28(bdaddr, args):
     print("Called: func_LMP_OP_0x28 with bdaddr:", bdaddr)
     if check_args(args) == -1:
         print("args rejected as they were not a byte array: ", args)
+        return
     else: print("args: ", args)
 
     reversed_args = args[::-1]
-    int_args = [int(arg, 16) for arg in reversed_args]
+    try:
+        int_args = [int(arg, 16) for arg in reversed_args]
+    except ValueError:
+        return
     features = 0
     for num in int_args:
         features = (features << 8) | num
