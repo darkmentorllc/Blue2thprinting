@@ -593,7 +593,7 @@ The regex is used as a MySQL "REGEXP" statement, and thus must be valid MySQL re
 
 **Printing information for BDADDRs that have some data element that is associated with a company name that matches a given regex**:
 
-`python3 ./TellMeEverything.py --nameregex "^Qualcomm"`
+`python3 ./TellMeEverything.py --companyregex "^Qualcomm"`
 
 The regex is checked against associations with the BDADDR IEEE OUI, UUID16s, and BT/BLE CompanyID fields from link layer version information.
 
