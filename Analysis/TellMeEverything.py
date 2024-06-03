@@ -1394,6 +1394,9 @@ def print_service_solicit_uuid16s(device_bdaddr):
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
+            if(uuid16 == ''):
+                print("\t\tEmpty list present")
+                continue
             service_by_uuid16 = get_uuid16_service_string(uuid16)
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
@@ -1480,6 +1483,9 @@ def print_service_solicit_uuid128s(device_bdaddr):
         str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
         for uuid128 in str_UUID128s_list:
             uuid128 = uuid128.strip().lower()
+            if(uuid128 == ''):
+                print("\t\tEmpty list present")
+                continue
             dashing_uuid128 = f"{uuid128[:8]}-{uuid128[8:12]}-{uuid128[12:16]}-{uuid128[16:20]}-{uuid128[20:32]}"
             print(f"\t\tUUID128 {dashing_uuid128} ({get_custom_uuid128_string(uuid128)})")
         print("\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_solicit), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
