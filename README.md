@@ -278,7 +278,7 @@ static int rx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
 
 **Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher2.py:**
 
-If you have a username other than 'pi', update `~/Blue2thprint/Braktooth_module/LMP2thprint.cpp` to correct the path in the `BTC2TH_LOG_PATH` variable.
+If you have a username other than 'pi', update `~/Blue2thprinting/Braktooth_module/LMP2thprint.cpp` to correct the path in the `BTC2TH_LOG_PATH` variable.
 
 ```
 cd ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector
