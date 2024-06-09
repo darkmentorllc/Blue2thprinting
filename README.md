@@ -345,7 +345,7 @@ cd Scripts
 chmod +x *.sh
 ```
 
-If your username is different than `pi`, adjust accordingly the scripts from `Scripts` folder:
+If your username is different than `pi`, adjust accordingly the scripts from the `Scripts` folder:
 
 ```
 for i in *.sh; do sed -i "s|/home/pi|/home/YOURUSERNAME|g" $i; done
