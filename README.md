@@ -338,10 +338,10 @@ Copy the "Scripts" folder from this repository into your home directory.
 
 ```
 cp -r ~/Blue2thprinting/Scripts ~
+cd ~/Scripts
 # If your username is different than pi, update the "username" field in central_app_launcher2.py
 cp ~/Scripts/central_app_launcher2.py ~/central_app_launcher2.py
 sudo su
-cd Scripts
 chmod +x *.sh
 ```
 
