@@ -2,7 +2,7 @@
 
 #bluetoothctl is a better than hcitool lescan because it shows more info about beacons it sees
 
-LOGPATH="/home/user/Blue2thprinting/Scripts/logs/bluetoothctl"
+LOGPATH="/home/user/Blue2thprinting/Logs/bluetoothctl"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 LINKAGE_FILE="/tmp/BT_link.txt"

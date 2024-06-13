@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 FILES="$@"
 
-LOGPATH='/home/user/Blue2thprinting/Scripts/logs/btmon'
+LOGPATH='/home/user/Blue2thprinting/Logs/btmon'
 
 rm ~/names.txt
 

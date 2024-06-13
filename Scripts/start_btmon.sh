@@ -2,7 +2,7 @@
 
 ERRORLOG="/tmp/runall.log"
 echo "start_btmon.sh start" >> $ERRORLOG
-LOGPATH="/home/user/Blue2thprinting/Scripts/logs/btmon"
+LOGPATH="/home/user/Blue2thprinting/Logs/btmon"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 echo $HN

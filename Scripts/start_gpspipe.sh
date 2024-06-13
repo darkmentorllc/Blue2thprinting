@@ -2,7 +2,7 @@
 
 ERRORLOG="/tmp/runall.log"
 echo "start_gpspipe.sh start" >> $ERRORLOG
-LOGPATH="/home/user/Blue2thprinting/Scripts/logs/gpspipe"
+LOGPATH="/home/user/Blue2thprinting/Logs/gpspipe"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 

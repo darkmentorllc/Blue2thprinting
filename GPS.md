@@ -39,13 +39,13 @@ Confirm you are running version 3.17 (newer versions like 3.22 which is bundled 
 
 ### Re-enable gpspipe in misc scripts
 
-1. Edit ~/Scripts/runall.sh and un-comment the line that includes `gpspipe`, and fix up the username if needed.
-2. Edit ~/Scripts/check.sh and un-comment the line that includes `gpspipe`.
-3. Edit ~/Scripts/killall.sh and un-comment the line that includes `gpspipe`.
+1. Edit ~/Blue2thprinting/Scripts/runall.sh and un-comment the line that includes `gpspipe`, and fix up the username if needed.
+2. Edit ~/Blue2thprinting/Scripts/check.sh and un-comment the line that includes `gpspipe`.
+3. Edit ~/Blue2thprinting/Scripts/killall.sh and un-comment the line that includes `gpspipe`.
 
 # Analysis Scripts Usage
 
-After you have sniffed some traffic, you will have files in ~/Scripts/logs/btmon/ and ~/Scripts/logs/gpspipe/, that should be named the same as each other (timestamp followed by hostname) except that GPS files end in .txt and btmon in .bin.
+After you have sniffed some traffic, you will have files in ~/Blue2thprinting/Logs/btmon/ and ~/Blue2thprinting/Logs/gpspipe/, that should be named the same as each other (timestamp followed by hostname) except that GPS files end in .txt and btmon in .bin.
 
 **Note:** Because data parsing and database lookups can be CPU/IO intensive, it is generally recommended to *not* perform data import or analysis on the capture device (the UP^2 in this case.) Rather, it is recommended to copy all data off to a separate, faster, analysis system, and perform the subsequent steps there.
 
@@ -54,7 +54,7 @@ After you have sniffed some traffic, you will have files in ~/Scripts/logs/btmon
 Often the GPS log will be continuing to log metadata even when it can't get a GPS coordinate fix. You should periodically deliminate any useless files that have no lat/long coordinates by running the following:
 
 ```
-python3 delete_gps_files_lacking_lat_long.py ~/Scripts/logs/gpspipe/
+python3 delete_gps_files_lacking_lat_long.py ~/Blue2thprinting/Logs/gpspipe/
 ```
 
 Any files that are deleted will be printed out. No output means no files were deleted.
@@ -64,25 +64,23 @@ Any files that are deleted will be printed out. No output means no files were de
 Assume we have the following files:
 
 ```
-pi@pi0-2:~/Scripts $ ls logs/gpspipe/
+user@VM:~/Blue2thprinting/$ ls Logs/gpspipe/
 2023-08-24-01-04-59_pi0-2.txt  2023-08-24-01-11-38_pi0-2.txt
 ```
 
-If you have a file like `/home/pi/Scripts/logs/gpspipe/2023-08-24-01-11-38_pi0-2.txt` for instance, you can map the instances of *named* bluetooth devices. 
+If you have a file like `~/Blue2thprinting/Logs/gpspipe/2023-08-24-01-11-38_pi0-2.txt` for instance, you can map the instances of *named* bluetooth devices. 
 
 ```
-root@pi0-2:/home/pi/Scripts# ./map_specific.sh 2023-08-24-01-04-59_pi0-2 2023-08-24-01-11-38_pi0-2
+user@VM:/home/user/Blue2thprinting/Scripts: ./map_specific.sh 2023-08-24-01-04-59_pi0-2 2023-08-24-01-11-38_pi0-2
 passed in 
-Processing  2023-08-24-01-04-59_pi0-2
-Running as user "root" and group "root". This could be dangerous.
-Processing  2023-08-24-01-11-38_pi0-2
-Running as user "root" and group "root". This could be dangerous.
+Processing 2023-08-24-01-04-59_pi0-2
+Processing 2023-08-24-01-11-38_pi0-2
 Adding markers
 
 Done
 
-root@pi0-2:/home/pi/Scripts# ls -la bt_map.html 
--rw-r--r-- 1 root root 9012 Aug 24 01:31 bt_map.html
+user@VM:/home/user/Blue2thprinting/Scripts: ls -la bt_map.html 
+-rw-r--r-- 1 user user 9012 Aug 24 01:31 bt_map.html
 ```
 
 The file bt_map.html can be opened in a browser to see the GPS locations of named devices.

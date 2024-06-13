@@ -38,7 +38,7 @@ static gboolean characteristics(gpointer user_data);
 static gboolean characteristics_desc(gpointer user_data);
 static void char_read_cb(guint8 status, const guint8 *pdu, guint16 plen, gpointer user_data);
 
-static char * g_log_name = "/home/user/Blue2thprinting/Scripts/logs/GATTprint.log";
+static char * g_log_name = "/home/user/Blue2thprinting/Logs/GATTprint.log";
 FILE * g_log_FILE;
 
 static char *opt_src = NULL;
