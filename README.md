@@ -131,55 +131,18 @@ Install *Ubuntu 22.04* on the UP^2.
 
 # OS Setup & Configuration
 
-### Install prerequisite software:
+## ***All code assumes that you've checked out this repository to your home directory as `~/Blue2thprinting`.***
+
+### Run the setup helper script
+
+This previously was a bunch of manual commands. Now instead just run the below:
 
 ```
-sudo apt-get update
-sudo apt-get upgrade -y
-sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
-```
-Wireshark/tshark/dumpcap will prompt for whether non-super-users should be able to capture packets. Select yes.  
-
-```
-sudo pip3 install gmplot inotify_simple
+cd ~/Blue2thprinting
+sudo ./setup_capture_helper_ubuntu.sh
 ```
 
-**Check out *this repository* to a known location:**  
-
-```
-git clone --recurse-submodules https://github.com/darkmentorllc/Blue2thprinting.git ~/Blue2thprinting
-```
-
-***BEWARE!*** If you don't include the `--recurse-submodules`, stuff won't work later! Ensure that the Bluetooth assigned numbers sub-repository was successfully checked out by confirming that `~/Blue2thprinting/Analysis/public` is not empty.
-
-### Compile custom BlueZ tools
-
-I collect GATT data via a modified `gatttool` from the BlueZ tools. I also use the unmodified, but not compiled by default, `sdptool` to collect SDP info. If you want to use this, you will have to compile it on the target system (e.g. Raspberry Pi). My modified BlueZ-5.66 code is in this repository in the `bluez-5.66` folder.
-
-Issue the following commands to copy the folder to Downloads (where other scripts will assume it's located), and then begin the Makefile generation:  
-
-```
-cp -r ~/Blue2thprinting/bluez-5.66 ~/Downloads/bluez-5.66
-cd ~/Downloads/bluez-5.66
-./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
-```
-
-If you have a username other than 'pi', update `~/Downloads/bluez-5.66/attrib/gatttool.c` and `~/Downloads/bluez-5.66/tools/sdptool.c` to correct the path in `g_log_name`.
-
-```
-make -j4
-```
-
-At the end you should confirm it has built by running the following commands:
-
-```
-~/Downloads/bluez-5.66/attrib/gatttool --help
-~/Downloads/bluez-5.66/tools/sdptool --help
-```
-
-If there is an error of "Failed to open the file.", that means you failed to update the username in the `g_log_name` variable as mentioned above (or perhaps it already exists but you don't have permission because it was created by root.)
-
-Custom BlueZ compilation will also build a custom `~/Downloads/bluez-5.66/client/bluetoothctl` which has an output format that's parsed by `central_app_launcher2.py`.
+And there's comments in that script if you want to see what's being done and why.
 
 ### Setup Braktooth
 
@@ -298,10 +261,7 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 
 ### Setup automatic script execution at boot:
 
-```
-cd ~/Blue2thprinting
-sudo ./setup_capture_helper_ubuntu.sh
-```
+The previous `setup_capture_helper_ubuntu.sh` should have already configured your system to automatically run data capture at reboot. To test this, do:
 
 `sudo reboot`  
 After the system comes back up, run:  
