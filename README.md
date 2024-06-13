@@ -297,48 +297,27 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 # Capture Scripts Setup
 
 ### Setup automatic script execution at boot:
-Copy the "Scripts" folder from this repository into your home directory.
 
 ```
-cp -r ~/Blue2thprinting/Scripts ~
-cd ~/Scripts
-# If your username is different than pi, update the "username" field in central_app_launcher2.py
-cp ~/Scripts/central_app_launcher2.py ~/central_app_launcher2.py
-sudo su
-chmod +x *.sh
+cd ~/Blue2thprinting
+sudo ./setup_capture_helper_ubuntu.sh
 ```
 
-If your username is different than `pi`, adjust accordingly the scripts from the `Scripts` folder:
-
-```
-for i in *.sh; do sed -i "s|/home/pi|/home/YOURUSERNAME|g" $i; done
-```
-
-Edit the crontab to start the scripts on reboot:
-```
-crontab -e
-```
-
-Select nano, the best editor! :P  
-Add to the bottom of the file:  
-`@reboot /home/YOURUSERNAME/Scripts/runall.sh`  
-Save and exit  
 `sudo reboot`  
 After the system comes back up, run:  
 `cd Scripts`  
 `./check.sh`  
-If you are too quick, you will see things like `start_btmon.sh`, `start_bluetoothctl.sh`, or `start_gpspipe.sh`.  
+If you are too quick, you will see things like `start_btmon.sh`, `start_bluetoothctl.sh`.  
 But after their sleep timers have expired, they will transition to things like:
 
 ```
-root      1506  0.3  0.5   5216  2268 pts/0    S    01:12   0:00 /usr/bin/gpspipe -p -w -T +%F %H:%M:%S -o /home/pi/Scripts/logs/gpspipe/2023-08-24-01-11-38_pi0-2.txt
 root      1871  0.0  0.4   7328  1940 pts/0    S+   01:12   0:00 grep gpspipe
 root      1504  0.6  0.4   2780  1960 pts/0    S    01:12   0:00 /usr/bin/btmon -T -w /home/pi/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin
 root      1873  0.0  0.4   7328  2020 pts/0    S+   01:12   0:00 grep btmon
 root      1510  0.3  0.7   6740  3204 pts/0    S    01:12   0:00 /usr/bin/bluetoothctl scan on
 root      1875  0.0  0.4   7328  2016 pts/0    S+   01:12   0:00 grep bluetoothctl
 ```
-If your GPS is plugged in and working correctly, you should see all 3 of those sort of commands. From now on, whenever you reboot, the data collection will begin automatically.
+From now on, whenever you reboot, the data collection will begin automatically.
 
 You can cancel collection by running: `sudo ./killall.sh` from the Scripts folder.
 
@@ -386,7 +365,7 @@ from within the Scripts folder.
 
 ```
 cd ~/Blue2thprinting
-sudo ./setup_helper_ubuntu.sh
+sudo ./setup_analysis_helper_ubuntu.sh
 ```
 
 **macOS Software Setup**: You can load the data into the database and perform analysis on macOS, but you must first [install HomeBrew](https://brew.sh/), and then run `brew install mysql` and `brew install wireshark` (for the `tshark` CLI version). (If for some reason neither tshark nor wireshark are found in your PATH, look in / add from /usr/local/Cellar/wireshark/). Then also edit `/usr/local/etc/my.cnf` and add `secure_file_priv = /tmp` at the end of the file, and then start the mysql server with `/usr/local/opt/mysql/bin/mysqld_safe --datadir=/usr/local/var/mysql`.
@@ -395,17 +374,14 @@ This should be re-run if you ever do a "git pull" in the `Blue2thprinting/public
 
 ### Importing data from btmon .bin files
 
-`cd ~/Blue2thprinting/Analysis`
+**Import ExampleData:**
 
-Run `./fill_ALL_from_HCI_log.sh {your_btmon_file.bin}`.
-
-E.g. `./fill_ALL_from_HCI_log.sh ~/Blue2thprinting/ExampleData/2023-10-06-08-52-20_up-apl01.bin`
+```
+cd ~/Blue2thprinting/Analysis
+./fill_ALL_from_HCI_log.sh ../ExampleData/2023-10-06-08-52-20_up-apl01.bin
+```
 
 You should see a variety of outputs such as "tsharking", and "mysql import". You can safely ignore any tshark warnings about the file being "cut short in the middle of a packet".
-
-Eventually once you have many files to process in bulk, you will want to pass each file to `fill_ALL_from_HCI_log.sh` sequentially. For that you can issue a command like:
-
-`time find ~/Scripts/logs/btmon/2023-10* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
 
 **To confirm that some data was successfully imported, you can issue:**
 
@@ -414,6 +390,12 @@ mysql -u user -pa -D bt -e "SELECT * FROM LE_bdaddr_to_name LIMIT 10;"
 ```
 
 This should show some of the same sort of device name data that you could see by the above `./dump_names_specific.sh` command.
+
+**Import your own data:**
+
+Eventually once you have many files from your own collection that you want to process in bulk, you will want to pass each file to `fill_ALL_from_HCI_log.sh` sequentially. For that you can issue a command like:
+
+`time find ~/Scripts/logs/btmon/2024-06* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
 
 ### Importing GATT data from GATTprint.log
 
