@@ -62,3 +62,8 @@ echo "======================================================================"
 echo "You should see 10 16-bit Bluetooth company IDs after the next command:"
 echo "======================================================================"
 mysql -u user -pa --database='bt' --execute="SELECT * from UUID16_to_company limit 10;"
+
+echo ""
+echo "[--------------------------------------------------]
+echo "Everything seems to have completed successfully! \o/
+echo "[--------------------------------------------------]

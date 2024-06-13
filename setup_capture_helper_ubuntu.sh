@@ -156,3 +156,8 @@ if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! 
 else
     echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
 fi
+
+echo ""
+echo "[--------------------------------------------------]
+echo "Everything seems to have completed successfully! \o/
+echo "[--------------------------------------------------]
