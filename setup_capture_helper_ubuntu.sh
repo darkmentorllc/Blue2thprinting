@@ -2,36 +2,50 @@
 
 if [ "$EUID" -ne 0 ]; then
     echo "This script needs to be run with sudo"
-    exit 1
+    exit -1
 fi
 
-echo "============================================================================"
-echo "This script assumes you're running a Debian-derivative system that uses apt!"
-echo "============================================================================"
+USERNAME="$SUDO_USER"
+echo "Username detected as '$USERNAME'."
+
+if [ ! -d "/home/$USERNAME/Blue2thprinting" ]; then
+    echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
+    echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
+    exit -1
+fi
+
+apt -v
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
+    echo "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
 echo ""
 echo "===================================="
 echo "Installing all prerequisite software"
 echo "===================================="
-sudo apt-get update
-sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
-sudo pip3 install gmplot inotify_simple
+#sudo apt-get update
+#sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
+#sudo pip3 install gmplot inotify_simple
 
 echo ""
 echo "====================================================================================================================================="
 echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
 echo "====================================================================================================================================="
-git submodule update --init --recursive
+#### This git repository includes the Bluetooth SIG's assigned numbers git repo under the ./public subfolder
+#### Most people would check it out before seeing that they need to pass the parameter to recurse submodules
+#### So I'm just not bothering with telling folks to do that, and just doing it here
+#cd /home/$USERNAME/Blue2thprinting
+#git submodule update --init --recursive
 
 echo ""
 echo "==================================================================================="
 echo "Correcting locations which include hardcoded username in a /home/username/... path."
 echo "==================================================================================="
-#if [ -n "$SUDO_USER" ]; then
-    USERNAME="$SUDO_USER"
-#else
-#    USERNAME="$USER"
-#fi
-
+#### There's a few places where paths are assumed to be in the user's home dir. This fixes those up.
 cd /home/$USERNAME/Blue2thprinting
 echo "Correcting bluez-5.66/attrib/gatttool.c"
 sed -i "s|/home/user/|/home/$USERNAME/|" bluez-5.66/attrib/gatttool.c
@@ -73,6 +87,11 @@ echo ""
 echo "====================================================================="
 echo "Appending entry to root crontab to run ~/Scripts/runall.sh at reboot."
 echo "====================================================================="
+#### This tries to make sure it preserves whatever is already in the crontab
+#### and it just appends an entry to run the runall.sh script at reboot
+#### which invokes the sub-scripts to run btmon (primary HCI logging),
+#### bluetoothctl (primary discovery), and central_app_launcher2.py
+#### (orchestration of GATT/SDP/LL/LMP measurements)
 if [ ! -f "/home/$USERNAME/Scripts/.cron_added" ]; then
     cron_entry="@reboot /home/$USERNAME/Scripts/runall.sh"
     echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
@@ -89,12 +108,15 @@ else
 fi
 
 echo ""
-echo "=================================================="
-echo "Compiling the customized BlueZ gatttool & sdptool."
-echo "=================================================="
+echo "================================================================="
+echo "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
+echo "================================================================="
+#### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
+#### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
+#### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
 cp -r /home/$USERNAME/Blue2thprinting/bluez-5.66 /home/$USERNAME/Downloads/bluez-5.66
 cd /home/$USERNAME/Downloads/bluez-5.66
-### Configuration ###
+### BlueZ Configuration ###
 if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/Makefile" ]; then
     echo "  Beginning configuration."
     ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
@@ -107,21 +129,33 @@ if [ $? != 0 ]; then
 fi
 
 ### Compilation ###
-if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/tools/sdptool" ]; then
+if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/client/bluetoothctl" ]; then
     echo "  Beginning compilation (this will take a while!)"
     make -j4
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Testing gatttool runs successfully. If you see the help output, it's working."
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
     /home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Testing sdptool runs successfully. If you see the help output, it's working."
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
     /home/$USERNAME/Downloads/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    echo "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    /home/$USERNAME/Downloads/bluez-5.66/client/bluetoothctl --version
+    if [ $? != 0 ]; then
+        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
+        exit
+    fi
 else
-    echo "  gatttool and sdptool already exist, skipping recompilation."
+    echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
 fi

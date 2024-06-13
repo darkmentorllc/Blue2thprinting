@@ -5,6 +5,21 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+if [ ! -d "/home/$USERNAME/Blue2thprinting" ]; then
+    echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
+    echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
+    exit -1
+fi
+
+apt -v
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
+    echo "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
 echo ""
 echo "====================================================================================================================================="
 echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
@@ -18,12 +33,18 @@ echo ""
 echo "==================================="
 echo "Creating all MySQL database tables."
 echo "==================================="
+#### This will create the less-privileged MySQL user "user", with a password of "a", under which subsequent commands will be run.
+#### It will then create all the database tables where imported data will be stored
+#### It will give an error message (that can be ignored) if the user or tables are already created
 ./create_all_db_tables.sh
 
 echo ""
 echo "===================================="
 echo "Importing IEEE OUI list to database."
 echo "===================================="
+#### This will just import a
+#### The oui.txt came from "https://standards-oui.ieee.org/oui/oui.txt"
+#### oui.txt will periodically be updated
 ./process_OUI_lists.sh ./oui.txt
 echo "==========================================================="
 echo "You should see 10 (XEROX) IEEE OUIs after the next command:"
