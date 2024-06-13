@@ -144,7 +144,7 @@ def check_args(args):
 bdaddr = "NULL"
 
 try:
-    with open("./BTC_2THPRINT.log", "rb") as file:
+    with open("../Logs/BTC_2THPRINT.log", "rb") as file:
         for line in file:
             try:
                 line = line.decode("utf-8").rstrip("\n")  # Decode and remove newline character
@@ -177,7 +177,7 @@ try:
                 elif opcode == "LMP_OP_0x28":
                     func_LMP_OP_0x28(bdaddr, tokens[2:])
 except FileNotFoundError:
-    print("The file BTC_2THPRINT_test.log could not be found.")
+    print("The file BTC_2THPRINT.log could not be found.")
 except Exception as e:
     print("An error occurred while opening the file:", e)
     traceback.print_exc()
