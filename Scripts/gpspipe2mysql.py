@@ -1,4 +1,4 @@
-# Takes in an argv[1] of a file path like /home/pi/gpspipe/2020-05-10-18-21-23_pi4.txt
+# Takes in an argv[1] of a file path like /home/user/gpspipe/2020-05-10-18-21-23_pi4.txt
 # Outputs "hosttime","gpstime","lat","lon"
 # hosttime is from the front of the lines, and is the time according to the rpi's clock (which was typically wrong)
 # gpstime is what time gpspipe thinks it is (which is typically right AFAIK)

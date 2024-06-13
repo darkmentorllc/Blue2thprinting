@@ -41,7 +41,7 @@
 #define for_each_opt(opt, long, short) while ((opt=getopt_long(argc, argv, short ? short:"+", long, 0)) != -1)
 #define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
-static char * g_log_name = "/home/user/SDPprint.log";
+static char * g_log_name = "/home/user/Blue2thprinting/Scripts/logs/SDPprint.log";
 FILE * g_log_FILE;
 
 /*

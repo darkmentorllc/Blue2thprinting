@@ -5,6 +5,9 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+USERNAME="$SUDO_USER"
+echo "Username detected as '$USERNAME'."
+
 if [ ! -d "/home/$USERNAME/Blue2thprinting" ]; then
     echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
     echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."

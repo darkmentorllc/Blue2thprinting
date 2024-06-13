@@ -236,7 +236,7 @@ sudo apt-get install python2.7
 wget -c https://bootstrap.pypa.io/pip/2.7/get-pip.py
 # need to install the Python 2.7 requirements in /root (sudo) because the Sweyntooth script will run with sudo
 sudo python2.7 get-pip.py
-# In case it warns you that it installed pip2.7 in a location that's not in your path, e.g. /home/pi/.local/bin/, add that location to your PATH with "export PATH=$PATH:/home/pi/.local/bin/"
+# In case it warns you that it installed pip2.7 in a location that's not in your path, e.g. /home/user/.local/bin/, add that location to your PATH with "export PATH=$PATH:/home/user/.local/bin/"
 sudo pip2.7 install -r requirements.txt
 ```
 
@@ -263,25 +263,25 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 
 ### Setup automatic script execution at boot:
 
-The previous `setup_capture_helper_ubuntu.sh` should have already configured your system to automatically run data capture at reboot. To test this, do:
+The previous `setup_capture_helper_ubuntu.sh` should have already configured your system to automatically run data capture at reboot. So now reboot with `sudo reboot`.  
 
-`sudo reboot`  
 After the system comes back up, run:  
-`cd Scripts`  
-`./check.sh`  
-If you are too quick, you will see things like `start_btmon.sh`, `start_bluetoothctl.sh`.  
+`~/Blue2thprinting/Scripts/check.sh`  
+If you are too quick, you will see things like `start_btmon.sh` and `start_bluetoothctl.sh`.  
 But after their sleep timers have expired, they will transition to things like:
 
 ```
-root      1871  0.0  0.4   7328  1940 pts/0    S+   01:12   0:00 grep gpspipe
-root      1504  0.6  0.4   2780  1960 pts/0    S    01:12   0:00 /usr/bin/btmon -T -w /home/pi/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin
-root      1873  0.0  0.4   7328  2020 pts/0    S+   01:12   0:00 grep btmon
-root      1510  0.3  0.7   6740  3204 pts/0    S    01:12   0:00 /usr/bin/bluetoothctl scan on
-root      1875  0.0  0.4   7328  2016 pts/0    S+   01:12   0:00 grep bluetoothctl
+root        1952  0.0  0.0   3636  1008 ?        S    18:02   0:00 /usr/bin/btmon -T -w /home/user/Blue2thprinting/Scripts/logs/btmon/2024-06-13-18-01-39_VM.bin
+user        2034  0.0  0.0   9040   648 pts/0    S+   18:03   0:00 grep btmon
+user        2036  0.0  0.0   9040   720 pts/0    S+   18:03   0:00 grep bluetoothctl
+root         783  0.0  0.0   9500  3312 ?        S    18:01   0:00 /bin/bash /home/user/Blue2thprinting/Scripts/start_central_app_launcher.sh
+root        1977  0.0  0.1  11924  4624 ?        S    18:02   0:00 sudo -E python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher2.py
+root        1979 97.9  0.3 168332 11936 ?        Sl   18:02   0:44 python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher2.py
+user        2038  0.0  0.0   9040   720 pts/0    S+   18:03   0:00 grep central_app
 ```
 From now on, whenever you reboot, the data collection will begin automatically.
 
-You can cancel collection by running: `sudo ./killall.sh` from the Scripts folder.
+You can cancel collection by running: `sudo ~/Blue2thprinting/Scripts/killall.sh`.
 
 If you want to manually restart the collection without a reboot, you can run: `sudo ./runall.sh` from the Scripts folder.
 
@@ -296,7 +296,7 @@ After you have sniffed some traffic, you will have files in ~/Scripts/logs/btmon
 Assume we have the following files:
 
 ```
-root@pi0-2:/home/pi/Scripts# ls logs/btmon/
+user@VM:/home/user/Blue2thprinting/Scripts/# ls logs/btmon/
 2023-08-24-01-04-59_pi0-2.bin  2023-08-24-01-11-38_pi0-2.bin
 ```
 
@@ -304,10 +304,10 @@ The named bluetooth devices found in multiple files can be dumped to stdout as f
 
 ```
 ./dump_names_specific.sh 2023-08-24-01-04-59_pi0-2.bin 2023-08-24-01-11-38_pi0-2.bin
-Processing  /home/pi/Scripts/logs/btmon/2023-08-24-01-04-59_pi0-2.bin
-btmon -T -r /home/pi/Scripts/logs/btmon/2023-08-24-01-04-59_pi0-2.bin.bin | grep -e "Name (.*):" | sort | uniq
-Processing  /home/pi/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin
-btmon -T -r /home/pi/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin.bin | grep -e "Name (.*):" | sort | uniq
+Processing  /home/user/Blue2thprinting/Scripts/logs/btmon/2023-08-24-01-04-59_pi0-2.bin
+btmon -T -r /home/user/Blue2thprinting/Scripts/logs/btmon/2023-08-24-01-04-59_pi0-2.bin.bin | grep -e "Name (.*):" | sort | uniq
+Processing  /home/user/Blue2thprinting/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin
+btmon -T -r /home/user/Blue2thprinting/Scripts/logs/btmon/2023-08-24-01-11-38_pi0-2.bin.bin | grep -e "Name (.*):" | sort | uniq
 All found names:
         Name (complete): This_is-not_real
         Name (complete): Neither is this😎
@@ -332,7 +332,8 @@ sudo ./setup_analysis_helper_ubuntu.sh
 
 **macOS Software Setup**: macOS cannot be used for collection, but it can be used for analysis of files collected on other platforms. You must first [install HomeBrew](https://brew.sh/), and then run `brew install mysql` and `brew install wireshark` (for the `tshark` CLI version). (If for some reason neither tshark nor wireshark are found in your PATH, look in / add from /usr/local/Cellar/wireshark/). Then also edit `/usr/local/etc/my.cnf` and add `secure_file_priv = /tmp` at the end of the file, and then start the mysql server with `/usr/local/opt/mysql/bin/mysqld_safe --datadir=/usr/local/var/mysql`.
 
-Then run 
+Then run  
+
 ```
 cd ~/Blue2thprinting
 sudo ./setup_analysis_helper_macOS.sh
@@ -363,16 +364,15 @@ This should show some of the same sort of device name data that you could see by
 
 Eventually once you have many files from your own collection that you want to process in bulk, you will want to pass each file to `fill_ALL_from_HCI_log.sh` sequentially. For that you can issue a command like:
 
-`time find ~/Scripts/logs/btmon/2024-06* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
+`time find ~/Blue2thprinting/Scripts/logs/btmon/2024-06* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
 
 ### Importing GATT data from GATTprint.log
 
-Both `central_app_launcher2.py` and `gatttool` log information about attempted and successful GATTprinting to the file `/home/pi/GATTprint.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
+Both `central_app_launcher2.py` and `gatttool` log information about attempted and successful GATTprinting to the file `/home/user/Blue2thprinting/Scripts/logs/GATTprint.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
 
 ```
-cp ~/Blue2thprinting/Analysis/parse_GATTPRINT_2db.py ~/
-cd ~
-cat GATTprint*.log | sort | uniq > GATTprint_dedup.log
+cd ~/Blue2thprinting/Analysis/
+cat ~/Blue2thprinting/Scripts/logs/GATTprint*.log | sort | uniq > GATTprint_dedup.log
 python3 ./parse_GATTPRINT_2db.py
 ```
 
@@ -386,12 +386,11 @@ mysql -u user -pa -D bt -e "SELECT * FROM GATT_characteristics LIMIT 10;"
 
 ### Importing BLE LL data from BLE_2THPRINT.log
 
-Both `central_all_launcher2.py` and my `LL2thprint.py` Sweyntooth module log information about attempted and successful LL2thprint to the file `/home/pi/BLE_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
+Both `central_all_launcher2.py` and my `LL2thprint.py` Sweyntooth module log information about attempted and successful LL2thprint to the file `/home/user/Blue2thprinting/Scripts/logs/BLE_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
 
 ```
-cp ~/Blue2thprinting/Analysis/parse_BLE_2THPRINT_2db.py ~/
-cd ~
-cat BLE_2THPRINT*.log | sort | uniq > BLE_2THPRINT_dedup.log
+cd ~/Blue2thprinting/Analysis/
+cat ~/Blue2thprinting/Scripts/logs/BLE_2THPRINT*.log | sort | uniq > BLE_2THPRINT_dedup.log
 python3 ./parse_BLE_2THPRINT_2db.py
 ```
 
@@ -405,11 +404,11 @@ mysql -u user -pa -D bt -e "SELECT * FROM BLE2th_LL_VERSION_IND LIMIT 10;"
 
 ### Importing BTC LMP data from BTC_2THPRINT.log
 
-Both `central_all_launcher2.py` and my `LMP2thprint.cpp` Braktooth module log information about attempted and successful LL2thprint to the file `/home/pi/BTC_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
+Both `central_all_launcher2.py` and my `LMP2thprint.cpp` Braktooth module log information about attempted and successful LL2thprint to the file `/home/user/Blue2thprinting/Scripts/logs/BTC_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
 
 ```
-cp ~/Blue2thprinting/Analysis/parse_BTC_2THPRINT_2db.py ~/
-cd ~
+
+cd ~/Blue2thprinting/Analysis/
 python3 ./parse_BTC_2THPRINT_2db.py
 ```
 

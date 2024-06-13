@@ -30,6 +30,7 @@ echo "===================================="
 #sudo apt-get update
 #sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
 #sudo pip3 install gmplot inotify_simple
+echo "  Done"
 
 echo ""
 echo "====================================================================================================================================="
@@ -38,50 +39,43 @@ echo "==========================================================================
 #### This git repository includes the Bluetooth SIG's assigned numbers git repo under the ./public subfolder
 #### Most people would check it out before seeing that they need to pass the parameter to recurse submodules
 #### So I'm just not bothering with telling folks to do that, and just doing it here
-#cd /home/$USERNAME/Blue2thprinting
-#git submodule update --init --recursive
+cd /home/$USERNAME/Blue2thprinting
+git submodule update --init --recursive
+echo "  Done"
 
 echo ""
 echo "==================================================================================="
 echo "Correcting locations which include hardcoded username in a /home/username/... path."
 echo "==================================================================================="
 #### There's a few places where paths are assumed to be in the user's home dir. This fixes those up.
-cd /home/$USERNAME/Blue2thprinting
-echo "Correcting bluez-5.66/attrib/gatttool.c"
-sed -i "s|/home/user/|/home/$USERNAME/|" bluez-5.66/attrib/gatttool.c
-echo "Correcting bluez-5.66/tools/sdptool.c"
-sed -i "s|/home/user/|/home/$USERNAME/|" bluez-5.66/tools/sdptool.c
-echo "Correcting all the scripts in ./Scripts"
-cd /home/$USERNAME/Blue2thprinting/Scripts
-for i in *.sh; do
-    echo "  Correcting $i"
-    sed -i "s|/home/pi/|/home/$USERNAME/|g" "$i";
-done
-for i in *.py; do
-    echo "  Correcting $i"
-    sed -i "s|/home/pi/|/home/$USERNAME/|g" "$i";
-done
-sed -i "s|username = \"pi\"|username = \"$USERNAME\"|" central_app_launcher2.py
-echo "Correcting central_app_launcher2.py"
+if [ $USERNAME != "user" ]; then
+    echo "Replacing username 'user' with '$USERNAME'."
+    cd /home/$USERNAME/Blue2thprinting
+    echo "Correcting bluez-5.66/attrib/gatttool.c"
+    sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/attrib/gatttool.c
+    echo "Correcting bluez-5.66/tools/sdptool.c"
+    sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/tools/sdptool.c
+    echo "Correcting all the scripts in ./Scripts"
+    cd /home/$USERNAME/Blue2thprinting/Scripts
+    for i in *.sh; do
+        echo "  Correcting $i"
+        sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
+    done
+    for i in *.py; do
+        echo "  Correcting $i"
+        sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
+    done
+    sed -i "s|username = \"user\"|username = \"$USERNAME\"|" central_app_launcher2.py
+    echo "Correcting central_app_launcher2.py"
+fi
+echo "  Done"
 
 echo ""
 echo "================================================"
 echo "Adding execute permissions to the shell scripts."
 echo "================================================"
 chmod +x *.sh
-
-echo ""
-echo "==========================================="
-echo "Copying scripts to their assumed locations."
-echo "==========================================="
-if [ ! -d "/home/$USERNAME/Scripts" ]; then
-    echo "cp ~/Blue2thprinting/Scripts ~"
-    cp -r /home/$USERNAME/Blue2thprinting/Scripts /home/$USERNAME/
-fi
-if [ ! -f "/home/$USERNAME/central_app_launcher2.py" ]; then
-    echo "cp ~/Blue2thprinting/Scripts/central_app_launcher2.py ~/central_app_launcher2.py"
-    cp /home/$USERNAME/Blue2thprinting/Scripts/central_app_launcher2.py /home/$USERNAME/central_app_launcher2.py
-fi
+echo "  Done"
 
 echo ""
 echo "====================================================================="
@@ -92,8 +86,8 @@ echo "====================================================================="
 #### which invokes the sub-scripts to run btmon (primary HCI logging),
 #### bluetoothctl (primary discovery), and central_app_launcher2.py
 #### (orchestration of GATT/SDP/LL/LMP measurements)
-if [ ! -f "/home/$USERNAME/Scripts/.cron_added" ]; then
-    cron_entry="@reboot /home/$USERNAME/Scripts/runall.sh"
+if [ ! -f "/home/$USERNAME/Blue2thprinting/Scripts/.cron_added" ]; then
+    cron_entry="@reboot /home/$USERNAME/Blue2thprinting/Scripts/runall.sh"
     echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
     sudo crontab -u root -l > /tmp/crontab.root.bak
     sudo cp /tmp/crontab.root.bak /tmp/crontab.root.new
@@ -101,8 +95,8 @@ if [ ! -f "/home/$USERNAME/Scripts/.cron_added" ]; then
     echo "$cron_entry" >> /tmp/crontab.root.new
     echo "  Importing new crontab from /tmp/crontab.root.new"
     sudo cat /tmp/crontab.root.new | sudo crontab -u root -
-    echo "  Setting flag in /home/$USERNAME/Scripts/.cron_added to avoid re-settting."
-    touch "/home/$USERNAME/Scripts/.cron_added"
+    echo "  Setting flag in /home/$USERNAME/Blue2thprinting/Scripts/.cron_added to avoid re-settting."
+    touch "/home/$USERNAME/Blue2thprinting/Scripts/.cron_added"
 else
     echo "  Skipped, because already added."
 fi
@@ -114,11 +108,12 @@ echo "================================================================="
 #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
 #### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
 #### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
-cp -r /home/$USERNAME/Blue2thprinting/bluez-5.66 /home/$USERNAME/Downloads/bluez-5.66
-cd /home/$USERNAME/Downloads/bluez-5.66
+cd /home/$USERNAME/Blue2thprinting/bluez-5.66
 ### BlueZ Configuration ###
-if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/Makefile" ]; then
+if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/Makefile" ]; then
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Beginning configuration."
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<"
     ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
 else
     echo "  Makefile present. Configuration already succeeded."
@@ -129,13 +124,15 @@ if [ $? != 0 ]; then
 fi
 
 ### Compilation ###
-if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/client/bluetoothctl" ]; then
+if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl" ]; then
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Beginning compilation (this will take a while!)"
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
     make -j4
     echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Testing gatttool runs successfully. If you see the help output, it's working."
     echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    /home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool --help
+    /home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
@@ -143,7 +140,7 @@ if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/h
     echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Testing sdptool runs successfully. If you see the help output, it's working."
     echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    /home/$USERNAME/Downloads/bluez-5.66/tools/sdptool --help
+    /home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
@@ -151,7 +148,7 @@ if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/h
     echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
     echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-    /home/$USERNAME/Downloads/bluez-5.66/client/bluetoothctl --version
+    /home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl --version
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit

@@ -7,7 +7,14 @@ echo "sedding"
 # Get rid of hex prefix, so it can be used as an INT in mysql
 #sed -i '' s/^\"0x0/\"/g /tmp/dev_and_type.csv
 # Get rid of "\r" on some Z-Link names, which MySQL will interpret as a carriage return after it imports it
-sed -i '' s/\\\\\r//g /tmp/dev_and_type.csv
+uname=$(uname)
+if [ $uname == "Darwin" ]; then
+    sed -i '' s/\\\\\r//g /tmp/EIR_bdaddr_to_name_short.csv
+    sed -i '' s/\\\\\r//g /tmp/EIR_bdaddr_to_name_complete.csv
+else
+    sed -i "s/\\\\\r//g" /tmp/EIR_bdaddr_to_name_short.csv
+    sed -i "s/\\\\\r//g" /tmp/EIR_bdaddr_to_name_complete.csv
+fi
 cat /tmp/EIR_bdaddr_to_name_short.csv | sort | uniq > /tmp/EIR_bdaddr_to_name_short_uniq.csv
 cat /tmp/EIR_bdaddr_to_name_complete.csv | sort | uniq > /tmp/EIR_bdaddr_to_name_complete_uniq.csv
 echo "mysql import"

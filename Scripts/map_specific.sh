@@ -4,8 +4,8 @@ FILES="$@"
 
 echo "passed in " ${args[0]}
 
-BTMONLOGS="/home/pi/Scripts/logs/btmon/"
-GPSPIPELOGS="/home/pi/Scripts/logs/gpspipe/"
+BTMONLOGS="/home/user/Scripts/Blue2thprinting/logs/btmon/"
+GPSPIPELOGS="/home/user/Scripts/Blue2thprinting/logs/gpspipe/"
 
 # Reset the files and db tables
 rm /tmp/advspecific.csv
@@ -32,7 +32,7 @@ do
 	mysql --database='bt' --execute="LOAD DATA INFILE '/tmp/advspecific.csv' INTO TABLE adv_specific FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (capture_date_unix,rssi,device_bdaddr_type,device_bdaddr,device_name);"
 
 	# Process the specific gps coordinates, Output goes into /tmp/gpsspecific.csv
-	echo ${file} | xargs -n 1 -I {} python /home/pi/Scripts/gpspipe2mysql.py $GPSPIPELOGS{}.txt >> /tmp/gpsspecific.csv 
+	echo ${file} | xargs -n 1 -I {} python /home/user/Blue2thprinting/Scripts/gpspipe2mysql.py $GPSPIPELOGS{}.txt >> /tmp/gpsspecific.csv 
 
 	# Insert data into database
 	mysql --database='bt' --execute="LOAD DATA INFILE '/tmp/gpsspecific.csv' REPLACE INTO TABLE gps_specific FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (@host_time,@gps_time,lat,lon) SET unix_host_time = UNIX_TIMESTAMP(@host_time), unix_gps_time = UNIX_TIMESTAMP(@gps_time);"

@@ -52,14 +52,14 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
 # PATHS YOU MAY NEED TO FIX
 ##################################################
 
-username = "pi"
+username = "user"
 
 default_cwd = f"/home/{username}/"
 
-gatttool_exec_path = f"/home/{username}/Downloads/bluez-5.66/attrib/gatttool"
+gatttool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/attrib/gatttool"
 
-sdptool_exec_path = f"/home/{username}/Downloads/bluez-5.66/tools/sdptool"
-sdptool_log_path = f"/home/{username}/Scripts/logs/sdptool"
+sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
+sdptool_log_path = f"/home/{username}/Blue2thprinting/Scripts/logs/sdptool"
 
 braktooth = f"/home/{username}/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter"
 brak_cwd = f"/home/{username}/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/"
@@ -69,9 +69,9 @@ ble2thprint = f"/home/{username}/Downloads/sweyntooth_bluetooth_low_energy_attac
 sweyn_cwd = f"/home/{username}/Downloads/sweyntooth_bluetooth_low_energy_attacks/"
 dongle1 = "/dev/ttyACM0"
 
-btc2thprint_log_path = f"/home/{username}/BTC_2THPRINT.log"
-gattprint_log_path = f"/home/{username}/GATTprint.log"
-sdpprint_log_path = f"/home/{username}/SDPprint.log"
+btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Scripts/logs/BTC_2THPRINT.log"
+gattprint_log_path = f"/home/{username}/Blue2thprinting/Scripts/logs/GATTprint.log"
+sdpprint_log_path = f"/home/{username}/Blue2thprinting/Scripts/logs/SDPprint.log"
 
 # END STUFF YOU MAY NEED TO FIX UP
 
