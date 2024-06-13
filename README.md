@@ -144,6 +144,8 @@ sudo ./setup_capture_helper_ubuntu.sh
 
 And there's comments in that script if you want to see what's being done and why.
 
+If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth and Sweyntooth to get the full power of Blue2thprinting!
+
 ### Setup Braktooth
 
 Place the Braktooth code in the location assumed by `central_app_launcher2.py`:  

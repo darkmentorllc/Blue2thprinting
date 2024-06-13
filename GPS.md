@@ -37,9 +37,11 @@ Ctrl-c to exit gpsmon.
 `gpspipe -V`
 Confirm you are running version 3.17 (newer versions like 3.22 which is bundled with newer Raspbian OSes have known issues that prevent capturing the coordinates in our usage, with the GPS hardware recommended on the main page.)
 
-### Re-enable gpspipe in auto-launch scripts
+### Re-enable gpspipe in misc scripts
 
-Edit ~/Scripts/runall.sh and un-comment the line that includes `start_gpspipe.sh`, and fix up the username if needed.
+1. Edit ~/Scripts/runall.sh and un-comment the line that includes `gpspipe`, and fix up the username if needed.
+2. Edit ~/Scripts/check.sh and un-comment the line that includes `gpspipe`.
+3. Edit ~/Scripts/killall.sh and un-comment the line that includes `gpspipe`.
 
 # Analysis Scripts Usage
 

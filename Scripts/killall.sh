@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RESULT1=$(killall gpspipe)
+#RESULT1=$(killall gpspipe)
 #echo $RESULT1
 RESULT2=$(killall btmon)
 #echo $RESULT2
