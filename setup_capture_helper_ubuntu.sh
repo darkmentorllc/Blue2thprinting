@@ -27,9 +27,9 @@ echo ""
 echo "===================================="
 echo "Installing all prerequisite software"
 echo "===================================="
-#sudo apt-get update
-#sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
-#sudo pip3 install gmplot inotify_simple
+sudo apt-get update
+sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
+sudo pip3 install gmplot inotify_simple
 echo "  Done"
 
 echo ""
