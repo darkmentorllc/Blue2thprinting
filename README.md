@@ -152,43 +152,6 @@ git clone --recurse-submodules https://github.com/darkmentorllc/Blue2thprinting.
 
 ***BEWARE!*** If you don't include the `--recurse-submodules`, stuff won't work later! Ensure that the Bluetooth assigned numbers sub-repository was successfully checked out by confirming that `~/Blue2thprinting/Analysis/public` is not empty.
 
-### Test GPS module:
-
-If you type "gpsmon" at this point, you will not get any coordinates. The presence of coordinates will be our determination of correctness of operation.
-
-*With your GPS module disconnected*, run: `ls -la /dev/ttyACM*`  
- - There should be no such file present. If there is something present, unplug all peripheral devices until you detect which device was causing that. Do not plug that device in again while operating this system.  
- - Plug in your USB GPS antenna, run `ls -la /dev/ttyACM*`  
- - The GPS device should now be visible as /dev/ttyACM0. ***The below will assume that /dev/ttyACM0 is the GPS device.***  
-
-Change two lines from:
-
-```
-ListenStream=[::1]:2947
-ListenStream=127.0.0.1:2947
-```
-
-to
-
-```
-#ListenStream=[::1]:2947
-ListenStream=0.0.0.0:2947
-```
-Save the file and exit. (Note: this commented out the IPv6 address.)
-
-```
-gpsd /dev/ttyACM0 -F /var/run/gpsd.socket
-systemctl daemon-reload
-systemctl restart gpsd.socket
-systemctl restart gpsd
-```
-You should now see GPS coordinates (assuming you're somewhere with visibility of the sky or otherwise in GPS range.) If you don't, reboot, and then run "sudo gpsmon" and confirm if you can then. (If you still can't, you're SOL, because Linux GPS has caused me enough trouble, and I'm not debugging yours `¯\_(ツ)_/¯`.)
-
-Ctrl-c to exit gpsmon.
-
-`gpspipe -V`
-Confirm you are running version 3.17 (newer versions like 3.22 which is bundled with newer Raspbian OSes have known issues that prevent capturing the coordinates in our usage, with the GPS hardware recommended above.)
-
 ### Compile custom BlueZ tools
 
 I collect GATT data via a modified `gatttool` from the BlueZ tools. I also use the unmodified, but not compiled by default, `sdptool` to collect SDP info. If you want to use this, you will have to compile it on the target system (e.g. Raspberry Pi). My modified BlueZ-5.66 code is in this repository in the `bluez-5.66` folder.
@@ -387,16 +350,6 @@ After you have sniffed some traffic, you will have files in ~/Scripts/logs/btmon
 
 **Note:** Because data parsing and database lookups can be CPU/IO intensive, it is generally recommended to *not* perform data import or analysis on the capture device (the UP^2 in this case.) Rather, it is recommended to copy all data off to a separate, faster, analysis system, and perform the subsequent steps there.
 
-### delete\_gps\_files\_lacking\_lat\_long.py
-
-Often the GPS log will be continuing to log metadata even when it can't get a GPS coordinate fix. You should periodically deliminate any useless files that have no lat/long coordinates by running the following:
-
-```
-python3 delete_gps_files_lacking_lat_long.py ~/Scripts/logs/gpspipe/
-```
-
-Any files that are deleted will be printed out. No output means no files were deleted.
-
 ### dump\_names\_specific.sh
 
 Assume we have the following files:
@@ -423,36 +376,6 @@ from within the Scripts folder.
 
 *Note:* The accepted name format is just the filename, not the full path. 
 
-### map\_specific.sh
-
-Assume we have the following files:
-
-```
-pi@pi0-2:~/Scripts $ ls logs/gpspipe/
-2023-08-24-01-04-59_pi0-2.txt  2023-08-24-01-11-38_pi0-2.txt
-```
-
-If you have a file like `/home/pi/Scripts/logs/gpspipe/2023-08-24-01-11-38_pi0-2.txt` for instance, you can map the instances of *named* bluetooth devices. 
-
-```
-root@pi0-2:/home/pi/Scripts# ./map_specific.sh 2023-08-24-01-04-59_pi0-2 2023-08-24-01-11-38_pi0-2
-passed in 
-Processing  2023-08-24-01-04-59_pi0-2
-Running as user "root" and group "root". This could be dangerous.
-Processing  2023-08-24-01-11-38_pi0-2
-Running as user "root" and group "root". This could be dangerous.
-Adding markers
-
-Done
-
-root@pi0-2:/home/pi/Scripts# ls -la bt_map.html 
--rw-r--r-- 1 root root 9012 Aug 24 01:31 bt_map.html
-```
-
-The file bt_map.html can be opened in a browser to see the GPS locations of named devices.
-
-*Note:* The accepted name format is just the filename, not the full path. You must remove the filetype suffix like ".txt" or ".bin".
-
 ## Import data into MySQL
 
 **Note:** Because data parsing and database lookups can be CPU/IO intensive, it is generally recommended to *not* perform data import or analysis on the capture device (the UP^2 in this case.) Rather, it is recommended to copy all data off to a separate, faster, analysis system, and perform the subsequent steps there.
@@ -461,32 +384,12 @@ The file bt_map.html can be opened in a browser to see the GPS locations of name
 
 **Linux Software Setup**: You should already have the necessary MySQL (MariaDB) database and tshark tools installed from the above apt-get commands.
 
+```
+cd ~/Blue2thprinting
+sudo ./setup_helper_ubuntu.sh
+```
+
 **macOS Software Setup**: You can load the data into the database and perform analysis on macOS, but you must first [install HomeBrew](https://brew.sh/), and then run `brew install mysql` and `brew install wireshark` (for the `tshark` CLI version). (If for some reason neither tshark nor wireshark are found in your PATH, look in / add from /usr/local/Cellar/wireshark/). Then also edit `/usr/local/etc/my.cnf` and add `secure_file_priv = /tmp` at the end of the file, and then start the mysql server with `/usr/local/opt/mysql/bin/mysqld_safe --datadir=/usr/local/var/mysql`.
-
-**Create initial database & tables**:
-
-To create the "bt" database and all the necessary tables, run the following:  
-
-```
-cd ~/Blue2thprinting/Analysis
-sudo ./create_all_db_tables.sh
-```
-
-**Import the IEEE OUIs into the database**:
-
-```
-cd ~/Blue2thprinting/Analysis
-./process_OUI_lists.sh ./oui.txt
-```
-
-The oui.txt is from [https://standards-oui.ieee.org/oui/oui.txt](https://standards-oui.ieee.org/oui/oui.txt), and should be periodically updated. Also note that the `process_OUI_lists.sh` script does not currently handle OUI assignments that are less than 24 bits ([tracking issue](https://github.com/darkmentorllc/naiveBTsniffing/issues/1)).
-
-**Import BT companies into the database**:
-
-```
-cd ~/Blue2thprinting/Analysis
-./translator_fill_UUID16_to_company.sh
-```
 
 This should be re-run if you ever do a "git pull" in the `Blue2thprinting/public` directory, which contains the Bluetooth Assigned Numbers information, to get updated assigned vendor UUID16s.
 
@@ -496,13 +399,13 @@ This should be re-run if you ever do a "git pull" in the `Blue2thprinting/public
 
 Run `./fill_ALL_from_HCI_log.sh {your_btmon_file.bin}`.
 
-E.g. `./fill_ALL_from_HCI_log.sh ../ExampleData/2023-10-06-08-52-20_up-apl01.bin`
+E.g. `./fill_ALL_from_HCI_log.sh ~/Blue2thprinting/ExampleData/2023-10-06-08-52-20_up-apl01.bin`
 
 You should see a variety of outputs such as "tsharking", and "mysql import". You can safely ignore any tshark warnings about the file being "cut short in the middle of a packet".
 
 Eventually once you have many files to process in bulk, you will want to pass each file to `fill_ALL_from_HCI_log.sh` sequentially. For that you can issue a command like:
 
-`time find /path/to/btmon_logs/2023-10* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
+`time find ~/Scripts/logs/btmon/2023-10* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
 
 **To confirm that some data was successfully imported, you can issue:**
 
@@ -514,7 +417,7 @@ This should show some of the same sort of device name data that you could see by
 
 ### Importing GATT data from GATTprint.log
 
-Both `central_all_launcher2.py` and `gatttool` log information about attempted and successful GATTprinting to the file `/home/pi/GATTprint.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
+Both `central_app_launcher2.py` and `gatttool` log information about attempted and successful GATTprinting to the file `/home/pi/GATTprint.log` (or alt user home directory if you reconfigured it). To import this data into the database, run the following:
 
 ```
 cp ~/Blue2thprinting/Analysis/parse_GATTPRINT_2db.py ~/
@@ -578,10 +481,6 @@ Issue `python3 ./TellMeEverything.py --help` for the latest usage.
 
 **If you get an error like "public/path/something can't be found"**, make sure your `~/Blue2thprinting/Analysis/public` folder is not empty. If it is empty, that implies you didn't check out the Bluetooth assigned numbers sub-module at git repository clone time. This can be corrected by issuing `git submodule update --init --recursive`.
 
-Create folders to store the resulting text 2thprints:
-
-`mkdir BTC2thprints BLE2thprints GATTPrints`
-
 **Printing information for a specific BDADDR**:
 
 `python3 ./TellMeEverything.py --bdaddr 4c:e6:c0:21:39:a6`
@@ -605,3 +504,10 @@ The regex is checked against associations with the BDADDR IEEE OUI, UUID16s, and
 **Printing information for BDADDRs that have Manufacturer Specific Data that matches a given regex**:
 
 `python3 ./TellMeEverything.py --MSDregex "008fc3d5"`
+
+
+### GPS
+
+I originally added support for GPS logging of where devices were seen, before I learned that [WiGLE.net](https://WiGLE.net) had support for crowdsourced Bluetooth logging. These days I tend to not use my GPS dongle, and instead I just run a junk Pixel phone with WiGLE and consider its capture good enough. (Also the phone's GPS seemed to generally be more reliable than the USB GPS dongle.)
+
+Therefore I have moved discussion of the GPS setup to a [separate page](GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
