@@ -1,0 +1,127 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]; then
+    echo "This script needs to be run with sudo"
+    exit 1
+fi
+
+echo "============================================================================"
+echo "This script assumes you're running a Debian-derivative system that uses apt!"
+echo "============================================================================"
+echo ""
+echo "===================================="
+echo "Installing all prerequisite software"
+echo "===================================="
+sudo apt-get update
+sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils tshark mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
+sudo pip3 install gmplot inotify_simple
+
+echo ""
+echo "====================================================================================================================================="
+echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
+echo "====================================================================================================================================="
+git submodule update --init --recursive
+
+echo ""
+echo "==================================================================================="
+echo "Correcting locations which include hardcoded username in a /home/username/... path."
+echo "==================================================================================="
+#if [ -n "$SUDO_USER" ]; then
+    USERNAME="$SUDO_USER"
+#else
+#    USERNAME="$USER"
+#fi
+
+cd /home/$USERNAME/Blue2thprinting
+echo "Correcting bluez-5.66/attrib/gatttool.c"
+sed -i "s|/home/user/|/home/$USERNAME/|" bluez-5.66/attrib/gatttool.c
+echo "Correcting bluez-5.66/tools/sdptool.c"
+sed -i "s|/home/user/|/home/$USERNAME/|" bluez-5.66/tools/sdptool.c
+echo "Correcting all the scripts in ./Scripts"
+cd /home/$USERNAME/Blue2thprinting/Scripts
+for i in *.sh; do
+    echo "  Correcting $i"
+    sed -i "s|/home/pi/|/home/$USERNAME/|g" "$i";
+done
+for i in *.py; do
+    echo "  Correcting $i"
+    sed -i "s|/home/pi/|/home/$USERNAME/|g" "$i";
+done
+sed -i "s|username = \"pi\"|username = \"$USERNAME\"|" central_app_launcher2.py
+echo "Correcting central_app_launcher2.py"
+
+echo ""
+echo "================================================"
+echo "Adding execute permissions to the shell scripts."
+echo "================================================"
+chmod +x *.sh
+
+echo ""
+echo "==========================================="
+echo "Copying scripts to their assumed locations."
+echo "==========================================="
+if [ ! -d "/home/$USERNAME/Scripts" ]; then
+    echo "cp ~/Blue2thprinting/Scripts ~"
+    cp -r /home/$USERNAME/Blue2thprinting/Scripts /home/$USERNAME/
+fi
+if [ ! -f "/home/$USERNAME/central_app_launcher2.py" ]; then
+    echo "cp ~/Blue2thprinting/Scripts/central_app_launcher2.py ~/central_app_launcher2.py"
+    cp /home/$USERNAME/Blue2thprinting/Scripts/central_app_launcher2.py /home/$USERNAME/central_app_launcher2.py
+fi
+
+echo ""
+echo "====================================================================="
+echo "Appending entry to root crontab to run ~/Scripts/runall.sh at reboot."
+echo "====================================================================="
+if [ ! -f "/home/$USERNAME/Scripts/.cron_added" ]; then
+    cron_entry="@reboot /home/$USERNAME/Scripts/runall.sh"
+    echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
+    sudo crontab -u root -l > /tmp/crontab.root.bak
+    sudo cp /tmp/crontab.root.bak /tmp/crontab.root.new
+    echo "  Appending new entry: $cron_entry"
+    echo "$cron_entry" >> /tmp/crontab.root.new
+    echo "  Importing new crontab from /tmp/crontab.root.new"
+    sudo cat /tmp/crontab.root.new | sudo crontab -u root -
+    echo "  Setting flag in /home/$USERNAME/Scripts/.cron_added to avoid re-settting."
+    touch "/home/$USERNAME/Scripts/.cron_added"
+else
+    echo "  Skipped, because already added."
+fi
+
+echo ""
+echo "=================================================="
+echo "Compiling the customized BlueZ gatttool & sdptool."
+echo "=================================================="
+cp -r /home/$USERNAME/Blue2thprinting/bluez-5.66 /home/$USERNAME/Downloads/bluez-5.66
+cd /home/$USERNAME/Downloads/bluez-5.66
+### Configuration ###
+if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/Makefile" ]; then
+    echo "  Beginning configuration."
+    ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
+else
+    echo "  Makefile present. Configuration already succeeded."
+fi
+if [ $? != 0 ]; then
+    echo "  Something went wrong with the ./configure. Look for an error message, correct it, and try again."
+    exit
+fi
+
+### Compilation ###
+if [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Downloads/bluez-5.66/tools/sdptool" ]; then
+    echo "  Beginning compilation (this will take a while!)"
+    make -j4
+    echo "  Testing gatttool runs successfully. If you see the help output, it's working."
+    /home/$USERNAME/Downloads/bluez-5.66/attrib/gatttool --help
+    if [ $? != 0 ]; then
+        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
+        exit
+    fi
+    echo "  Testing sdptool runs successfully. If you see the help output, it's working."
+    /home/$USERNAME/Downloads/bluez-5.66/tools/sdptool --help
+    if [ $? != 0 ]; then
+        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
+        exit
+    fi
+else
+    echo "  gatttool and sdptool already exist, skipping recompilation."
+fi

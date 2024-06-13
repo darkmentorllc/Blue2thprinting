@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<record>
+	<attribute id="0x0000">
+		<uint32 value="0x4f491801" />
+	</attribute>
+</record>
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<record>
+	<attribute id="0x0000">
+		<uint32 value="0x4f491132" />
+	</attribute>
+</record>
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<record>
+	<attribute id="0x0000">
+		<uint32 value="0x4f491116" />
+	</attribute>
+	<attribute id="0x0001">
+		<sequence>
+			<uuid value="0x1116" />
+		</sequence>
+	</attribute>
+</record>
