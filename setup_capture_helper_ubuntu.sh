@@ -158,6 +158,6 @@ else
 fi
 
 echo ""
-echo "[--------------------------------------------------]
-echo "Everything seems to have completed successfully! \o/
-echo "[--------------------------------------------------]
+echo "[--------------------------------------------------]"
+echo "Everything seems to have completed successfully! \o/"
+echo "[--------------------------------------------------]"
