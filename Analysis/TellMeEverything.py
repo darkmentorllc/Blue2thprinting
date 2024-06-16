@@ -850,7 +850,7 @@ def get_bdaddrs_by_msd_regex(msdregex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE mf_specific_data REGEXP '{msdregex}'"
+    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE MSD REGEXP '{msdregex}'"
     eir_result = execute_query(eir_query)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
@@ -858,7 +858,7 @@ def get_bdaddrs_by_msd_regex(msdregex):
     print(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in EIR_bdaddr_to_MSD")
     print(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE mf_specific_data REGEXP '{msdregex}'"
+    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE MSD REGEXP '{msdregex}'"
     le_result = execute_query(le_query)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -1106,36 +1106,36 @@ def print_transmit_power(bdaddr, nametype):
 def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT device_BT_CID, mf_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    eir_query = f"SELECT device_BT_CID, MSD FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
-    le_query = f"SELECT le_evt_type, bdaddr_random, device_BT_CID, mf_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    le_query = f"SELECT le_evt_type, bdaddr_random, device_BT_CID, MSD FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     le_result = execute_query(le_query)
 
     if (len(eir_result) != 0 or len(le_result) != 0):
         print("\tManufacturer-specific Data:")
 
-    for device_BT_CID, mf_specific_data in eir_result:
+    for device_BT_CID, MSD in eir_result:
         print(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
         print(f"\t\t\t Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
-        print(f"\t\tRaw Data: {mf_specific_data}")
-        if({BT_CID_to_company_name(device_BT_CID)} == "Apple, Inc." and mf_specific_data[0:3] == "0215"):
+        print(f"\t\tRaw Data: {MSD}")
+        if({BT_CID_to_company_name(device_BT_CID)} == "Apple, Inc." and MSD[0:3] == "0215"):
             print(f"\t\tApple iBeacon:")
         print(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_MSD)")
 
-    for le_evt_type, bdaddr_random, device_BT_CID, mf_specific_data in le_result:
+    for le_evt_type, bdaddr_random, device_BT_CID, MSD in le_result:
         print(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
         print(f"\t\t\t Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
-        print(f"\t\tRaw Data: {mf_specific_data}")
+        print(f"\t\tRaw Data: {MSD}")
 
         # Print Apple iBeacon information
-        if(device_BT_CID == 76 and mf_specific_data[0:4] == "0215"):
+        if(device_BT_CID == 76 and MSD[0:4] == "0215"):
             print(f"\t\tApple iBeacon:")
-            UUID128 = f"{mf_specific_data[4:12]}-{mf_specific_data[12:16]}-{mf_specific_data[16:20]}-{mf_specific_data[20:24]}-{mf_specific_data[24:36]}"
-            major = f"{mf_specific_data[36:40]}"
-            minor = f"{mf_specific_data[40:44]}"
-            rssi = f"{mf_specific_data[44:46]}"
+            UUID128 = f"{MSD[4:12]}-{MSD[12:16]}-{MSD[16:20]}-{MSD[20:24]}-{MSD[24:36]}"
+            major = f"{MSD[36:40]}"
+            minor = f"{MSD[40:44]}"
+            rssi = f"{MSD[44:46]}"
             print(f"\t\t\tUUID128: {UUID128}")
             print(f"\t\t\tMajor ID: {major}")
             print(f"\t\t\tMinor ID: {minor}")
