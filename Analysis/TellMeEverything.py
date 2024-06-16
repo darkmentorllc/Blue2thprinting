@@ -903,7 +903,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE char_UUID128 REGEXP '{uuid128regex}'"
+    gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID128 REGEXP '{uuid128regex}'"
     gatt_char_result = execute_query(gatt_char_query)
     for (bdaddr,) in gatt_char_result:
         bdaddr_hash[bdaddr] = 1
@@ -920,7 +920,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE char_UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
         gatt_char_result = execute_query(gatt_char_query)
         for (bdaddr,) in gatt_char_result:
             bdaddr_hash[bdaddr] = 1
@@ -2059,8 +2059,8 @@ def is_characteristic_readable(number):
 
 	
 # Decode some misc things just because
-def characteristic_value_decoding(char_UUID128, bytes):
-    str = match_known_GATT_UUID_or_custom_UUID(char_UUID128)
+def characteristic_value_decoding(UUID128, bytes):
+    str = match_known_GATT_UUID_or_custom_UUID(UUID128)
     if(str == "Characteristic: Appearance"):
         value = int.from_bytes(bytes, byteorder='little')
         #print(f"Value = {value}")
@@ -2084,7 +2084,7 @@ def device_has_GATT_info(bdaddr):
     query = f"SELECT descriptor_handle,UUID128 FROM GATT_descriptors WHERE device_bdaddr = '{bdaddr}'";
     GATT_descriptors_result = execute_query(query)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, char_UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
@@ -2103,7 +2103,7 @@ def print_GATT_info(bdaddr):
     query = f"SELECT descriptor_handle,UUID128 FROM GATT_descriptors WHERE device_bdaddr = '{bdaddr}'";
     GATT_descriptors_result = execute_query(query)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, char_UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
@@ -2124,14 +2124,14 @@ def print_GATT_info(bdaddr):
         for descriptor_handle, UUID128_2 in GATT_descriptors_result:
             if(descriptor_handle <= end_handle and descriptor_handle >= begin_handle):
                 print(f"\t\t\tGATT Descriptor: {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
-                for declaration_handle, char_properties, char_value_handle, char_UUID128 in GATT_characteristics_result:
+                for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
                     if(descriptor_handle == char_value_handle):
-                        print(f"\t\t\t\tGATT Characteristic: {char_UUID128} ({match_known_GATT_UUID_or_custom_UUID(char_UUID128)}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
+                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
                         if(is_characteristic_readable(char_properties)):
                             if(char_value_handle in char_byte_vals_dict):
                                 print(f"\t\t\t\tGATT Characteristic value read as {char_byte_vals_dict[char_value_handle]}")
                                 print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
-                                characteristic_value_decoding(char_UUID128, char_byte_vals_dict[char_value_handle]) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                                characteristic_value_decoding(UUID128, char_byte_vals_dict[char_value_handle]) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
                             else:
                                 print(f"\t\t\t\tNo GATT characteristic value was read and stored in the database (despite characteristic being readable)")
 
@@ -2145,9 +2145,9 @@ def print_GATT_info(bdaddr):
             for descriptor_handle, UUID128_2 in GATT_descriptors_result:
                 print(f"\t\tGATT Descriptor: Descriptor Handle: {descriptor_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
                 file.write(f"Descriptor Handle: {descriptor_handle}, {UUID128_2}\n")
-            for declaration_handle, char_properties, char_value_handle, char_UUID128 in GATT_characteristics_result:
-                print(f"\t\tGATT Characteristic: {char_UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}")
-                file.write(f"Char: {char_UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
+            for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
+                print(f"\t\tGATT Characteristic: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}")
+                file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
         print("")
 
     if(len(GATT_services_result) == 0):

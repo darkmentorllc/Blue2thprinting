@@ -1,15 +1,17 @@
 #!/bin/bash
 echo "$1"
 echo "tsharking"
+# TODO: The LE_bdaddr_to_flags database table doesn't currently have a field for btcommon.eir_ad.entry.flags.bredr_not_supported
+# TODO: A new LE_bdaddr_to_flags2 table was created for the pcap scripts to include that. This will need to be updated and all data re-processed
 tshark -r "$1" -Y 'bthci_evt.code == 0x3e && btcommon.eir_ad.entry.type == 0x01' -T fields -e bthci_evt.bd_addr -e bthci_evt.le_peer_address_type -e bthci_evt.le_advts_event_type -e bthci_evt.le_ext_advts_event_type -e btcommon.eir_ad.entry.flags.le_limited_discoverable_mode -e btcommon.eir_ad.entry.flags.le_general_discoverable_mode -e btcommon.eir_ad.entry.flags.le_bredr_support_controller -e btcommon.eir_ad.entry.flags.le_bredr_support_host -E occurrence=f -E separator=, -E quote=d | awk -F, '{gsub(/,,/, ",")}1' > /tmp/LE_bdaddr_to_flags.csv
 # Dedup
 cat /tmp/LE_bdaddr_to_flags.csv | sort | uniq > /tmp/LE_bdaddr_to_flags_uniq.csv
 # get rid of 0x prefix to make it so I don't need to alter all the mysql table import statements for the boolean values (which I didn't find a way to convert properly)
 uname=$(uname)
 if [ $uname == "Darwin" ]; then
-    sed -i '' s/\"0x0/\"/g /tmp/EIR_bdaddr_to_flags_uniq.csv
+    sed -i '' s/\"0x0/\"/g /tmp/LE_bdaddr_to_flags_uniq.csv
 else
-    sed -i "s/\"0x0/\"/g" /tmp/EIR_bdaddr_to_flags_uniq.csv
+    sed -i "s/\"0x0/\"/g" /tmp/LE_bdaddr_to_flags_uniq.csv
 fi
 
 echo "mysql import"

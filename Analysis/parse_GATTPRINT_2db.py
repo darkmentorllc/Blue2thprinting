@@ -20,7 +20,7 @@ cursor = db_connection.cursor()
 # Prepare the SQL statement with placeholders
 sql_GATT_services = "INSERT IGNORE INTO GATT_services (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
 sql_GATT_descriptors = "INSERT IGNORE INTO GATT_descriptors (device_bdaddr_type, device_bdaddr, descriptor_handle, UUID128) VALUES (%s, %s, %s, %s)"
-sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, char_UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
+sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
 sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s)"
 
 # Try to find the bdaddr that will be substituted for {}, in any of our BLE tables
@@ -119,7 +119,7 @@ def func_CHARACTERISTIC(device_bdaddr_type, new, args):
             print("Couldn't convert value to int in func_CHARACTERISTIC 1")
             return
 
-        char_UUID128 = args[4]
+        UUID128 = args[4]
     else:
         if (len(args) != 6):
             print("args rejected as they were not the correct number of elements:", args)
@@ -133,10 +133,10 @@ def func_CHARACTERISTIC(device_bdaddr_type, new, args):
             print("Couldn't convert value to int in func_CHARACTERISTIC 2")
             return
 
-        char_UUID128 = args[5]
+        UUID128 = args[5]
 
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, char_UUID128)
+    values = (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_characteristics, values)
