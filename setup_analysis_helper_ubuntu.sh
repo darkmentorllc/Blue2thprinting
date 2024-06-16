@@ -39,7 +39,7 @@ echo "==================================="
 #### This will create the less-privileged MySQL user "user", with a password of "a", under which subsequent commands will be run.
 #### It will then create all the database tables where imported data will be stored
 #### It will give an error message (that can be ignored) if the user or tables are already created
-./create_all_db_tables.sh
+./one_time_initialization/initialize_database.sh
 
 echo ""
 echo "===================================="
@@ -48,7 +48,7 @@ echo "===================================="
 #### This will just import a
 #### The oui.txt came from "https://standards-oui.ieee.org/oui/oui.txt"
 #### oui.txt will periodically be updated
-./process_OUI_lists.sh ./oui.txt
+./one_time_initialization/process_OUI_lists.sh ./one_time_initialization/oui.txt
 echo "==========================================================="
 echo "You should see 10 (XEROX) IEEE OUIs after the next command:"
 echo "==========================================================="
@@ -58,7 +58,7 @@ echo ""
 echo "==================================================="
 echo "Filling database with Bluetooth 16-bit company IDs."
 echo "==================================================="
-./translator_fill_UUID16_to_company.sh
+./one_time_initialization/translator_fill_UUID16_to_company.sh
 echo "======================================================================"
 echo "You should see 10 16-bit Bluetooth company IDs after the next command:"
 echo "======================================================================"
