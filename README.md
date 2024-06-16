@@ -341,13 +341,13 @@ sudo ./setup_analysis_helper_macOS.sh
 
 The above `setup_analysis_helper*.sh` scripts should be re-run if you ever do a "git pull" in the `Blue2thprinting/public` directory, which contains the Bluetooth Assigned Numbers information, to get updated assigned vendor UUID16s.
 
-### Importing data from btmon .bin files
+### Importing data from btmon .bin HCI log files
 
 **Import ExampleData:**
 
 ```
 cd ~/Blue2thprinting/Analysis
-./fill_ALL_from_HCI_log.sh ../ExampleData/2023-10-06-08-52-20_up-apl01.bin
+./parse_HCI_2db.sh ../ExampleData/2023-10-06-08-52-20_up-apl01.bin
 ```
 
 You should see a variety of outputs such as "tsharking", and "mysql import". You can safely ignore any tshark warnings about the file being "cut short in the middle of a packet".
@@ -362,9 +362,9 @@ This should show some of the same sort of device name data that you could see by
 
 **Import your own data:**
 
-Eventually once you have many files from your own collection that you want to process in bulk, you will want to pass each file to `fill_ALL_from_HCI_log.sh` sequentially. For that you can issue a command like:
+Eventually once you have many files from your own collection that you want to process in bulk, you will want to pass each file to `parse_HCI_2db.sh` sequentially. For that you can issue a command like:
 
-`time find ~/Blue2thprinting/Logs/btmon/2024-06* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./fill_ALL_from_HCI_log.sh {}"`
+`time find ~/Blue2thprinting/Logs/btmon/2024-06* -type f -name "*.bin" | xargs -n 1 -I {} bash -c " ./parse_HCI_2db.sh {}"`
 
 ### Importing GATT data from GATTprint.log
 
