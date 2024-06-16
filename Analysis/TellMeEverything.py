@@ -365,7 +365,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM LE_bdaddr_to_mf_specific WHERE bdaddr_random = 0 "
+        f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
         f"    UNION ALL "
@@ -389,7 +389,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_flags "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_mf_specific "
+        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_name "
         f"    UNION ALL "
@@ -666,11 +666,11 @@ def get_bdaddrs_by_company_regex(companyregex):
             print(f"{len(tooth_ll_result)} results found in BLE2th_LL_VERSION_IND for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_mf_specific WHERE device_BT_CID = '{key}'"
+            le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = '{key}'"
             le_msd_result = execute_query(le_msd_query)
             for (bdaddr,) in le_msd_result:
                 bdaddr_hash[bdaddr] = 1
-            print(f"{len(le_msd_result)} results found in LE_bdaddr_to_mf_specific for key 0x{key:04x}")
+            print(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             # NOTE: Manufacture-specific data is the location where the BT_CID is most likely to be byte-swapped
@@ -678,27 +678,27 @@ def get_bdaddrs_by_company_regex(companyregex):
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_mf_specific WHERE device_BT_CID = '{byte_swapped_key}'"
+                le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = '{byte_swapped_key}'"
                 le_msd_result = execute_query(le_msd_query)
                 for (bdaddr,) in le_msd_result:
                     bdaddr_hash[bdaddr] = 1
-                print(f"{len(le_msd_result)} results found in LE_bdaddr_to_mf_specific for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
+                print(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_mf_specific WHERE device_BT_CID = '{key}'"
+            eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = '{key}'"
             eir_msd_result = execute_query(eir_msd_query)
             for (bdaddr,) in eir_msd_result:
                 bdaddr_hash[bdaddr] = 1
-            print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_mf_specific for key 0x{key:04x}")
+            print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_mf_specific WHERE device_BT_CID = '{byte_swapped_key}'"
+                eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = '{byte_swapped_key}'"
                 eir_msd_result = execute_query(eir_msd_query)
                 for (bdaddr,) in eir_msd_result:
                     bdaddr_hash[bdaddr] = 1
-                print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_mf_specific for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
+                print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
    
     if(enable_UUID16_lookup):
@@ -769,7 +769,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
-                f"    SELECT device_bdaddr FROM LE_bdaddr_to_mf_specific WHERE bdaddr_random = 0 "
+                f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
@@ -793,7 +793,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM EIR_bdaddr_to_flags "
                 f"    UNION ALL "
-                f"    SELECT device_bdaddr FROM EIR_bdaddr_to_mf_specific "
+                f"    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM EIR_bdaddr_to_name "
                 f"    UNION ALL "
@@ -850,19 +850,19 @@ def get_bdaddrs_by_msd_regex(msdregex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_mf_specific WHERE mf_specific_data REGEXP '{msdregex}'"
+    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE mf_specific_data REGEXP '{msdregex}'"
     eir_result = execute_query(eir_query)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in EIR_bdaddr_to_mf_specific")
+    print(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in EIR_bdaddr_to_MSD")
     print(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_mf_specific WHERE mf_specific_data REGEXP '{msdregex}'"
+    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE mf_specific_data REGEXP '{msdregex}'"
     le_result = execute_query(le_query)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_msd_regex: {len(le_result)} results found in LE_bdaddr_to_mf_specific")
+    print(f"get_bdaddrs_by_msd_regex: {len(le_result)} results found in LE_bdaddr_to_MSD")
     print(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
     return bdaddr_hash.keys()
@@ -1106,9 +1106,9 @@ def print_transmit_power(bdaddr, nametype):
 def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT device_BT_CID, mf_specific_data FROM EIR_bdaddr_to_mf_specific WHERE device_bdaddr = '{bdaddr}'"
+    eir_query = f"SELECT device_BT_CID, mf_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
-    le_query = f"SELECT le_evt_type, bdaddr_random, device_BT_CID, mf_specific_data FROM LE_bdaddr_to_mf_specific WHERE device_bdaddr = '{bdaddr}'"
+    le_query = f"SELECT le_evt_type, bdaddr_random, device_BT_CID, mf_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     le_result = execute_query(le_query)
 
     if (len(eir_result) != 0 or len(le_result) != 0):
@@ -1121,7 +1121,7 @@ def print_manufacturer_data(bdaddr):
         print(f"\t\tRaw Data: {mf_specific_data}")
         if({BT_CID_to_company_name(device_BT_CID)} == "Apple, Inc." and mf_specific_data[0:3] == "0215"):
             print(f"\t\tApple iBeacon:")
-        print(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_mf_specific)")
+        print(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_MSD)")
 
     for le_evt_type, bdaddr_random, device_BT_CID, mf_specific_data in le_result:
         print(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
@@ -1148,7 +1148,7 @@ def print_manufacturer_data(bdaddr):
         # TODO: I'd like to find out how to parse Microsoft beacons like are shown in the Nordic nRF app
         # TODO: Parse Eddystone even though it's deprecated?
 
-        print(f"\t\t\tIn BT LE Data (LE_bdaddr_to_mf_specific), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        print(f"\t\t\tIn BT LE Data (LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         print(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
 
@@ -1512,7 +1512,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_mf_specific
+    FROM EIR_bdaddr_to_MSD
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1
@@ -1591,7 +1591,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_mf_specific
+    FROM LE_bdaddr_to_MSD
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1

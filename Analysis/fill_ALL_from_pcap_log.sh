@@ -6,8 +6,8 @@ echo "$1"
 #echo ./pcap_fill_LE_bdaddr_to_name.sh "$1"
 #./pcap_fill_LE_bdaddr_to_name.sh "$1"
 
-#echo ./pcap_fill_LE_bdaddr_to_mf_specific.sh "$1"
-#./pcap_fill_LE_bdaddr_to_mf_specific.sh "$1"
+#echo ./pcap_fill_LE_bdaddr_to_MSD.sh "$1"
+#./pcap_fill_LE_bdaddr_to_MSD.sh "$1"
 
 #echo ./pcap_fill_LE_bdaddr_to_tx_power.sh "$1"
 #./pcap_fill_LE_bdaddr_to_tx_power.sh "$1"

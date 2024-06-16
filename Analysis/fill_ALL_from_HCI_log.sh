@@ -18,8 +18,8 @@ echo ./fill_EIR_bdaddr_to_UUID32s.sh "$1"
 echo ./fill_EIR_bdaddr_to_flags.sh "$1"
 ./fill_EIR_bdaddr_to_flags.sh "$1"
 
-echo ./fill_EIR_bdaddr_to_mf_specific.sh "$1"
-./fill_EIR_bdaddr_to_mf_specific.sh "$1"
+echo ./fill_EIR_bdaddr_to_MSD.sh "$1"
+./fill_EIR_bdaddr_to_MSD.sh "$1"
 
 echo ./fill_EIR_bdaddr_to_name.sh "$1"
 ./fill_EIR_bdaddr_to_name.sh "$1"
@@ -54,8 +54,8 @@ echo ./fill_LE_bdaddr_to_connect_interval.sh "$1"
 echo ./fill_LE_bdaddr_to_flags.sh "$1"
 ./fill_LE_bdaddr_to_flags.sh "$1"
 
-echo ./fill_LE_bdaddr_to_mf_specific.sh "$1"
-./fill_LE_bdaddr_to_mf_specific.sh "$1"
+echo ./fill_LE_bdaddr_to_MSD.sh "$1"
+./fill_LE_bdaddr_to_MSD.sh "$1"
 
 echo ./fill_LE_bdaddr_to_name.sh "$1"
 ./fill_LE_bdaddr_to_name.sh "$1"

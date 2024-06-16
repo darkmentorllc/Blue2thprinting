@@ -44,7 +44,7 @@ FROM (
   WHERE device_bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_mf_specific
+  FROM LE_bdaddr_to_MSD
   WHERE device_bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
