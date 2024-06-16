@@ -2,7 +2,7 @@ Welcome to Xeno's basic Blue2thprinting setup! It's cheap(ish, other than the sm
 
 # Disclaimer!
 
-This is ***researchware***. Don't expect it to be easy to set up, nor use. The instructions will only be refined for greater ease of use once we begin work on the [OST2](https://ost2.fyi) Bluetooth classes.
+The code in this repository is ***researchware***. That means **its purpose is primarily to prove that the results from past research are real, and to allow replication of results*** (in this case, the [Blue2thprinting](https://darkmentor.com/publication/2023-11-hardweario/) talk.) This code is not meant to be used as a production tool, nor is it optimized for performance, ease of use, or anything else. It is only meant to be used by researchers looking to replicate, or expand, on this work.
 
 # Assumed Hardware
 (If you do not have any of the below, you will need to purchase.)
