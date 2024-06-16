@@ -19,7 +19,7 @@ sql_BLE2th_LL_VERSION_IND = "INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bd
 sql_BLE2th_LL_UNKNOWN_RSP = "INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s)"
 sql_BLE2th_LL_FEATUREs    = "INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s)"
 sql_BLE2th_LL_PHYs        = "INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
-sql_BLE2th_LL_LENGTHs     = "INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time, raw_bytes) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+sql_BLE2th_LL_LENGTHs     = "INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
 sql_BLE2th_LL_PING_RSP    = "INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s)"
 file_path = './BLE_2THPRINT_dedup.log'
 
@@ -94,11 +94,11 @@ with open(file_path, 'r') as file:
             print("\tMaxTxOctets: 0x%04X" % max_tx_octets)
             print("\tMaxTxTime: 0x%04X" % max_tx_time)
 
-            raw_byte_string = '_'.join(tokens[5:])
-            print('\traw_byte_string: %s' % raw_byte_string)
+            #raw_byte_string = '_'.join(tokens[5:])
+            #print('\traw_byte_string: %s' % raw_byte_string)
 
             # Define the parameter values to be inserted
-            values = (bdaddr_type, bdaddr, int(tokens[4], 16), max_rx_octets, max_rx_time, max_tx_octets, max_tx_time, raw_byte_string)
+            values = (bdaddr_type, bdaddr, int(tokens[4], 16), max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
             # Execute the SQL statement
             cursor.execute(sql_BLE2th_LL_LENGTHs, values)
             # Commit the changes to the database
