@@ -67,8 +67,12 @@ print("Resulting Dictionary for CONNECT_IND:")
 for key, value in result_dict_CONNECT.items():
     print(f"{key}: {value}")
 
-print("\nResulting Dictionary for LL_FEATUREs:")
+print("\nResulting Dictionary for LL_FEATURE_REQs:")
 for key, value in result_dict_FEATURE_REQ.items():
+    print(f"{key}: {value}")
+
+print("\nResulting Dictionary for LL_FEATURE_RSPs:")
+for key, value in result_dict_FEATURE_RSP.items():
     print(f"{key}: {value}")
 '''
 
