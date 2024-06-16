@@ -62,8 +62,8 @@ for key, value in result_dict_VERSION.items():
 '''
 
 # Write the CSV lines to a file appropriate for direct import to mysql BLE2th_LL_VERSION_IND table via a CLI mysql invocation
-with open('/tmp/LL_VERSION_IND_uniq_done.csv', 'w', newline='') as csvfile:
-    csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+with open('/tmp/LL_VERSION_IND_uniq_done.csv', 'w', newline='\n') as csvfile:
+    csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 
     for device_bdaddr, device_bdaddr_type in result_dict_CONNECT.items():
         if device_bdaddr in result_dict_VERSION:

@@ -47,7 +47,7 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_other_le_
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_appearance (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, appearance INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, appearance));"
 
-mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_connect_interval (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, interval_min SMALLINT NOT NULL, interval_max SMALLINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max));"
+mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_connect_interval (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, interval_min SMALLINT UNSIGNED NOT NULL, interval_max SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max));"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_UUID16_service_solicit (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, str_UUID16s VARCHAR(480), PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, str_UUID16s));"
 

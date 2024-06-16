@@ -14,4 +14,4 @@ else
     sed -i "s/\"0x000f\",$/&\"XXXXXX\"/" /tmp/EIR_bdaddr_to_MSD_uniq.csv
 fi
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_MSD_uniq.csv' REPLACE INTO TABLE EIR_bdaddr_to_MSD FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, @device_BT_CID, MSD) SET device_BT_CID = CAST(CONV(REPLACE(@device_BT_CID, '0x', ''), 16, 10) AS UNSIGNED);"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_MSD_uniq.csv' REPLACE INTO TABLE EIR_bdaddr_to_MSD FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, @device_BT_CID, manufacturer_specific_data) SET device_BT_CID = CAST(CONV(REPLACE(@device_BT_CID, '0x', ''), 16, 10) AS UNSIGNED);"
