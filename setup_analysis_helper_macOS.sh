@@ -29,7 +29,7 @@ echo "==========================================================================
 git submodule update --init --recursive
 
 # Next commands assume they run from the Analysis folder
-cd ./Analysis
+cd ./Analysis/one_time_initialization
 
 echo ""
 echo "==================================="
@@ -38,7 +38,7 @@ echo "==================================="
 #### This will create the less-privileged MySQL user "user", with a password of "a", under which subsequent commands will be run.
 #### It will then create all the database tables where imported data will be stored
 #### It will give an error message (that can be ignored) if the user or tables are already created
-./one_time_initialization/initialize_database.sh
+./initialize_database.sh
 
 echo ""
 echo "===================================="
@@ -47,7 +47,7 @@ echo "===================================="
 #### This will just import a
 #### The oui.txt came from "https://standards-oui.ieee.org/oui/oui.txt"
 #### oui.txt will periodically be updated
-./one_time_initialization/process_OUI_lists.sh ./one_time_initialization/oui.txt
+./translator_fill_IEEE_bdaddr_to_company.sh ./oui.txt
 echo "==========================================================="
 echo "You should see 10 (XEROX) IEEE OUIs after the next command:"
 echo "==========================================================="
@@ -57,11 +57,21 @@ echo ""
 echo "==================================================="
 echo "Filling database with Bluetooth 16-bit company IDs."
 echo "==================================================="
-./one_time_initialization/translator_fill_UUID16_to_company.sh
+./translator_fill_UUID16_to_company.sh
 echo "======================================================================"
 echo "You should see 10 16-bit Bluetooth company IDs after the next command:"
 echo "======================================================================"
 mysql -u user -pa --database='bt' --execute="SELECT * from UUID16_to_company limit 10;"
+
+echo ""
+echo "==================================================================================================="
+echo "Filling database with BLEScope research paper's mappings between UUI128s and Android package names."
+echo "==================================================================================================="
+python3 ./translator_fill_BLEScope_UUID128s.py
+echo "============================================================================================"
+echo "You should see 10 mappings between UUI128s and Android package names after the next command:"
+echo "============================================================================================"
+mysql -u user -pa --database='bt' --execute="SELECT * from BLEScope_UUID128s limit 10;"
 
 echo ""
 echo "[--------------------------------------------------]"
