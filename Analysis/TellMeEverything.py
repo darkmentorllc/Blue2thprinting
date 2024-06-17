@@ -15,14 +15,7 @@ import struct
 # Load JSON data from file
 json_file = './Metadata_v2.json'
 with open(json_file, 'r') as f:
-    nameprint_v2_data = json.load(f)
-
-#for nameprint, metadata in nameprint_v2_data.items():
-#    print(f"{nameprint}")
-#    print(f"{metadata}")
-#    if(metadata['2thprint_Chip_Maker']):
-#       print("This nameprint has ChipMaker data!")
-
+    metadata_v2 = json.load(f)
 
 ########################################
 # BEGIN FILL DATA FROM CSVs ############
@@ -2112,6 +2105,24 @@ def device_has_GATT_info(bdaddr):
     else:
         return 0;
 
+# Returns 0 if there is no LL_VERSION_IND info for this BDADDR, else returns 1
+def device_has_LL_VERSION_IND_info(bdaddr):
+    version_query = f"SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+    if(len(version_result) != 0):
+        return 1
+    else:
+        return 0
+
+# Returns 0 if there is no LMP_VERSION_RES info for this BDADDR, else returns 1
+def device_has_LMP_VERSION_RES_info(bdaddr):
+    version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+    if(len(version_result) != 0):
+        return 1
+    else:
+        return 0
+
 def print_associated_android_package_names(type, indent, UUID128):
     if(type == "Service"):
         query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 1";
@@ -2188,11 +2199,11 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
         print("")
 
-    if(not hideBLEScopedata):
-        print("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
-        for UUID128 in unknown_UUID128_hash.keys():
-            (type, indent) = unknown_UUID128_hash[UUID128]
-            print_associated_android_package_names(type, indent, UUID128)
+        if(not hideBLEScopedata):
+            print("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
+            for UUID128 in unknown_UUID128_hash.keys():
+                (type, indent) = unknown_UUID128_hash[UUID128]
+                print_associated_android_package_names(type, indent, UUID128)
 
     if(len(GATT_services_result) == 0):
         print("\tNo GATT Information found.")
@@ -2207,6 +2218,12 @@ def print_ChipMakerPrint(bdaddr):
 
     print(f"\t2thprint_ChipMakerPrint:")
 
+    #===============#
+    # IEEE OUI data #
+    #===============#
+    # Find out what type of BDADDR this is
+
+
     #=====================#
     # LL_VERSION_IND data #
     #=====================#
@@ -2220,8 +2237,8 @@ def print_ChipMakerPrint(bdaddr):
         no_results_found = False
         # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for device_BT_CID in version_result:
-            print(f"\t\tFrom LL_VERSION_IND: Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+        for (device_BT_CID,) in version_result:
+            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
 
     #==========================#
     # LMP_VERSION_REQ/RSP data #
@@ -2236,8 +2253,8 @@ def print_ChipMakerPrint(bdaddr):
         no_results_found = False
         # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for device_BT_CID in version_result:
-            print(f"\t\tFrom LMP_VERSION_REQ/RSP: Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+        for (device_BT_CID,) in version_result:
+            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
 
     #================#
     # NamePrint data #
@@ -2257,37 +2274,142 @@ def print_ChipMakerPrint(bdaddr):
     if(len(rsp_result) > 0): we_have_a_name = True
 
     # Query for LE_bdaddr_to_name table
-    le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    le_query = f"SELECT device_name, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     le_result = execute_query(le_query)
     if(len(le_result) > 0): we_have_a_name = True
 
     if(we_have_a_name):
-        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
+        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data and a NamePrint
         # and if so, try that nameprint against the name(s) for this device
-        for nameprint, metadata in nameprint_v2_data.items():
-            # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
-            regex_pattern = nameprint.replace('\\\\\\', '\\')
-            if(metadata['2thprint_Chip_Maker']):
+        for device_model, metadata in metadata_v2.items():
+            if(metadata['2thprint_Chip_Maker'] and metadata['2thprint_NamePrint']):
+                # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+                regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
-                    for name in eir_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                    for (name,) in eir_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)")
                             no_results_found = False
                 if(len(rsp_result) > 0):
-                    for name in rsp_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                    for (name,) in rsp_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)")
                             no_results_found = False
                 if(len(le_result) > 0):
-                    for name in le_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                    for name,le_evt_type in le_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})")
                             no_results_found = False
 
     if(no_results_found):
         print(f"\t\tNo ChipMakerPrint(s) found.")
 
     print()
+
+# We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
+def chip_by_sub_version(sub_version, device_BT_CID):
+    if(device_BT_CID == 15):
+        if(sub_version == 0x6308): 
+            return "Broadcom BCM4387C2" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6308.py
+        if(sub_version == 0x6206):
+            return "Broadcom BCM4345C1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6206.py
+        if(sub_version == 0x617e):
+            return "Broadcom BCM4345B0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x617e.py
+        if(sub_version == 0x6119):
+            return "Broadcom BCM4345C0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6119.py
+        if(sub_version == 0x6109):
+            return "Broadcom BCM4335C0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6109.py
+        if(sub_version == 0x6103):
+            return "Broadcom BCM4355C0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6103.py
+        if(sub_version == 0x422a):
+            return "Broadcom BCM2070B0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x422a.py
+        if(sub_version == 0x4228):
+            return "Broadcom BCM4378B1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x4228.py
+        if(sub_version == 0x420e):
+            return "Broadcom BCM4347B1 or Cypress CYW20739B1 or Broadcom BCM4349B1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x420e.py & https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x420e_iphone.py & https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4208):
+            return "Cypress CYW20735B1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x4208.py
+        if(sub_version == 0x4196):
+            return "Broadcom BCM20702A2" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x4196.py
+        if(sub_version == 0x411a):
+            return "Broadcom BCM4347B0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x411a.py
+        if(sub_version == 0x4109):
+            return "Broadcom BCM4345B0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x4109.py
+        if(sub_version == 0x3040):
+            return "Broadcom BCM4364B3" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x3040.py
+        if(sub_version == 0x3032):
+            return "Broadcom BCM4364B3" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x3032.py
+        if(sub_version == 0x240f):
+            return "Broadcom BCM4358A3" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x240f.py
+        if(sub_version == 0x2230):
+            return "Broadcom BCM20703A2" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x2230.py
+        if(sub_version == 0x220e):
+            return "Broadcom BCM20702A1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x220e.py
+        if(sub_version == 0x220c):
+            return "Cypress CYW20819A1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x220c.py
+        if(sub_version == 0x220b):
+            return "Cypress CYW20706" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x220b.py
+        if(sub_version == 0x2209):
+            return "Broadcom BCM43430A1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x2209.py
+        if(sub_version == 0x21d0):
+            return "Broadcom BCM2046" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x21d0.py
+        if(sub_version == 0x21a9):
+            return "Broadcom BCM20703A1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x21a9.py
+        if(sub_version == 0x2056):
+            return "Broadcom BCM4364B0" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x2056.py
+        if(sub_version == 0x203a):
+            return "Broadcom BCM4377B3" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x203a.py
+        if(sub_version == 0x2033):
+            return "Broadcom BCM4377B3" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x2033.py
+        if(sub_version == 0x1111):
+            return "Broadcom BCM4375B1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x1111.py
+        if(sub_version == 0x4103):
+            return "Broadcom BCM4330B1" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x410d):
+            return "Broadcom BCM4334B0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x410e):
+            return "Broadcom BCM43341B0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4204):
+            return "Broadcom BCM2076B1" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4406):
+            return "Broadcom BCM4324B3" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4606):
+            return "Broadcom BCM4324B5" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x610c):
+            return "Broadcom BCM4354" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x2122):
+            return "Broadcom BCM4343A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x6606):
+            return "Broadcom BCM4345C0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x230f):
+            return "Broadcom BCM4356A2" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x420d):
+            return "Broadcom BCM4349B1" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4217):
+            return "Broadcom BCM4329B1" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x6106):
+            return "Broadcom BCM4359C0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x4106):
+            return "Broadcom BCM4335A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x410c):
+            return "Broadcom BCM43430B0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x2119):
+            return "Broadcom BCM4373A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c
+        if(sub_version == 0x2105):
+            return "Broadcom BCM20703A1" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB (e.g. it was for 0x220e)
+        if(sub_version == 0x210b):
+            return "Broadcom BCM43142A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+        if(sub_version == 0x2112):
+            return "Broadcom BCM4314A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+        if(sub_version == 0x2118):
+            return "Broadcom BCM20702A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+        if(sub_version == 0x2126):
+            return "Broadcom BCM4335A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+        if(sub_version == 0x6607):
+            return "Broadcom BCM4350C5" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+
+    # If we get here, return empty string denoting nothing found
+    return ""
 
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
@@ -2298,6 +2420,42 @@ def print_ChipPrint(bdaddr):
 
     print(f"\t2thprint_ChipPrint:")
 
+    #=====================#
+    # LL_VERSION_IND data #
+    #=====================#
+
+    # We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
+
+    version_query = f"SELECT ll_sub_version, device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+
+    if(len(version_result) != 0):
+        no_results_found = False
+        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (ll_sub_version,device_BT_CID) in version_result:
+            chip_name = chip_by_sub_version(ll_sub_version, device_BT_CID)
+            if(chip_name != ""):
+                print(f"\t\t{chip_name} -> From LL_VERSION_IND info (BLE2th_LL_VERSION_IND table)")
+
+    #==========================#
+    # LMP_VERSION_REQ/RSP data #
+    #==========================#
+
+    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+
+    version_query = f"SELECT lmp_sub_version, device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+
+    if(len(version_result) != 0):
+        no_results_found = False
+        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (lmp_sub_version, device_BT_CID) in version_result:
+            chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
+            if(chip_name != ""):
+                print(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (BTC2th_LMP_version_res table)")
+
     #================#
     # NamePrint data #
     #================#
@@ -2316,31 +2474,31 @@ def print_ChipPrint(bdaddr):
     if(len(rsp_result) > 0): we_have_a_name = True
 
     # Query for LE_bdaddr_to_name table
-    le_query = f"SELECT device_name FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    le_query = f"SELECT device_name, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     le_result = execute_query(le_query)
     if(len(le_result) > 0): we_have_a_name = True
 
     if(we_have_a_name):
         # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
-        for nameprint, metadata in nameprint_v2_data.items():
-            # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
-            regex_pattern = nameprint.replace('\\\\\\', '\\')
-            if(metadata['2thprint_Chip_Maker']):
+        for nameprint, metadata in metadata_v2.items():
+            if(metadata['2thprint_Chip'] and metadata['2thprint_NamePrint']):
+                # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+                regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
-                    for name in eir_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                    for (name,) in eir_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)")
                             no_results_found = False
                 if(len(rsp_result) > 0):
-                    for name in rsp_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                    for (name,) in rsp_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)")
                             no_results_found = False
                 if(len(le_result) > 0):
-                    for name in le_result:
-                        if re.search(regex_pattern, name[0]):
-                            print(f"\t\tFrom NamePrint match on {regex_pattern} (LE_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                    for name, le_evt_type in le_result:
+                        if re.search(regex_pattern, name):
+                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})")
                             no_results_found = False
 
     if(no_results_found):
@@ -2369,6 +2527,8 @@ def main():
     parser.add_argument('--UUID128stats', type=str, default='', help='Parse the UUID128 data, and output statistics about the most common entries')
     parser.add_argument('--UUID16stats', type=str, default='', help='Parse the UUID16 data, and output statistics about the most common entries')
     parser.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
+    parser.add_argument('--require_LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
+    parser.add_argument('--require_LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
     parser.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     args = parser.parse_args()
@@ -2386,6 +2546,8 @@ def main():
     uuid16stats = args.UUID16stats
     uuid128stats = args.UUID128stats
     requireGATT = args.requireGATT
+    require_LL_VERSION_IND = args.require_LL_VERSION_IND
+    require_LMP_VERSION_RES = args.require_LMP_VERSION_RES
     hideBLEScopedata = args.hideBLEScopedata
 
     # Import any data from CSV files as necessary
@@ -2499,6 +2661,12 @@ def main():
     for bdaddr in bdaddrs:
         if(requireGATT):
             if(device_has_GATT_info(bdaddr) != 1):
+                continue
+        if(require_LL_VERSION_IND):
+            if(device_has_LL_VERSION_IND_info(bdaddr) != 1):
+                continue
+        if(require_LMP_VERSION_RES):
+            if(device_has_LMP_VERSION_RES_info(bdaddr) != 1):
                 continue
         print("================================================================================")
         print(f"For bdaddr = {bdaddr}:")

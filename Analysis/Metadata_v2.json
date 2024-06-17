@@ -1,10 +1,11 @@
 {
-	"^S[0-9a-f]{16}C$": {
+	"Tesla Model 3 or Y": {
 		"comment": "This is close to the maximum data we would like to have about a device. But if new fields are determined later that we'd like to add, they can be added too.",
 		"2thprint_Chip": "TI CC2640",
                 "2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
 		"2thprint_Chip_Maker": "Texas Instruments",
 		"2thprint_Device_Model": "Tesla Model 3 or Y",
+		"2thprint_NamePrint": "^S[0-9a-f]{16}C$",
                 "short_description": "An electric car, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car.",
 		"company_website": "https://tesla.com",
                 "security_research_urls": {
@@ -13,28 +14,34 @@
 		},
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
+		"evidence_URL": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
 		"confirmation_method": "FCC_InternalPhotos",
+		"confirmation_confidence": "10/10",
 		"FCC_ID": "2AEIM-1089773",
 		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1089773/External-Photos/External-Photos-3491653.pdf",
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf"
 	},
-	"^Tesla Keyfob$": {
+	"Tesla Keyfob": {
                 "2thprint_Chip": "TI CC2640",
                 "2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
                 "2thprint_Chip_Maker": "Texas Instruments",
                 "2thprint_Device_Model": "Tesla Keyfob",
+		"2thprint_NamePrint": "^Tesla Keyfob$",
                 "short_description": "Keyfob for Tesla electric cars, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car. For use by those who can't, or don't want to, use their phone as a proximity key.",
 		"company_website": "https://tesla.com",
                 "security_research_urls": {
-			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://darkmentor.com/bt.html#Project%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
 		},
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
+		"evidence_URL": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf",
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
 		"confirmation_method": "FCC_InternalPhotos",
+		"confirmation_confidence": "10/10",
 		"FCC_ID": "2AEIM-1133148",
 		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1133148/External-Photos/External-Photos-3989912.pdf",
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf"
