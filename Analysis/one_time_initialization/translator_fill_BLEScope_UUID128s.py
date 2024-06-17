@@ -104,6 +104,8 @@ with open(json_file, 'r') as f:
 
 # Iterate over each entry in the JSON data
 for key, value in data.items():
+    if(key == "CREDITS"):
+        continue
     pkg = value['pkg']
     uuids = value['uuids']
     
