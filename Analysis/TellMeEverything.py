@@ -2,10 +2,27 @@
 
 import argparse
 import mysql.connector
+import json
+import csv
 import yaml
 import re
-import csv
 import struct
+
+########################################
+# BEGIN FILL DATA FROM JSON ############
+########################################
+
+# Load JSON data from file
+json_file = './Metadata_v2.json'
+with open(json_file, 'r') as f:
+    nameprint_v2_data = json.load(f)
+
+#for nameprint, metadata in nameprint_v2_data.items():
+#    print(f"{nameprint}")
+#    print(f"{metadata}")
+#    if(metadata['2thprint_Chip_Maker']):
+#       print("This nameprint has ChipMaker data!")
+
 
 ########################################
 # BEGIN FILL DATA FROM CSVs ############
@@ -2181,6 +2198,157 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         print("\tNo GATT Information found.")
         print("")
 
+# This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
+# If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
+def print_ChipMakerPrint(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    no_results_found = True
+
+    print(f"\t2thprint_ChipMakerPrint:")
+
+    #=====================#
+    # LL_VERSION_IND data #
+    #=====================#
+
+    # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
+
+    version_query = f"SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+
+    if(len(version_result) != 0):
+        no_results_found = False
+        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for device_BT_CID in version_result:
+            print(f"\t\tFrom LL_VERSION_IND: Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+
+    #==========================#
+    # LMP_VERSION_REQ/RSP data #
+    #==========================#
+
+    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+
+    version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
+    version_result = execute_query(version_query)
+
+    if(len(version_result) != 0):
+        no_results_found = False
+        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for device_BT_CID in version_result:
+            print(f"\t\tFrom LMP_VERSION_REQ/RSP: Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+
+    #================#
+    # NamePrint data #
+    #================#
+
+    # First see if we have a name for this device
+    we_have_a_name = False
+
+    # Query for EIR_bdaddr_to_name table
+    eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    eir_result = execute_query(eir_query)
+    if(len(eir_result) > 0): we_have_a_name = True
+
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    rsp_result = execute_query(rsp_query)
+    if(len(rsp_result) > 0): we_have_a_name = True
+
+    # Query for LE_bdaddr_to_name table
+    le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    le_result = execute_query(le_query)
+    if(len(le_result) > 0): we_have_a_name = True
+
+    if(we_have_a_name):
+        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
+        # and if so, try that nameprint against the name(s) for this device
+        for nameprint, metadata in nameprint_v2_data.items():
+            # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+            regex_pattern = nameprint.replace('\\\\\\', '\\')
+            if(metadata['2thprint_Chip_Maker']):
+                if(len(eir_result) > 0):
+                    for name in eir_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                            no_results_found = False
+                if(len(rsp_result) > 0):
+                    for name in rsp_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                            no_results_found = False
+                if(len(le_result) > 0):
+                    for name in le_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern}: {metadata['2thprint_Chip_Maker']}")
+                            no_results_found = False
+
+    if(no_results_found):
+        print(f"\t\tNo ChipMakerPrint(s) found.")
+
+    print()
+
+# This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
+# If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
+def print_ChipPrint(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    no_results_found = True
+
+    print(f"\t2thprint_ChipPrint:")
+
+    #================#
+    # NamePrint data #
+    #================#
+
+    # First see if we have a name for this device
+    we_have_a_name = False
+
+    # Query for EIR_bdaddr_to_name table
+    eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    eir_result = execute_query(eir_query)
+    if(len(eir_result) > 0): we_have_a_name = True
+
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    rsp_result = execute_query(rsp_query)
+    if(len(rsp_result) > 0): we_have_a_name = True
+
+    # Query for LE_bdaddr_to_name table
+    le_query = f"SELECT device_name FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    le_result = execute_query(le_query)
+    if(len(le_result) > 0): we_have_a_name = True
+
+    if(we_have_a_name):
+        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
+        # and if so, try that nameprint against the name(s) for this device
+        for nameprint, metadata in nameprint_v2_data.items():
+            # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+            regex_pattern = nameprint.replace('\\\\\\', '\\')
+            if(metadata['2thprint_Chip_Maker']):
+                if(len(eir_result) > 0):
+                    for name in eir_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                            no_results_found = False
+                if(len(rsp_result) > 0):
+                    for name in rsp_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                            no_results_found = False
+                if(len(le_result) > 0):
+                    for name in le_result:
+                        if re.search(regex_pattern, name[0]):
+                            print(f"\t\tFrom NamePrint match on {regex_pattern} (LE_bdaddr_to_name table): {metadata['2thprint_Chip']}")
+                            no_results_found = False
+
+    if(no_results_found):
+        print(f"\t\tNo ChipPrint(s) found.")
+
+    print()
+
+
 ########################################
 # MAIN #################################
 ########################################
@@ -2334,6 +2502,8 @@ def main():
                 continue
         print("================================================================================")
         print(f"For bdaddr = {bdaddr}:")
+        print_ChipPrint(bdaddr)
+        print_ChipMakerPrint(bdaddr)
         print_company_name_from_bdaddr(bdaddr)
         print_classic_EIR_CID_info(bdaddr)
         print_device_names(bdaddr, nametype)
