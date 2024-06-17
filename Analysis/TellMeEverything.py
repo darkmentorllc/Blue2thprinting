@@ -1266,7 +1266,7 @@ def print_class_of_device(bdaddr):
 # Device Name
 ########################################
 
-# !!!FIXME: For devices with () in their name, like "", 
+# !!!FIXME: For devices with () in their name, like "Galaxy Watch3 (0462)", 
 # the nameprint to match in MySQL needs to be "^Galaxy Watch3 \\\([A-F0-9]{4}\\\)$
 # however, it only matches in Python regex if it's got 1 slash instead of 3. like "^Galaxy Watch3 \([A-F0-9]{4}\)$
 # that leads to failure to match on values from the NAMEPRINT_DB.csv, even when something could have been looked up by the nameregex
@@ -2095,7 +2095,20 @@ def device_has_GATT_info(bdaddr):
     else:
         return 0;
 
-def print_GATT_info(bdaddr):
+def print_associated_android_package_names(type, indent, UUID128):
+    if(type == "Service"):
+        query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 1";
+    if(type == "Characteristic"):
+        query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 2";
+
+    print(f"{indent}{type} {UUID128}:")
+    print(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
+    android_pkgs_result = execute_query(query)
+    for (pkg,) in android_pkgs_result:
+        print(f"{indent}\t{pkg}")
+    print()
+
+def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
     query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
@@ -2117,16 +2130,24 @@ def print_GATT_info(bdaddr):
     if(len(GATT_services_result) != 0):
         print("\tGATT Information:")
 
+    unknown_UUID128_hash = {}
     # TODO: It would be nice if this printed out characteristics even when there's no corresponding descriptor within the given handle range (example: cf:3a:ad:09:ca:14)
     # Print semantically-meaningful information
     for begin_handle,end_handle,UUID128 in GATT_services_result:
-        print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
+        UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
+        print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({UUID128_description})")
+        # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
+        if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+            unknown_UUID128_hash[UUID128] = ("Service","\t\t\t")
         for descriptor_handle, UUID128_2 in GATT_descriptors_result:
             if(descriptor_handle <= end_handle and descriptor_handle >= begin_handle):
                 print(f"\t\t\tGATT Descriptor: {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
                 for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
                     if(descriptor_handle == char_value_handle):
-                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
+                        UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
+                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({UUID128_description}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
+                        if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+                            unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
                         if(is_characteristic_readable(char_properties)):
                             if(char_value_handle in char_byte_vals_dict):
                                 print(f"\t\t\t\tGATT Characteristic value read as {char_byte_vals_dict[char_value_handle]}")
@@ -2149,6 +2170,12 @@ def print_GATT_info(bdaddr):
                 print(f"\t\tGATT Characteristic: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}")
                 file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
         print("")
+
+    if(not hideBLEScopedata):
+        print("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
+        for UUID128 in unknown_UUID128_hash.keys():
+            (type, indent) = unknown_UUID128_hash[UUID128]
+            print_associated_android_package_names(type, indent, UUID128)
 
     if(len(GATT_services_result) == 0):
         print("\tNo GATT Information found.")
@@ -2173,7 +2200,8 @@ def main():
     parser.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
     parser.add_argument('--UUID128stats', type=str, default='', help='Parse the UUID128 data, and output statistics about the most common entries')
     parser.add_argument('--UUID16stats', type=str, default='', help='Parse the UUID16 data, and output statistics about the most common entries')
-    parser.add_argument('--requireGATT', type=str, default='', help='If this argument is given with a value, only print out information for devices which have GATT info')
+    parser.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
+    parser.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     args = parser.parse_args()
     bdaddr = args.bdaddr
@@ -2190,6 +2218,7 @@ def main():
     uuid16stats = args.UUID16stats
     uuid128stats = args.UUID128stats
     requireGATT = args.requireGATT
+    hideBLEScopedata = args.hideBLEScopedata
 
     # Import any data from CSV files as necessary
     create_nameprint_CSV_data()
@@ -2300,7 +2329,7 @@ def main():
 
 
     for bdaddr in bdaddrs:
-        if(requireGATT != ""):
+        if(requireGATT):
             if(device_has_GATT_info(bdaddr) != 1):
                 continue
         print("================================================================================")
@@ -2316,7 +2345,7 @@ def main():
         print_appearance(bdaddr, nametype)
         print_manufacturer_data(bdaddr)
         print_class_of_device(bdaddr)
-        print_GATT_info(bdaddr)
+        print_GATT_info(bdaddr, hideBLEScopedata)
         print_BLE_2thprint(bdaddr)
         print_BTC_2thprint(bdaddr)
 
