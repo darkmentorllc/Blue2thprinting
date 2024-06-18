@@ -1350,6 +1350,9 @@ def print_uuid16s(device_bdaddr):
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
+            if(uuid16 == ''):
+                print("\t\tEmpty list present")
+                continue
             service_by_uuid16 = get_uuid16_service_string(uuid16)
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
@@ -1371,6 +1374,9 @@ def print_uuid16s(device_bdaddr):
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
+            if(uuid16 == ''):
+                print("\t\tEmpty list present")
+                continue
             service_by_uuid16 = get_uuid16_service_string(uuid16)
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
@@ -2211,81 +2217,11 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         print("\tNo GATT Information found.")
         print("")
 
-# The ChipMaker_names will be used as regexp expressions in MySQL queries to find the associated IEEE OUIs
-ChipMaker_names = ['^Actions', 'Airoha Technology Corp', 'Ambiq', 'Atheros Communications', 'Apple, Inc', 'Barrot Technology', 'beken', 'Broadcom', 'Cypress Semiconductor', 'Dialog Semiconductor', 'HiSilicon', 'Infineon', 'Intel Corp', 'Marvell', 'MediaTek', 'Nordic Semiconductor', 'NXP', '^ON Semiconductor', 'PHYPLUS', 'Qualcomm', 'Realtek', 'Samsung', 'Shenzhen Goodix Technology', 'Silicon Laboratories', 'Spreadtrum Communications', 'Telink Semiconductor', 'Texas Instruments', 'Vimicro', 'Yichip Microelectronics']
-ChipMaker_OUI_hash = {}
+########################################
+# Metadata v2 helper functions
+########################################
 
-def create_ChipMaker_OUI_hash():    
-    for company in ChipMaker_names:
-        oui_query = f"SELECT device_bdaddr,company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP '{company}'"
-        oui_result = execute_query(oui_query)
-        for (oui,company_name) in oui_result:
-            ChipMaker_OUI_hash[oui.lower()] = company_name # I'm using the IEEE name instead of the company regex since it will generally be longer and more verbose, since I cut down some regexes to match both IEEE OUIs and BT CIDs
-
-    #print(ChipMaker_OUI_hash)
-
-
-# This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
-# If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
-def print_ChipMakerPrint(bdaddr):
-    bdaddr = bdaddr.strip().lower()
-
-    no_results_found = True
-
-    print(f"\t2thprint_ChipMakerPrint:")
-
-    #===============#
-    # IEEE OUI data #
-    #===============#
-    random = False
-
-    oui = bdaddr[0:8]
-    is_classic = is_bdaddr_classic(bdaddr)
-    if(is_classic):
-        if(oui in ChipMaker_OUI_hash.keys()):
-            print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
-            no_results_found = False
-    else:
-        random = is_bdaddr_le_and_random(bdaddr)
-        if(not random):
-            if(oui in ChipMaker_OUI_hash.keys()):
-                print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
-                no_results_found = False
-
-    #=====================#
-    # LL_VERSION_IND data #
-    #=====================#
-
-    # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
-    ble_version_query = f"SELECT device_BT_CID, device_bdaddr_type FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
-    ble_version_result = execute_query(ble_version_query)
-
-    if(len(ble_version_result) != 0):
-        no_results_found = False
-        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
-        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,device_bdaddr_type) in ble_version_result:
-            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
-
-    #==========================#
-    # LMP_VERSION_REQ/RSP data #
-    #==========================#
-
-    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
-    btc_version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
-    btc_version_result = execute_query(btc_version_query)
-
-    if(len(btc_version_result) != 0):
-        no_results_found = False
-        # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
-        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,) in btc_version_result:
-            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
-
-    #================#
-    # NamePrint data #
-    #================#
-
+def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # First see if we have a name for this device
     we_have_a_name = False
 
@@ -2305,32 +2241,166 @@ def print_ChipMakerPrint(bdaddr):
     if(len(le_result) > 0): we_have_a_name = True
 
     if(we_have_a_name):
-        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data and a NamePrint
+        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
-        for device_model, metadata in metadata_v2.items():
-            if(metadata['2thprint_Chip_Maker'] and metadata['2thprint_NamePrint']):
+        for nameprint, metadata in metadata_v2.items():
+            if(metadata[metadata_type] and metadata['2thprint_NamePrint']):
                 # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
                 regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
                     for (name,) in eir_result:
                         if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)")
-                            no_results_found = False
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
                 if(len(rsp_result) > 0):
                     for (name,) in rsp_result:
                         if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)")
-                            no_results_found = False
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)"
                 if(len(le_result) > 0):
-                    for name,le_evt_type in le_result:
+                    for name, le_evt_type in le_result:
                         if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip_Maker']} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})")
-                            no_results_found = False
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+
+    # Else return an empty string to indicate we have no name or no match
+    return ""
+
+########################################
+# ChipMaker Info
+########################################
+
+# The ChipMaker_names_and_BT_CIDs will be used as regexp expressions in MySQL queries to find the associated IEEE OUIs
+# Note: Apple and Samsung have been observed to get their endianness wrong. But Samsung devices have also been observed using a completely arbitrary/wrong 0xFF19 value in the BT CID field of MSD...
+ChipMaker_names_and_BT_CIDs = {'^Actions': [0x03E0], 'Airoha Technology Corp': [0x94], 'Ambiq': [0x09AC], 'Atheros Communications': [0x45], 'Apple, Inc': [0x004C, 0x4C00], 'Barrot Technology': [0x08E7], 'beken': [0x05F0], 'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Broadcom': [0xF], 'Casambi': [0x03C3], 'Cypress Semiconductor': [0x131] , 'Dialog Semiconductor': [0xD2], 'Espressif': [0x02E5], 'HiSilicon': [0x010F], 'Hong Kong HunterSun': [0x01BF], 'Infineon': [0x09], 'Ingchips': [0x06AC], 'Intel Corp': [0x02], '^LAPIS': [0x0179], 'Marvell': [0x48], 'MediaTek': [0x46], 'Nordic Semiconductor': [0x59], 'NXP': [0x25], '^ON Semiconductor': [0x0362], 'PHYPLUS': [0x0504], 'Qualcomm': [0x0A, 0x1D], 'Realtek': [0x5D], 'RivieraWaves': [0x60], 'Samsung': [0x0075, 0x7500, 0xff19], 'Shanghai wuqi': [0x0A06], 'Shenzhen Goodix Technology': [0x04F7], 'Silicon Laboratories': [0x02FF], 'Spreadtrum Communications': [0x01EC], 'STMicro': [0x30], 'ST Microelectronics': [0x30], 'Telink Semiconductor': [0x0211], 'Texas Instruments': [0x0D], '^Universal Electronics': [0x93], 'Vimicro': [0x81], 'Yichip Microelectronics': [0x050E], 'Zhuhai Jieli': [0x05D6]}
+
+# Misc note: RivieraWaves licenses BT IP. E.g. to Espressif (so some Espressif things will have Espressif OUI & RivieraWaves BT CID) https://www.ceva-ip.com/press/espressif-licenses-and-deploys-ceva-bluetooth-in-esp32-iot-chip/
+# Misc note: Hong Kong HunterSun licensed BT IP from Andes: https://www.andestech.com/en/2018/06/20/huntersun-corporation-licenses-andescore-n1068a-s-for-its-hs6601-single-chip-bluetooth-soc-targeting-wireless-audio-applications/
+# Misc note: "ST Microelectronics*" in BT CIDs, "STMicro*" in IEEE OUIs :-/
+# As a reminder to myself, these are the company names & BT CIDs that don't have IEEE OUIs = {'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Casambi': [0x03C3], 'Hong Kong HunterSun': [0x01BF], 'Ingchips': [0x06AC], 'RivieraWaves': [0x60], 'Shanghai wuqi': [0x0A06], 'ST Microelectronics': [0x30], 'Zhuhai Jieli': [0x05D6]]
+
+ChipMaker_OUI_hash = {}
+
+def create_ChipMaker_OUI_hash():    
+    for company in ChipMaker_names_and_BT_CIDs.keys():
+        oui_query = f"SELECT device_bdaddr,company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP '{company}'"
+        oui_result = execute_query(oui_query)
+        for (oui,company_name) in oui_result:
+            ChipMaker_OUI_hash[oui.lower()] = company_name # I'm using the IEEE name instead of the company regex since it will generally be longer and more verbose, since I cut down some regexes to match both IEEE OUIs and BT CIDs
+
+    #print(ChipMaker_OUI_hash)
+
+# This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
+# If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
+def print_ChipMakerPrint(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    no_results_found = True
+
+    print(f"\t2thprint_ChipMakerPrint:")
+
+    #=====================#
+    # LL_VERSION_IND data #
+    #=====================#
+
+    # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
+    ble_version_query = f"SELECT device_BT_CID, device_bdaddr_type FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    ble_version_result = execute_query(ble_version_query)
+
+    if(len(ble_version_result) != 0):
+        no_results_found = False
+        # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (device_BT_CID,device_bdaddr_type) in ble_version_result:
+            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
+
+    #==========================#
+    # LMP_VERSION_REQ/RSP data #
+    #==========================#
+
+    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+    btc_version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
+    btc_version_result = execute_query(btc_version_query)
+
+    if(len(btc_version_result) != 0):
+        no_results_found = False
+        # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (device_BT_CID,) in btc_version_result:
+            print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
+
+    #================#
+    # NamePrint data #
+    #================#
+    str = lookup_metadata_by_nameprint(bdaddr, '2thprint_Chip_Maker')
+    if(str != ""):
+        print(str)
+        no_results_found = False
+
+    #===============#
+    # IEEE OUI data #
+    #===============#
+    random = False
+
+    oui = bdaddr[0:8]
+    is_classic = is_bdaddr_classic(bdaddr)
+    if(is_classic):
+        if(oui in ChipMaker_OUI_hash.keys()):
+            print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
+            no_results_found = False
+    else:
+        random = is_bdaddr_le_and_random(bdaddr)
+        if(not random):
+            if(oui in ChipMaker_OUI_hash.keys()):
+                print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
+                no_results_found = False
+
+    #=============================#
+    # GATT known chip-maker UUIDs #
+    #=============================#
+
+    #========================================#
+    # Manufacturer-Specific Data (MSD) - BTC #
+    #========================================#
+    # In general more companies tend to leave this uninitialized for BTC, than for BLE. So a BTC hit is more likely to be accurate than BLE
+    MSD_query = f"SELECT device_BT_CID FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    MSD_result = execute_query(MSD_query)
+
+    if(len(MSD_result) != 0):
+        # There could be multiple results if there are multiple distinct data blobs seen
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (device_BT_CID,) in MSD_result:
+            # Check if this CID corresponds to a ChipMaker
+            for name in ChipMaker_names_and_BT_CIDs.keys():
+                BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
+                if(device_BT_CID in BT_CID_list):
+                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (EIR_bdaddr_to_MSD table)")
+                    no_results_found = False
+    
+
+    #========================================#
+    # Manufacturer-Specific Data (MSD) - BLE #
+    #========================================#
+    MSD_query = f"SELECT device_BT_CID, le_evt_type FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    MSD_result = execute_query(MSD_query)
+
+    if(len(MSD_result) != 0):
+        # There could be multiple results if there are multiple distinct data blobs seen or multiple event types
+        # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
+        for (device_BT_CID,le_evt_type) in MSD_result:
+            # Check if this CID corresponds to a ChipMaker
+            for name in ChipMaker_names_and_BT_CIDs.keys():
+                BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
+                if(device_BT_CID in BT_CID_list):
+                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
+                    no_results_found = False
 
     if(no_results_found):
         print(f"\t\tNo ChipMakerPrint(s) found.")
 
+    # Final padding print of print_ChipMakerPrint()
     print()
+
+########################################
+# Chip Info
+########################################
 
 # We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
 def chip_by_sub_version(sub_version, device_BT_CID):
@@ -2485,52 +2555,38 @@ def print_ChipPrint(bdaddr):
     #================#
     # NamePrint data #
     #================#
-
-    # First see if we have a name for this device
-    we_have_a_name = False
-
-    # Query for EIR_bdaddr_to_name table
-    eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
-    if(len(eir_result) > 0): we_have_a_name = True
-
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    rsp_result = execute_query(rsp_query)
-    if(len(rsp_result) > 0): we_have_a_name = True
-
-    # Query for LE_bdaddr_to_name table
-    le_query = f"SELECT device_name, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    le_result = execute_query(le_query)
-    if(len(le_result) > 0): we_have_a_name = True
-
-    if(we_have_a_name):
-        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
-        # and if so, try that nameprint against the name(s) for this device
-        for nameprint, metadata in metadata_v2.items():
-            if(metadata['2thprint_Chip'] and metadata['2thprint_NamePrint']):
-                # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
-                regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
-                if(len(eir_result) > 0):
-                    for (name,) in eir_result:
-                        if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)")
-                            no_results_found = False
-                if(len(rsp_result) > 0):
-                    for (name,) in rsp_result:
-                        if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)")
-                            no_results_found = False
-                if(len(le_result) > 0):
-                    for name, le_evt_type in le_result:
-                        if re.search(regex_pattern, name):
-                            print(f"\t\t{metadata['2thprint_Chip']} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})")
-                            no_results_found = False
+    str = lookup_metadata_by_nameprint(bdaddr, '2thprint_Chip')
+    if(str != ""):
+        print(str)
+        no_results_found = False
 
     if(no_results_found):
         print(f"\t\tNo ChipPrint(s) found.")
 
     print()
+
+########################################
+# ModuleMaker Info
+########################################
+
+########################################
+# Module Info
+########################################
+
+########################################
+# DeviceMaker Info
+########################################
+
+########################################
+# DeviceModel Info
+########################################
+
+def print_DeviceModel(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    no_results_found = True
+
+    print(f"\t2thprint_DeviceModelPrint:")
 
 
 ########################################
@@ -2596,7 +2652,7 @@ def main():
     # It could be argued that the ChipMaker_OUI_hash should be pulled out and made static and just read from file.
     # But I'd consider that premature optimization for now.
     # TODO: consider doing this in the future if it adds too much overhead to every invocation
-    create_ChipMaker_OUI_hash() 
+    create_ChipMaker_OUI_hash()
 
     if(bdaddr is not None):
         bdaddrs = [bdaddr]
