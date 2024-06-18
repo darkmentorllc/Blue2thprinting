@@ -1021,12 +1021,14 @@ def get_bdaddr_type(bdaddr, random):
     bdaddr_type_str = ""
     if(random == 0):
         bdaddr_type_str = "Public"
-    elif(bdaddr[0] == 'f' or bdaddr[0] == 'e' or bdaddr[0] == 'd' or bdaddr[0] == 'c'):
+    elif(bdaddr[0].lower() == 'f' or bdaddr[0].lower() == 'e' or bdaddr[0] == 'd' or bdaddr[0].lower() == 'c'):
         bdaddr_type_str = "Random Static"
     elif(random == 1 and (bdaddr[0] == '7' or bdaddr[0] == '6' or bdaddr[0] == '5' or bdaddr[0] == '4')):
         bdaddr_type_str = "Random Resolvable"
     elif(random == 1 and (bdaddr[0] == '3' or bdaddr[0] == '2' or bdaddr[0] == '1' or bdaddr[0] == '0')):
         bdaddr_type_str = "Random Non-Resolvable"
+    else:
+        bdaddr_type_str = "Random Buggy?"
 
     return bdaddr_type_str
 
@@ -1678,7 +1680,7 @@ def is_bdaddr_le_and_random(bdaddr):
             return True
 
 def print_company_name_from_bdaddr(bdaddr):
-
+    bdaddr = bdaddr.strip().lower()
     random = False
 
     # Extract the first 3 octets from the bdaddr
@@ -2209,6 +2211,20 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         print("\tNo GATT Information found.")
         print("")
 
+# The ChipMaker_names will be used as regexp expressions in MySQL queries to find the associated IEEE OUIs
+ChipMaker_names = ['^Actions', 'Airoha Technology Corp', 'Ambiq', 'Atheros Communications', 'Apple, Inc', 'Barrot Technology', 'beken', 'Broadcom', 'Cypress Semiconductor', 'Dialog Semiconductor', 'HiSilicon', 'Infineon', 'Intel Corp', 'Marvell', 'MediaTek', 'Nordic Semiconductor', 'NXP', '^ON Semiconductor', 'PHYPLUS', 'Qualcomm', 'Realtek', 'Samsung', 'Shenzhen Goodix Technology', 'Silicon Laboratories', 'Spreadtrum Communications', 'Telink Semiconductor', 'Texas Instruments', 'Vimicro', 'Yichip Microelectronics']
+ChipMaker_OUI_hash = {}
+
+def create_ChipMaker_OUI_hash():    
+    for company in ChipMaker_names:
+        oui_query = f"SELECT device_bdaddr,company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP '{company}'"
+        oui_result = execute_query(oui_query)
+        for (oui,company_name) in oui_result:
+            ChipMaker_OUI_hash[oui.lower()] = company_name # I'm using the IEEE name instead of the company regex since it will generally be longer and more verbose, since I cut down some regexes to match both IEEE OUIs and BT CIDs
+
+    #print(ChipMaker_OUI_hash)
+
+
 # This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
 # If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipMakerPrint(bdaddr):
@@ -2221,23 +2237,34 @@ def print_ChipMakerPrint(bdaddr):
     #===============#
     # IEEE OUI data #
     #===============#
-    # Find out what type of BDADDR this is
+    random = False
 
+    oui = bdaddr[0:8]
+    is_classic = is_bdaddr_classic(bdaddr)
+    if(is_classic):
+        if(oui in ChipMaker_OUI_hash.keys()):
+            print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
+            no_results_found = False
+    else:
+        random = is_bdaddr_le_and_random(bdaddr)
+        if(not random):
+            if(oui in ChipMaker_OUI_hash.keys()):
+                print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
+                no_results_found = False
 
     #=====================#
     # LL_VERSION_IND data #
     #=====================#
 
     # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
+    ble_version_query = f"SELECT device_BT_CID, device_bdaddr_type FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    ble_version_result = execute_query(ble_version_query)
 
-    version_query = f"SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
-
-    if(len(version_result) != 0):
+    if(len(ble_version_result) != 0):
         no_results_found = False
         # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,) in version_result:
+        for (device_BT_CID,device_bdaddr_type) in ble_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
 
     #==========================#
@@ -2245,15 +2272,14 @@ def print_ChipMakerPrint(bdaddr):
     #==========================#
 
     # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+    btc_version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
+    btc_version_result = execute_query(btc_version_query)
 
-    version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
-
-    if(len(version_result) != 0):
+    if(len(btc_version_result) != 0):
         no_results_found = False
         # The only time there should be multiple results is if we got some corrupt data, which resulted in inserting N distinct entries into the db
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,) in version_result:
+        for (device_BT_CID,) in btc_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
 
     #================#
@@ -2566,6 +2592,11 @@ def main():
     create_gatt_descriptors_uuid16_names()
     create_gatt_characteristic_uuid16_names()
     create_appearance_yaml_data()
+
+    # It could be argued that the ChipMaker_OUI_hash should be pulled out and made static and just read from file.
+    # But I'd consider that premature optimization for now.
+    # TODO: consider doing this in the future if it adds too much overhead to every invocation
+    create_ChipMaker_OUI_hash() 
 
     if(bdaddr is not None):
         bdaddrs = [bdaddr]
