@@ -2221,6 +2221,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 # Metadata v2 helper functions
 ########################################
 
+# Returns a string to be printed by the caller
 def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # First see if we have a name for this device
     we_have_a_name = False
@@ -2241,10 +2242,10 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     if(len(le_result) > 0): we_have_a_name = True
 
     if(we_have_a_name):
-        # If we have a name, consult with the Nameprint_v2 data, and see if any entries have Chip Maker data
+        # If we have a name, consult with the metadata_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
-        for nameprint, metadata in metadata_v2.items():
-            if(metadata[metadata_type] and metadata['2thprint_NamePrint']):
+        for heading, metadata in metadata_v2.items():
+            if('2thprint_NamePrint' in metadata.keys() and metadata_type in metadata.keys()):
                 # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
                 regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
@@ -2262,6 +2263,101 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
 
     # Else return an empty string to indicate we have no name or no match
     return ""
+
+# Pass '2thprint_ChipMaker_GATTprint' as metadata_input_type and '2thprint_Chip_Maker' as metadata_output_type to find ChipMaker-specific GATT info
+# Returns a list of strings to be printed by the caller, or an empty list
+def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_type):
+    # First see if we have GATT data for this device
+    we_have_GATT = False
+
+    services_query = f"SELECT UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'"
+    services_result = execute_query(services_query)
+    if(len(services_result) > 0): we_have_GATT = True
+
+    chars_query = f"SELECT UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_result = execute_query(chars_query)
+    if(len(chars_result) > 0): we_have_GATT = True
+
+    le_adv_query = f"SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE device_bdaddr = '{bdaddr}'"
+    le_adv_result = execute_query(le_adv_query)
+    if(len(le_adv_result) > 0): we_have_GATT = True
+
+    le_adv2_query = f"SELECT str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE device_bdaddr = '{bdaddr}'"
+    le_adv2_result = execute_query(le_adv2_query)
+    if(len(le_adv2_result) > 0): we_have_GATT = True
+
+    eir_adv_query = f"SELECT str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE device_bdaddr = '{bdaddr}'"
+    eir_adv_result = execute_query(eir_adv_query)
+    if(len(eir_adv_result) > 0): we_have_GATT = True
+
+    str_list = []
+
+    if(we_have_GATT):
+        # If we have GATT data, consult with the metadata_v2 data, and see if any entries have Chip Maker data
+        # and if so, try that nameprint against the name(s) for this device
+        for heading, metadata in metadata_v2.items():
+            # Confirm that this entry even has what we're looking for
+            if('GATT_Vendor_Specific' in metadata.keys() and metadata_input_type in metadata.keys() and metadata_output_type in metadata.keys()):
+
+                # Iterate through every UUID128 from the metadata
+                for UUID128_metadata in metadata['GATT_Vendor_Specific'].keys():
+                    UUID128_metadata_ = UUID128_metadata.replace('-','').lower()
+
+                    if(len(services_result) > 0):
+                        # Iterate through every UUID128 from the GATT_services database query
+                        for (UUID128_db,) in services_result:
+                            # Remove dashes and make lowercase
+                            UUID128_db_ = UUID128_db.replace('-','').lower()
+                            if(UUID128_db_ == UUID128_metadata_):
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (GATT_services table)")
+
+                    if(len(chars_result) > 0):
+                        # Iterate through every UUID128 from the GATT_Characteristics database query
+                        for (UUID128_db,) in chars_result:
+                            # Remove dashes and make lowercase
+                            UUID128_db_ = UUID128_db.replace('-','').lower()
+                            if(UUID128_db_ == UUID128_metadata_):
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (GATT_characteristics table)")
+
+                    if(len(le_adv_result) > 0):
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # NOTE! : While I don't believe it currently is, treat every str_UUID128s entry as if it could be a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output for UUID128s is)
+                        for (str_UUID128s,) in le_adv_result:
+                            UUID128_list = str_UUID128s.split(",")
+                            if(len(UUID128_list) != 0):
+                                for UUID128_db in UUID128_list:
+                                    # Remove dashes and make lowercase
+                                    UUID128_db_ = UUID128_db.replace('-','').lower()
+                                    if(UUID128_db_ == UUID128_metadata_):
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s table)")
+
+                    if(len(le_adv2_result) > 0):
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # NOTE! : While I don't believe it currently is, treat every str_UUID128s entry as if it could be a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output for UUID128s is)
+                        for (str_UUID128s,) in le_adv2_result:
+                            UUID128_list = str_UUID128s.split(",")
+                            if(len(UUID128_list) != 0):
+                                for UUID128_db in UUID128_list:
+                                    # Remove dashes and make lowercase
+                                    UUID128_db_ = UUID128_db.replace('-','').lower()
+                                    if(UUID128_db_ == UUID128_metadata_):
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128_service_solicit table)")
+
+                    if(len(eir_adv_result) > 0):
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # NOTE! : Every str_UUID128s entry is a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output is)
+                        for (str_UUID128s,) in eir_adv_result:
+                            UUID128_list = str_UUID128s.split(",")
+                            if(len(UUID128_list) != 0):
+                                for UUID128_db in UUID128_list:
+                                    # Remove dashes and make lowercase
+                                    UUID128_db_ = UUID128_db.replace('-','').lower()
+                                    if(UUID128_db_ == UUID128_metadata_):
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (EIR_bdaddr_to_UUID128s table)")
+
+    # Else return an empty list to indicate we have no name or no match
+    return str_list
+
 
 ########################################
 # ChipMaker Info
@@ -2355,6 +2451,11 @@ def print_ChipMakerPrint(bdaddr):
     #=============================#
     # GATT known chip-maker UUIDs #
     #=============================#
+    str_list = lookup_metadata_by_GATTprint(bdaddr, '2thprint_ChipMaker_GATTprint', '2thprint_Chip_Maker')
+    if(len(str_list) > 0):
+        no_results_found = False
+        for str in str_list:
+            print(str)
 
     #========================================#
     # Manufacturer-Specific Data (MSD) - BTC #

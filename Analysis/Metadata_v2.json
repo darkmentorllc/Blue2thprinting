@@ -51,5 +51,81 @@
 		"FCC_ID": "2AEIM-1133148",
 		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1133148/External-Photos/External-Photos-3989912.pdf",
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf"
+	},
+	"Nordic GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Nordic Semiconductor",
+		"company_website": "https://www.nordicsemi.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Nordic UART": "https://web.archive.org/web/20240303153909/https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html",
+			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic insecure DFU 2": "https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
+			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic Experimental Buttonless DFU Service 2": ""
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"6e400001-b5a3-f393-e0a9-e50e24dcca9e": "Service: Nordic: UART",
+			"6e400002-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Receive (RX)",
+			"6e400003-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Transmit (TX)",
+			"00001530-1212-efde-1523-785feabcd123": "Service: Nordic: 'Legacy'(insecure) Device Firmware Update (DFU)",
+			"00001531-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Control Point",
+			"00001532-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Packet",
+			"00001534-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Version",
+			"0000fe59-0000-1000-8000-00805f9b34fb": "Service: Nordic: Secure Device Firmware Update (DFU)",
+			"8EC90001-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Control Point",
+			"8EC90002-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Packet",
+			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU"
+		}
+	},
+	"Silicon Labs GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Silicon Laboratories",
+		"company_website": "https://www.silabs.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
+			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
+			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
+			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)"
+		}
+	},
+	"Cambridge Silicon Radio (CSR) GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Cambridge Silicon Radio (CSR) (Acquired by Qualcomm)",
+		"company_website": "https://www.qualcomm.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"CSR: GAIA (Over The Air firmware update protocol) 1": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
+			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://github.com/Hypfer/fiio-bta30-protocol"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR: GAIA (Over The Air firmware update protocol)",
+			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Command Endpoint",
+			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Response Endpoint",
+			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Data Endpoint"
+		}
 	}
 }
