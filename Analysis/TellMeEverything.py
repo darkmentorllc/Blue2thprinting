@@ -1131,6 +1131,7 @@ def print_manufacturer_data(bdaddr):
         flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
         print(f"\t\t\t Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
         print(f"\t\tRaw Data: {manufacturer_specific_data}")
+        # TODO: DELETEME? I don't think there can be BT classic iBeacons can there?
         if({BT_CID_to_company_name(device_BT_CID)} == "Apple, Inc." and manufacturer_specific_data[0:3] == "0215"):
             print(f"\t\tApple iBeacon:")
         print(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_MSD)")
@@ -2479,19 +2480,21 @@ def print_ChipMakerPrint(bdaddr):
     #========================================#
     # Manufacturer-Specific Data (MSD) - BLE #
     #========================================#
-    MSD_query = f"SELECT device_BT_CID, le_evt_type FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    MSD_query = f"SELECT device_BT_CID, le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     MSD_result = execute_query(MSD_query)
 
     if(len(MSD_result) != 0):
         # There could be multiple results if there are multiple distinct data blobs seen or multiple event types
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,le_evt_type) in MSD_result:
+        for (device_BT_CID,le_evt_type, manufacturer_specific_data) in MSD_result:
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
-                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
                     no_results_found = False
+                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
+                    if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
+                        print(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
     if(no_results_found):
         print(f"\t\tNo ChipMakerPrint(s) found.")

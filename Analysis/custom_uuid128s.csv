@@ -82,6 +82,36 @@
 "6e400002b5a3f393e0a9e50e24dcca9e","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic UART RX Characteristic (https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html)",
 "6e400003b5a3f393e0a9e50e24dcca9e","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic UART TX Characteristic (https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html)",
 
+"000015301212efde1523785feabcd123","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service (https://nordicsemiconductor.github.io/IOSnRFConnect/assets/files/UserManual.pdf)"
+"000015311212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Control Point Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"000015321212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Packet Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"000015341212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Version Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"0000fe5900001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Secure DFU Service (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+"8EC90001F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Control Point Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+"8EC90002F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service,DFU Packet Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+
+# Also note: I saw one device (c4:5b:be:ae:59:22) which had an OUI of Espressif. There was only one though, so maybe just an error in recording whether it was a public BDADDR or not? (Or of course some vendors just pick whatever they want...)
+"f000ffc004514000b000000000000000","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc104514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc204514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc304514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc404514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+
+"1D14D6EEFD634FA1BFA48F47B42119F0","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Silicon Labs: OTA Firmware Update (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+"F7BF3564FB6D4E5388A45E37E0326063","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: OTA Firmware Update Control Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+"984227F334FC4045A5D02C581F81A153","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: OTA Firmware Update Data Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+# https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services
+# Example of EV Charger which had this was in Hacktivity 2023 talk
+"331a36f5245945ea9d956142f0c4b307","ASSOCIATED WITH: ADV_IND, GATT_Service: ChipMakerPrint=Silicon Labs: BGX Xpress Streaming Service (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"a9da60400823499594ec9ce41ca28833","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Peripheral Receive (Rx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"a73e9a10628f4494a09912efaf72258f","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Peripheral Transmit (Tx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"75a9f022af034e41b4bc9de90a47d50b","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Stream Mode (Mode) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+
+"da2b84f1627948debdc0afbea0226079","ASSOCIATED WITH: GATT_Service: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"a87988b9694c479c900e95dfa6c00a24","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service Commands (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"18cda7844bd3437085bbbfed91ec86af","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service RX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"bf03260c72054c25af4393b1c299d159","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service TX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+
 "0000fe2c00001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Google Fast Pair (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
 "FE2C1233836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Model ID Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
 "FE2C1234836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Keybased Pairing Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
@@ -131,21 +161,6 @@
 "c7df000233c011e8b4670ed5f89f718b","ASSOCIATED WITH: ADV_IND, GATT_Service: The unknown (presumed something to do with Amazon because of GATT) 'rnet'"
 "c7df000333c011e8b4670ed5f89f718b","ASSOCIATED WITH: ADV_IND, GATT_Service: The unknown (presumed something to do with Amazon because of GATT) 'rnet'"
 
-"000015301212efde1523785feabcd123","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service (https://nordicsemiconductor.github.io/IOSnRFConnect/assets/files/UserManual.pdf)"
-"000015311212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Control Point Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
-"000015321212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Packet Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
-"000015341212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Version Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
-"0000fe5900001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Secure DFU Service (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
-"8EC90001F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Control Point Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
-"8EC90002F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service,DFU Packet Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
-
-# Also note: I saw one device (c4:5b:be:ae:59:22) which had an OUI of Espressif. There was only one though, so maybe just an error in recording whether it was a public BDADDR or not? (Or of course some vendors just pick whatever they want...)
-"f000ffc004514000b000000000000000","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
-"f000ffc104514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
-"f000ffc204514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
-"f000ffc304514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
-"f000ffc404514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
-
 "9aa4730fb25c4cc3b821c931559fc196","Claimed to be Apple Watch related here: https://github.com/davidgyoung/BackgroundAdvertiser/blob/master/BackgroundAdvertiser/OverflowArea/OverflowAreaUtils.swift TODO: look into more"
 
 #BEGIN COPIED FROM https://bleak.readthedocs.io/en/latest/_modules/bleak/uuids.html (and removed dash)
@@ -168,13 +183,6 @@
 "d2d3f8ef9c994d9ca2b391c85d44326c","ASSOCIATED WITH: ADV_IND, GATT_Service: Nest: Associated with device name 'Dropcam'. com.nest.android according to https://web.cse.ohiostate.edu/~lin.3021/file/CCS19a.pdf"
 "7606123e42824ed4aca12374de7fdb61","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Nest: Associated with device name 'Dropcam'. Characteristic ('Writable') Under d2d3f8ef9c994d9ca2b391c85d44326c service"
 
-# https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services
-# Example of EV Charger which had this was in Hacktivity 2023 talk
-"331a36f5245945ea9d956142f0c4b307","ASSOCIATED WITH: ADV_IND, GATT_Service: Silicon Labs: BGX Xpress Streaming Service (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
-"a9da60400823499594ec9ce41ca28833","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: BGX: Peripheral Receive (Rx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
-"a73e9a10628f4494a09912efaf72258f","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: BGX: Peripheral Transmit (Tx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
-"75a9f022af034e41b4bc9de90a47d50b","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: BGX: Stream Mode (Mode) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
-
 "2dd100101c37452d8979d1b4a787d0a4","ASSOCIATED WITH: ADV_IND, GATT_Service: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
 "2dd100111c37452d8979d1b4a787d0a4","ASSOCIATED WITH: GATT_Characteristic: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
 "2dd100131c37452d8979d1b4a787d0a4","ASSOCIATED WITH: GATT_Characteristic: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
@@ -183,11 +191,3 @@
 
 "cbbfe0e1f7f3420684e084cbb3d09dfc","ASSOCIATED WITH: ADV_IND: Android TV Remote? () https://android-review.linaro.org/plugins/gitiles/platform/cts/+/8bb61c456cb5dcc0c1f48c7651c98679ca384dde%5E%21/"
 
-"1D14D6EEFD634FA1BFA48F47B42119F0","ASSOCIATED WITH: GATT_Service: Silicon Labs: OTA Firmware Update (https://blog.quarkslab.com/breaking-secur-eboot-on-the-silicon-labs-gecko-platform.html)"
-"F7BF3564FB6D4E5388A45E37E0326063","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: OTA Firmware Update Control Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
-"984227F334FC4045A5D02C581F81A153","ASSOCIATED WITH: GATT_Characteristic: Silicon Labs: OTA Firmware Update Data Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
-
-"da2b84f1627948debdc0afbea0226079","ASSOCIATED WITH: GATT_Service: Blue Radios (Modules): AT Serial Service (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
-"a87988b9694c479c900e95dfa6c00a24","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service Commands (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
-"18cda7844bd3437085bbbfed91ec86af","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service RX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
-"bf03260c72054c25af4393b1c299d159","ASSOCIATED WITH: GATT_Characteristic: Blue Radios (Modules): AT Serial Service TX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"

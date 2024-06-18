@@ -91,8 +91,15 @@
 		"company_website": "https://www.silabs.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
+		"security_research_urls": {
+			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://darkmentor.com/publication/2020-08-blackhat/ TODO: Update w/ archive.org link",
+			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+
+		},
 		"evidence_URL": {
-			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services"
+			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
+			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -100,6 +107,9 @@
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"GATT_Vendor_Specific": {
+			"1D14D6EE-FD63-4FA1-BFA4-8F47B42119F0": "Service: Silicon Labs: Over The Air firmware update protocol",
+			"F7BF3564-FB6D-4E53-88A4-5E37E0326063": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Control Endpoint",
+			"984227F3-34FC-4045-A5D0-2C581F81A153": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Data Endpoint",
 			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
 			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
 			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
@@ -114,7 +124,7 @@
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
 			"CSR: GAIA (Over The Air firmware update protocol) 1": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
-			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://github.com/Hypfer/fiio-bta30-protocol"
+			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://github.com/Hypfer/fiio-bta30-protocol TODO: Update w/ archive.org link"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -122,10 +132,33 @@
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"GATT_Vendor_Specific": {
-			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR: GAIA (Over The Air firmware update protocol)",
-			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Command Endpoint",
-			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Response Endpoint",
-			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR: GAIA (Over The Air firmware update protocol): Data Endpoint"
+			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol)",
+			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Command Endpoint",
+			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Response Endpoint",
+			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Data Endpoint"
+		}
+	},
+	"Texas Instruments GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Texas Instruments",
+		"company_website": "https://www.ti.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"f000ffc0-0451-4000-b000-000000000000": "Service: Texas Instruments: Over the Air Download (OAD) firmware update",
+			"f000ffc1-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Identify",
+			"f000ffc2-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Block",
+			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
+			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
 		}
 	}
+
 }
