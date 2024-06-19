@@ -31,6 +31,9 @@
 "4f860003943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
 "4f860004943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
 
+"00000000decafadedecadeafdecacafe","ASSOCIATED WITH: GATT_Service: Apple MFi iAP client (https://wiomoc.de/misc/posts/mfi_iap.html, https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py#L112)"
+"00000000decafadedecadeafdecacaff","ASSOCIATED WITH: GATT_Service: Apple MFi iAP server (https://wiomoc.de/misc/posts/mfi_iap.html, https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py#L111)"
+
 "5052494d2dab034169726f6861424c45","ASSOCIATED WITH: GATT_Service: Multiple vendors' headphones"
 "434841522dab314169726f6861424c45","ASSOCIATED WITH: GATT_Characteristic: Multiple vendors' headphones (below 5052494d2dab034169726f6861424c45 service)"
 "434841522dab324169726f6861424c45","ASSOCIATED WITH: GATT_Characteristic: Multiple vendors' headphones (below 5052494d2dab034169726f6861424c45 service)"

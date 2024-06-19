@@ -68,6 +68,11 @@ def create_bt_CID_to_names():
         name = entry['name']
         bt_CID_to_names[value] = name
 
+    # Hack: Add in the wrong-endian Apple/Samsung values
+    bt_CID_to_names[0x4C00] = "Apple, Inc. (wrong-endian)"
+    bt_CID_to_names[0x7500] = "Samsung (wrong-endian)"
+    bt_CID_to_names[0xff19] = "Samsung (buggy)"
+
 #    print(bt_CID_to_names)
 #    print(len(bt_CID_to_names))
 
@@ -2222,6 +2227,16 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 # Metadata v2 helper functions
 ########################################
 
+# Had to move this earlier for use in match_str_to_ChipMaker()
+# The ChipMaker_names_and_BT_CIDs will be used as regexp expressions in MySQL queries to find the associated IEEE OUIs
+# Note: Apple and Samsung have been observed to get their endianness wrong. But Samsung devices have also been observed using a completely arbitrary/wrong 0xFF19 value in the BT CID field of MSD...
+ChipMaker_names_and_BT_CIDs = {'^Actions': [0x03E0], 'Airoha Technology Corp': [0x94], 'Ambiq': [0x09AC], 'Atheros Communications': [0x45], '^Apple': [0x004C, 0x4C00], 'Barrot Technology': [0x08E7], 'beken': [0x05F0], 'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Broadcom': [0xF], 'Casambi': [0x03C3], 'Cypress Semiconductor': [0x131] , 'Dialog Semiconductor': [0xD2], 'Espressif': [0x02E5], 'HiSilicon': [0x010F], 'Hong Kong HunterSun': [0x01BF], 'Infineon': [0x09], 'Ingchips': [0x06AC], 'Intel Corp': [0x02], '^LAPIS': [0x0179], 'Marvell': [0x48], 'MediaTek': [0x46], 'Nordic Semiconductor': [0x59], 'NXP': [0x25], '^ON Semiconductor': [0x0362], 'PHYPLUS': [0x0504], 'Qualcomm': [0x0A, 0x1D], 'Realtek': [0x5D], 'RivieraWaves': [0x60], 'Samsung': [0x0075, 0x7500, 0xff19], 'Shanghai wuqi': [0x0A06], 'Shenzhen Goodix Technology': [0x04F7], 'Silicon Laboratories': [0x02FF], 'Spreadtrum Communications': [0x01EC], 'STMicro': [0x30], 'ST Microelectronics': [0x30], 'Telink Semiconductor': [0x0211], 'Texas Instruments': [0x0D], '^Universal Electronics': [0x93], 'Vimicro': [0x81], 'Yichip Microelectronics': [0x050E], 'Zhuhai Jieli': [0x05D6], 'MILWAUKEE': [123]}
+
+# Misc note: RivieraWaves licenses BT IP. E.g. to Espressif (so some Espressif things will have Espressif OUI & RivieraWaves BT CID) https://www.ceva-ip.com/press/espressif-licenses-and-deploys-ceva-bluetooth-in-esp32-iot-chip/
+# Misc note: Hong Kong HunterSun licensed BT IP from Andes: https://www.andestech.com/en/2018/06/20/huntersun-corporation-licenses-andescore-n1068a-s-for-its-hs6601-single-chip-bluetooth-soc-targeting-wireless-audio-applications/
+# Misc note: "ST Microelectronics*" in BT CIDs, "STMicro*" in IEEE OUIs :-/
+# As a reminder to myself, these are the company names & BT CIDs that don't have IEEE OUIs = {'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Casambi': [0x03C3], 'Hong Kong HunterSun': [0x01BF], 'Ingchips': [0x06AC], 'RivieraWaves': [0x60], 'Shanghai wuqi': [0x0A06], 'ST Microelectronics': [0x30], 'Zhuhai Jieli': [0x05D6]]
+
 # Returns a string to be printed by the caller
 def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # First see if we have a name for this device
@@ -2265,6 +2280,52 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # Else return an empty string to indicate we have no name or no match
     return ""
 
+# Returns a string to be printed by the caller
+def lookup_ChipPrint_by_GATT(bdaddr):
+    # First see if we have GATT data for this device
+    we_have_GATT = False
+    model_name_match = 0
+    str = ""
+
+    chars_query = f"SELECT UUID128,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_result = execute_query(chars_query)
+    if(len(chars_result) > 0): we_have_GATT = True
+
+    if(we_have_GATT):
+        # If we have GATT data, check if we have successfully read a "Model Number String" (00002a24-0000-1000-8000-00805f9b34fb) value or a "Hardware Revision String" (00002a27-0000-1000-8000-00805f9b34fb)
+        # Iterate through every UUID128 from the GATT_Characteristics database query
+        for (UUID128_db,char_value_handle) in chars_result:
+            # Remove dashes and make lowercase
+            UUID128_db_ = UUID128_db.replace('-','').lower()
+            if((UUID128_db_ == "00002a2400001000800000805f9b34fb" or UUID128_db_ == "00002a2700001000800000805f9b34fb") and model_name_match == 0):
+                # If so, go lookup the actual data behind it, so we can see if the "Model Number String" is a Chip
+                char_value_query = f"SELECT byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}' and read_handle = {char_value_handle}"
+                char_value_result = execute_query(char_value_query)
+                if(len(char_value_result) > 0):
+                    for (byte_values,) in char_value_result:
+                        tmpstr = byte_values.decode('utf-8')
+                        #print(f"byte_values: {tmpstr}")
+                        # Now consult with the metadata_v2 data, and see if any entries have a 2thprint_Chip_GATT_Model_Number which matches the value observed in the database
+                        for heading, metadata in metadata_v2.items():
+                            if('2thprint_Chip_GATT_Model_Number' in metadata):
+                                # FIXME: I think this is probably an insufficient matching criteria. E.g. a "Jabra Evolve 65e" device might match "Jabra Elite Active" metadata and then the printout would be a bit confusing
+                                if(tmpstr == metadata['2thprint_Chip_GATT_Model_Number']):
+                                    model_name_match = 1
+                                    str = f"\t\t{metadata['2thprint_Chip']} -> From GATT \"Model/Hardware Number String\" match with '{metadata['2thprint_Device_Model']}' device metadata (GATT_characteristics & GATT_characteristics_values tables & metadata_v2)"
+
+    # Return something appropriate for printing, or an empty string if no match
+    return str
+
+# If we have a string, we want to see if it matches any of the ChipMaker names, if we treat them as regexes
+# Returns the matched name, or an empty string
+def match_str_to_ChipMaker(str):
+    matched_company_name = ""
+    for chipmaker in ChipMaker_names_and_BT_CIDs.keys():
+        if(re.search(chipmaker, str)):
+            matched_company_name = chipmaker
+
+    return matched_company_name # can be empty
+
 # Pass '2thprint_ChipMaker_GATTprint' as metadata_input_type and '2thprint_Chip_Maker' as metadata_output_type to find ChipMaker-specific GATT info
 # Returns a list of strings to be printed by the caller, or an empty list
 def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_type):
@@ -2275,7 +2336,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     services_result = execute_query(services_query)
     if(len(services_result) > 0): we_have_GATT = True
 
-    chars_query = f"SELECT UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_query = f"SELECT UUID128,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_GATT = True
 
@@ -2292,6 +2353,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     if(len(eir_adv_result) > 0): we_have_GATT = True
 
     str_list = []
+    manufacturer_name_match = 0 # Only match this one time
 
     if(we_have_GATT):
         # If we have GATT data, consult with the metadata_v2 data, and see if any entries have Chip Maker data
@@ -2314,11 +2376,25 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
 
                     if(len(chars_result) > 0):
                         # Iterate through every UUID128 from the GATT_Characteristics database query
-                        for (UUID128_db,) in chars_result:
+                        for (UUID128_db,char_value_handle) in chars_result:
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
                             if(UUID128_db_ == UUID128_metadata_):
                                 str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (GATT_characteristics table)")
+
+                            # While we're here, check if this device has a "Manufacturer Name String" characteristic
+                            if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
+                                # If so, go lookup the actual data behind it, so we can see if the "Manufacturer Name" is a ChipMaker
+                                 char_value_query = f"SELECT byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}' and read_handle = {char_value_handle}"
+                                 char_value_result = execute_query(char_value_query)
+                                 if(len(char_value_result) > 0):
+                                     for (byte_values,) in char_value_result:
+                                         tmpstr = byte_values.decode('utf-8')
+                                         #print(f"byte_values: {tmpstr}")
+                                         match = match_str_to_ChipMaker(tmpstr)
+                                         if(match != ""):
+                                             manufacturer_name_match = 1
+                                             str_list.append(f"\t\t{tmpstr} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (GATT_characteristics & GATT_characteristics_values tables)")
 
                     if(len(le_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
@@ -2363,15 +2439,6 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
 ########################################
 # ChipMaker Info
 ########################################
-
-# The ChipMaker_names_and_BT_CIDs will be used as regexp expressions in MySQL queries to find the associated IEEE OUIs
-# Note: Apple and Samsung have been observed to get their endianness wrong. But Samsung devices have also been observed using a completely arbitrary/wrong 0xFF19 value in the BT CID field of MSD...
-ChipMaker_names_and_BT_CIDs = {'^Actions': [0x03E0], 'Airoha Technology Corp': [0x94], 'Ambiq': [0x09AC], 'Atheros Communications': [0x45], 'Apple, Inc': [0x004C, 0x4C00], 'Barrot Technology': [0x08E7], 'beken': [0x05F0], 'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Broadcom': [0xF], 'Casambi': [0x03C3], 'Cypress Semiconductor': [0x131] , 'Dialog Semiconductor': [0xD2], 'Espressif': [0x02E5], 'HiSilicon': [0x010F], 'Hong Kong HunterSun': [0x01BF], 'Infineon': [0x09], 'Ingchips': [0x06AC], 'Intel Corp': [0x02], '^LAPIS': [0x0179], 'Marvell': [0x48], 'MediaTek': [0x46], 'Nordic Semiconductor': [0x59], 'NXP': [0x25], '^ON Semiconductor': [0x0362], 'PHYPLUS': [0x0504], 'Qualcomm': [0x0A, 0x1D], 'Realtek': [0x5D], 'RivieraWaves': [0x60], 'Samsung': [0x0075, 0x7500, 0xff19], 'Shanghai wuqi': [0x0A06], 'Shenzhen Goodix Technology': [0x04F7], 'Silicon Laboratories': [0x02FF], 'Spreadtrum Communications': [0x01EC], 'STMicro': [0x30], 'ST Microelectronics': [0x30], 'Telink Semiconductor': [0x0211], 'Texas Instruments': [0x0D], '^Universal Electronics': [0x93], 'Vimicro': [0x81], 'Yichip Microelectronics': [0x050E], 'Zhuhai Jieli': [0x05D6]}
-
-# Misc note: RivieraWaves licenses BT IP. E.g. to Espressif (so some Espressif things will have Espressif OUI & RivieraWaves BT CID) https://www.ceva-ip.com/press/espressif-licenses-and-deploys-ceva-bluetooth-in-esp32-iot-chip/
-# Misc note: Hong Kong HunterSun licensed BT IP from Andes: https://www.andestech.com/en/2018/06/20/huntersun-corporation-licenses-andescore-n1068a-s-for-its-hs6601-single-chip-bluetooth-soc-targeting-wireless-audio-applications/
-# Misc note: "ST Microelectronics*" in BT CIDs, "STMicro*" in IEEE OUIs :-/
-# As a reminder to myself, these are the company names & BT CIDs that don't have IEEE OUIs = {'Bestechnic': [0x02B0], 'Bluetrum': [0x642], 'Casambi': [0x03C3], 'Hong Kong HunterSun': [0x01BF], 'Ingchips': [0x06AC], 'RivieraWaves': [0x60], 'Shanghai wuqi': [0x0A06], 'ST Microelectronics': [0x30], 'Zhuhai Jieli': [0x05D6]]
 
 ChipMaker_OUI_hash = {}
 
@@ -2663,6 +2730,15 @@ def print_ChipPrint(bdaddr):
     if(str != ""):
         print(str)
         no_results_found = False
+
+    #======================#
+    # GATT Model Name data #
+    #======================#
+    str = lookup_ChipPrint_by_GATT(bdaddr)
+    if(str != ""):
+        print(str)
+        no_results_found = False
+
 
     if(no_results_found):
         print(f"\t\tNo ChipPrint(s) found.")

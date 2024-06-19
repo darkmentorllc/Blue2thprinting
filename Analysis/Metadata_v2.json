@@ -92,7 +92,7 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"security_research_urls": {
-			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://darkmentor.com/publication/2020-08-blackhat/ TODO: Update w/ archive.org link",
+			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://web.archive.org/web/20240618170612/https://darkmentor.com/publication/2020-08-blackhat/",
 			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
 			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
 
@@ -124,7 +124,7 @@
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
 			"CSR: GAIA (Over The Air firmware update protocol) 1": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
-			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://github.com/Hypfer/fiio-bta30-protocol TODO: Update w/ archive.org link"
+			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://web.archive.org/web/20240618162011/https://github.com/Hypfer/fiio-bta30-protocol"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -159,6 +159,102 @@
 			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
 			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
 		}
+	},
+	"Jabra Elite 3":{
+                "2thprint_Chip": "Qualcomm QCC3040",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "QCC3040",
+                "2thprint_Chip_Maker": "Qualcomm",
+                "2thprint_Device_Model": "Jabra Elite 3",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite 3$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://www.jabra.com/bluetooth-headsets/jabra-elite-3",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. Model Number String (0x2a24) == 'QCC3040'. 'Device Name' (0x2a00) == 'Jabra Elite 3'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10",
+		"misc_other_URLs": {
+			"QCC30XX documentation" : "https://www.qualcomm.com/products/internet-of-things/consumer/audio/qcc30xx-series/qcc3040#Documentation"
+		}
+	},
+	"Jabra Elite 7 Pro":{
+                "2thprint_Chip": "Qualcomm QCC512x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "QCC512x",
+                "2thprint_Chip_Maker": "Qualcomm",
+                "2thprint_Device_Model": "Jabra Elite 7 Pro",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite 7 Pro$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/jabra-elite-7-pro",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'QCC512x'. 'Device Name' (0x2a00) == 'Jabra Elite 7 Pro'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10"
+	},
+	"Jabra Elite Active":{
+                "2thprint_Chip": "Qualcomm CSR867x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "CSR867x",
+                "2thprint_Chip_Maker": "CSR(->Qualcomm)",
+                "2thprint_Device_Model": "Jabra Elite Active",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite Active$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'CSR867x'. (Non-GATT) Advertised Name  == 'Jabra Elite Active'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT & ADV_IND data",
+                "confirmation_confidence": "10/10"
+	},
+	"Jabra Evolve 65e":{
+                "2thprint_Chip": "Qualcomm CSR867x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "CSR867x",
+                "2thprint_Chip_Maker": "CSR(->Qualcomm)",
+                "2thprint_Device_Model": "Jabra Evolve 65e",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Evolve 65e$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'CSR867x'. 'Device Name' (0x2a00) == 'Jabra Evolve 65e'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10"
+	},
+	"MagTek eDynamo credit card reader": {
+                "2thprint_Device_Model": "MagTek eDynamo",
+                "2thprint_Device_Maker": "MagTek",
+                "2thprint_NamePrint": "^eDynamo-B[A-F0-9]{6}$",
+		"short_description": "MagTek eDynamo credit card reader",
+		"comment": "I just wanted to capture this evidence URL which has nearby GATT UUIDs in it that I stumbled across.",
+		"evidence_URL": "https://www.magtek.com/content/documentationfiles/d99875629.pdf",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data.",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "8/10",
+		"GATT_Vendor_Specific": {
+			"0508e6f8-ad82-898f-f843-e3410cb60103": "Service: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60200": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60201": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60202": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60203": "Characteristic: MagTek: Unknown"
+		}
 	}
-
 }
