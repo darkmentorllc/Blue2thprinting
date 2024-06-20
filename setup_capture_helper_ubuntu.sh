@@ -31,6 +31,7 @@ sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
+# Note to self: python3-mysql.connector and python2.7 don't exist in Raspbian Bookworm, and python2.7 doesn't exist in Ubuntu 24.04
 sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-inotify python2.7 
 if [ $? != 0 ]; then
     echo ""
