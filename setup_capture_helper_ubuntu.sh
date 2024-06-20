@@ -33,14 +33,15 @@ echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debc
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
 sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-inotify python2.7 
 if [ $? != 0 ]; then
-    echo "\n\n Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
+    echo ""
+    echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
     exit -1
 fi
 echo "  Done"
 
 echo ""
 echo "====================================================================================================================================="
-echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
+echo "Fixing this repository when it's not cloned with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
 echo "====================================================================================================================================="
 #### This git repository includes the Bluetooth SIG's assigned numbers git repo under the ./public subfolder
 #### Most people would check it out before seeing that they need to pass the parameter to recurse submodules
