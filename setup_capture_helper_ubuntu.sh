@@ -15,7 +15,7 @@ if [ ! -d "/home/$USERNAME/Blue2thprinting" ]; then
 fi
 
 apt -v
-if [ ! $? ]; then
+if [ $? != 0 ]; then
     echo "================================================================================================================================================="
     echo "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
     echo "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
@@ -31,8 +31,11 @@ sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python2.7 
-sudo pip3 install gmplot inotify_simple
+sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-inotify python2.7 
+if [ $? != 0 ]; then
+    echo "\n\n Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
+    exit -1
+fi
 echo "  Done"
 
 echo ""
