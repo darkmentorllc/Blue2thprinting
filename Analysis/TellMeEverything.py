@@ -314,6 +314,8 @@ def execute_query(query):
         user='user',
         password='a',
         database='bt',
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
         auth_plugin='mysql_native_password'
     )
 
