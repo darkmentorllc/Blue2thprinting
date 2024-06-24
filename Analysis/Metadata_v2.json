@@ -160,6 +160,27 @@
 			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
 		}
 	},
+	"Espressif GATTPrints": {
+		"comment": "I don't think this is official, but rather just something someone decided to come up with for themselves. But if it is official then it's not on the open web and might be in private SDKs.",
+		"2thprint_Chip_Maker": "Espressif",
+		"company_website": "https://www.espressif.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Michael Angerer's BLE OTA for ESP32 1": "https://github.com/michael-angerer/esp32_ble_ota/blob/main/esp/main/gatt_svr.h",
+			"Michael Angerer's BLE OTA for ESP32 2": "https://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"d6f1d96d-594c-4c53-b1c6-244a1dfde6d8": "Service: NimBLE ESP32: OTA",
+			"7ad671aa-21c0-46a4-b722-270e3ae3d830": "Characteristic: NimBLE ESP32: OTA Control",
+			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data"
+		}
+	},
 	"Jabra Elite 3":{
                 "2thprint_Chip": "Qualcomm QCC3040",
                 "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
