@@ -927,6 +927,13 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
+    gatt_desc_query = f"SELECT device_bdaddr FROM GATT_descriptors WHERE UUID128 REGEXP '{uuid128regex}'"
+    gatt_desc_result = execute_query(gatt_desc_query)
+    for (bdaddr,) in gatt_desc_result:
+        bdaddr_hash[bdaddr] = 1
+    print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors")
+    print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
     if(try_with_dashes and len(uuid128regex) == 32):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
 
@@ -942,6 +949,13 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
         for (bdaddr,) in gatt_char_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
+        print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_descriptors WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_desc_result = execute_query(gatt_desc_query)
+        for (bdaddr,) in gatt_desc_result:
+            bdaddr_hash[bdaddr] = 1
+        print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
 
@@ -2189,7 +2203,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
                     if(descriptor_handle == char_value_handle):
                         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({UUID128_description}), Properties: {char_properties} ({characteristic_properties_to_string(char_properties)})")
+                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({UUID128_description}), Properties: 0x{char_properties:02X} ({characteristic_properties_to_string(char_properties)})")
                         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                             unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
                         if(is_characteristic_readable(char_properties)):
