@@ -1342,6 +1342,7 @@ def find_nameprint_match(name_string):
             print(f"\t\t\tNamePrint: match found for {key}: {value}")
 
 # Function to print device names from different tables
+# NOTE: This is sort of more like "advertised names", except that it also contains SCAN_RSP names too. But we don't want to print out GATT names here, as we'll print them in GATT section
 def print_device_names(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
@@ -1362,7 +1363,6 @@ def print_device_names(bdaddr, nametype):
         find_nameprint_match(name[0])
 
     # Query for LE_bdaddr_to_name table
-#    le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype}"
     le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query)
     for name, random, le_evt_type in le_result:
@@ -2299,6 +2299,11 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     le_result = execute_query(le_query)
     if(len(le_result) > 0): we_have_a_name = True
 
+    # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
+    chars_query = f"SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb' AND cv.device_bdaddr = '{bdaddr}';"
+    chars_result = execute_query(chars_query)
+    if(len(chars_result) > 0): we_have_a_name = True
+
     if(we_have_a_name):
         # If we have a name, consult with the metadata_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
@@ -2318,6 +2323,11 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                     for name, le_evt_type in le_result:
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+                if(len(chars_result) > 0):
+                    for (byte_values,) in chars_result:
+                        name = byte_values.decode('utf-8', 'ignore')
+                        if re.search(regex_pattern, name):
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (GATT_characteristics & GATT_characteristics_values tables)"
 
     # Else return an empty string to indicate we have no name or no match
     return ""
@@ -2828,15 +2838,47 @@ def print_PrivacyReport(bdaddr):
         print(f"\t\tUnique ID: BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
         no_results_found = False
 
+    #===================================================#
+    # GATT "Serial Number" (0x2a25) Characteristic data #
+    #===================================================#
+    #=============================================================#
+    # GATT "UID for Medical Devices" (0x2bff) Characteristic data #
+    #=============================================================#
+    # To be clear, we don't necessarily need to have successfully read the value for this. The mere presence of a definition for it is suggestive enough of the presence of a DUID to report on it
+
+    chars_query = f"SELECT UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_result = execute_query(chars_query)
+    if(len(chars_result) > 0): we_have_GATT = True
+
+    if(we_have_GATT):
+        # If we have GATT data, check if we have successfully read a "Model Number String" (00002a24-0000-1000-8000-00805f9b34fb) value or a "Hardware Revision String" (00002a27-0000-1000-8000-00805f9b34fb)
+        # Iterate through every UUID128 from the GATT_Characteristics database query
+        for (UUID128_db,) in chars_result:
+            # Remove dashes and make lowercase
+            UUID128_db_ = UUID128_db.replace('-','').lower()
+            if(UUID128_db_ == "00002a2500001000800000805f9b34fb"):
+                print(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                no_results_found = False
+            if(UUID128_db_ == "00002bff00001000800000805f9b34fb"):
+                print(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                no_results_found = False
+
+    # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
+
     #================#
     # NamePrint data #
     #================#
-    # This function will essentially do "if this bdaddr has a name, and if it matches a NamePrint regex, 
-    # and if that metadata entry also contains a 'NamePrint_UniqueID', then this NamePrint is one which is known to serve as a unique ID
+    # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
     str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
     if(str[2:6] == "True"):
         print(f"\t\tUnique ID: The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
         no_results_found = False
+
+    #===========#
+    # Name data #
+    #===========#
+    # If a device merely has a name, we have to leave it up to the user to decide if it looks like it's a DUID or not
+
 
     if(no_results_found):
         print("\t\tNo privacy report results found. (But current checks are far from exhaustive.)")
