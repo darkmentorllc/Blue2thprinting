@@ -360,6 +360,21 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
+    # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
+    chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb';"
+    chars_result = execute_query(chars_query)
+    if(len(chars_result) > 0):
+        for (bdaddr, byte_values) in chars_result:
+            tmpstr = byte_values.decode('utf-8', 'ignore')
+            #print(f"byte_values: {tmpstr}")
+            pattern = re.compile(nameregex)
+            if re.search(pattern, tmpstr):
+                print(f"{nameregex} matched bdaddr = {bdaddr}")
+                bdaddr_hash[bdaddr] = 1
+    print(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in GATT_characteristics_values and GATT_characteristics")
+    print(f"get_bdaddrs_by_name_regex: bdaddr_hash (len = {len(bdaddr_hash)}) = {bdaddr_hash}")
+
+
     return bdaddr_hash.keys()
 
 
@@ -932,7 +947,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     for (bdaddr,) in gatt_desc_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors")
-    print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
 
     if(try_with_dashes and len(uuid128regex) == 32):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
@@ -956,7 +971,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
         for (bdaddr,) in gatt_desc_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors by adding dashes to regex")
-        print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+        print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash {len(bdaddr_hash)} = {bdaddr_hash}")
 
 
     return bdaddr_hash.keys()
@@ -2199,20 +2214,20 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             unknown_UUID128_hash[UUID128] = ("Service","\t\t\t")
         for descriptor_handle, UUID128_2 in GATT_descriptors_result:
             if(descriptor_handle <= end_handle and descriptor_handle >= begin_handle):
-                print(f"\t\t\tGATT Descriptor: {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
+                print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
                 for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
                     if(descriptor_handle == char_value_handle):
                         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                        print(f"\t\t\t\tGATT Characteristic: {UUID128} ({UUID128_description}), Properties: 0x{char_properties:02X} ({characteristic_properties_to_string(char_properties)})")
+                        print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {descriptor_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02X} ({characteristic_properties_to_string(char_properties)})")
                         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                             unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
                         if(is_characteristic_readable(char_properties)):
                             if(char_value_handle in char_byte_vals_dict):
-                                print(f"\t\t\t\tGATT Characteristic value read as {char_byte_vals_dict[char_value_handle]}")
+                                print(f"\t\t\t\tGATT Characteristic Value read as {char_byte_vals_dict[char_value_handle]}")
                                 print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
                                 characteristic_value_decoding(UUID128, char_byte_vals_dict[char_value_handle]) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
                             else:
-                                print(f"\t\t\t\tNo GATT characteristic value was read and stored in the database (despite characteristic being readable)")
+                                print(f"\t\t\t\tNo GATT characteristic Value was read and stored in the database (despite characteristic being readable)")
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
@@ -2225,7 +2240,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 print(f"\t\tGATT Descriptor: Descriptor Handle: {descriptor_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
                 file.write(f"Descriptor Handle: {descriptor_handle}, {UUID128_2}\n")
             for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-                print(f"\t\tGATT Characteristic: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}")
+                print(f"\t\tGATT Characteristic Declaration: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Value Handle: {char_value_handle}")
                 file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
         print("")
 
