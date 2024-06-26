@@ -2846,6 +2846,7 @@ def print_PrivacyReport(bdaddr):
     #=============================================================#
     # To be clear, we don't necessarily need to have successfully read the value for this. The mere presence of a definition for it is suggestive enough of the presence of a DUID to report on it
 
+    we_have_GATT = False
     chars_query = f"SELECT UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_GATT = True
