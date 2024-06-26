@@ -6,6 +6,7 @@
 		"2thprint_Chip_Maker": "Texas Instruments",
 		"2thprint_Device_Model": "Tesla Model 3 or Y",
 		"2thprint_NamePrint": "^S[0-9a-f]{16}C$",
+		"NamePrint_UniqueID": "True",
                 "short_description": "An electric car, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car.",
 		"company_website": "https://tesla.com",
                 "security_research_urls": {

@@ -1053,8 +1053,19 @@ def USB_CID_to_company_name(device_USB_CID):
 
     return str
 
+# Special case of random = -1 means the caller doesn't know whether it's random or not, and wants it looked up
 def get_bdaddr_type(bdaddr, random):
     bdaddr_type_str = ""
+
+    if(random == -1):
+        if(is_bdaddr_classic(bdaddr)):
+            return "Classic"
+
+        random = is_bdaddr_le_and_random(bdaddr)
+        if(random == -1):
+            print("Error encounter in get_bdaddr_type for {bdaddr}. Debug.")
+            exit()
+    
     if(random == 0):
         bdaddr_type_str = "Public"
     elif(bdaddr[0].lower() == 'f' or bdaddr[0].lower() == 'e' or bdaddr[0] == 'd' or bdaddr[0].lower() == 'c'):
@@ -2799,6 +2810,39 @@ def print_DeviceModel(bdaddr):
 
     print(f"\t2thprint_DeviceModelPrint:")
 
+########################################
+# Privacy Report
+########################################
+# This is meant to convey data about what, if anything, may be directly serving as a device-unique-ID (DUID!), which would allow for device tracking
+
+def print_PrivacyReport(bdaddr):
+
+    no_results_found = True
+
+    #================#
+    # BDADDR data #
+    #================#
+    print("\tPrivacy Report:")
+    type = get_bdaddr_type(bdaddr, -1)
+    if(type == "Classic" or type == "Public" or type == "Random Static"):
+        print(f"\t\tUnique ID: BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
+        no_results_found = False
+
+    #================#
+    # NamePrint data #
+    #================#
+    # This function will essentially do "if this bdaddr has a name, and if it matches a NamePrint regex, 
+    # and if that metadata entry also contains a 'NamePrint_UniqueID', then this NamePrint is one which is known to serve as a unique ID
+    str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
+    if(str[2:6] == "True"):
+        print(f"\t\tUnique ID: The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
+        no_results_found = False
+
+    if(no_results_found):
+        print("\t\tNo privacy report results found. (But current checks are far from exhaustive.)")
+
+    print()
+
 
 ########################################
 # MAIN #################################
@@ -2984,6 +3028,7 @@ def main():
         print_GATT_info(bdaddr, hideBLEScopedata)
         print_BLE_2thprint(bdaddr)
         print_BTC_2thprint(bdaddr)
+        print_PrivacyReport(bdaddr)
 
 if __name__ == "__main__":
     main()
