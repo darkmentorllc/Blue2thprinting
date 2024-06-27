@@ -2882,31 +2882,39 @@ def print_UniqueIDReport(bdaddr):
     #===========#
     # If a device merely has a name, we have to leave it up to the user to decide if it looks like it's a DUID or not
 
-    # TODO: This needs to be refactored somehow, because this sequence of looking up names is a recurring pattern, but with slightly different usage
+    # TODO: This needs to be refactored into a common function across all its usages somehow. Because this sequence of looking up names is a recurring pattern, but with slightly different usage. But leaving it lazy for now since I'm not interested in premature optimization :D
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
         eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
         eir_result = execute_query(eir_query)
         for name in eir_result:
-            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
-            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name[0]}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
         rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
         rsp_result = execute_query(rsp_query)
         for name in rsp_result:
-            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
-            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name[0]}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
         le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'" 
         le_result = execute_query(le_query)
         for name, random, le_evt_type in le_result:
-            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
-            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name[0]}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
+        chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb' and cv.device_bdaddr = '{bdaddr}';"
+        chars_result = execute_query(chars_query)
+        if(len(chars_result) > 0):
+            for (bdaddr, byte_values) in chars_result:
+                name = byte_values.decode('utf-8', 'ignore')
+                print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via GATT. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+                print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+                no_results_found = False
 
     if(no_results_found):
         print("\t\tNo privacy report results found. (But current checks are far from exhaustive.)")
