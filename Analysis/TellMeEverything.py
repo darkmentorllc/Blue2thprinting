@@ -2820,19 +2820,19 @@ def print_DeviceModel(bdaddr):
 
     print(f"\t2thprint_DeviceModelPrint:")
 
-########################################
-# Privacy Report
-########################################
+###########################################
+# Unique ID / Potential Trackability Report
+###########################################
 # This is meant to convey data about what, if anything, may be directly serving as a device-unique-ID (DUID!), which would allow for device tracking
 
-def print_PrivacyReport(bdaddr):
+def print_UniqueIDReport(bdaddr):
 
     no_results_found = True
 
     #================#
     # BDADDR data #
     #================#
-    print("\tPrivacy Report:")
+    print("\tUnique ID / Potential Trackability Report:")
     type = get_bdaddr_type(bdaddr, -1)
     if(type == "Classic" or type == "Public" or type == "Random Static"):
         print(f"\t\tUnique ID: BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
@@ -2869,16 +2869,43 @@ def print_PrivacyReport(bdaddr):
     #================#
     # NamePrint data #
     #================#
+    NamePrint_match = False
     # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
     str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
     if(str[2:6] == "True"):
         print(f"\t\tUnique ID: The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
         no_results_found = False
+        NamePrint_match = True
 
     #===========#
     # Name data #
     #===========#
     # If a device merely has a name, we have to leave it up to the user to decide if it looks like it's a DUID or not
+
+    # TODO: This needs to be refactored somehow, because this sequence of looking up names is a recurring pattern, but with slightly different usage
+
+    # Don't bother giving a less-preceise match if a more-precise match was already found.
+    if(NamePrint_match == False):
+        eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+        eir_result = execute_query(eir_query)
+        for name in eir_result:
+            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            no_results_found = False
+
+        rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+        rsp_result = execute_query(rsp_query)
+        for name in rsp_result:
+            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            no_results_found = False
+
+        le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'" 
+        le_result = execute_query(le_query)
+        for name, random, le_evt_type in le_result:
+            print(f"\t\t\tPossible Unique ID: This device contains a name ({name[0]}) found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-name pattern, but that could just mean it has not been captured in our metadata yet.")
+            print(f"\t\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            no_results_found = False
 
 
     if(no_results_found):
@@ -3071,7 +3098,7 @@ def main():
         print_GATT_info(bdaddr, hideBLEScopedata)
         print_BLE_2thprint(bdaddr)
         print_BTC_2thprint(bdaddr)
-        print_PrivacyReport(bdaddr)
+        print_UniqueIDReport(bdaddr)
 
 if __name__ == "__main__":
     main()
