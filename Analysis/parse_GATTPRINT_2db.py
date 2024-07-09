@@ -299,7 +299,7 @@ try:
         for line in reader:
             if(len(line) > 0):
                 print(line)
-                if line[0] == "GATTPRINT:CHARACTERISTIC":
+                if (line[0] == "GATTPRINT:CHARACTERISTIC" or line[0] == "GATTPRINT:CHAR_DESC"): # start supporting BetterGATTGetter.py alt (newer & clearer IMHO) names
                     #print("GATTPRINT:CHARACTERISTIC")
                     (bdaddr_type, new) = lookup_device_bdaddr_type(line)
                     if bdaddr_type == -1: continue
@@ -309,7 +309,7 @@ try:
                     (bdaddr_type, new) = lookup_device_bdaddr_type(line)
                     if bdaddr_type == -1: continue
                     func_CHAR_VALUE(bdaddr_type, new, line[1:])
-                elif line[0] == "GATTPRINT:DESCRIPTORS":
+                elif (line[0] == "GATTPRINT:DESCRIPTORS" or line[0] == "GATTPRINT:HANDLE_UUID"): # start supporting BetterGATTGetter.py alt (newer & clearer IMHO) names
                     #print("GATTPRINT:DESCRIPTORS")
                     (bdaddr_type, new) = lookup_device_bdaddr_type(line)
                     if bdaddr_type == -1: continue

@@ -1722,6 +1722,22 @@ def is_bdaddr_le_and_random(bdaddr):
     UNION
     SELECT 1
     FROM BLE2th_LL_VERSION_IND
+    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    UNION
+    SELECT 1
+    FROM GATT_characteristics
+    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    UNION
+    SELECT 1
+    FROM GATT_characteristics_values
+    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    UNION
+    SELECT 1
+    FROM GATT_descriptors
+    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    UNION
+    SELECT 1
+    FROM GATT_services
     WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1; 
     """
 
