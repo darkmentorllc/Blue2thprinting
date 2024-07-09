@@ -942,11 +942,11 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_desc_query = f"SELECT device_bdaddr FROM GATT_descriptors WHERE UUID128 REGEXP '{uuid128regex}'"
+    gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID128 REGEXP '{uuid128regex}'"
     gatt_desc_result = execute_query(gatt_desc_query)
     for (bdaddr,) in gatt_desc_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors")
+    print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
 
     if(try_with_dashes and len(uuid128regex) == 32):
@@ -966,11 +966,11 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_descriptors WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
         gatt_desc_result = execute_query(gatt_desc_query)
         for (bdaddr,) in gatt_desc_result:
             bdaddr_hash[bdaddr] = 1
-        print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_descriptors by adding dashes to regex")
+        print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash {len(bdaddr_hash)} = {bdaddr_hash}")
 
 
@@ -1733,7 +1733,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM GATT_descriptors
+    FROM GATT_attribute_handles
     WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
     UNION
     SELECT 1
@@ -2149,7 +2149,7 @@ def characteristic_value_decoding(UUID128, bytes):
         print(f"Appearance decodes as: {appearance_uint16_to_string(value)}")
     elif(str == "Characteristic: Peripheral Preferred Connection Parameters" and len(bytes) == 8):
         Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<HHHH', bytes)
-        print(f"PPCP decodes as: Interval_Min:0x{Interval_Min:04X}, Interval_Max:0x{Interval_Max:04X}, Latency:0x{Latency:04X}, Timeout:0x{Timeout:04X}")
+        print(f"PPCP decodes as: Interval_Min:0x{Interval_Min:04x}, Interval_Max:0x{Interval_Max:04x}, Latency:0x{Latency:04x}, Timeout:0x{Timeout:04x}")
     elif(str == "Characteristic: Central Address Resolution" and len(bytes) == 1):
         addr_res_support = struct.unpack('<b', bytes)
         addr_res_support = "True" if addr_res_support == (1,) else "False"
@@ -2163,8 +2163,8 @@ def device_has_GATT_info(bdaddr):
     query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
 
-    query = f"SELECT descriptor_handle,UUID128 FROM GATT_descriptors WHERE device_bdaddr = '{bdaddr}'";
-    GATT_descriptors_result = execute_query(query)
+    query = f"SELECT attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
+    GATT_attribute_handles_result = execute_query(query)
 
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
@@ -2172,7 +2172,7 @@ def device_has_GATT_info(bdaddr):
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_values_result = execute_query(query)
 
-    if(len(GATT_services_result) != 0 or len(GATT_descriptors_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
+    if(len(GATT_services_result) != 0 or len(GATT_attribute_handles_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
         return 1;
     else:
         return 0;
@@ -2213,8 +2213,8 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
 
-    query = f"SELECT descriptor_handle,UUID128 FROM GATT_descriptors WHERE device_bdaddr = '{bdaddr}'";
-    GATT_descriptors_result = execute_query(query)
+    query = f"SELECT attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
+    GATT_attribute_handles_result = execute_query(query)
 
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
@@ -2239,13 +2239,13 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID128] = ("Service","\t\t\t")
-        for descriptor_handle, UUID128_2 in GATT_descriptors_result:
-            if(descriptor_handle <= end_handle and descriptor_handle >= begin_handle):
-                print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Descriptor Handle: {descriptor_handle}")
+        for attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+            if(attribute_handle <= end_handle and attribute_handle >= begin_handle):
+                print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle}")
                 for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-                    if(descriptor_handle == char_value_handle):
+                    if(attribute_handle == char_value_handle):
                         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                        print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {descriptor_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02X} ({characteristic_properties_to_string(char_properties)})")
+                        print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {attribute_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                             unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
                         if(is_characteristic_readable(char_properties)):
@@ -2263,11 +2263,11 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             for begin_handle,end_handle,UUID128 in GATT_services_result:
                 print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
                 file.write(f"Svc: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128}\n")
-            for descriptor_handle, UUID128_2 in GATT_descriptors_result:
-                print(f"\t\tGATT Descriptor: Descriptor Handle: {descriptor_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
-                file.write(f"Descriptor Handle: {descriptor_handle}, {UUID128_2}\n")
+            for attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+                print(f"\t\tGATT Descriptor: Descriptor Handle: {attribute_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
+                file.write(f"Descriptor Handle: {attribute_handle}, {UUID128_2}\n")
             for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-                print(f"\t\tGATT Characteristic Declaration: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Value Handle: {char_value_handle}")
+                print(f"\t\tGATT Characteristic Declaration: {UUID128}, Properties: 0x{char_properties:02x}, Declaration Handle: {declaration_handle}, Characteristic Value Handle: {char_value_handle}")
                 file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle}, Characteristic Handle: {char_value_handle}\n")
         print("")
 

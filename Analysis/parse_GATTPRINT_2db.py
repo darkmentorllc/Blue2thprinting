@@ -19,7 +19,7 @@ cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
 sql_GATT_services = "INSERT IGNORE INTO GATT_services (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
-sql_GATT_descriptors = "INSERT IGNORE INTO GATT_descriptors (device_bdaddr_type, device_bdaddr, descriptor_handle, UUID128) VALUES (%s, %s, %s, %s)"
+sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
 sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
 sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s)"
 
@@ -213,28 +213,28 @@ def func_SERVICE(device_bdaddr_type, new, args):
     db_connection.commit()
 
 # If new = 1, that means it has the new style formatting with the device_bdaddr_type already embedded
-def func_DESCRIPTORS(device_bdaddr_type, new, args):
-    #print("Called: func_DESCRIPTORS with args:", args)
+def func_ATT_HANDLES(device_bdaddr_type, new, args):
+    #print("Called: func_ATT_HANDLES with args:", args)
     if(new == 0):
         if (len(args) != 3):
             print("args rejected as they were not the correct number of elements:", args)
             return
         device_bdaddr = args[0]
-        descriptor_handle = int(args[1], 16)
+        attribute_handle = int(args[1], 16)
         UUID128 = args[2]
     else:
         if (len(args) != 4):
             print("args rejected as they were not the correct number of elements:", args)
             return
         device_bdaddr = args[1]
-        descriptor_handle = int(args[2], 16)
+        attribute_handle = int(args[2], 16)
         UUID128 = args[3]
 
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, descriptor_handle, UUID128)
+    values = (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
-    cursor.execute(sql_GATT_descriptors, values)
+    cursor.execute(sql_GATT_attribute_handles, values)
     # Commit the changes to the database
     db_connection.commit()
 
@@ -313,7 +313,7 @@ try:
                     #print("GATTPRINT:DESCRIPTORS")
                     (bdaddr_type, new) = lookup_device_bdaddr_type(line)
                     if bdaddr_type == -1: continue
-                    func_DESCRIPTORS(bdaddr_type, new, line[1:])
+                    func_ATT_HANDLES(bdaddr_type, new, line[1:])
                 elif line[0] == "GATTPRINT:SERVICE":
                     #print("GATTPRINT:SERVICE")
                     (bdaddr_type, new) = lookup_device_bdaddr_type(line)
