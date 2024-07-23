@@ -1835,7 +1835,7 @@ def decode_BLE_features(features):
     if(features & (0b1 << 0x1f)): print(f"\t\t\t\t* Synchronized Receiver")
     if(features & (0b1 << 0x20)): print(f"\t\t\t\t* Connected Isophronous Stream (Host Support)")
     if(features & (0b1 << 0x21)): print(f"\t\t\t\t* LE Power Control Request")
-    if(features & (0b1 << 0x22)): print(f"\t\t\t\t* LE Power Control Request (Error in spec?")
+    if(features & (0b1 << 0x22)): print(f"\t\t\t\t* LE Power Control Indication")
     if(features & (0b1 << 0x23)): print(f"\t\t\t\t* LE Path Loss Monitoring")
     if(features & (0b1 << 0x24)): print(f"\t\t\t\t* Periodic Advertising ADI support")
     if(features & (0b1 << 0x25)): print(f"\t\t\t\t* Connection Subrating")
