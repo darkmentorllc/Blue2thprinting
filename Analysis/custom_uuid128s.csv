@@ -91,7 +91,14 @@
 "000015341212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Version Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
 "0000fe5900001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Secure DFU Service (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
 "8EC90001F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Control Point Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
-"8EC90002F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service,DFU Packet Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+"8EC90002F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Packet Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+
+"000015231212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: LED Button Service (LBS) (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+"000015241212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic LBS, Button Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+"000015251212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic LBS, LED Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+
+"57a70000935011eda1eb0242ac120002","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Status Message Service (NSMS) (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/nsms.html)"
+"57a70001935011eda1eb0242ac120002","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: NSMS, Status Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/nsms.html)"
 
 # Also note: I saw one device (c4:5b:be:ae:59:22) which had an OUI of Espressif. There was only one though, so maybe just an error in recording whether it was a public BDADDR or not? (Or of course some vendors just pick whatever they want...)
 "f000ffc004514000b000000000000000","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
