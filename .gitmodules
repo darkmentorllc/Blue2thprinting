@@ -1,0 +1,3 @@
+[submodule "Analysis/public"]
+	path = Analysis/public
+	url = https://bitbucket.org/bluetooth-SIG/public.git

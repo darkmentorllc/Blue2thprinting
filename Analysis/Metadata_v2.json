@@ -1,0 +1,436 @@
+{
+        "Created by Xeno Kovah": {"Copyright(c) ©": "Dark Mentor LLC 2023-2024"},
+	"Tesla Model 3 or Y": {
+		"comment": "This is close to the maximum data we would like to have about a device. But if new fields are determined later that we'd like to add, they can be added too.",
+		"2thprint_Chip": "TI CC2640",
+                "2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
+		"2thprint_Chip_Maker": "Texas Instruments",
+		"2thprint_Device_Model": "Tesla Model 3 or Y",
+		"2thprint_NamePrint": "^S[0-9a-f]{16}C$",
+		"NamePrint_UniqueID": "True",
+                "short_description": "An electric car, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car.",
+		"company_website": "https://tesla.com",
+                "security_research_urls": {
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://darkmentor.com/bt.html#Project%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+		},
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "FCC_InternalPhotos",
+		"confirmation_confidence": "10/10",
+		"FCC_ID": "2AEIM-1089773",
+		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1089773/External-Photos/External-Photos-3491653.pdf",
+		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
+		"GATT_Vendor_Specific": {
+			"00000211-b2d1-43f0-9b88-960cebf8b91e": "Service",
+			"00000212-b2d1-43f0-9b88-960cebf8b91e": "Characteristic",
+			"00000213-b2d1-43f0-9b88-960cebf8b91e": "Characteristic",
+			"00000214-b2d1-43f0-9b88-960cebf8b91e": "Characteristic"
+		}
+	},
+	"Tesla Keyfob": {
+                "2thprint_Chip": "TI CC2640",
+                "2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
+                "2thprint_Chip_Maker": "Texas Instruments",
+                "2thprint_Device_Model": "Tesla Keyfob",
+		"2thprint_NamePrint": "^Tesla Keyfob$",
+                "short_description": "Keyfob for Tesla electric cars, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car. For use by those who can't, or don't want to, use their phone as a proximity key.",
+		"company_website": "https://tesla.com",
+                "security_research_urls": {
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://darkmentor.com/bt.html#Project%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+		},
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf",
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "FCC_InternalPhotos",
+		"confirmation_confidence": "10/10",
+		"FCC_ID": "2AEIM-1133148",
+		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1133148/External-Photos/External-Photos-3989912.pdf",
+		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf"
+	},
+	"Nordic GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Nordic Semiconductor",
+		"company_website": "https://www.nordicsemi.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Nordic UART": "https://web.archive.org/web/20240303153909/https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html",
+			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic insecure DFU 2": "https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
+			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic Experimental Buttonless DFU Service 2": ""
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"6e400001-b5a3-f393-e0a9-e50e24dcca9e": "Service: Nordic: UART",
+			"6e400002-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Receive (RX)",
+			"6e400003-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Transmit (TX)",
+			"00001530-1212-efde-1523-785feabcd123": "Service: Nordic: 'Legacy'(insecure) Device Firmware Update (DFU)",
+			"00001531-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Control Point",
+			"00001532-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Packet",
+			"00001534-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Version",
+			"0000fe59-0000-1000-8000-00805f9b34fb": "Service: Nordic: Secure Device Firmware Update (DFU)",
+			"8EC90001-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Control Point",
+			"8EC90002-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Packet",
+			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU"
+		},
+		"TODO: GATT values": "Need to handle cases like 2a28 'Software Revision String' and then have a regex like '^nRF52' and have that be a Nordic ChipMakerPrint"
+	},
+	"Silicon Labs GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Silicon Laboratories",
+		"company_website": "https://www.silabs.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"security_research_urls": {
+			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://web.archive.org/web/20240618170612/https://darkmentor.com/publication/2020-08-blackhat/",
+			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+
+		},
+		"evidence_URL": {
+			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
+			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"1D14D6EE-FD63-4FA1-BFA4-8F47B42119F0": "Service: Silicon Labs: Over The Air firmware update protocol",
+			"F7BF3564-FB6D-4E53-88A4-5E37E0326063": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Control Endpoint",
+			"984227F3-34FC-4045-A5D0-2C581F81A153": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Data Endpoint",
+			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
+			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
+			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
+			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)"
+		}
+	},
+	"Cambridge Silicon Radio (CSR) GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Cambridge Silicon Radio (CSR) (Acquired by Qualcomm)",
+		"company_website": "https://www.qualcomm.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"CSR: GAIA (Over The Air firmware update protocol) 1": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
+			"CSR: GAIA (Over The Air firmware update protocol) 2": "https://web.archive.org/web/20240618162011/https://github.com/Hypfer/fiio-bta30-protocol"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol)",
+			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Command Endpoint",
+			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Response Endpoint",
+			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Data Endpoint"
+		}
+	},
+	"Texas Instruments GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Texas Instruments",
+		"company_website": "https://www.ti.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"f000ffc0-0451-4000-b000-000000000000": "Service: Texas Instruments: Over the Air Download (OAD) firmware update",
+			"f000ffc1-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Identify",
+			"f000ffc2-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Block",
+			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
+			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
+		}
+	},
+	"Espressif GATTPrints": {
+		"comment": "I don't think this is official, but rather just something someone decided to come up with for themselves. But if it is official then it's not on the open web and might be in private SDKs.",
+		"2thprint_Chip_Maker": "Espressif",
+		"company_website": "https://www.espressif.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Michael Angerer's BLE OTA for ESP32 1": "https://github.com/michael-angerer/esp32_ble_ota/blob/main/esp/main/gatt_svr.h",
+			"Michael Angerer's BLE OTA for ESP32 2": "https://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"d6f1d96d-594c-4c53-b1c6-244a1dfde6d8": "Service: NimBLE ESP32: OTA",
+			"7ad671aa-21c0-46a4-b722-270e3ae3d830": "Characteristic: NimBLE ESP32: OTA Control",
+			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data"
+		}
+	},
+	"Cypress GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Cypress",
+		"company_website": "https://www.cypress.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-09-02",
+		"evidence_URL": {
+                        "PSoC® Creator™ Example Project BLE External Memory Bootloader and Bootloadable Example Projects": "https://web.archive.org/web/20170908223844/https://www.cypress.com/file/228556/download"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-09-02",
+		"confirmation_method": "evidence_URL & looking at collected GATT data",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"00060000-f8ce-11e4-abf4-0002a5d5c51b": "Service: Cypress: Bootloader",
+			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command"
+		}
+	},
+	"NXP GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "(Quintic->)NXP",
+		"company_website": "https://www.nxp.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-09-02",
+		"evidence_URL": {
+                        "QN902x OTA Profile Guide": "https://web.archive.org/web/20230405132905/https://www.nxp.com/docs/en/user-guide/UM10993.pdf"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-09-02",
+		"confirmation_method": "evidence_URL & looking at collected GATT data",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"TODO": "This is a standard UUID128 w/ UUID16 fee8. We should make that signal an NXP Chip_Maker_Print",
+			"0000fee8-0000-1000-8000-00805f9b34fb": "Service: (Quintic->)NXP: OTA firmware update",
+			"003784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA TX",
+			"013784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA RX"
+		}
+	},
+	"ST BlueNRG GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+                "2thprint_Chip": "ST BlueNRG (version unknown)",
+		"2thprint_Chip_Maker": "STMicro",
+		"company_website": "https://www.st.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-09-02",
+		"evidence_URL": {
+			"BlueNRG OTA service implementation": "https://github.com/winfred-lu/stm32f4-bluenrg/blob/master/Bluetooth_LE/BlueNRG_OTA/src/btl.c",
+			"Uncovering Vulnerabilities of Bluetooth Low Energy IoT from Companion Mobile Apps with Ble-Guuide": "https://darkmentor.com/bt.html#Uncovering%20Vulnerabilities%20of%20Bluetooth%20Low%20Energy%20IoT%20from%20Companion%20Mobile%20Apps%20with%20Ble-Guuide"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-09-02",
+		"confirmation_method": "evidence_URLs only, no actual data seen for this",
+		"confirmation_confidence": "5/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"8a97f7c0-8506-11e3-baa7-0800200c9a66": "Service: ST BlueNRG OTA firmware update",
+			"122e8cc0-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: Image",
+			"210f99f0-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: New Image",
+			"2691aa80-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: New Image TU Content",
+			"2bdc5760-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: ExpectedImageTUSeqNumber"
+		}
+	},
+	"ST STM32WBA GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+                "2thprint_Chip": "ST STM32WBA (version unknown)",
+		"2thprint_Chip_Maker": "STMicro",
+		"company_website": "https://www.st.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-09-02",
+		"evidence_URL": {
+			"Uncovering Vulnerabilities of Bluetooth Low Energy IoT from Companion Mobile Apps with Ble-Guuide": "https://darkmentor.com/bt.html#Uncovering%20Vulnerabilities%20of%20Bluetooth%20Low%20Energy%20IoT%20from%20Companion%20Mobile%20Apps%20with%20Ble-Guuide",
+			"STM32WBA Bluetooth® LE – Peer 2 Peer Applications": "https://web.archive.org/web/20240522153704/https://wiki.st.com/stm32mcu/wiki/Connectivity:STM32WBA_Peer_To_Peer",
+			"STM32WBA Bluetooth® LE – Peer 2 Peer Router": "https://web.archive.org/web/20240425081329/https://wiki.st.com/stm32mcu/wiki/Connectivity:STM32WBA_Peer_To_Peer_Router",
+			"STM32WBA Bluetooth® LE – Data throughput measurement": "https://web.archive.org/web/20240228102640/https://wiki.st.com/stm32mcu/wiki/Connectivity:STM32WBA_Data_Throughput"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-09-02",
+		"confirmation_method": "Primarily evidence_URLs, no actual data seen for most of these, except 0000fe40... P2P service",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"0000fe20-cc7a-482a-984a-7f2ed5b3e58f": "Service: STM32WBA OTA firmware update",
+			"0000fe22-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA OTA: Base Address (Write without response)",
+			"0000fe23-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA OTA: Confirmation (Indication)",
+			"0000fe24-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA OTA: Raw Data (Write without response)",
+			"0000fe40-cc7a-482a-984a-7f2ed5b3e58f": "Service: STM32WBA Peer-to-peer (P2P) service",
+			"0000fe41-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA P2P: LED (Write without response/Read)",
+			"0000fe42-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA P2P: Switch (Notify)",
+			"0000feb0-cc7a-482a-984a-7f2ed5b3e58f": "Service: STM32WBA Peer-to-peer (P2P) router service",
+			"0000feb1-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA P2P router: Write forward (Write without response/Read)",
+			"0000feb2-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA P2P router: Notify forward (Notify)",
+			"0000feb3-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA P2P router: Device info (Notify)",
+			"0000fe80-cc7a-482a-984a-7f2ed5b3e58f": "Service: STM32WBA Data throughput measurement",
+			"0000fe81-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer TX (Notify)",
+			"0000fe82-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer RX (Write without response)",
+			"0000fe83-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer TX RX INFO (Notify)"
+		},
+		"TODO: Add stuff from here": "https://www.st.com/resource/en/user_manual/dm00550659-getting-started-with-the-bluest-protocol-and-sdk-stmicroelectronics.pdf"
+	},
+	"Jabra Elite 3":{
+                "2thprint_Chip": "Qualcomm QCC3040",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "QCC3040",
+                "2thprint_Chip_Maker": "Qualcomm",
+                "2thprint_Device_Model": "Jabra Elite 3",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite 3$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://www.jabra.com/bluetooth-headsets/jabra-elite-3",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. Model Number String (0x2a24) == 'QCC3040'. 'Device Name' (0x2a00) == 'Jabra Elite 3'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10",
+		"misc_other_URLs": {
+			"QCC30XX documentation" : "https://www.qualcomm.com/products/internet-of-things/consumer/audio/qcc30xx-series/qcc3040#Documentation"
+		}
+	},
+	"Jabra Elite 7 Pro":{
+                "2thprint_Chip": "Qualcomm QCC512x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "QCC512x",
+                "2thprint_Chip_Maker": "Qualcomm",
+                "2thprint_Device_Model": "Jabra Elite 7 Pro",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite 7 Pro$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/jabra-elite-7-pro",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'QCC512x'. 'Device Name' (0x2a00) == 'Jabra Elite 7 Pro'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10"
+	},
+	"Jabra Elite Active":{
+                "2thprint_Chip": "Qualcomm CSR867x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "CSR867x",
+                "2thprint_Chip_Maker": "CSR(->Qualcomm)",
+                "2thprint_Device_Model": "Jabra Elite Active",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Elite Active$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'CSR867x'. (Non-GATT) Advertised Name  == 'Jabra Elite Active'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT & ADV_IND data",
+                "confirmation_confidence": "10/10"
+	},
+	"Jabra Evolve 65e":{
+                "2thprint_Chip": "Qualcomm CSR867x",
+                "comment": "The idea here is that if a device looks up the GATT Model Number (0x2a24), and finds it equal to this value, it knows this record (and the ChipPrint herein) applies to the device being looked at",
+                "2thprint_Chip_GATT_Model_Number": "CSR867x",
+                "2thprint_Chip_Maker": "CSR(->Qualcomm)",
+                "2thprint_Device_Model": "Jabra Evolve 65e",
+                "2thprint_Device_Maker": "Jabra",
+                "2thprint_NamePrint": "^Jabra Evolve 65e$",
+                "short_description": "Wireless headphones",
+                "company_website": "https://web.archive.org/web/20240225184010/https://www.jabra.com/bluetooth-headsets/",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. 'Model Number String' (0x2a24) == 'CSR867x'. 'Device Name' (0x2a00) == 'Jabra Evolve 65e'",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "10/10"
+	},
+	"MagTek eDynamo credit card reader": {
+                "2thprint_Device_Model": "MagTek eDynamo",
+                "2thprint_Device_Maker": "MagTek",
+                "2thprint_NamePrint": "^eDynamo-B[A-F0-9]{6}$",
+		"short_description": "MagTek eDynamo credit card reader",
+		"comment": "I just wanted to capture this evidence URL which has nearby GATT UUIDs in it that I stumbled across.",
+		"evidence_URL": "https://www.magtek.com/content/documentationfiles/d99875629.pdf",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-01-01",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-01-01",
+                "confirmation_method": "GATT data",
+                "confirmation_confidence": "8/10",
+		"GATT_Vendor_Specific": {
+			"0508e6f8-ad82-898f-f843-e3410cb60103": "Service: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60200": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60201": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60202": "Characteristic: MagTek: Unknown",
+			"0508e6f8-ad82-898f-f843-e3410cb60203": "Characteristic: MagTek: Unknown"
+		}
+	},
+	"Windows Laptop": {
+		"2thprint_Device_Model": "Windows laptop",
+                "comment": "This NamePrint is the default value used for a Windows hostname, which is then used for a Bluetooth Device Name in some Microsoft beacon packets. AFAIK it will be constant over time, and unique to a given host.",
+		"2thprint_NamePrint": "^LAPTOP-[0-9A-Z]{8}",
+		"NamePrint_UniqueID": "True",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-08-31",
+                "evidence_URL": "The packet types are these: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-08-31",
+                "confirmation_method": "Observed Microsoft MSD values",
+                "confirmation_confidence": "8/10"
+        },
+	"Windows Desktop": {
+		"2thprint_Device_Model": "Windows desktop",
+                "comment": "This NamePrint is the default value used for a Windows hostname, which is then used for a Bluetooth Device Name in some Microsoft beacon packets. AFAIK it will be constant over time, and unique to a given host.",
+		"2thprint_NamePrint": "^DESKTOP-[0-9A-Z]{7}",
+		"NamePrint_UniqueID": "True",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-08-31",
+                "evidence_URL": "The packet types are these: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-08-31",
+                "confirmation_method": "Observed Microsoft MSD values",
+                "confirmation_confidence": "8/10"
+        },
+	"Eddystone GATT UUIDs": {
+		"short_description": "Eddystone GATT UUIDs",
+		"comment": "I just wanted to capture this evidence URL which has nearby GATT UUIDs in it that I stumbled across.",
+		"evidence_URL": "https://github.com/google/eddystone/blob/master/configuration-service/README.md",
+                "submitted_by": "Xeno Kovah",
+                "submission_date": "2024-09-04",
+                "confirmed_by": "Xeno Kovah",
+                "confirmation_date": "2024-09-04",
+                "confirmation_method": "evidence_URL + GATT data",
+                "confirmation_confidence": "10/10",
+		"GATT_Vendor_Specific": {
+			"a3c87500-8ed3-4bdf-8a39-a01bebede295": "Service: Eddystone: Eddystone Configuration Service",
+			"a3c87501-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Capabilities",
+			"a3c87502-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Active Slot",
+			"a3c87503-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Advertising Interval",
+			"a3c87504-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Radio Tx Power",
+			"a3c87505-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: (Advanced) Advertised Tx Power",
+			"a3c87506-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Lock State",
+			"a3c87507-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Unlock",
+			"a3c87508-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Public ECDH Key",
+			"a3c87509-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: EID Identity Key",
+			"a3c8750a-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: ADV Slot Data",
+			"a3c8750b-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: (Advanced) Factory reset",
+			"a3c8750c-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: (Advanced) Remain Connectable"
+		}
+	}
+}

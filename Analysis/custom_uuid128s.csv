@@ -1,0 +1,206 @@
+"Created by Xeno Kovah","Copyright(c) © Dark Mentor LLC 2023-2024"
+
+"7905F431B5CE4E99A40F4B1E122D00D0","Apple Notification Center Service UUID (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html)"
+"9FBF120D630142D98C5825E699A21DBD","Apple Notification Center Service: Characteristic (notifiable): Notification Source (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html)"
+"69D1D8F345E149A898219BBDFDAAD9D9","Apple Notification Center Service: Characteristic (writeable with response): Control Point (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html)"
+"22EAC6E924D64BB5BE44B36ACE7C7BFB","Apple Notification Center Service: Characteristic (notifiable): Data Source (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html)"
+
+"89D3502B0F36433A8EF4C502AD55F8DC","Apple Media Service UUID (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html)"
+"9B3C81D857B14A8AB8DF0E56F7CA51C2","Apple Media Service: Characteristic (writeable, notifiable): Remote Command (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html)"
+"2F7CABCE808D411F9A0CBB92BA96C102","Apple Media Service: Characteristic (writeable with response, notifiable): Entity Update (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html)"
+"C6B2F38C23AB46D8A6ABA3A870BBD5D7","Apple Media Service: Characteristic (readable, writeable): Entity Attribute (https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html)"
+
+"D0611E78BBB44591A5F8487910AE4366","ASSOCIATED WITH: GATT_Service: Apple Continuity Service UUID (https://inria.hal.science/hal02359914/document)"
+"8667556c9a374c9184ed54ee27d90049","ASSOCIATED WITH: GATT_Characteristic: Apple Continuity Characteristic UUID (https://inria.hal.science/hal02359914/document)"
+
+"9fa480e0496745429390d343dc5d04ae","ASSOCIATED WITH: GATT_Service: Apple Nearby Service UUID (https://inria.hal.science/hal02359914/document)"
+"af0badb15b9943cd917aa77bc549e3cc","ASSOCIATED WITH: GATT_Characteristic: Apple Nearby Characteristic UUID (https://inria.hal.science/hal02359914/document)"
+
+"872901023C5143B1A1A911B9DC38478B","ASSOCIATED WITH: GATT_Service: Apple Find My: ASSUMED based on containing the 6aa5000163524d57a7b4003a416fbb0b Find My characteristic underneath it"
+"6aa5000163524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000263524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Company name? (Based on values of 'Apple' & 'Anker Innovations Limited')"
+"6aa5000363524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Model name? (Based on values of 'AirPods Pro' & 'eufy Security Smart Finder')"
+"6aa5000563524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000663524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000763524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000863524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000963524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+"6aa5000A63524d57a7b4003a416fbb0b","ASSOCIATED WITH: GATT_Characteristic: Apple Find My: Unknown (Based on UUID value near other apparent Find My values)"
+
+"941100016d9b4225a4f16a4a7f01b0de","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4300001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
+"4f860001943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
+"4f860002943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
+"4f860003943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
+"4f860004943b49efbed42f730304427a","ASSOCIATED WITH: GATT_Characteristic: Apple Unknown (Seen under 0000fd4400001000800000805f9b34fb Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder')"
+
+"00000000decafadedecadeafdecacafe","ASSOCIATED WITH: GATT_Service: Apple MFi iAP client (https://wiomoc.de/misc/posts/mfi_iap.html, https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py#L112)"
+"00000000decafadedecadeafdecacaff","ASSOCIATED WITH: GATT_Service: Apple MFi iAP server (https://wiomoc.de/misc/posts/mfi_iap.html, https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py#L111)"
+
+"5052494d2dab034169726f6861424c45","ASSOCIATED WITH: GATT_Service: Multiple vendors' headphones"
+"434841522dab314169726f6861424c45","ASSOCIATED WITH: GATT_Characteristic: Multiple vendors' headphones (below 5052494d2dab034169726f6861424c45 service)"
+"434841522dab324169726f6861424c45","ASSOCIATED WITH: GATT_Characteristic: Multiple vendors' headphones (below 5052494d2dab034169726f6861424c45 service)"
+
+"abbaff00e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: ADV_IND, GATT_Service: Fitbit: Charge 4, Charge 5, Inspire 3, Ionic, Luxe, Sense, Versa, Versa 2, Versa 3, Versa Lite"
+"abbaff01e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Characteristic: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+"abbaff02e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Characteristic: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+
+"abbafd00e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Service: Fitbit: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+"abbafd01e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+"abbafd02e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+"abbafd03e56a484cb8328b17cf6cbfe8","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+
+"ac2f004581824be591e02992e6b40ebb","ASSOCIATED WITH: GATT_Service: Fitbit: Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4"
+"ac2f014581824be591e02992e6b40ebb","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Charge 4,  Charge 5,  Inspire 3,  Luxe,  Sense,  Sense 2,  Versa,  Versa 2,  Versa 3,  Versa 4"
+"ac2f104581824be591e02992e6b40ebb","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Charge 5, Inspire 3, Luxe, Sense 2, Versa 4"
+
+"adabfb006e7d4601bda2bffaa68956ba","ASSOCIATED WITH: ADV_IND, GATT_Service: Fitbit: Ace 2, Ace 3, Alta, Alta HR, Blaze, Charge 2, Charge 3, Charge HR, Flex 2, Inspire, Inspire 2, Inspire HR, Ionic, Versa, Versa Lite, Zip"
+"adabfb016e7d4601bda2bffaa68956ba","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Charge 2, Inspire 2"
+"adabfb026e7d4601bda2bffaa68956ba","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Charge 2, Inspire 2"
+"adabfb036e7d4601bda2bffaa68956ba","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Charge 2, Inspire 2"
+"adabfb046e7d4601bda2bffaa68956ba","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Charge 2, Inspire 2"
+"adabfb056e7d4601bda2bffaa68956ba","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Inspire 2"
+
+"558dfa004fa841059f024eaa93e62980","ASSOCIATED WITH: GATT_Service: Fitbit: Charge 2, Inspire, Inspire 2"
+"558dfa014fa841059f024eaa93e62980","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Fitbit: Charge 2, Inspire 2"
+
+"adab0d576e7d4601bda2bffaa68956ba","ASSOCIATED WITH: ADV_IND: Fitbit: One (possibly bitflip? Only appears once...or I may just not have enough data)"
+"adab65526e7d4601bda2bffaa68956ba","ASSOCIATED WITH: ADV_IND: Fitbit: One (possibly bitflip? Only appears once...or I may just not have enough data)"
+"adab5b8c6e7d4601bda2bffaa68956ba","ASSOCIATED WITH: ADV_IND: Fitbit: Flex (possibly bitflip? Only appears once...or I may just not have enough data)"
+
+"9f819e562684479389a8c7102b4f5314","ASSOCIATED WITH: GATT_Service: Fitbit: Sense 2, Versa 4"
+"9f819e562684479389a8c7102b4f5315","ASSOCIATED WITH: GATT_Characteristic: Fitbit: Sense 2, Versa 4"
+
+"9d41000735d6f4ddba60e7bd8dc491c0","ASSOCIATED WITH: GATT_Characteristic: Tile Characteristic (Readable)"
+"9d41001835d6f4ddba60e7bd8dc491c0","ASSOCIATED WITH: GATT_Characteristic: Tile Characteristic (Writable without response)"
+"9d41001935d6f4ddba60e7bd8dc491c0","ASSOCIATED WITH: GATT_Characteristic: Tile Characteristic (Notify, Indicate)"
+
+"289d680008a04e48986e62fb2cc93af9","ASSOCIATED WITH: GATT_Service: Endress+Hauser FMR10/20 radarbased liquid measurement devices"
+"289d680108a04e48986e62fb2cc93af9","ASSOCIATED WITH: GATT_Characteristic: Endress+Hauser FMR10/20 radarbased liquid measurement devices"
+"289d680208a04e48986e62fb2cc93af9","ASSOCIATED WITH: GATT_Characteristic: Endress+Hauser FMR10/20 radarbased liquid measurement devices"
+
+"00001100d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=CSR: CSR GAIA (Over The Air update protocol, https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf)"
+"00001101d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=CSR: CSR GAIA Command Endpoint (Over The Air update protocol, https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf)"
+"00001102d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=CSR: CSR GAIA Response Endpoint (Over The Air update protocol, https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf)"
+"00001103d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=CSR: CSR GAIA Data Endpoint (Over The Air update protocol, not included in https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf, found at https://github.com/Hypfer/fiiobta30protocol)"
+
+"6e400001b5a3f393e0a9e50e24dcca9e","ASSOCIATED WITH: SCAN_RSP, GATT_Service: ChipMakerPrint=Nordic: Nordic UART Service (https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html)",
+"6e400002b5a3f393e0a9e50e24dcca9e","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic UART RX Characteristic (https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html)",
+"6e400003b5a3f393e0a9e50e24dcca9e","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic UART TX Characteristic (https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html)",
+
+"000015301212efde1523785feabcd123","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service (https://nordicsemiconductor.github.io/IOSnRFConnect/assets/files/UserManual.pdf)"
+"000015311212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Control Point Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"000015321212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Packet Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"000015341212efde1523785feabcd123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic ('Legacy'/insecure) DFU Service, DFU Version Characteristic, (https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java)"
+"0000fe5900001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Secure DFU Service (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+"8EC90001F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Control Point Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+"8EC90002F3154F609FB8838830DAEA50","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic Secure DFU Service, DFU Packet Characteristic, (https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html)"
+
+"000015231212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: LED Button Service (LBS) (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+"000015241212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic LBS, Button Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+"000015251212EFDE1523785FEABCD123","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: Nordic LBS, LED Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html#lbs-readme)"
+
+"57a70000935011eda1eb0242ac120002","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Nordic: Nordic Status Message Service (NSMS) (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/nsms.html)"
+"57a70001935011eda1eb0242ac120002","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Nordic: NSMS, Status Characteristic (https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/nsms.html)"
+
+# Also note: I saw one device (c4:5b:be:ae:59:22) which had an OUI of Espressif. There was only one though, so maybe just an error in recording whether it was a public BDADDR or not? (Or of course some vendors just pick whatever they want...)
+"f000ffc004514000b000000000000000","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc104514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc204514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc304514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+"f000ffc404514000b000000000000000","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=TexasInstruments: TI OTA Firmware update (https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0)"
+
+"1D14D6EEFD634FA1BFA48F47B42119F0","ASSOCIATED WITH: GATT_Service: ChipMakerPrint=Silicon Labs: OTA Firmware Update (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+"F7BF3564FB6D4E5388A45E37E0326063","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: OTA Firmware Update Control Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+"984227F334FC4045A5D02C581F81A153","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: OTA Firmware Update Data Attribute (https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html)"
+# https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services
+# Example of EV Charger which had this was in Hacktivity 2023 talk
+"331a36f5245945ea9d956142f0c4b307","ASSOCIATED WITH: ADV_IND, GATT_Service: ChipMakerPrint=Silicon Labs: BGX Xpress Streaming Service (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"a9da60400823499594ec9ce41ca28833","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Peripheral Receive (Rx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"a73e9a10628f4494a09912efaf72258f","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Peripheral Transmit (Tx) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+"75a9f022af034e41b4bc9de90a47d50b","ASSOCIATED WITH: GATT_Characteristic: ChipMakerPrint=Silicon Labs: BGX: Stream Mode (Mode) (https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services)"
+
+"da2b84f1627948debdc0afbea0226079","ASSOCIATED WITH: GATT_Service: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"a87988b9694c479c900e95dfa6c00a24","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service Commands (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"18cda7844bd3437085bbbfed91ec86af","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service RX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+"bf03260c72054c25af4393b1c299d159","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Blue Radios (Modules): AT Serial Service TX (https://github.com/securing/gattacker/blob/master/standalone/blueRadiosCmd.js)"
+
+"0000fe2c00001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Google Fast Pair (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+"FE2C1233836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Model ID Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+"FE2C1234836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Keybased Pairing Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+"FE2C1235836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Passkey Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+"FE2C1236836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Account Key Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+"FE2C1237836648148EB001DE32100BEA","ASSOCIATED WITH: GATT_Characteristic: Google Fast Pair Personalized Name Characteristic (https://developers.google.com/nearby/fastpair/specifications/characteristics)"
+
+"0000fe0300001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Amazon Alexa (https://developer.amazon.com/enUS/docs/alexa/alexagadgetstoolkit/bluetoothlesettings.html)"
+"F04EB177300543A7AC61A390DDF83076","ASSOCIATED WITH: GATT_Characteristic: Amazon Alexa Transmit (Tx) Characteristics under 0000fe0300001000800000805f9b34fb service (https://developer.amazon.com/enUS/docs/alexa/alexagadgetstoolkit/bluetoothlesettings.html)"
+"2BEEA05B18794BB48A2F72641F82420B","ASSOCIATED WITH: GATT_Characteristic: Amazon Alexa Receive (Rx) Characteristic under 0000fe0300001000800000805f9b34fb service (https://developer.amazon.com/enUS/docs/alexa/alexagadgetstoolkit/bluetoothlesettings.html)"
+
+"0000febe00001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Bose (4th most common! Citation needed!)"
+"9ec813b4256b409093a8a4f0e9107733","ASSOCIATED WITH: GATT_Characteristic: Bose (('Readable' 'Notify' ) characteristic under 0xfebe service)"
+"d417c0289818435499d12ac09d074591","ASSOCIATED WITH: GATT_Characteristic: Bose (('Readable' 'Writable without response' 'Writable' 'Notify') characteristic under 0xfebe service)"
+"234bfbd5e3b34536a3fe723620d4b78d","ASSOCIATED WITH: GATT_Characteristic: Bose (('Writable') characteristic under 0xfebe service)"
+"c65b8f2faee24c89b758bc4892d6f2d8","ASSOCIATED WITH: GATT_Characteristic: Bose (('Readable' 'Writable without response' 'Writable' 'Notify'') characteristic under 0xfebe service)"
+"eecb95ddbefe40d698c70651d2d09ba9","ASSOCIATED WITH: GATT_Characteristic: Bose (('Writable' 'Notify') characteristic under 0xfebe service)"
+
+"569a1101b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: ADV_IND, GATT_Service: ModuleMakerPrint=Laird: Laird virtual serial port (https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a2000b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Laird virtual serial port TX_FIFO Characteristic, under 569a1101b87f490c92cb11ba5ea5167c service (https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a2001b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Laird virtual serial port RX_FIFO Characteristic, under 569a1101b87f490c92cb11ba5ea5167c service (https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a1102b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Service: ModuleMakerPrint=Laird: Laird virtual serial port (not actually mentioned in https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf, but observed in wild)"
+"569a2002b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Laird virtual serial port MODEM_OUT Characteristic, under 569a1102b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a2003b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Laird virtual serial port MODEM_IN Characteristic, under 569a1102b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a1103b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Service: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port (not actually mentioned in https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf, but observed in wild)"
+"569a3000b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1103b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a3001b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_IN Characteristic, under 569a1103b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a1104b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: ADV_IND, GATT_Service: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port (not actually mentioned in https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf, but observed in wild)"
+"569a4000b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a4001b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a4002b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a4003b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+"569a4004b87f490c92cb11ba5ea5167c","ASSOCIATED WITH: GATT_Characteristic: ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service(https://www.mouser.com/pdfDocs/ApplicationNoteLairdBLESerialPortServicev1_0_0.pdf)"
+
+# Something present on many headphones, Bose, Jabra, etc
+"0000eb10d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Service: Unknown, present on many audio devices. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate"
+"0000eb11d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000eb10d10211e19b2300025b00a5a5 service. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate"
+"0000eb12d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000eb10d10211e19b2300025b00a5a5 service. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate"
+"0000eb13d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000eb10d10211e19b2300025b00a5a5 service. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate"
+"0000eb14d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000eb10d10211e19b2300025b00a5a5 service. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate"
+"0000fd9200001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Qualcomm. Present on many audio devices. TODO: Further investigate"
+"0000eb20d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000fd9200001000800000805f9b34fb service. TODO: Further investigate"
+"0000eb21d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000fd9200001000800000805f9b34fb service. TODO: Further investigate"
+"0000eb22d10211e19b2300025b00a5a5","ASSOCIATED WITH: GATT_Characteristic: Unknown, present on many audio devices. Under 0000fd9200001000800000805f9b34fb service. TODO: Further investigate"
+
+"c7df000133c011e8b4670ed5f89f718b","ASSOCIATED WITH: ADV_IND, GATT_Service: The unknown (presumed something to do with Amazon because of GATT) 'rnet'"
+"c7df000233c011e8b4670ed5f89f718b","ASSOCIATED WITH: ADV_IND, GATT_Service: The unknown (presumed something to do with Amazon because of GATT) 'rnet'"
+"c7df000333c011e8b4670ed5f89f718b","ASSOCIATED WITH: ADV_IND, GATT_Service: The unknown (presumed something to do with Amazon because of GATT) 'rnet'"
+
+"9aa4730fb25c4cc3b821c931559fc196","Claimed to be Apple Watch related here: https://github.com/davidgyoung/BackgroundAdvertiser/blob/master/BackgroundAdvertiser/OverflowArea/OverflowAreaUtils.swift TODO: look into more"
+
+#BEGIN COPIED FROM https://bleak.readthedocs.io/en/latest/_modules/bleak/uuids.html (and removed dash)
+#END COPIED FROM https://bleak.readthedocs.io/en/latest/_modules/bleak/uuids.html (and removed dash)
+
+# TODO: Look at this https://github.com/WebBluetoothCG/registries/blob/master/gatt_blocklist.txt, lots of juicy UUIDS!
+# Good source for UUIDs for serial (possible ChipMakerPrints): https://github.com/ghostyguo/BleUuidExplorer/blob/master/app/src/main/java/ghostysoft/bleuuidexplorer/GattAttributes.java
+# TODO: Look into this: https://gist.github.com/ariccio/2882a435c79da28ba6035a14c5c65f22
+
+"273e00014c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: Control Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L21)"
+"273e00034c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: EEG Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L26)"
+"273e00044c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: EEG Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L26)"
+"273e00054c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: EEG Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L26)"
+"273e00064c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: EEG Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L26)"
+"273e00074c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: EEG Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L26)"
+"273e00094c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: Gyroscope Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L23)"
+"273e000a4c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: Accelerometer Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L24)"
+"273e000b4c4d454d96bef03bac821358","ASSOCIATED WITH: GATT_Characteristic: Interaxon Inc.: Muse EEG Headset: Telemetry Characteristic (https://github.com/urish/musejs/blob/06e83670a0558297feebe4540f6b11d203003aed/src/muse.ts#L22)"
+
+"d2d3f8ef9c994d9ca2b391c85d44326c","ASSOCIATED WITH: ADV_IND, GATT_Service: Nest: Associated with device name 'Dropcam'. com.nest.android according to https://web.cse.ohiostate.edu/~lin.3021/file/CCS19a.pdf"
+"7606123e42824ed4aca12374de7fdb61","ASSOCIATED WITH: GATT_Descriptor, GATT_Characteristic: Nest: Associated with device name 'Dropcam'. Characteristic ('Writable') Under d2d3f8ef9c994d9ca2b391c85d44326c service"
+
+"2dd100101c37452d8979d1b4a787d0a4","ASSOCIATED WITH: ADV_IND, GATT_Service: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
+"2dd100111c37452d8979d1b4a787d0a4","ASSOCIATED WITH: GATT_Characteristic: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
+"2dd100131c37452d8979d1b4a787d0a4","ASSOCIATED WITH: GATT_Characteristic: Dyson Limited: Air purifying fan (https://youtu.be/Z65QgA_BKgc?t=45)"
+
+"95665a00870411e5960c0002a5d5c51b","ASSOCIATED WITH: ADV_IND: VXi (headset maker) based on OUIs in my data for matches. From BLEScope: com.imptt.proptt, com.cotap.android, com.stagrp.instantconnect6, com.loudtalks, com.mysay.b"
+
+"cbbfe0e1f7f3420684e084cbb3d09dfc","ASSOCIATED WITH: ADV_IND: Android TV Remote? () https://android-review.linaro.org/plugins/gitiles/platform/cts/+/8bb61c456cb5dcc0c1f48c7651c98679ca384dde%5E%21/"
+
+"4de17a0052cb11e6bdf40800200c9a66","ASSOCIATED WITH: BTC EIR: Android Auto Wireless Gateway (https://github.com/hkfuertes/AAGW/blob/efad8bfe9ab99a2be1a77d9d329a3520669d7557/app/src/main/java/net/mfuertes/aagw/gateway/connectivity/BluetoothProfileHandler.kt#L20)

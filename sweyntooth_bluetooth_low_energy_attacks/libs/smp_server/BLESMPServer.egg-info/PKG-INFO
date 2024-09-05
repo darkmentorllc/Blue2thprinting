@@ -1,0 +1,12 @@
+Metadata-Version: 1.1
+Name: BLESMPServer
+Version: 1.0.1
+Summary: SMP Server library
+Home-page: UNKNOWN
+Author: Matheus Eduardo Garbelini
+Author-email: mgarbelix@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
