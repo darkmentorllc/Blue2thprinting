@@ -12,6 +12,7 @@ import csv
 import yaml
 import re
 import struct
+import time
 
 ########################################
 # BEGIN FILL DATA FROM JSON ############
@@ -1746,12 +1747,15 @@ def is_bdaddr_classic(bdaddr):
             if(bdaddr_result):
                 return True
     
+    '''
+    # NOTE: Temporarily disabled, because this adds something like 5 seconds to this function and slows down the entire code. We need to find a better way to do this (since I had even noticed the slowdown after I added)
     # Check if this BDADDR appears in Microsoft Swift Pair MSD - https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/bluetooth-swift-pair
     bdaddr_little_endian_str = f"{bdaddr[15:17]}{bdaddr[12:14]}{bdaddr[9:11]}{bdaddr[6:8]}{bdaddr[3:5]}{bdaddr[0:2]}"
     query = f"SELECT id FROM LE_bdaddr_to_MSD where device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030180{bdaddr_little_endian_str}';"
     result = execute_query(query)
     if(len(result) != 0):
         return True
+    '''
 
     return False
 
@@ -2285,7 +2289,8 @@ def characteristic_value_decoding(UUID128, bytes):
                 cname = BT_CID_to_company_name(company_id)
             else:
                 cname = USB_CID_to_company_name(company_id)
-            print(f"PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, product_id = 0x{product_id:04x}, product_version = 0x{product_version:04x}")
+            prod_ver_str = "{}.{}.{}".format(product_version >> 8, (product_version & 0x00F0) >> 4, (product_version & 0x000F))
+            print(f"PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}")
     else:
         print("") # basically just force a newline so next line isn't double-indented
 
@@ -2347,54 +2352,84 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     query = f"SELECT attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
+    attribute_handles_dict = {attribute_handle: UUID128 for attribute_handle,UUID128 in GATT_attribute_handles_result}
 
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
+    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID128) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_values_result = execute_query(query)
+    char_value_handles_dict = {read_handle: byte_values for read_handle,byte_values in GATT_characteristics_values_result}
 
-    # Put the handle to raw byte values into a dictionary so we don't need to do multiple loops below
-    char_byte_vals_dict = {}
-    for read_handle,byte_values in GATT_characteristics_values_result:
-        char_byte_vals_dict[read_handle] = byte_values
+    # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
+    # I will iterate through all of these handles, so nothing gets missed
+    query = f"""
+    SELECT DISTINCT handle_value
+    FROM (
+        SELECT attribute_handle AS handle_value
+        FROM GATT_attribute_handles
+        WHERE device_bdaddr = '{bdaddr}'
+        UNION
+        SELECT declaration_handle AS handle_value
+        FROM GATT_characteristics
+        WHERE device_bdaddr = '{bdaddr}'
+        UNION
+        SELECT char_value_handle AS handle_value
+        FROM GATT_characteristics
+        WHERE device_bdaddr = '{bdaddr}'
+    ) AS combined_handles
+    ORDER BY handle_value ASC;
+    """
+    GATT_all_known_handles_result = execute_query(query)
 
     if(len(GATT_services_result) != 0):
         print("\tGATT Information:")
 
     unknown_UUID128_hash = {}
-    # TODO: It would be nice if this printed out characteristics even when there's no corresponding descriptor within the given handle range (example: cf:3a:ad:09:ca:14)
     # Print semantically-meaningful information
-    for begin_handle,end_handle,UUID128 in GATT_services_result:
+    for svc_begin_handle,svc_end_handle,UUID128 in GATT_services_result:
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-        print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({UUID128_description})")
+        print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle}\tEnd Handle: {svc_end_handle}   \tUUID128: {UUID128} ({UUID128_description})")
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID128] = ("Service","\t\t\t")
-        for attribute_handle, UUID128_2 in GATT_attribute_handles_result:
-            if(attribute_handle <= end_handle and attribute_handle >= begin_handle):
-                print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle}")
-                for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-                    if(attribute_handle == char_value_handle):
-                        UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                        print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {attribute_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
-                        if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-                            unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
-                        if(is_characteristic_readable(char_properties)):
-                            if(char_value_handle in char_byte_vals_dict):
-                                print(f"\t\t\t\tGATT Characteristic Value read as {char_byte_vals_dict[char_value_handle]}")
-                                print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
-                                characteristic_value_decoding(UUID128, char_byte_vals_dict[char_value_handle]) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
-                            else:
-                                print(f"\t\t\t\tNo GATT characteristic Value was read and stored in the database (despite characteristic being readable)")
+
+        # Iterate through all known handles, so nothing gets missed
+        for handle, in GATT_all_known_handles_result:
+            # Check if this handle is found in the GATT_attribute_handles table, and if so, print that info
+            if(handle in attribute_handles_dict.keys()):
+                attribute_handle = handle
+                UUID128_2 = attribute_handles_dict[handle]
+                if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle}")
+
+            # Check if this handle is found in the GATT_characteristics table, and if so, print that info
+            if(handle in declaration_handles_dict.keys()):
+                declaration_handle = handle
+                if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    (char_properties, char_value_handle, UUID128) = declaration_handles_dict[handle]
+                    UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
+                    print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                    if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+                        unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
+
+            # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
+            if(handle in char_value_handles_dict.keys()):
+                char_value_handle = handle
+                byte_values = char_value_handles_dict[handle]
+                if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
+                    print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
+                    characteristic_value_decoding(UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         print(f"\n\t\tGATTPrint:")
         with open(f"./GATTPrints/{bdaddr}.gattprint", 'w') as file:
-            for begin_handle,end_handle,UUID128 in GATT_services_result:
-                print(f"\t\tGATT Service: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
-                file.write(f"Svc: Begin Handle: {begin_handle}\tEnd Handle: {end_handle}   \tUUID128: {UUID128}\n")
+            for svc_begin_handle,svc_end_handle,UUID128 in GATT_services_result:
+                print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle}\tEnd Handle: {svc_end_handle}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
+                file.write(f"Svc: Begin Handle: {svc_begin_handle}\tEnd Handle: {svc_end_handle}   \tUUID128: {UUID128}\n")
             for attribute_handle, UUID128_2 in GATT_attribute_handles_result:
                 print(f"\t\tGATT Descriptor: Descriptor Handle: {attribute_handle},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
                 file.write(f"Descriptor Handle: {attribute_handle}, {UUID128_2}\n")
@@ -2695,11 +2730,13 @@ def create_ChipMaker_OUI_hash():
 # If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipMakerPrint(bdaddr):
     bdaddr = bdaddr.strip().lower()
+    time_profile = False
 
     no_results_found = True
 
     print(f"\t2thprint_ChipMakerPrint:")
 
+    if(time_profile): print(f"Start = {time.time()}")
     #=====================#
     # LL_VERSION_IND data #
     #=====================#
@@ -2715,6 +2752,7 @@ def print_ChipMakerPrint(bdaddr):
         for (device_BT_CID,device_bdaddr_type) in ble_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
 
+    if(time_profile): print(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#
     # LMP_VERSION_REQ/RSP data #
     #==========================#
@@ -2730,6 +2768,7 @@ def print_ChipMakerPrint(bdaddr):
         for (device_BT_CID,) in btc_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
 
+    if(time_profile): print(f"NamePrint = {time.time()}")
     #================#
     # NamePrint data #
     #================#
@@ -2738,6 +2777,7 @@ def print_ChipMakerPrint(bdaddr):
         print(str)
         no_results_found = False
 
+    if(time_profile): print(f"OUI = {time.time()}")
     #===============#
     # IEEE OUI data #
     #===============#
@@ -2756,6 +2796,7 @@ def print_ChipMakerPrint(bdaddr):
                 print(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
                 no_results_found = False
 
+    if(time_profile): print(f"GATT = {time.time()}")
     #=============================#
     # GATT known chip-maker UUIDs #
     #=============================#
@@ -2765,11 +2806,12 @@ def print_ChipMakerPrint(bdaddr):
         for str in str_list:
             print(str)
 
-    # FIXME: TODO! Start with Quintic->NXP OTA = 0xfee8
+    # FIXME: TODO! Start with Quintic->NXP OTA = 0xfee8, can also do CSR/Qualcomm = 0x000a and also need to look up in PnP ID if present
     #=============================# 
     # Known chip-maker UUID16s    #
     #=============================#
 
+    if(time_profile): print(f"MSD BTC = {time.time()}")
     #========================================#
     # Manufacturer-Specific Data (MSD) - BTC #
     #========================================#
@@ -2789,6 +2831,7 @@ def print_ChipMakerPrint(bdaddr):
                     no_results_found = False
     
 
+    if(time_profile): print(f"MSD BLE = {time.time()}")
     #========================================#
     # Manufacturer-Specific Data (MSD) - BLE #
     #========================================#
@@ -2808,6 +2851,7 @@ def print_ChipMakerPrint(bdaddr):
                     if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
                         print(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
+    if(time_profile): print(f"End = {time.time()}")
     if(no_results_found):
         print(f"\t\tNo ChipMakerPrint(s) found.")
 

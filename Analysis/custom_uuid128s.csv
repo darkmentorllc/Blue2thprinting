@@ -135,7 +135,7 @@
 "F04EB177300543A7AC61A390DDF83076","ASSOCIATED WITH: GATT_Characteristic: Amazon Alexa Transmit (Tx) Characteristics under 0000fe0300001000800000805f9b34fb service (https://developer.amazon.com/enUS/docs/alexa/alexagadgetstoolkit/bluetoothlesettings.html)"
 "2BEEA05B18794BB48A2F72641F82420B","ASSOCIATED WITH: GATT_Characteristic: Amazon Alexa Receive (Rx) Characteristic under 0000fe0300001000800000805f9b34fb service (https://developer.amazon.com/enUS/docs/alexa/alexagadgetstoolkit/bluetoothlesettings.html)"
 
-"0000febe00001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Bose (4th most common! Citation needed!)"
+"0000febe00001000800000805f9b34fb","ASSOCIATED WITH: GATT_Service: Bose Unknown, (vendor-specific based on Bose member_uuids.yaml ID. 4th most common! Citation/documentation needed!)"
 "9ec813b4256b409093a8a4f0e9107733","ASSOCIATED WITH: GATT_Characteristic: Bose (('Readable' 'Notify' ) characteristic under 0xfebe service)"
 "d417c0289818435499d12ac09d074591","ASSOCIATED WITH: GATT_Characteristic: Bose (('Readable' 'Writable without response' 'Writable' 'Notify') characteristic under 0xfebe service)"
 "234bfbd5e3b34536a3fe723620d4b78d","ASSOCIATED WITH: GATT_Characteristic: Bose (('Writable') characteristic under 0xfebe service)"
