@@ -2281,21 +2281,44 @@ def characteristic_extended_properties_to_string(number):
 def is_characteristic_readable(number):
     return (number & 0b00000010) != 0
 
+def lookup_company_name_by_OUI(OUI):
+    query = f"SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr = '{OUI}'"
+    result = execute_query(query)
+    if(len(result) >= 1):
+        return result[0][0]
+    else:
+        return ""
+
 	
-# Decode some misc things just because
-def characteristic_value_decoding(UUID128, bytes):
+# Decode some misc things just because they provide interesting info
+def characteristic_value_decoding(indent, UUID128, bytes):
     str = match_known_GATT_UUID_or_custom_UUID(UUID128)
     if(str == "Characteristic: Appearance"):
         value = int.from_bytes(bytes, byteorder='little')
         #print(f"Value = {value}")
-        print(f"Appearance decodes as: {appearance_uint16_to_string(value)}")
+        print(f"{indent}Appearance decodes as: {appearance_uint16_to_string(value)}")
+
     elif(str == "Characteristic: Peripheral Preferred Connection Parameters" and len(bytes) == 8):
         Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<HHHH', bytes)
-        print(f"PPCP decodes as: Interval_Min:0x{Interval_Min:04x}, Interval_Max:0x{Interval_Max:04x}, Latency:0x{Latency:04x}, Timeout:0x{Timeout:04x}")
+        print(f"{indent}PPCP decodes as: Interval_Min:0x{Interval_Min:04x}, Interval_Max:0x{Interval_Max:04x}, Latency:0x{Latency:04x}, Timeout:0x{Timeout:04x}")
+
     elif(str == "Characteristic: Central Address Resolution" and len(bytes) == 1):
         addr_res_support = struct.unpack('<b', bytes)
         addr_res_support = "True" if addr_res_support == (1,) else "False"
-        print(f"Central Address Resolution decodes as: Address Resolution Supported = {addr_res_support}")
+        print(f"{indent}Central Address Resolution decodes as: Address Resolution Supported = {addr_res_support}")
+
+    elif(str == "Characteristic: System ID" and len(bytes) >= 3):
+        big_endian_OUI = f"{bytes[0]:02X}:{bytes[1]:02X}:{bytes[2]:02X}"
+        if(big_endian_OUI != "00:00:00"): # Don't want to show likely-false-positives as "Xerox"
+            be_company_name = lookup_company_name_by_OUI(big_endian_OUI)
+            if(be_company_name != ""):
+                print(f"{indent}System ID first 3 bytes big-endian decodes as: OUI = {big_endian_OUI}, Company Name = {be_company_name}")
+        little_endian_OUI = f"{bytes[-1]:02X}:{bytes[-2]:02X}:{bytes[-3]:02X}"
+        if(little_endian_OUI != "00:00:00"):
+            le_company_name = lookup_company_name_by_OUI(little_endian_OUI)
+            if(le_company_name != ""):
+                print(f"{indent}System ID last 3 bytes little-endian decodes as: OUI = {little_endian_OUI}, Company Name = {le_company_name}")
+
     elif(str == "Characteristic: PnP ID" and len(bytes) == 7):
         company_id_type, company_id, product_id, product_version = struct.unpack('<BHHH', bytes)
         if(company_id_type == 1 or company_id_type == 2): # Don't bother with data which doesn't conform to spec
@@ -2304,7 +2327,7 @@ def characteristic_value_decoding(UUID128, bytes):
             else:
                 cname = USB_CID_to_company_name(company_id)
             prod_ver_str = "{}.{}.{}".format(product_version >> 8, (product_version & 0x00F0) >> 4, (product_version & 0x000F))
-            print(f"PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}")
+            print(f"{indent}PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}")
     else:
         print("") # basically just force a newline so next line isn't double-indented
 
@@ -2434,8 +2457,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 byte_values = char_value_handles_dict[handle]
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
                     print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                    print(f"\t\t\t\t\t", end="") # Don't want a newline before next print
-                    characteristic_value_decoding(UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                    characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
