@@ -48,6 +48,20 @@ def create_nameprint_CSV_data():
                 value = row[0].strip()
                 nameprint_data[key] = value
 
+# Option to store private metadata in
+# this file. It will be consulted, but
+# doesn't need to be checked in
+try:
+    with open('./NAMEPRINT_DB_private.csv', 'r') as csvfile:
+        csv_reader = csv.reader(csvfile)
+        for row in csv_reader:
+            if len(row) >= 2:
+                key = row[1].strip()
+                value = row[0].strip()
+                nameprint_data[key] = value
+except FileNotFoundError:
+    pass
+
 custom_uuid128_hash = {} 
 
 def create_custom_uuid128_CSV_data():
