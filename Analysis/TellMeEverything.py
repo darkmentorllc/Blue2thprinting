@@ -2278,6 +2278,14 @@ def characteristic_value_decoding(UUID128, bytes):
         addr_res_support = struct.unpack('<b', bytes)
         addr_res_support = "True" if addr_res_support == (1,) else "False"
         print(f"Central Address Resolution decodes as: Address Resolution Supported = {addr_res_support}")
+    elif(str == "Characteristic: PnP ID" and len(bytes) == 7):
+        company_id_type, company_id, product_id, product_version = struct.unpack('<BHHH', bytes)
+        if(company_id_type == 1 or company_id_type == 2): # Don't bother with data which doesn't conform to spec
+            if(company_id_type == 1):
+                cname = BT_CID_to_company_name(company_id)
+            else:
+                cname = USB_CID_to_company_name(company_id)
+            print(f"PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, product_id = 0x{product_id:04x}, product_version = 0x{product_version:04x}")
     else:
         print("") # basically just force a newline so next line isn't double-indented
 

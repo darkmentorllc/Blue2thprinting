@@ -1,5 +1,4 @@
 Welcome to Xeno's basic Blue2thprinting setup! It's cheap(ish, other than the small form factor PC) and *good enough* to get started!  
-Copyright(c) © Dark Mentor LLC 2023-2024  
 
 # Disclaimer!
 
@@ -461,3 +460,5 @@ The regex is checked against associations with the BDADDR IEEE OUI, UUID16s, and
 I originally added support for GPS logging of where devices were seen, before I learned that [WiGLE.net](https://WiGLE.net) had support for crowdsourced Bluetooth logging. These days I tend to not use my GPS dongle, and instead I just run a junk Pixel phone with WiGLE and consider its capture good enough. (Also the phone's GPS seemed to generally be more reliable than the USB GPS dongle.)
 
 Therefore I have moved discussion of the GPS setup to a [separate page](GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
+
+Copyright(c) © Dark Mentor LLC 2023-2024
