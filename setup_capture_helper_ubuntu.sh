@@ -32,18 +32,55 @@ echo ""
 echo "===================================="
 echo "Installing all prerequisite software"
 echo "===================================="
-sudo apt-get update
+#sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
 # Note to self: python3-mysql.connector and python2.7 don't exist in Raspbian Bookworm, and python2.7 doesn't exist in Ubuntu 24.04
-sudo apt-get install -y python3-pip python3-mysql.connector python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-inotify python2.7 
+sudo apt-get install -y python3-pip python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-intelhex
 if [ $? != 0 ]; then
     echo ""
     echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
     exit -1
 fi
 echo "  Done"
+
+# Conditionally install the packages which differ from distro to distro
+### inotify
+dpkg -l | grep -q '^ii  python3-inotify'
+if [ $? != 0 ]; then
+    echo "  NOTE: This distribution is missing the python3-inotify package. This would prevent the code from working correctly, and is fatal. Attempting to install through pip instead."
+    pip3 install inotify
+    if [ $? != 0 ]; then
+        echo "  Could not install inotify. Tool will not work without it. Exiting."
+        exit -1
+    fi
+else
+    sudo apt-get install -y python3-inotify
+fi
+
+### mysql-connector
+dpkg -l | grep -q '^ii  python3-mysql.connector'
+if [ $? != 0 ]; then
+    echo "  NOTE: This distribution is missing the python3-mysql.connector package. This may cause issues for data analysis. Attempting to install through pip instead."
+    pip3 install mysql-connector
+    if [ $? != 0 ]; then
+        echo "  Could not install mysql-connector. Tool will not work without it. Exiting."
+        exit -1
+    fi
+else
+    sudo apt-get install -y python3-mysql.connector
+fi
+
+### Python 2.7
+dpkg -l | grep -q '^ii  python2.7'
+if [ $? != 0 ]; then
+    echo "  NOTE: This distribution is missing the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent it from working."
+else
+    sudo apt-get install -y python2.7
+fi
+
+
 
 echo ""
 echo "====================================================================================================================================="
@@ -169,6 +206,23 @@ if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! 
 else
     echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
 fi
+
+echo ""
+echo "================================================================="
+echo "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
+echo "================================================================="
+#### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
+#### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
+#### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
+cd /home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/
+### BlueZ Configuration ###
+if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
+    find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
+    echo "  Sonoff firmware flashing complete."
+else
+    echo "  No Sonoff firmware, not attempting firmware flashing."
+fi
+
 
 echo ""
 echo "[--------------------------------------------------]"
