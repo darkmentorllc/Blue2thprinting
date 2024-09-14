@@ -139,7 +139,7 @@ This previously was a bunch of manual commands. Now instead just run the below:
 
 ```
 cd ~/Blue2thprinting
-sudo ./setup_capture_helper_ubuntu.sh
+sudo ./setup_capture_helper_debian-based.sh
 ```
 
 And there's comments in that script if you want to see what's being done and why.
@@ -263,7 +263,7 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 
 ### Setup automatic script execution at boot:
 
-The previous `setup_capture_helper_ubuntu.sh` should have already configured your system to automatically run data capture at reboot. So now reboot with `sudo reboot`.  
+The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot. So now reboot with `sudo reboot`.
 
 After the system comes back up, run:  
 `~/Blue2thprinting/Scripts/check.sh`  
@@ -327,7 +327,7 @@ from within the Scripts folder.
 
 ```
 cd ~/Blue2thprinting
-sudo ./setup_analysis_helper_ubuntu.sh
+sudo ./setup_analysis_helper_debian-based.sh
 ```
 
 **macOS Software Setup**: macOS cannot be used for collection, but it can be used for analysis of files collected on other platforms. You must first [install HomeBrew](https://brew.sh/), and then run `brew install mysql` and `brew install wireshark` (for the `tshark` CLI version). (If for some reason neither tshark nor wireshark are found in your PATH, look in / add from /usr/local/Cellar/wireshark/). Then also edit `/usr/local/etc/my.cnf` and add `secure_file_priv = /tmp` at the end of the file, and then start the mysql server with `/usr/local/opt/mysql/bin/mysqld_safe --datadir=/usr/local/var/mysql`.
