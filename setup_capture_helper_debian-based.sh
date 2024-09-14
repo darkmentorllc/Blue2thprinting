@@ -4,6 +4,7 @@
 # Created by Xeno Kovah
 # Copyright(c) © Dark Mentor LLC 2023-2024
 ##########################################
+# Tested on Ubuntu 24.04, Raspbian Buster & Bookworm
 
 if [ "$EUID" -ne 0 ]; then
     echo "This script needs to be run with sudo"
@@ -36,7 +37,6 @@ sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-# Note to self: python3-mysql.connector and python2.7 don't exist in Raspbian Bookworm, and python2.7 doesn't exist in Ubuntu 24.04
 sudo apt-get install -y python3-pip python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-intelhex
 if [ $? != 0 ]; then
     echo ""
@@ -53,7 +53,7 @@ if [ $? != 0 ]; then
     pip3 install inotify
     if [ $? != 0 ]; then
         echo "  Could not install inotify. Tool will not work without it."
-        echo "  This is known to not be packaged by Ubuntu 24.04 and to require using the --break-system-packages option to install."
+        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
         while true; do
             read -p "Do you want to install with --break-system-packages (y/n): " user_input
             case "$user_input" in
@@ -86,7 +86,7 @@ if [ $? != 0 ]; then
     pip3 install mysql-connector
     if [ $? != 0 ]; then
         echo "  Could not install mysql-connector. Tool will not work without it."
-        echo "  This is known to not be packaged by Ubuntu 24.04 and to require using the --break-system-packages option to install."
+        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
         while true; do
             read -p "Do you want to install with --break-system-packages (y/n): " user_input
             case "$user_input" in
@@ -112,15 +112,18 @@ else
     sudo apt-get install -y python3-mysql.connector
 fi
 
+no_python2=1
 ### Python 2.7
 dpkg -l | grep -q '^ii  python2.7'
 if [ $? != 0 ]; then
-    echo "  NOTE: This distribution is missing the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent it from working."
+    echo "  WARNING: This distribution is missing the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent it from working."
 else
     sudo apt-get install -y python2.7
+    python2.7 --version
+    if [ $? == 0 ]; then
+        $no_python2=0
+    fi
 fi
-
-
 
 echo ""
 echo "====================================================================================================================================="
@@ -268,3 +271,6 @@ echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"
 echo "[--------------------------------------------------]"
+if [ $no_python2 == 1 ]; then
+    echo "WARNING: This system could not install the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent full 2thprinting from working."
+fi
