@@ -1,10 +1,4 @@
 #!/usr/bin/python3
-
-##########################################
-# Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
-##########################################
-
 '''
 This is a tool which coordinates the launching of various 2thprinting apps.
 The goal is to try and generally minimize contention for the scanning interface
@@ -16,6 +10,7 @@ import subprocess
 import threading
 import time
 import os
+import glob
 from subprocess import TimeoutExpired
 import traceback
 
@@ -27,20 +22,19 @@ from inotify_simple import INotify, flags
 ##################################################
 
 BLE_thread_enabled = True
-BTC_thread_enabled = True
+BTC_thread_enabled = False
+Sniffle_thread_enabled = True
 
 btc_2thprint_enabled = False
 ble_2thprint_enabled = False
 gattprint_enabled = True
 sdpprint_enabled = True
 
-# This can be used to pre-populate any specific devices you want to test
-# TODO, this worked in central_app_launcher.py but I haven't gotten around to adding it back in
-#manual_test = True
-
 print_skipped = True
 print_verbose = True
 print_finished_bdaddrs = True
+sniffle_stdout_logging = False
+sniffle_log_rotate_in_seconds = 3600 # This will create a new log every hour if timeout=3600
 
 # END TESTING TOGGLES
 
@@ -58,7 +52,7 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
 # PATHS YOU MAY NEED TO FIX
 ##################################################
 
-username = "user"
+username = "pi"
 
 default_cwd = f"/home/{username}/"
 
@@ -78,6 +72,10 @@ dongle1 = "/dev/ttyACM0"
 btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
 gattprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
 sdpprint_log_path = f"/home/{username}/Blue2thprinting/Logs/SDPprint.log"
+
+sniffle_stdout_log_path = f"/home/{username}/Blue2thprinting/Logs/Sniffle_stdout.log"
+sniffle_path = f"/home/{username}/Blue2thprinting/Sniffle/python_cli/sniff_receiver.py"
+sniffle_pcap_log_folder = f"/home/{username}/Blue2thprinting/Logs/sniffle"
 
 # END STUFF YOU MAY NEED TO FIX UP
 
@@ -99,8 +97,6 @@ ll2thprint_success_bdaddrs = {}
 ll2thprint_success_bdaddrs_lock = threading.Lock()
 lmp2thprint_success_bdaddrs = {}
 lmp2thprint_success_bdaddrs_lock = threading.Lock()
-
-
 
 ##################################################
 # Log print helpers
@@ -139,15 +135,16 @@ def all_2thprints_done(type, bdaddr):
        else:
            return False
 
-
 class ApplicationThread(threading.Thread):
-    def __init__(self, process, bdaddr, info_type, timeout):
+    global serial_port_status
+    def __init__(self, process, bdaddr, info_type, timeout, launch_cmd=""):
         threading.Thread.__init__(self)
         self.process = process
         self.timeout = timeout
         self.is_terminated = False
         self.bdaddr = bdaddr
         self.info_type = info_type
+        self.launch_cmd = launch_cmd
 
     def run(self):
         try:
@@ -190,6 +187,8 @@ class ApplicationThread(threading.Thread):
                            if(all_2thprints_done("BTC", self.bdaddr)):
                                locked_delete_from_dict(btc_bdaddrs, btc_bdaddrs_lock, self.bdaddr)
                                if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {self.bdaddr} from btc_bdaddrs!")
+                    elif(self.info_type == "Sniffle"):
+                       external_log_write(sdpprint_log_path, f"SNIFFLE LAUNCH SUCCESS: {self.launch_cmd} {datetime.datetime.now()}")
                 else:
                     if(self.info_type == "GATT"):
                        external_log_write(gattprint_log_path, f"GATTPRINTING FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
@@ -197,6 +196,8 @@ class ApplicationThread(threading.Thread):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "SDP"):
                        external_log_write(sdpprint_log_path, f"SDPPRINTING FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
+                    elif(self.info_type == "Sniffle"):
+                       external_log_write(sniffle_stdout_log_path, f"SNIFFLE LAUNCH FAILURE 0x{retCode:02x} FOR: {self.launch_cmd} {datetime.datetime.now()}")
 
             self.is_terminated = True
         except TimeoutExpired:
@@ -210,7 +211,24 @@ class ApplicationThread(threading.Thread):
                external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "SDP"):
                external_log_write(sdpprint_log_path, f"SDPPRINTING FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
-
+            elif(self.info_type == "Sniffle"):
+               external_log_write(sniffle_stdout_log_path, f"SNIFFLE TIMEOUT FOR: {self.launch_cmd} {datetime.datetime.now()}")
+               # Re-set the status of the serial port to available
+               key = next((k for k, v in serial_port_status.items() if v == self.process.pid), None)
+               if(key == None):
+                   print(serial_port_status)
+                   print("Unknown error occurred. Exiting")
+                   exit(-1)
+               if(print_verbose): print(f"self.process.pid = {self.process.pid}. Corresponding key in serial_port_status is {key}")
+               # Set the status back to launching with follow or not (-A) based on the current launch status
+               toks = self.launch_cmd.split(" ")
+               if(toks[2] == "-A"):
+                   serial_port_status[key] = 1
+               else:
+                   serial_port_status[key] = 0
+               if(print_verbose): print("Notifying sniffle_thread_function to wake up and re-launch a new process/thread for this serial port.")
+               with start_sniffle_threads_condition:
+                   start_sniffle_threads_condition.notify()
 
 def launch_application(cmd, target_cwd, stdout=None):
     try:
@@ -234,6 +252,7 @@ def launch_application(cmd, target_cwd, stdout=None):
 
 def force_reboot():
     print(f"UNRECOVERABLE ERROR. REBOOTING at {datetime.datetime.now()}")
+    time.sleep(30) # TODO: for testing only. Deleteme
     os.system("sudo reboot")
     print("SLEEPING FOR SUPERSTITION!")
     time.sleep(30)
@@ -632,6 +651,100 @@ def btc_thread_function():
         #time.sleep(5)
 
 ##################################################
+# Sniffle-handling thread
+##################################################
+
+# The key will be serial port like /dev/ttyUSB0, the value will be 0 if the serial port is available and should follow connections, 1 if it's available and should not follow, and a process PID if it's in use
+serial_port_status = {}
+start_sniffle_threads_condition = threading.Condition()
+
+# Function for the Sniffle thread(s)
+def sniffle_thread_function():
+    global sniffle_stdout_logging
+    global start_sniffle_threads_condition
+    global available_serial_ports
+    adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
+    create_connection_follower = True
+
+    base_dir = '/dev/serial/by-id'
+    # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
+    pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
+
+    # Check if the base directory exists and is accessible
+    if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
+        print(f"The directory {base_dir} does not exist or is not accessible. Fix sniffle_thread_function() or permissions")
+        exit(-1)
+
+    # Construct the full pattern path
+    full_pattern = os.path.join(base_dir, pattern)
+
+    # Use glob to match the pattern
+    matching_files = glob.glob(full_pattern)
+    for serial_port_filename in matching_files:
+        # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
+        link_target_relative_path = os.readlink(serial_port_filename)
+        link_target_absolute_path = os.path.abspath(os.path.join(os.path.dirname(serial_port_filename), link_target_relative_path))
+        if(print_verbose): print(f"Found viable Sniffle dongle: {serial_port_filename} -> {link_target_absolute_path}")
+        if(print_verbose): print(f"Adding {link_target_absolute_path} to serial_port_status")
+        if(create_connection_follower):
+            serial_port_status[link_target_absolute_path] = 0
+            create_connection_follower = False
+        else:
+            serial_port_status[link_target_absolute_path] = 1
+
+    while(True):
+            for link_target_absolute_path in serial_port_status.keys():
+                # Get just the "ttyUSB# part to append to file names so they're unique
+                short_name = link_target_absolute_path.split("/")[2]
+                target_adv_channel = 37 + adv_channel
+                adv_channel = (adv_channel + 1) % 3
+                # Launch the sniffer as a background thread
+                current_time = datetime.datetime.now()
+                launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
+                hostname = os.popen('hostname').read().strip()
+                # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
+                if(serial_port_status[link_target_absolute_path] == 0):
+                    sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
+                else:
+                    sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
+                #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
+                #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
+
+                try:
+                    if(sniffle_stdout_logging):
+                        sniffle_append_stdout = open(f"{sniffle_pcap_log_folder}/Sniffle_stdout.log", "a")
+                    else:
+                        sniffle_append_stdout = open(f"/dev/null", "a")
+                    sniffle_process = launch_application(sniffle_cmd, default_cwd, stdout=sniffle_append_stdout)
+                    if(print_verbose): print(f"Setting {link_target_absolute_path} pid to {sniffle_process.pid}")
+                    serial_port_status[link_target_absolute_path] = sniffle_process.pid
+                except BlockingIOError as e:
+                    print(f"Caught BlockingIOError while launching Sniffle application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
+                    # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
+                    force_reboot()
+                except Exception as e:
+                    print(f"Caught an exception while launching Sniffle application: {e}")
+                    # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
+                    force_reboot()
+
+                if(sniffle_process != None):
+                    # TODO: I don't feel like adding a new parameter right now, so I'm just reusing the bdaddr to include info about the sniffle_cmd used to launch the process
+                    launch_cmd_str = " ".join(sniffle_cmd)
+                    individual_sniffle_instance_thread = ApplicationThread(sniffle_process, info_type="Sniffle", bdaddr="N/A", launch_cmd=launch_cmd_str, timeout=sniffle_log_rotate_in_seconds)
+                    try:
+                        individual_sniffle_instance_thread.start()
+                        #Sniffle_individual_sniffer_threads_list.append(individual_sniffle_instance_thread)
+                    except Exception as e:
+                        print(f"Caught an exception while starting Sniffle thread: {e}")
+                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
+                        force_reboot()
+            # We have now launched threads for all available serial ports
+            with start_sniffle_threads_condition:
+                start_sniffle_threads_condition.wait()
+
+    # End while(True)
+
+##################################################
 # main()
 ##################################################
 
@@ -640,13 +753,18 @@ inotify = INotify()
 watch_descriptor = inotify.add_watch(bluetoothctl_log_link, flags.MODIFY)
 
 def main():
+    global start_sniffle_threads_condition
 
     ble_thread = threading.Thread(target=ble_thread_function)
     btc_thread = threading.Thread(target=btc_thread_function)
+    sniffle_thread = threading.Thread(target=sniffle_thread_function)
 
     if(BLE_thread_enabled): ble_thread.start()
-    if(BTC_thread_enabled):btc_thread.start()
-
+    if(BTC_thread_enabled): btc_thread.start()
+    if(Sniffle_thread_enabled):
+        sniffle_thread.start()
+        with start_sniffle_threads_condition:
+            start_sniffle_threads_condition.notify()
 
     # Keep track of the bluetoothctl log file position so we don't re-process it on each open
     bt_file_position = 0
