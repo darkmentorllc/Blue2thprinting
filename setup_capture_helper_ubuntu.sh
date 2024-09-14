@@ -32,7 +32,7 @@ echo ""
 echo "===================================="
 echo "Installing all prerequisite software"
 echo "===================================="
-#sudo apt-get update
+sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
