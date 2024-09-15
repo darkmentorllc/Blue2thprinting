@@ -22,11 +22,11 @@ from inotify_simple import INotify, flags
 ##################################################
 
 BLE_thread_enabled = True
-BTC_thread_enabled = False
+BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-btc_2thprint_enabled = False
-ble_2thprint_enabled = False
+btc_2thprint_enabled = True
+ble_2thprint_enabled = True
 gattprint_enabled = True
 sdpprint_enabled = True
 
