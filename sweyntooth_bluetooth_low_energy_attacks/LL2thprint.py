@@ -16,7 +16,7 @@ from scapy.utils import raw
 from timeout_lib import start_timeout, disable_timeout, update_timeout
 from Crypto.Cipher import AES
 
-BLE2TH_LOG_PATH = "/home/pi/BLE_2THPRINT.log"
+BLE2TH_LOG_PATH = "/home/user/Blue2thprinting/Logs/BLE_2THPRINT.log"
 
 # Default master address
 master_address = '5d:36:ac:90:0b:20'
