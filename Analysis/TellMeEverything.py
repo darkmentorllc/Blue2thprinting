@@ -2420,6 +2420,11 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     """
     GATT_all_known_handles_result = execute_query(query)
 
+    # Create a copy of the handle list to keep track of handles we see which never match any Service, to print them out after the fact
+    service_match_dict = {}
+    for handle, in GATT_all_known_handles_result:
+        service_match_dict[handle] = 0
+
     if(len(GATT_services_result) != 0):
         print("\tGATT Information:")
 
@@ -2439,12 +2444,14 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 attribute_handle = handle
                 UUID128_2 = attribute_handles_dict[handle]
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    service_match_dict[handle] = 1
                     print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle}")
 
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
             if(handle in declaration_handles_dict.keys()):
                 declaration_handle = handle
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    service_match_dict[handle] = 1
                     (char_properties, char_value_handle, UUID128) = declaration_handles_dict[handle]
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
                     print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
@@ -2456,8 +2463,40 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 char_value_handle = handle
                 byte_values = char_value_handles_dict[handle]
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                    service_match_dict[handle] = 1
                     print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
                     characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+
+
+        # Second pass:
+        # Iterate through all known handles, printing only information about handles which never matched any service
+        print(f"\t\tGATT Service Unknown! Handle does not match any Service ranges that we received from the device!")
+        for handle, in GATT_all_known_handles_result:
+            if(service_match_dict[handle] == 1):
+                continue
+            # Check if this handle is found in the GATT_attribute_handles table, and if so, print that info
+            if(handle in attribute_handles_dict.keys()):
+                attribute_handle = handle
+                UUID128_2 = attribute_handles_dict[handle]
+                print(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle}")
+
+            # Check if this handle is found in the GATT_characteristics table, and if so, print that info
+            if(handle in declaration_handles_dict.keys()):
+                declaration_handle = handle
+                (char_properties, char_value_handle, UUID128) = declaration_handles_dict[handle]
+                UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
+                print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+                    unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
+
+            # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
+            if(handle in char_value_handles_dict.keys()):
+                char_value_handle = handle
+                byte_values = char_value_handles_dict[handle]
+                print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
+                characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+
+
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
