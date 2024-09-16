@@ -2328,8 +2328,8 @@ def characteristic_value_decoding(indent, UUID128, bytes):
                 cname = USB_CID_to_company_name(company_id)
             prod_ver_str = "{}.{}.{}".format(product_version >> 8, (product_version & 0x00F0) >> 4, (product_version & 0x000F))
             print(f"{indent}PnP ID decodes as: Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}")
-    else:
-        print("") # basically just force a newline so next line isn't double-indented
+    #else:
+    #    print("") # basically just force a newline so next line isn't double-indented
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
 def device_has_GATT_info(bdaddr):
@@ -2397,7 +2397,15 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_values_result = execute_query(query)
-    char_value_handles_dict = {read_handle: byte_values for read_handle,byte_values in GATT_characteristics_values_result}
+    # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
+    char_value_handles_dict = {}
+    for read_handle,byte_values in GATT_characteristics_values_result:
+        if(read_handle in char_value_handles_dict.keys()):
+            # There is already an entry for this handle, so append the new value to the list of possible values
+            char_value_handles_dict[read_handle].append(byte_values)
+        else:
+            # There wasn't already an entry, so insert a list of a single value")
+            char_value_handles_dict[read_handle] = [ byte_values ]
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
@@ -2462,11 +2470,12 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
             if(handle in char_value_handles_dict.keys()):
                 char_value_handle = handle
-                byte_values = char_value_handles_dict[handle]
-                if(handle <= svc_end_handle and handle >= svc_begin_handle):
-                    service_match_dict[handle] = 1
-                    print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                    characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                for byte_values in char_value_handles_dict[handle]:
+                    #byte_values = char_value_handles_dict[handle]
+                    if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                        service_match_dict[handle] = 1
+                        print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
+                        characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
 
     # Second pass:
@@ -2493,9 +2502,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
         if(handle in char_value_handles_dict.keys()):
             char_value_handle = handle
-            byte_values = char_value_handles_dict[handle]
-            print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-            characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+            for byte_values in char_value_handles_dict[handle]:
+                #byte_values = char_value_handles_dict[handle]
+                print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
+                characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
 
 
