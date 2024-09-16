@@ -144,6 +144,8 @@ echo "==========================================================================
 if [ $USERNAME != "user" ]; then
     echo "Replacing username 'user' with '$USERNAME'."
     cd /home/$USERNAME/Blue2thprinting
+    sed -i "s|/home/user/|/home/$USERNAME/|" sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py
+    echo "Correcting sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
     echo "Correcting bluez-5.66/attrib/gatttool.c"
     sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/attrib/gatttool.c
     echo "Correcting bluez-5.66/tools/sdptool.c"
@@ -160,8 +162,6 @@ if [ $USERNAME != "user" ]; then
     done
     sed -i "s|username = \"user\"|username = \"$USERNAME\"|" central_app_launcher2.py
     echo "Correcting central_app_launcher2.py"
-    sed -i "s|/home/user/|/home/$USERNAME/|" sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py
-    echo "Correcting sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
 fi
 echo "  Done"
 
