@@ -61,12 +61,12 @@ gatttool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/attrib/gattto
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
 sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
 
-braktooth = f"/home/{username}/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter"
-brak_cwd = f"/home/{username}/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/"
+braktooth = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter"
+brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/"
 
 python2 = "/usr/bin/python2.7"
-ble2thprint = f"/home/{username}/Downloads/sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
-sweyn_cwd = f"/home/{username}/Downloads/sweyntooth_bluetooth_low_energy_attacks/"
+ble2thprint = f"/home/{username}/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
+sweyn_cwd = f"/home/{username}/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks/"
 dongle1 = "/dev/ttyACM0"
 
 btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
