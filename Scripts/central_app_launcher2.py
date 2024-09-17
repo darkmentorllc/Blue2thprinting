@@ -25,8 +25,8 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-btc_2thprint_enabled = True
-ble_2thprint_enabled = True
+btc_2thprint_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
+ble_2thprint_enabled = False # This is toggled off by default because unless you have Sweyntooth set up, turning this on will cause an error and reboot loop. Only turn on once Sweyntooth is configured.
 gattprint_enabled = True
 sdpprint_enabled = True
 
@@ -671,8 +671,17 @@ def sniffle_thread_function():
     pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
 
     # Check if the base directory exists and is accessible
-    if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
-        print(f"The directory {base_dir} does not exist or is not accessible. Fix sniffle_thread_function() or permissions")
+    retry_count = 0
+    MAX_RETRY_COUNT = 360 # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late!)
+    while(retry_count < MAX_RETRY_COUNT):
+        if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
+            retry_count += 10
+            if(print_verbose): print(f"sniffle_thread_function: /dev/serial/by-id may not be accessible yet. Sleeping 10 seconds.")
+            time.sleep(10)
+        else:
+            break # It's accessible, try to access Sniffle dongles now
+    if(retry_count == MAX_RETRY_COUNT):
+        print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Fix sniffle_thread_function() or permissions.")
         exit(-1)
 
     # Construct the full pattern path
