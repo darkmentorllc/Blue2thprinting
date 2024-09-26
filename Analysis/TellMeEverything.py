@@ -2369,18 +2369,24 @@ def device_has_LMP_VERSION_RES_info(bdaddr):
     else:
         return 0
 
+# Returns whether any matches were found
 def print_associated_android_package_names(type, indent, UUID128):
     if(type == "Service"):
         query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 1";
     if(type == "Characteristic"):
         query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 2";
 
-    print(f"{indent}{type} {UUID128}:")
-    print(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
+    match_found = False
     android_pkgs_result = execute_query(query)
-    for (pkg,) in android_pkgs_result:
-        print(f"{indent}\t{pkg}")
-    print()
+    if(len(android_pkgs_result) > 0):
+        match_found = True
+        print(f"{indent}{type} {UUID128}:")
+        print(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
+        for (pkg,) in android_pkgs_result:
+            print(f"{indent}\t{pkg}")
+        print()
+
+    return match_found
 
 def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
@@ -2532,10 +2538,15 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         print("")
 
         if(not hideBLEScopedata):
+            match_found = False
             print("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
             for UUID128 in unknown_UUID128_hash.keys():
                 (type, indent) = unknown_UUID128_hash[UUID128]
-                print_associated_android_package_names(type, indent, UUID128)
+                match_found = print_associated_android_package_names(type, indent, UUID128)
+            if(not match_found):
+                print("\t\t\tNo matches found\n")
+            else:
+                print()
 
     if(len(GATT_services_result) == 0):
         print("\tNo GATT Information found.")
