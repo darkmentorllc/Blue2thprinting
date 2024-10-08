@@ -22,7 +22,7 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_UUID128s
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_flags (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL,  le_general_discoverable_mode BOOLEAN NOT NULL,  le_bredr_support_controller  BOOLEAN NOT NULL,  le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, le_bredr_support_controller, le_bredr_support_host));"
 
-mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, device_BT_CID INT NOT NULL, MSD VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, device_BT_CID, manufacturer_specific_data));"
+mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, device_BT_CID, manufacturer_specific_data));"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE RSP_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, device_name));"
 
@@ -41,7 +41,7 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_flags (id
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_tx_power (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, device_tx_power TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power));"
 
-mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, device_BT_CID INT NOT NULL, MSD VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, MSD));"
+mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data));"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_other_le_bdaddr (id INT NOT NULL AUTO_INCREMENT, device_bdaddr VARCHAR(20) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, other_bdaddr VARCHAR(20), other_bdaddr_random BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random));"
 
