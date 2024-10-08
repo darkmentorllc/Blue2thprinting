@@ -2525,7 +2525,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         print(f"\n\t\tGATTPrint:")
-        with open(f"./GATTPrints/{bdaddr}.gattprint", 'w') as file:
+        with open(f"./GATTprints/{bdaddr}.gattprint", 'w') as file:
             for svc_begin_handle,svc_end_handle,UUID128 in GATT_services_result:
                 print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
                 file.write(f"Svc: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128}\n")
