@@ -26,9 +26,9 @@
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
 		"GATT_Vendor_Specific": {
 			"00000211-b2d1-43f0-9b88-960cebf8b91e": "Service",
-			"00000212-b2d1-43f0-9b88-960cebf8b91e": "Characteristic",
-			"00000213-b2d1-43f0-9b88-960cebf8b91e": "Characteristic",
-			"00000214-b2d1-43f0-9b88-960cebf8b91e": "Characteristic"
+			"00000212-b2d1-43f0-9b88-960cebf8b91e": "'To Vehicle' Characteristic",
+			"00000213-b2d1-43f0-9b88-960cebf8b91e": "'From Vehicle' Characteristic",
+			"00000214-b2d1-43f0-9b88-960cebf8b91e": "'Version Info' Characteristic"
 		}
 	},
 	"Tesla Keyfob": {

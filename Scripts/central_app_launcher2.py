@@ -713,9 +713,9 @@ def sniffle_thread_function():
                 hostname = os.popen('hostname').read().strip()
                 # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
                 if(serial_port_status[link_target_absolute_path] == 0):
-                    sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
+                    sniffle_cmd = ["python3", sniffle_path, f"-e", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
                 else:
-                    sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
+                    sniffle_cmd = ["python3", sniffle_path, f"-e", f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
                 #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
                 #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
 
