@@ -4,8 +4,8 @@
 ########################################
 
 import struct
-import TME_glob
 from TME_helpers import *
+from TME_BTIDES import *
 
 ########################################
 # Transmit Power
@@ -16,9 +16,10 @@ def print_transmit_power(bdaddr, nametype):
 
     eir_query = f"SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
-    for name in eir_result:
-        print(f"\tTransmit Power: {name[0]}dB")
+    for (device_tx_power,) in eir_result:
+        print(f"\tTransmit Power: {device_tx_power}dB")
         print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_tx_power)")
+        BTIDES_insert_TxPower(bdaddr, 0, 50, "EIR", device_tx_power)
 
 #    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype}"
     le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
@@ -27,6 +28,7 @@ def print_transmit_power(bdaddr, nametype):
         print(f"\tTransmit Power: {device_tx_power}dB")
         print(f"\t\tIn BT LE Data (LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        BTIDES_insert_TxPower(bdaddr, random, le_evt_type, get_le_event_type_string(le_evt_type), device_tx_power)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
         print("\tNo transmit power found.")
@@ -168,7 +170,7 @@ def print_manufacturer_data(bdaddr):
                 Salt_bytes = bytes.fromhex(manufacturer_specific_data[8:16])
                 big_endian_integer_Salt = struct.unpack('<I', Salt_bytes)[0] # Salt is ostensibly stored little-endian, but without knowing a "Device Thumbprint" to calculate the Device Hash I can't be sure
                 print(f"\t\t\tSalt: 0x{big_endian_integer_Salt:08x}")
-                Device_Hash_bytes = bytes.fromhex(manufacturer_specific_data[16:])
+                #Device_Hash_bytes = bytes.fromhex(manufacturer_specific_data[16:])
                 print(f"\t\t\tDevice Hash: {manufacturer_specific_data[16:]}")
                 # Non-spec interpretation based on observed data: I see 2 bytes and then a string
                 # This seems to only occur if(ExtendedDeviceStatus & 0x8). Found some if(ExtendedDeviceStatus & 0x4), data and confirmed it doesn't occur then

@@ -9,7 +9,6 @@ import argparse
 #import mysql.connector
 #import struct
 #import time
-import TME_glob
 from TME_helpers import *
 from TME_import import *
 from TME_lookup import *
@@ -24,6 +23,7 @@ from TME_BLE2thprint import *
 from TME_BTC2thprint import *
 from TME_metadata import *
 from TME_trackability import *
+from TME_BTIDES import *
 
 ########################################
 # MAIN #################################
@@ -32,6 +32,7 @@ from TME_trackability import *
 # Main function to handle command line arguments
 def main():
     parser = argparse.ArgumentParser(description='Query device names from MySQL tables.')
+    parser.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     parser.add_argument('--bdaddr', type=str, required=False, help='Device bdaddr value.')
     parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     parser.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
@@ -42,14 +43,15 @@ def main():
     parser.add_argument('--UUID128regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
     parser.add_argument('--UUID16regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
     parser.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
-    parser.add_argument('--UUID128stats', type=str, default='', help='Parse the UUID128 data, and output statistics about the most common entries')
-    parser.add_argument('--UUID16stats', type=str, default='', help='Parse the UUID16 data, and output statistics about the most common entries')
+    parser.add_argument('--UUID128stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries')
+    parser.add_argument('--UUID16stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries')
     parser.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
     parser.add_argument('--require_LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
     parser.add_argument('--require_LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
     parser.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     args = parser.parse_args()
+    out_filename = args.output
     bdaddr = args.bdaddr
     bdaddrregex = args.bdaddrregex
     nametype = 0 # Default to non-random
@@ -104,11 +106,11 @@ def main():
     # Options to simply print statistics from the database
     ######################################################
 
-    if(uuid16stats != ""):
+    if(uuid16stats):
         get_uuid16_stats(uuid16stats)
         quit() # Don't do anything other than print the stats and exit
 
-    if(uuid128stats != ""):
+    if(uuid128stats):
         get_uuid128_stats(uuid128stats)
         quit() # Don't do anything other than print the stats and exit
 
@@ -215,6 +217,11 @@ def main():
         print_BLE_2thprint(bdaddr)
         print_BTC_2thprint(bdaddr)
         print_UniqueIDReport(bdaddr)
+
+        #BTIDES_insert_TxPower(bdaddr, "public", 1)
+    
+    if(out_filename != ""):
+        write_BTIDES(out_filename)
 
 if __name__ == "__main__":
     main()

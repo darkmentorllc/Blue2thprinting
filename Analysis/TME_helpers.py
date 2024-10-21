@@ -327,7 +327,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         random = is_bdaddr_le_and_random(bdaddr)
 
     if(random):
-       print(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
+        print(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
     else:
         # Query the database for the company_name based on the first 3 octets
         query = f"SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr LIKE '{first_three_octets}%'"
@@ -370,7 +370,7 @@ def find_nameprint_match(name_string):
 ##################################################################################
 
 def appearance_uint16_to_string(number):
-    str = ""
+    #s = ""
     subcategory_num = number & 0b111111
     category_num = number >> 6
     #print(f"Raw Value: 0x{number:04x}")
