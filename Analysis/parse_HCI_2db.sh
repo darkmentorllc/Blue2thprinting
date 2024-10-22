@@ -21,8 +21,8 @@ echo ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_UUID16s.sh "$1"
 echo ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_UUID32s.sh "$1"
 ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_UUID32s.sh "$1"
 
-echo ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_flags.sh "$1"
-./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_flags.sh "$1"
+echo ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_flags2.sh "$1"
+./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_flags2.sh "$1"
 
 echo ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_MSD.sh "$1"
 ./parse_HCI_2db_helpers/fill_EIR_bdaddr_to_MSD.sh "$1"
@@ -57,8 +57,8 @@ echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_appearance.sh "$1"
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_connect_interval.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_connect_interval.sh "$1"
 
-echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_flags.sh "$1"
-./parse_HCI_2db_helpers/fill_LE_bdaddr_to_flags.sh "$1"
+echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_flags2.sh "$1"
+./parse_HCI_2db_helpers/fill_LE_bdaddr_to_flags2.sh "$1"
 
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_MSD.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_MSD.sh "$1"
