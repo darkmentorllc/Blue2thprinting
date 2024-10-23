@@ -34,6 +34,44 @@ echo "Fixing this repository if you didn't clone it with a recursive pull of the
 echo "====================================================================================================================================="
 git submodule update --init --recursive
 
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
+sudo apt-get install -y python3-pip python3-docutils mariadb-server
+
+### mysql-connector
+dpkg -l | grep -q '^ii  python3-mysql.connector'
+if [ $? != 0 ]; then
+    echo "  NOTE: This distribution is missing the python3-mysql.connector package. This may cause issues for data analysis. Attempting to install through pip instead."
+    pip3 install mysql-connector
+    if [ $? != 0 ]; then
+        echo "  Could not install mysql-connector. Tool will not work without it."
+        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
+        while true; do
+            read -p "Do you want to install with --break-system-packages (y/n): " user_input
+            case "$user_input" in
+                [Yy]* )
+                    pip3 install mysql-connector --break-system-packages
+                    if [ $? != 0 ]; then
+                        echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
+                        exit -1
+                    fi
+                    break
+                    ;;
+                [Nn]* )
+                    echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
+                    exit -1
+                    ;;
+                * )
+                    echo "Please answer y or n."
+                    ;;
+            esac
+        done
+    fi
+else
+    sudo apt-get install -y python3-mysql.connector
+fi
+
+
+
 # Next commands assume they run from the Analysis folder
 cd ./Analysis/one_time_initialization
 

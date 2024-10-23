@@ -13,7 +13,7 @@ fi
 USERNAME="$SUDO_USER"
 echo "Username detected as '$USERNAME'."
 
-if [ ! -d "/home/$USERNAME/Blue2thprinting" ]; then
+if [ ! -d "/Users/$USERNAME/Blue2thprinting" ]; then
     echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
     echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
     exit -1
@@ -23,6 +23,22 @@ brew -v
 if [ ! $? ]; then
     echo "================================================================================================================================================="
     echo "This script assumes you're running on macOS and that you have brew already installed from https://brew.sh/. Install brew to continue."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+mysql --version
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "This script assumes you've already run "brew install mysql" on macOS per the instructions in the git repository. Please run that first.
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+tshark --version
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "This script assumes you've already run "brew install tshark" on macOS per the instructions in the git repository. Please run that first.
     echo "================================================================================================================================================="
     exit -1
 fi
