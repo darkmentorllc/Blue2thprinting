@@ -35,7 +35,7 @@ echo "==========================================================================
 git submodule update --init --recursive
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-sudo apt-get install -y python3-pip python3-docutils mariadb-server
+sudo apt-get install -y python3-pip python3-docutils python3-jsonschema mariadb-server
 
 ### mysql-connector
 dpkg -l | grep -q '^ii  python3-mysql.connector'
