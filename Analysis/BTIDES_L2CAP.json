@@ -1,0 +1,82 @@
+{
+  "$id": "http://darkmentor.com/BT_JSON_schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "BTIDES L2CAP packet information data types",
+  "type": "object",
+  "properties": {
+    "L2CAPArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/L2CAP_LE_CREDIT_BASED_CONNECTION_REQ"},
+          {"$ref": "#/definitions/L2CAP_LE_CREDIT_BASED_CONNECTION_REQ2"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "L2CAP_LE_CREDIT_BASED_CONNECTION_REQ": {
+      "type": "object",
+      "description": "Structure for L2CAP\\_LE\\_CREDIT\\_BASED\\_CONNECTION\\_REQ packet.",
+      "required": [ "asdf" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"code": {
+		"description": "Optional field just if you don't want to look up the \"code\" (term used in the spec, rather than opcode) for this packet type.",
+		"type": "integer",
+		"enum": 20
+	},
+	"id": {
+		"description": "1-byte \"identifier\" field from spec. Arbitrary value, just used to match requests to responses.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	},
+	"data_len": {
+		"description": "2-byte \"Data Length\" field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"spsm": {
+		"description": "2-byte \"SPSM\" (Simplified Protocol Service Multiplexer) field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"src_cid": {
+		"description": "2-byte \"Source CID\" ((L2CAP) Channel ID) field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"mtu": {
+		"description": "2-byte \"MTU\" (Maximum Transmission Unit) field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"mps": {
+		"description": "2-byte \"MPS\" (Maximum PDU Payload Size) field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"initial_credits": {
+		"description": "2-byte \"Initial Credits\" field from spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	}
+      }
+    },
+    "L2CAP_LE_CREDIT_BASED_CONNECTION_REQ2": {
+      "type": "object",
+      "description": "Structure for L2CAP\\_LE\\_CREDIT\\_BASED\\_CONNECTION\\_REQ packet, as single raw hex string.",
+      "required": [ "full_pkt_hex_str" ],
+      "properties": {
+        "full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    }
+  }
+}

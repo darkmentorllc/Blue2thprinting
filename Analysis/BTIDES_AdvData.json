@@ -1,0 +1,183 @@
+{
+  "$id": "http://darkmentor.com/BT_JSON_schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "BTIDES AdvData advertised data types",
+  "type": "object",
+  "properties": {
+    "AdvChanArray": {
+	"description": "Capture multiple types of data such as ADV\\_IND, SCAN\\_RSP, EIR, etc here.",
+	"type": "array",
+	"items": { "$ref": "#/definitions/AdvChanData" }
+    }
+  },
+  "definitions": {
+    "AdvChanData": {
+	"description": "Data about a packet seen on an advertising channel (could be \\*ADV\\_\\* or \\*SCAN\\_\\* for BLE or EIR for BR/EDR).",
+	"type": "object",
+	"properties": {
+		"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+		"type": {
+			"description": "What kind of advertisement or response this data appeared in. \n 0 = ADV\\_IND\n 1 = ADV\\_DIRECT\\_IND\n 2 = ADV\\_NONCONN\\_IND\n 3 = ADV\\_SCAN\\_IND\n 10 = AUX\\_ADV\\_IND\n 20 = SCAN\\_RSP\n 21 = AUX\\_SCAN\\_RSP\n 50 = Extended Inquiry Response",
+			"type": "integer",
+			"enum": [0, 1, 2, 3, 10, 20, 21, 50]
+		},
+		"type_str": {
+			"description": "What kind of advertisement or response this data appeared in, as a string.\n ADV\\_IND\n ADV\\_DIRECT\\_IND\n ADV\\_NONCONN\\_IND\n ADV\\_SCAN\\_IND\n AUX\\_ADV\\_IND\n SCAN\\_RSP\n AUX\\_SCAN\\_RSP\n EIR",
+			"type": "string",
+			"enum": ["ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "ADV_SCAN_IND", "AUX_ADV_IND", "SCAN_RSP", "AUX_SCAN_RSP", "EIR" ]
+		},
+		"CSA": {
+			"description": "Channel Selection Algorithm (from LL header). 0 = CSA #1, 1 = CSA #2. This can be obtained from pcaps, but is not typically present in HCI logs, thus it is optional.",
+			"type": "integer",
+			"enum": [0,1]
+		},
+		"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str" },
+		"AdvDataArray": {
+			"description": "This is the array of *0 or more* AdvData types (where \"AdvData\" is the term used in the Spec definition of packets), like Device Name, Tx Power, Manufacturer-Specific Data (MSD), UUID16/128 lists, etc.",
+			"type": "array",
+			"items": {
+				"anyOf": [
+					{"$ref": "#/definitions/Flags"},
+					{"$ref": "#/definitions/UUID16ListIncomplete"},
+					{"$ref": "#/definitions/UUID16ListComplete"},
+					{"$ref": "#/definitions/TxPower"},
+					{"$ref": "#/definitions/ManufacturerSpecificData"}
+				]
+			}
+		}
+	}
+    },
+    "Flags": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0x01 = \"Flags\"",
+      "required": [ "type", "length", "flags_hex_str" ],
+      "properties": {
+	"type": {
+		"description": "This should technically always be exactly == 0x01. (Per the assigned numbers document, \"Common Data Type\" table.) This is just here as an optional field in case you don't want to do lookup.",
+		"type": "integer",
+		"const": 1
+	},
+	"type_str": {
+		"type": "string",
+		"const": "Flags"
+	},
+	"length": {
+		"description": "This should technically always be exactly == 2. But you should store whatever value actually came in from the device, because they could be sending malformed data, and if so, you want to capture that.",
+		"type": "integer"
+	},
+        "flags_hex_str": {
+		"description": "Flags field, single byte, stored as a hex string. i.e. 0x1a == string \"1a\" without any \"0x\" prefix.\n From BT Core Specification Supplement: \n bit 0 = 'LE Limited Discoverable Mode'\n  bit 1 = 'LE General Discoverable Mode'\n  bit 2 = 'BR/EDR Not Supported.'\n  bit 3 = 'Simultaneous LE and BR/EDR to Same Device Capable (Controller)'\n  bit 4 = 'Simultaneous LE and BR/EDR to Same Device Capable (Controller)' (removed in new specs.)",
+		"type": "string",
+		"minLength": 2,
+		"maxLength": 2
+	}
+      }
+    },
+    "UUID16ListIncomplete": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0x02 = \"Incomplete List of 16-bit Service or Service Class UUIDs.\"",
+      "required": [ "type", "length" ],
+      "properties": {
+	"type": {
+		"description": "This should technically always be exactly == 0x02. (Per the assigned numbers document, \"Common Data Type\" table.) This is just here as an optional field in case you don't want to do lookup.",
+		"type": "integer",
+		"const": 2
+	},
+	"type_str": {
+		"type": "string",
+		"const": "UUID16ListIncomplete"
+	},
+	"length": {
+		"description": "This is 1 or more. If it's 1, it means they only have space for the type, and have included a 0-length UUID16List. Similarly if it's 3, they didn't include a full UUID16, so UUID16List should still be excluded because it's empty.",
+		"type": "integer"
+	},
+	"UUID16List": {
+		"description": "This is the array of *0 or more* UUID16s. Yes, devices can technically send an array of size 0 (this is seen more commonly with UUID32s).",
+		"type": "array",
+		"items": {"$ref": "BTIDES_base.json#/definitions/UUID16_hex_str"}
+	}
+      }
+    },
+    "UUID16ListComplete": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0x03 = \"Complete List of 16-bit Service or Service Class UUIDs.\"",
+      "required": [ "type", "length" ],
+      "properties": {
+	"type": {
+		"description": "This should technically always be exactly == 0x03. (Per the assigned numbers document, \"Common Data Type\" table.) This is just here as an optional field in case you don't want to do lookup.",
+		"type": "integer",
+		"const": 3
+	},
+	"type_str": {
+		"type": "string",
+		"const": "UUID16ListComplete"
+	},
+	"length": {
+		"description": "This is 1 or more. If it's 1, it means they only have space for the type, and have included a 0-length UUID16List. Similarly if it's 3, they didn't include a full UUID16, so UUID16List should still be excluded because it's empty.",
+		"type": "integer"
+	},
+	"UUID16List": {
+		"description": "This is the array of *0 or more* UUID16s. Yes, devices can technically send an array of size 0 (this is seen more commonly with UUID32s).",
+		"type": "array",
+		"items": {"$ref": "BTIDES_base.json#/definitions/UUID16_hex_str"}
+	}
+      }
+    },
+    "TxPower": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0x0A = \"Transmit Power Level\" (in dBm).",
+      "required": [ "type", "length", "tx_power" ],
+      "properties": {
+	"type": {
+		"description": "This should technically always be exactly == 0x0A (10). (Per the assigned numbers document, \"Common Data Type\" table.) This is just here as an optional field in case you don't want to do lookup.",
+		"type": "integer",
+		"const": 10
+	},
+	"type_str": {
+		"type": "string",
+		"const": "TxPower"
+	},
+	"length": {
+		"description": "This should technically always be exactly == 2. But you should store whatever value actually came in from the device, because they could be sending malformed data, and if so, you want to capture that.",
+		"type": "integer"
+	},
+        "tx_power": {
+		"description": "Tx Power field, single byte, stored as a signed integer (-128 to 127)",
+		"type": "integer",
+		"minimum": -128,
+		"maximum": 127
+	}
+      }
+    },
+    "ManufacturerSpecificData": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0xFF = \"Manufacturer Specific Data\" (MSD)",
+      "required": [ "type", "length", "company_id_hex_str", "msd_hex_str" ],
+      "properties": {
+	"type": {
+		"description": "This should technically always be exactly == 0xFF (255). (Per the assigned numbers document, \"Common Data Type\" table.) This is just here as an optional field in case you don't want to do lookup.",
+		"type": "integer",
+		"const": 255
+	},
+	"type_str": {
+		"type": "string",
+		"const": "ManufacturerSpecificData"
+	},
+	"length": {
+		"description": "Length of the MSD (including company ID), from packet.",
+		"type": "integer"
+	},
+	"company_id_hex_str": {
+		"description": "First 2 bytes of the MSD, interpreted as a little-endian company ID. e.g. first 2 bytes were 0x4C 0x00 it should be \"004C\" (Apple). Note however that some vendors (including Apple) sometimes put their ID big endian instead of little endian. So you may sometimes have to try IDs both ways to find a match, and even if you find a match it might be spurious.",
+		"type": "string",
+		"minLength": 4,
+		"maxLength": 4
+	},
+        "msd_hex_str": {
+		"description": "This is the remainder of the MSD, after the first 2 bytes which are interpreted per above as the company\\_id\\_hex\\_str.",
+		"type": "string"
+	}
+      }
+    }
+  }
+}

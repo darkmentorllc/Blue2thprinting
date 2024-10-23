@@ -1,0 +1,111 @@
+{
+  "$id": "http://darkmentor.com/BT_JSON_schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "BTIDES LMP packet information data types",
+  "type": "object",
+  "properties": {
+    "LMPArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/LMP_VERSION_REQ"},
+          {"$ref": "#/definitions/LMP_VERSION_REQ2"},
+          {"$ref": "#/definitions/LMP_FEATURES_REQ"},
+          {"$ref": "#/definitions/LMP_FEATURES_REQ2"},
+          {"$ref": "#/definitions/LMP_FEATURES_RSP"},
+          {"$ref": "#/definitions/LMP_FEATURES_RSP2"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "LMP_VERSION_REQ": {
+      "type": "object",
+      "description": "Structure for LMP\\_VERSION\\_REQ packet.",
+      "required": [ "version", "company_id", "subversion" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 37
+	},
+        "version": { "$ref": "BTIDES_LL.json#/definitions/version" },
+        "company_id": { "$ref": "BTIDES_LL.json#/definitions/company_id" },
+        "subversion": { "$ref": "BTIDES_LL.json#/definitions/subversion" }
+      }
+    },
+    "LMP_VERSION_REQ2": {
+      "type": "object",
+      "description": "Structure for LL\\_VERSION\\_IND packet, as single raw hex string.",
+      "required": [ "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 37
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "features_hex_str": {
+	"description": "8-byte value as hex string.",
+	"type": "string",
+	"minLength": 16,
+	"maxLength": 16
+    },
+    "LMP_FEATURES_REQ": {
+      "type": "object",
+      "description": "Structure for LMP\\_FEATURES\\_REQ packet.",
+      "required": [ "features_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 39
+	},
+	"features_hex_str": { "$ref": "#/definitions/features_hex_str"
+	}
+      }
+    },
+    "LMP_FEATURES_REQ2": {
+      "type": "object",
+      "description": "Structure for LMP\\_FEATURES\\_REQ packet, as single raw hex string.",
+      "required": [ "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 37
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LMP_FEATURES_RSP": {
+      "type": "object",
+      "description": "Structure for LMP\\_FEATURES\\_RSP packet.",
+      "required": [ "features_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 40
+	},
+	"features_hex_str": { "$ref": "#/definitions/features_hex_str"
+	}
+      }
+    },
+    "LMP_FEATURES_RSP2": {
+      "type": "object",
+      "description": "Structure for LMP\\_FEATURES\\_RSP packet, as single raw hex string.",
+      "required": [ "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 40
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    }
+  }
+}
