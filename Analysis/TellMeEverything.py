@@ -220,7 +220,8 @@ def main():
 
         #BTIDES_insert_TxPower(bdaddr, "public", 1)
     
-    if(out_filename != ""):
+    if(out_filename != None and out_filename != ""):
+        print(out_filename)
         write_BTIDES(out_filename)
 
 if __name__ == "__main__":
