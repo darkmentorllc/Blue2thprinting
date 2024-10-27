@@ -1,0 +1,367 @@
+{
+  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_LL.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Does this even show up anywhere? XXX?",
+  "description": "JSON Schema for Bluetooth Device Information. Sub-information, Link Layer packet information data types",
+  "type": "object",
+  "properties": {
+    "LLArray": {
+      "type": "array",
+      "items": {
+	"anyOf": [
+	  {"$ref": "#/definitions/LL_UNKNOWN_RSP"},
+	  {"$ref": "#/definitions/LL_FEATURE_REQ"},
+	  {"$ref": "#/definitions/LL_FEATURE_REQ2"},
+	  {"$ref": "#/definitions/LL_FEATURE_RSP"},
+	  {"$ref": "#/definitions/LL_FEATURE_RSP2"},
+	  {"$ref": "#/definitions/LL_VERSION_IND"},
+	  {"$ref": "#/definitions/LL_VERSION_IND2"},
+	  {"$ref": "#/definitions/LL_PING_REQ"},
+	  {"$ref": "#/definitions/LL_PING_RSP"},
+	  {"$ref": "#/definitions/LL_LENGTH_REQ"},
+	  {"$ref": "#/definitions/LL_LENGTH_REQ2"},
+	  {"$ref": "#/definitions/LL_LENGTH_RSP"},
+	  {"$ref": "#/definitions/LL_LENGTH_RSP2"},
+	  {"$ref": "#/definitions/LL_PHY_REQ"},
+	  {"$ref": "#/definitions/LL_PHY_REQ2"},
+	  {"$ref": "#/definitions/LL_PHY_RSP"},
+	  {"$ref": "#/definitions/LL_PHY_RSP2"}
+	]
+      }
+    }
+  },
+  "definitions": {
+    "LL_UNKNOWN_RSP": {
+      "type": "object",
+      "description": "Structure for LL\\_UNKNOWN\\_RSP packet.",
+      "required": [ "opcode", "unknown_type" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 7. This is required to differentiate from other data types in an array.",
+		"const": 7
+	},
+	"unknown_type": {
+		"description": "One byte value indicating the LL opcode of a message received that the device does not understand.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+        }
+      }
+    },
+    "LL_UNKNOWN_RSP2": {
+      "type": "object",
+      "description": "Structure for LL\\_UNKNOWN\\_RSP packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 7. This is required to differentiate from other data types in an array.",
+		"const": 7
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "le_features_hex_str": {
+        "description": "An bit-array of LE supported features, 8 bytes long, defined in spec section \"Feature Support\" under Link Layer specification. Used by LL\\_FEATURE\\_REQ/RSP and as an optional AdvData type.",
+        "type": "string",
+        "minLength": 16,
+        "maxLength": 16
+    },
+    "LL_FEATURE_REQ": {
+      "type": "object",
+      "description": "Structure for LL\\_FEATURE\\_REQ packet.",
+      "required": [ "opcode", "le_features_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 8. This is required to differentiate from other data types in an array.",
+		"const": 8
+	},
+	"le_features_hex_str": {"$ref": "#/definitions/le_features_hex_str"}
+      }
+    },
+    "LL_FEATURE_REQ2": {
+      "type": "object",
+      "description": "Structure for LL\\_FEATURE\\_REQ packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 8. This is required to differentiate from other data types in an array.",
+		"const": 8
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_FEATURE_RSP": {
+      "type": "object",
+      "description": "Structure for LL\\_FEATURE\\_RSP packet.",
+      "required": [ "opcode", "le_features_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 9. This is required to differentiate from other data types in an array.",
+		"const": 9
+	},
+	"le_features_hex_str": {"$ref": "#/definitions/le_features_hex_str"}
+      }
+    },
+    "LL_FEATURE_RSP2": {
+      "type": "object",
+      "description": "Structure for LL\\_FEATURE\\_RSP packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 9. This is required to differentiate from other data types in an array.",
+		"const": 9
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_VERSION_IND": {
+      "type": "object",
+      "description": "Structure for LL\\_VERSION\\_IND packet.",
+      "required": [ "opcode", "version", "company_id", "subversion" ],
+      "$comment": "I'm only putting these version/company_id/subversion up to the top level definitions so I can reference them from LMP as well, since they're the same meaning/values.",
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 12. This is required to differentiate from other data types in an array.",
+		"const": 12
+	},
+	"version": { "$ref": "#/definitions/version" },
+	"company_id": { "$ref": "#/definitions/company_id" },
+        "subversion": { "$ref": "#/definitions/subversion" }
+      }
+    },
+    "version": {
+	"description": "One byte value indicating version of the BT Core Specification that this device comforms to.\n e.g. 0x06 = 4.0, 0x08 = 4.2, 0x09 = 5.0, 0x0D = 5.4 etc. See Assigned Numbers document. \n Only setting an upper bound to enforce sanity checking that this is a single byte value.",
+	"type": "integer",
+	"minimum": 0,
+	"maximum": 255
+    },
+    "company_id": {
+	"description": "Company ID as assigned by Bluetooth SIG. See assigned\\_numbers/company\\_identifiers/company\\_identifiers.yaml from https://bitbucket.org/bluetooth-SIG/public. \n Only setting an upper bound to enforce sanity checking that this is a two-byte value.",
+	"type": "integer",
+	"minimum": 0,
+	"maximum": 65535
+    },
+    "subversion": {
+	"description": "This is nominally the sub-version of the BT controller itself (i.e. hardware). This value is arbitrary, and picked by the hardware maker. \n The correspondance of certain values to certain hardware is known for some vendors like Broadcom, but is unknown for most vendors.\n Only setting an upper bound to enforce sanity checking that this is a two-byte value.",
+	"type": "integer",
+	"minimum": 0,
+	"maximum": 65535
+    },
+    "LL_VERSION_IND2": {
+      "type": "object",
+      "description": "Structure for LL\\_VERSION\\_IND packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 12. This is required to differentiate from other data types in an array.",
+		"const": 12
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_PING_REQ": {
+      "type": "object",
+      "description": "Structure for LL\\_PING\\_REQ packet.",
+      "required": [ "opcode" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 18. This is required to differentiate from other data types in an array.",
+		"const": 18
+	}
+      }
+    },
+    "LL_PING_RSP": {
+      "type": "object",
+      "description": "Structure for LL\\_PING\\_RSP packet.",
+      "required": [ "opcode" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 19. This is required to differentiate from other data types in an array.",
+		"const": 19
+	}
+      }
+    },
+    "LL_LENGTH_REQ": {
+      "type": "object",
+      "description": "Structure for LL\\_LENGTH\\_REQ packet.",
+      "required": [ "opcode", "MaxRxOctets","MaxRxTime","MaxTxOctets","MaxTxTime" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 20. This is required to differentiate from other data types in an array.",
+		"const": 20
+	},
+	"MaxRxOctets": {
+		"description": "2-byte MaxRxOctets from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxRxTime": {
+		"description": "2-byte MaxRxTime from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxTxOctets": {
+		"description": "2-byte MaxTxOctets from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxTxTime": {
+		"description": "2-byte MaxTxTime from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	}
+      }
+    },
+    "LL_LENGTH_REQ2": {
+      "type": "object",
+      "description": "Structure for LL\\_LENGTH\\_REQ packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 20. This is required to differentiate from other data types in an array.",
+		"const": 20
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_LENGTH_RSP": {
+      "type": "object",
+      "description": "Structure for LL\\_LENGTH\\_RSP packet.",
+      "required": [ "opcode", "MaxRxOctets","MaxRxTime","MaxTxOctets","MaxTxTime" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 21. This is required to differentiate from other data types in an array.",
+		"const": 21
+	},
+	"MaxRxOctets": {
+		"description": "2-byte MaxRxOctets from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxRxTime": {
+		"description": "2-byte MaxRxTime from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxTxOctets": {
+		"description": "2-byte MaxTxOctets from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	},
+	"MaxTxTime": {
+		"description": "2-byte MaxTxTime from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 65535
+	}
+      }
+    },
+    "LL_LENGTH_RSP2": {
+      "type": "object",
+      "description": "Structure for LL\\_LENGTH\\_RSP packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 21. This is required to differentiate from other data types in an array.",
+		"const": 21
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_PHY_REQ": {
+      "type": "object",
+      "description": "Structure for LL\\_PHY\\_REQ packet.",
+      "required": [ "opcode", "TX_PHYS", "RX_PHYS" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 22. This is required to differentiate from other data types in an array.",
+		"const": 22
+	},
+	"TX_PHYS": {
+		"description": "1-byte TX_PHYS from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	},
+	"RX_PHYS": {
+		"description": "1-byte RX_PHYS from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	}
+      }
+    },
+    "LL_PHY_REQ2": {
+      "type": "object",
+      "description": "Structure for LL\\_PHY\\_REQ packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 22. This is required to differentiate from other data types in an array.",
+		"const": 22
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "LL_PHY_RSP": {
+      "type": "object",
+      "description": "Structure for LL\\_PHY\\_RSP packet.",
+      "required": [ "opcode", "TX_PHYS", "RX_PHYS" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 23. This is required to differentiate from other data types in an array.",
+		"const": 23
+	},
+	"TX_PHYS": {
+		"description": "1-byte TX_PHYS from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	},
+	"RX_PHYS": {
+		"description": "1-byte RX_PHYS from BT Core Spec.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	}
+      }
+    },
+    "LL_PHY_RSP2": {
+      "type": "object",
+      "description": "Structure for LL\\_PHY\\_RSP packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode": {
+		"description": "This should always be 23. This is required to differentiate from other data types in an array.",
+		"const": 23
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    }
+  }
+}

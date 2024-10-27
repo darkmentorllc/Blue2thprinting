@@ -1,0 +1,42 @@
+{
+  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_HCI.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "BTIDES HCI information data types that don't fit elsewhere",
+  "type": "object",
+  "properties": {
+    "HCIArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/HCI_Remote_Name_Request_Complete"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "HCI_Remote_Name_Request_Complete": {
+      "type": "object",
+      "description": "Data from an HCI \"Remote Name Request Complete\" event.",
+      "$comment": "This is data which doesn't fit the exact definition of the corresponding LMP_NAME_REQ/RSP packets, because the Controller reassembles any fragments. So this needs to go in this new file.",
+      "required": [ "event_code", "status", "bdaddr", "remote_name" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"event_code": {
+		"description": "This should always be 7. This is required to differentiate from other data types in an array.",
+		"const": 7
+	},
+	"status": {
+		"description": "0 for success, other values for failure.",
+		"type": "integer",
+		"minimum": 0,
+		"maximum": 255
+	},
+	"bdaddr": { "$ref": "BTIDES_base.json#/definitions/bdaddr" },
+	"remote_name": {
+		"description": "The full device name, without fragmentation.",
+		"type": "string"
+	}
+      }
+    }
+  }
+}

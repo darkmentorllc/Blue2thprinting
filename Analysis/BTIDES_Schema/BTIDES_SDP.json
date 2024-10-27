@@ -1,0 +1,40 @@
+{
+  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_SDP.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "BTIDES SDP packet information data types",
+  "type": "object",
+  "properties": {
+    "SDPArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/PLACEHOLDER_"},
+          {"$ref": "#/definitions/PLACEHOLDER_2"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "PLACEHOLDER_": {
+      "type": "object",
+      "description": "Structure for PLACEHOLDER_ packet.",
+      "required": [ "asdf" ],
+      "properties": {
+	"asdf": {
+		"description": "asdf",
+		"type": "integer",
+                "minimum": 0,
+                "maximum": 255
+	}
+      }
+    },
+    "PLACEHOLDER_2": {
+      "type": "object",
+      "description": "Structure for PLACEHOLDER_ packet, as single raw hex string.",
+      "required": [ "full_pkt_hex_str" ],
+      "properties": {
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    }
+  }
+}
