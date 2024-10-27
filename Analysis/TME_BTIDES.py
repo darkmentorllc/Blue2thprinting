@@ -64,6 +64,26 @@ def ff_TxPower(power):
     TxPower = {"type": 10, "length": 2, "tx_power": power}
     return TxPower
 
+def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
+    flags_int = 0x00
+    if(le_limited_discoverable_mode):
+        flags_int |= 1
+    if(le_general_discoverable_mode):
+        flags_int |= 1 << 1
+    if(bredr_not_supported):
+        flags_int |= 1 << 2
+    if(le_bredr_support_controller):
+        flags_int |= 1 << 3
+    if(le_bredr_support_host):
+        flags_int |= 1 << 4
+    flags_hex_str = f"{flags_int:02X}"
+    return flags_hex_str
+
+def ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
+    flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+    Flags = {"type": 1, "length": 2, "flags_hex_str": flags_hex_str}
+    return Flags
+
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
 def le_evt_type_to_BTIDES_types(type):
@@ -125,7 +145,7 @@ def BTIDES_insert_TxPower(bdaddr, random, type, type_str, data):
     ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
-    ###print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
+    print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
     entry = lookup_entry(bdaddr, random)
     ###print("entry = ")
     ###print(json.dumps(entry, indent=2))
@@ -148,10 +168,80 @@ def BTIDES_insert_TxPower(bdaddr, random, type, type_str, data):
                 # Now check if there's an AdvDataArray entry that exactly matches 
                 for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
                     # TODO: pass through length in the future
-                    if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and AdvDataEntry["tx_power"] == data):
+                    if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
+                       "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
+                        # We already have the entry we would insert, so just go ahead and return
+                        ###print("BTIDES_insert_TxPower: found existing match. Nothing to do. Returning.")
+                        ###print(json.dumps(BTIDES_JSON, indent=2))
+                        return
+
+                # If we get here we didn't find any match, so we now need to insert our entry
+                else:
+                    # Insert into inner AdvDataArray
+                    AdvChanEntry["AdvDataArray"].append(ff_TxPower(data))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
+                    return
+            else:
+                # Insert into outer AdvChanArray
+                acd = ff_AdvChanData(type=btype, type_str=btype_str)
+                acd["AdvDataArray"] = [ ff_TxPower(data) ] 
+                entry["AdvChanArray"].append(acd)
+                ###print(json.dumps(BTIDES_JSON, indent=2))
+                return
+
+# Opens existing JSON object, searches for an entry for the given bdaddr
+# If no entry already exists, it creates a new one
+# If an entry already exists, it tries to insert the TxPower data into a AdvChanArray->AdvChanData->AdvDataArray entry
+#  If an existing AdvChanData entry already exists, this is done
+#  If no AdvChanData exists, it creates one 
+# Example: BTIDES_insert_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+def BTIDES_insert_Flags(bdaddr, random, type, type_str, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
+    global BTIDES_JSON
+    #print("XENO WUZ HERE")
+    ###print(BTIDES_JSON)
+    btype = le_evt_type_to_BTIDES_types(type)
+    btype_str = le_evt_type_to_BTIDES_type_str(type)
+    flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+    print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
+    entry = lookup_entry(bdaddr, random)
+    ###print("entry = ")
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # Insert new one
+        base = ff_base(bdaddr, random)
+        ###print(json.dumps(base, indent=2))
+        acd = ff_AdvChanData(type=btype, type_str=btype_str)
+        acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
+        print(json.dumps(acd, indent=2))
+        base["AdvChanArray"] = [ acd ]
+        BTIDES_JSON.append(base)
+        print(json.dumps(BTIDES_JSON, indent=2))
+    else:
+        #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+        for AdvChanEntry in entry["AdvChanArray"]:
+            ###print(AdvChanEntry)
+            if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
+                # This AdvData is of the same type as we're currently processing for this insert
+                # Now check if there's an AdvDataArray entry that exactly matches 
+                for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
+                    # TODO: pass through length in the future
+                    if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
+                       "flags_hex_str" in AdvDataEntry.keys() and AdvDataEntry["flags_hex_str"] == flags_hex_str):
                         # We already have the entry we would insert, so just go ahead and return
                         ###print("BTIDES_insert_TxPower: found existing match. Nothing to do. Returning.")
                         ###print(json.dumps(BTIDES_JSON, indent=2))
                         return
                     
                 # If we get here we didn't find any match, so we now need to insert our entry
+                else:
+                    # Insert into inner AdvDataArray
+                    AdvChanEntry["AdvDataArray"].append(ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
+                    return
+            else:
+                # Insert into outer AdvChanArray
+                acd = ff_AdvChanData(type=btype, type_str=btype_str)
+                acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
+                entry["AdvChanArray"].append(acd)
+                print(json.dumps(BTIDES_JSON, indent=2))
+                return

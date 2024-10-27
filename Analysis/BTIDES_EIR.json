@@ -1,0 +1,51 @@
+{
+  "$id": "http://darkmentor.com/BT_JSON_schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "BTIDES FHS/EIR information data types that don't fit elsewhere",
+  "type": "object",
+  "properties": {
+    "EIRArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/PageScanRepetitionMode"},
+          {"$ref": "#/definitions/ClassOfDevice"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "PageScanRepetitionMode": {
+      "type": "object",
+      "$comment": "debatable whether there should instead be a FHS or EIR packet data type",
+      "description": "Page Scan Reptition Mode value from a FHS/EIR packet.",
+      "required": [ "type", "page_scan_repetition_mode" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"type": {
+		"description": "This should always be 1. This is required to differentiate from other data types in an array.",
+		"const": 1
+	},
+	"page_scan_repetition_mode": {
+		"description": "2-bit page scan reptition mode. 0 for R0, 1 for R1, 2 fr R2, 3 is RFU.",
+		"type": "integer",
+		"enum": [ 0, 1, 2 ]
+	}
+      }
+    },
+    "ClassOfDevice": {
+      "type": "object",
+      "$comment": "debatable whether there should instead be a FHS or EIR packet data type",
+      "description": "Class Of Device (CoD) value from a FHS/EIR packet.",
+      "required": [ "type", "CoD_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"type": {
+		"description": "This should always be 1. This is required to differentiate from other data types in an array.",
+		"const": 1
+	},
+	"CoD_hex_str": { "$ref" : "BTIDES_AdvData.json#/definitions/CoD_hex_str" }
+      }
+    }
+  }
+}

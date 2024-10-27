@@ -2,23 +2,30 @@
   "$id": "http://darkmentor.com/BTIDES_Schema/BTIDES.html",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "BlueTooth Information Data Exchange Schema (BTIDES!)",
-  "type": "object",
-  "required": [ "bdaddr", "bdaddr_rand" ],
-  "properties": {
-    "bdaddr": { "$ref": "#/definitions/bdaddr" },
-    "bdaddr_rand": { "$ref": "#/definitions/bdaddr_random" },
-    "bdaddr_rand_subtype": { "$ref": "#/definitions/bdaddr_random_subtype" },
-    "AdvChanArray": { "$ref": "BTIDES_AdvData.json#/properties/AdvChanArray" },
-    "LLArray": { "$ref": "BTIDES_LL.json#/properties/LLArray" },
-    "L2CAPArray": { "$ref": "BTIDES_L2CAP.json#/properties/L2CAPArray" },
-    "SMPArray": { "$ref": "BTIDES_SMP.json#/properties/SMPArray" },
-    "ATTArray": { "$ref": "BTIDES_ATT.json#/properties/ATTArray" },
-    "GATTArray": { "$ref": "BTIDES_GATT.json#/properties/GATTArray" },
-    "LMPArray": { "$ref": "BTIDES_LMP.json#/properties/LMPArray" },
-    "SDPArray": { "$ref": "BTIDES_SDP.json#/properties/SDPArray" },
-    "GPSArray": { "$ref": "BTIDES_GPS.json#/properties/GPSArray" }
-  },
+  "type": "array",
+  "items": { "$ref": "#/definitions/RootType" },
   "definitions": {
+    "RootType": {
+      "description": "The core information which must be in every element of the base array",
+      "type": "object",
+      "required": [ "bdaddr", "bdaddr_rand" ],
+      "properties": {
+        "bdaddr": { "$ref": "#/definitions/bdaddr" },
+        "bdaddr_rand": { "$ref": "#/definitions/bdaddr_random" },
+        "bdaddr_rand_subtype": { "$ref": "#/definitions/bdaddr_random_subtype" },
+        "AdvChanArray": { "$ref": "BTIDES_AdvData.json#/properties/AdvChanArray" },
+        "LLArray": { "$ref": "BTIDES_LL.json#/properties/LLArray" },
+        "HCIArray": { "$ref": "BTIDES_HCI.json#/properties/HCIArray" },
+        "L2CAPArray": { "$ref": "BTIDES_L2CAP.json#/properties/L2CAPArray" },
+        "SMPArray": { "$ref": "BTIDES_SMP.json#/properties/SMPArray" },
+        "ATTArray": { "$ref": "BTIDES_ATT.json#/properties/ATTArray" },
+        "GATTArray": { "$ref": "BTIDES_GATT.json#/properties/GATTArray" },
+        "EIRArray": { "$ref": "BTIDES_EIR.json#/properties/EIRArray" },
+        "LMPArray": { "$ref": "BTIDES_LMP.json#/properties/LMPArray" },
+        "SDPArray": { "$ref": "BTIDES_SDP.json#/properties/SDPArray" },
+        "GPSArray": { "$ref": "BTIDES_GPS.json#/properties/GPSArray" }
+      }
+    },
     "bdaddr": {
         "description": "Bluetooth Device Address (BDADDR) in typical colon-deliminated-hexidecimal format. E.g. \"AA:BB:CC:DD:EE:FF\", where AA is the most significant byte",
 	"type": "string"
@@ -83,14 +90,20 @@
         "minLength": 4,
         "maxLength": 4
     },
+    "UUID32_hex_str": {
+	"description": "UUID32 as hex_str.",
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 8
+    },
     "UUID128_hex_str": {
-        "description": "UUID128 as big-endian hex str. Should be encoded *containing* dashes (because it's quicker to strip them out if needed than add them in). E.g. 6e400001-b5a3-f393-e0a9-e50e24dcca9e.",
+        "description": "UUID128 as big-endian hex_str. Should be encoded *containing* dashes (because it's quicker to strip them out if needed than add them in). E.g. 6e400001-b5a3-f393-e0a9-e50e24dcca9e.",
         "type": "string",
         "minLength": 36,
         "maxLength": 36
     },
     "full_pkt_hex_str": {
-	"description": "This is the original full packet data (starting from the LL header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",
+	"description": "This is the original full packet data (starting from the {LL/LMP} header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",
 	"type": "string"
     }
   }

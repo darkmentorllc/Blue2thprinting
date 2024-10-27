@@ -210,6 +210,7 @@ def main():
         print_uuid128s(bdaddr)
         print_service_solicit_uuid128s(bdaddr)
         print_transmit_power(bdaddr, nametype)
+        print_flags(bdaddr)
         print_appearance(bdaddr, nametype)
         print_manufacturer_data(bdaddr)
         print_class_of_device(bdaddr)
@@ -221,7 +222,6 @@ def main():
         #BTIDES_insert_TxPower(bdaddr, "public", 1)
     
     if(out_filename != None and out_filename != ""):
-        print(out_filename)
         write_BTIDES(out_filename)
 
 if __name__ == "__main__":

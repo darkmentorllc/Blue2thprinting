@@ -35,7 +35,39 @@ def print_transmit_power(bdaddr, nametype):
 
     print("")
 
+########################################
+# Flags
+########################################
 
+def print_flags(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    eir_query = f"SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
+    eir_result = execute_query(eir_query)
+    for (le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in eir_result:
+        print(f"\tIn BT Classic Data (EIR_bdaddr_to_flags2)")
+        print(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
+        print(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
+        print(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
+        print(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
+        print(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        BTIDES_insert_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+
+    le_query = f"SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
+    le_result = execute_query(le_query)
+    for (bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in le_result:
+        print(f"\tIn BLE Data (LE_bdaddr_to_flags2)")
+        print(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
+        print(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
+        print(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
+        print(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
+        print(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        BTIDES_insert_Flags(bdaddr, bdaddr_random, le_evt_type, get_le_event_type_string(le_evt_type), le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+
+    if (len(eir_result) == 0 and len(le_result) == 0):
+        print("\tNo flags found.")
+
+    print("")
 
 ########################################
 # Manufacturer-specific Data
