@@ -22,7 +22,8 @@ import json
 import mysql.connector
 
 from jsonschema import validate, ValidationError
-#from referencing import Registry, Resource
+from referencing import Registry, Resource
+from jsonschema import Draft202012Validator
 #import referencing.jsonschema
 
 
@@ -102,6 +103,37 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power}); "
         ###print(le_insert)
         execute_insert(le_insert)
+        
+def import_AdvData_Flags(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_Flags!")
+    
+    le_limited_discoverable_mode = 0
+    le_general_discoverable_mode = 0
+    bredr_not_supported = 0
+    le_bredr_support_controller = 0
+    le_bredr_support_host = 0
+    flags_hex_str = leaf["flags_hex_str"]
+    flags_int = int(flags_hex_str, 16)
+    if(flags_int & (1 << 0)):
+        le_limited_discoverable_mode = 1
+    if(flags_int & (1 << 1)):
+        le_general_discoverable_mode = 1
+    if(flags_int & (1 << 2)):
+        bredr_not_supported = 1
+    if(flags_int & (1 << 3)):
+        le_bredr_support_controller = 1
+    if(flags_int & (1 << 4)):
+        le_bredr_support_host = 1
+    
+    if(db_type == 50):
+        # EIR
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_flags2 (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host}); "
+        #print(eir_insert)
+        execute_insert(eir_insert)
+    else:
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {random}, {db_type}, {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host}); "
+        #print(le_insert)
+        execute_insert(le_insert)
 
 def has_AdvDataArray(entry):
     if(entry != None and entry["AdvDataArray"] != None):
@@ -115,6 +147,13 @@ def has_TxPower(entry):
     else:
         return False
 
+def has_Flags(entry):
+    if(entry != None and entry["type"] == 1 and entry["flags_hex_str"] != None and len(entry["flags_hex_str"]) == 2):
+        return True
+    else:
+        return False
+
+
 def parse_AdvChanArray(entry):
     ###print(json.dumps(entry, indent=2))
     for AdvChanEntry in entry["AdvChanArray"]:
@@ -122,6 +161,8 @@ def parse_AdvChanArray(entry):
             for AdvData in AdvChanEntry["AdvDataArray"]:
                 if(has_TxPower(AdvData)):
                     import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                if(has_Flags(AdvData)):
+                    import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
     
 
 def has_AdvChanArray(entry):
@@ -129,6 +170,21 @@ def has_AdvChanArray(entry):
         return True
     else:
         return False
+
+# Same order as in BTIDES_base.json
+BTIDES_files = ["BTIDES_base.json", 
+                "BTIDES_AdvData.json", 
+                "BTIDES_LL.json",
+                "BTIDES_HCI.json",
+                "BTIDES_L2CAP.json",
+                "BTIDES_SMP.json",
+                "BTIDES_ATT.json",
+                "BTIDES_GATT.json",
+                "BTIDES_EIR.json",
+                "BTIDES_LMP.json",
+                "BTIDES_SDP.json",
+                "BTIDES_GPS.json"
+                ]
 
 def main():
     global BTIDES_JSON
@@ -143,26 +199,36 @@ def main():
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
         #print(json.dumps(BTIDES_JSON, indent=2))
 
-    with open("BTIDES_base.json", 'r') as f:
-        BTIDES_Schema = json.load(f)
-        #print(json.dumps(BTIDES_Schema, indent=2))
+    # Import all the local BTIDES json schema files, so that we don't hit the website all the time
+    all_schemas = []
+    for file in BTIDES_files:
+        with open(f"./BTIDES_Schema/{file}", 'r') as f:
+            #BTIDES_Schema
+            s = json.load(f)
+            #print(s["$id"])
+            schema = Resource.from_contents(s)
+            all_schemas.append((s["$id"], schema))
         
-    # I don't want this hitting the website all the time
-    #registry = Registry().with_resources( [ ( "./BTIDES_base.json", BTIDES_Schema) ] )
+    registry = Registry().with_resources( all_schemas )
 
+    # Sanity check every entry against the Schema
+    try:
+        Draft202012Validator(
+            {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
+            registry=registry,
+        ).validate(instance=BTIDES_JSON)
+        #print("JSON is valid according to BTIDES Schema")
+    except ValidationError as e:
+        print("JSON data is invalid per BTIDES Schema:", e.message)
+        exit(-1)
+
+    # If we get here, every entry validates and we can process them all
     for entry in BTIDES_JSON:
-        # Sanity check every entry against the Schema
-        try:
-            validate(instance=entry, schema=BTIDES_Schema) #, registry=registry)
-            #print("JSON is valid according to BTIDES Schema")
-        except ValidationError as e:
-            print("JSON data is invalid per BTIDES Schema:", e.message)
-            exit(-1)
-
+        
         if(has_AdvChanArray(entry)):
             parse_AdvChanArray(entry)
             
-    print(f"Inserted {insert_count} records to the database.")
+    print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplciates).")
 
 if __name__ == "__main__":
     main()
