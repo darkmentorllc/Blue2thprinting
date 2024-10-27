@@ -18,4 +18,4 @@ else
     sed -i "s/\"0x0/\"/g" /tmp/EIR_bdaddr_to_flags2_uniq.csv
 fi
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_flags2_uniq.csv' REPLACE INTO TABLE EIR_bdaddr_to_flags2 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, le_bredr_not_supported, le_bredr_support_controller, le_bredr_support_host);"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_flags2_uniq.csv' REPLACE INTO TABLE EIR_bdaddr_to_flags2 FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host);"
