@@ -9,7 +9,6 @@
 
 import json
 import TME.TME_glob
-#from TME.TME_helpers import *
 from TME.TME_BTIDES_base import *
 
 ############################
@@ -19,6 +18,10 @@ from TME.TME_BTIDES_base import *
 def ff_LL_VERSION_IND(version, company_id, subversion):
     ll_version_ind = {"opcode": 12, "version": version, "company_id": company_id, "subversion": subversion}
     return ll_version_ind
+
+############################
+# JSON insertion functions
+############################
 
 # Opens existing JSON object, searches for an entry for the given bdaddr
 # If no entry already exists, it creates a new one

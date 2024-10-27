@@ -24,15 +24,14 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
-#from future.backports.test.pystone import TRUE
 
 ###################################
 # Globals
 ###################################
 
 # Same order as in BTIDES_base.json
-BTIDES_files = ["BTIDES_base.json", 
-                "BTIDES_AdvData.json", 
+BTIDES_files = ["BTIDES_base.json",
+                "BTIDES_AdvData.json",
                 "BTIDES_LL.json",
                 "BTIDES_HCI.json",
                 "BTIDES_L2CAP.json",
@@ -191,7 +190,7 @@ def parse_AdvChanArray(entry):
                     import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
 def has_AdvChanArray(entry):
-    if(entry["AdvChanArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
+    if("AdvChanArray" in entry.keys() and entry["AdvChanArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
         return True
     else:
         return False
@@ -221,7 +220,38 @@ def parse_LLArray(entry):
             import_LL_VERSION_IND(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
 
 def has_LLArray(entry):
-    if(entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
+    if("LLArray" in entry.keys() and entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
+        return True
+    else:
+        return False
+
+###################################
+# BTIDES_LMP.json information
+###################################
+
+def import_LMP_VERSION_RES(bdaddr, lmp_entry):
+    lmp_version = lmp_entry["version"]
+    device_BT_CID = lmp_entry["company_id"]
+    lmp_sub_version = lmp_entry["subversion"]
+    insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES ('{bdaddr}', {lmp_version}, {device_BT_CID}, {lmp_sub_version});"
+    #print(insert)
+    execute_insert(insert)
+
+def has_LMP_VERSION_RES(lmp_entry):
+    if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == 38):
+        return True
+    else:
+        return False
+
+def parse_LMPArray(entry):
+    ###print(json.dumps(entry, indent=2))
+    for lmp_entry in entry["LMPArray"]:
+        if(has_LMP_VERSION_RES(lmp_entry)):
+            import_LMP_VERSION_RES(entry["bdaddr"], lmp_entry)
+
+def has_LMPArray(entry):
+    #print(json.dumps(entry, indent=2))
+    if("LMPArray" in entry.keys() and entry["LMPArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None and entry["bdaddr_rand"] == 0):
         return True
     else:
         return False
@@ -229,6 +259,15 @@ def has_LLArray(entry):
 ###################################
 # MAIN
 ###################################
+
+######################################################
+##################### WARNING!!! #####################
+##################### WARNING!!! #####################
+##################### WARNING!!! #####################
+######################################################
+# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY ACID!
+# SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
+# OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
 
 def main():
     global BTIDES_JSON
@@ -274,6 +313,9 @@ def main():
 
         if(has_LLArray(entry)):
             parse_LLArray(entry)
+
+        if(has_LMPArray(entry)):
+            parse_LMPArray(entry)
 
             
     print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplicates).")

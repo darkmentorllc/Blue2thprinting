@@ -197,7 +197,7 @@ def main():
         print("================================================================================")
         print(f"For bdaddr = {bdaddr}:")
         print_ChipPrint(bdaddr)
-        print_ChipMakerPrint(bdaddr)
+        print_ChipMakerPrint(bdaddr)                        # Opportunistic BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)
         print_device_names(bdaddr, nametype)
