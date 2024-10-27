@@ -4,8 +4,8 @@
 ########################################
 
 import re
-import TME_glob
-from TME_helpers import *
+#import TME.TME_glob
+from TME.TME_helpers import *
 
 ########################################
 # Device Name

@@ -3,9 +3,9 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-from TME_helpers import *
-from TME_metadata import *
-from TME_AdvChan import *
+from TME.TME_helpers import *
+from TME.TME_metadata import *
+from TME.TME_AdvChan import *
 
 ###########################################
 # Unique ID / Potential Trackability Report

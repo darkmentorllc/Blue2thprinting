@@ -9,21 +9,21 @@ import argparse
 #import mysql.connector
 #import struct
 #import time
-from TME_helpers import *
-from TME_import import *
-from TME_lookup import *
-from TME_stats import *
-from TME_AdvChan import *
-from TME_names import *
-from TME_UUID16 import *
-from TME_UUID128 import *
-from TME_EIR import *
-from TME_GATT import *
-from TME_BLE2thprint import *
-from TME_BTC2thprint import *
-from TME_metadata import *
-from TME_trackability import *
-from TME_BTIDES import *
+from TME.TME_helpers import *
+from TME.TME_import import *
+from TME.TME_lookup import *
+from TME.TME_stats import *
+from TME.TME_AdvChan import *
+from TME.TME_names import *
+from TME.TME_UUID16 import *
+from TME.TME_UUID128 import *
+from TME.TME_EIR import *
+from TME.TME_GATT import *
+from TME.TME_BLE2thprint import *
+from TME.TME_BTC2thprint import *
+from TME.TME_metadata import *
+from TME.TME_trackability import *
+from TME.TME_BTIDES import *
 
 ########################################
 # MAIN #################################

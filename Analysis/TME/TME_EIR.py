@@ -3,8 +3,8 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-import TME_glob
-from TME_helpers import *
+#import TME.TME_glob
+from TME.TME_helpers import *
 
 ########################################
 # BTC EIR Device CID

@@ -3,9 +3,9 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-import TME_glob
-from TME_helpers import *
-from TME_names import *
+#import TME.TME_glob
+from TME.TME_helpers import *
+from TME.TME_names import *
 
 ########################################
 # 2thprint_BTC Info

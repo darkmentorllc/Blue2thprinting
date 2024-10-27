@@ -6,8 +6,8 @@
 import json
 import csv
 import yaml
-import TME_glob
-from TME_helpers import *
+import TME.TME_glob
+from TME.TME_helpers import *
 
 ########################################
 # BEGIN FILL DATA FROM JSON ############
@@ -18,7 +18,7 @@ def import_metadata_v2():
     # Load JSON data from file
     json_file = './Metadata_v2.json'
     with open(json_file, 'r') as f:
-        TME_glob.metadata_v2 = json.load(f)
+        TME.TME_glob.metadata_v2 = json.load(f)
 
 
 # Option to store private metadata in
@@ -29,7 +29,7 @@ def import_private_metadata_v2():
     json_file = './Metadata_v2_private.json'
     try:
         with open(json_file, 'r') as f:
-            TME_glob.metadata_v2.update(json.load(f))
+            TME.TME_glob.metadata_v2.update(json.load(f))
     except FileNotFoundError:
         pass
 
@@ -45,7 +45,7 @@ def import_nameprint_CSV_data():
             if len(row) >= 2:
                 key = row[1].strip()
                 value = row[0].strip()
-                TME_glob.nameprint_data[key] = value
+                TME.TME_glob.nameprint_data[key] = value
 
 def import_private_nameprint_CSV_data():
     global nameprint_data
@@ -59,7 +59,7 @@ def import_private_nameprint_CSV_data():
                 if len(row) >= 2:
                     key = row[1].strip()
                     value = row[0].strip()
-                    TME_glob.nameprint_data[key] = value
+                    TME.TME_glob.nameprint_data[key] = value
     except FileNotFoundError:
         pass
 
@@ -71,7 +71,7 @@ def import_custom_uuid128_CSV_data():
             if len(row) >= 2:
                 key = row[0].strip().lower()
                 value = row[1].strip()
-                TME_glob.custom_uuid128_hash[key] = value
+                TME.TME_glob.custom_uuid128_hash[key] = value
 #                print(f"key = {key}, value = {value}")
 
 
@@ -93,15 +93,15 @@ def import_bt_CID_to_names():
     for entry in data['company_identifiers']:
         value = entry['value']
         name = entry['name']
-        TME_glob.bt_CID_to_names[value] = name
+        TME.TME_glob.bt_CID_to_names[value] = name
 
     # Hack: Add in the wrong-endian Apple/Samsung values
-    TME_glob.bt_CID_to_names[0x4C00] = "Apple, Inc. (wrong-endian)"
-    TME_glob.bt_CID_to_names[0x7500] = "Samsung (wrong-endian)"
-    TME_glob.bt_CID_to_names[0xff19] = "Samsung (buggy)"
+    TME.TME_glob.bt_CID_to_names[0x4C00] = "Apple, Inc. (wrong-endian)"
+    TME.TME_glob.bt_CID_to_names[0x7500] = "Samsung (wrong-endian)"
+    TME.TME_glob.bt_CID_to_names[0xff19] = "Samsung (buggy)"
 
-#    print(TME_glob.bt_CID_to_names)
-#    print(len(TME_glob.bt_CID_to_names))
+#    print(TME.TME_glob.bt_CID_to_names)
+#    print(len(TME.TME_glob.bt_CID_to_names))
 
 #########################################
 # Get data from member_uuids.yaml
@@ -118,13 +118,13 @@ def import_bt_member_UUID16s_to_names():
     for entry in data['uuids']:
         value = entry['uuid']
         name = entry['name']
-        TME_glob.bt_member_UUID16s_to_names[value] = name
+        TME.TME_glob.bt_member_UUID16s_to_names[value] = name
         uuid128_value = f"0000{value:04x}00001000800000805f9b34fb".lower()
-        TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_value] = name
+        TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_value] = name
 
-#    print(TME_glob.bt_member_UUID16s_to_names)
-#    print(TME_glob.bt_member_UUID16_as_UUID128_to_names)
-#    print(len(TME_glob.bt_member_UUID16s_to_names))
+#    print(TME.TME_glob.bt_member_UUID16s_to_names)
+#    print(TME.TME_glob.bt_member_UUID16_as_UUID128_to_names)
+#    print(len(TME.TME_glob.bt_member_UUID16s_to_names))
 
 
 #########################################
@@ -136,7 +136,7 @@ def import_bt_member_UUID16s_to_names():
 def import_CoD_to_names():
     global CoD_yaml_data
     with open('./public/assigned_numbers/core/class_of_device.yaml', 'r') as file:
-        TME_glob.CoD_yaml_data = yaml.safe_load(file)
+        TME.TME_glob.CoD_yaml_data = yaml.safe_load(file)
         
 #########################################
 # Get data from core_version.yaml
@@ -152,9 +152,9 @@ def import_bt_spec_version_numbers_to_names():
     for entry in data['core_version']:
         value = entry['value']
         name = entry['name']
-        TME_glob.bt_spec_version_numbers_to_names[value] = name
+        TME.TME_glob.bt_spec_version_numbers_to_names[value] = name
 
-    #print(TME_glob.bt_spec_version_numbers_to_names)
+    #print(TME.TME_glob.bt_spec_version_numbers_to_names)
 
 #########################################
 # Get data from appearance_values.yaml
@@ -165,7 +165,7 @@ def import_bt_spec_version_numbers_to_names():
 def import_appearance_yaml_data():
     global appearance_yaml_data
     with open('./public/assigned_numbers/core/appearance_values.yaml', 'r') as file:
-        TME_glob.appearance_yaml_data = yaml.safe_load(file)
+        TME.TME_glob.appearance_yaml_data = yaml.safe_load(file)
 
 #########################################
 # Get data from service_uuids.yaml
@@ -181,9 +181,9 @@ def import_gatt_services_uuid16_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.gatt_services_uuid16_names[uuid] = name
+        TME.TME_glob.gatt_services_uuid16_names[uuid] = name
 
-    #print(TME_glob.gatt_services_uuid16_names)
+    #print(TME.TME_glob.gatt_services_uuid16_names)
 
 #########################################
 # Get data from declarations.yaml
@@ -199,9 +199,9 @@ def import_gatt_declarations_uuid16_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.gatt_declarations_uuid16_names[uuid] = name
+        TME.TME_glob.gatt_declarations_uuid16_names[uuid] = name
 
-    #print(TME_glob.gatt_declarations_uuid16_names)
+    #print(TME.TME_glob.gatt_declarations_uuid16_names)
 
 #########################################
 # Get data from descriptors.yaml
@@ -217,9 +217,9 @@ def import_gatt_descriptors_uuid16_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.gatt_descriptors_uuid16_names[uuid] = name
+        TME.TME_glob.gatt_descriptors_uuid16_names[uuid] = name
 
-    #print(TME_glob.gatt_descriptors_uuid16_names)
+    #print(TME.TME_glob.gatt_descriptors_uuid16_names)
 
 #########################################
 # Get data from characteristic_uuids.yaml
@@ -235,9 +235,9 @@ def import_gatt_characteristic_uuid16_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.gatt_characteristic_uuid16_names[uuid] = name
+        TME.TME_glob.gatt_characteristic_uuid16_names[uuid] = name
 
-    #print(TME_glob.gatt_characteristic_uuid16_names)
+    #print(TME.TME_glob.gatt_characteristic_uuid16_names)
 
 #########################################
 # Get data from protocol_identifiers.yaml
@@ -253,9 +253,9 @@ def import_uuid16_protocol_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.uuid16_protocol_names[uuid] = name
+        TME.TME_glob.uuid16_protocol_names[uuid] = name
 
-    #print(TME_glob.uuid16_protocol_names)
+    #print(TME.TME_glob.uuid16_protocol_names)
 
 #########################################
 # Get data from service_class.yaml
@@ -271,6 +271,6 @@ def import_uuid16_service_names():
     for entry in data['uuids']:
         uuid = entry['uuid']
         name = entry['name']
-        TME_glob.uuid16_service_names[uuid] = name
+        TME.TME_glob.uuid16_service_names[uuid] = name
 
-    #print(TME_glob.uuid16_service_names)
+    #print(TME.TME_glob.uuid16_service_names)

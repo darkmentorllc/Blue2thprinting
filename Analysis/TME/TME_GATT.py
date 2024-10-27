@@ -5,24 +5,24 @@
 
 import re
 import struct
-import TME_glob
-from TME_helpers import *
+import TME.TME_glob
+from TME.TME_helpers import *
 
 def get_uuid16_gatt_service_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT services
-    return TME_glob.gatt_services_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+    return TME.TME_glob.gatt_services_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
 def get_uuid16_gatt_declaration_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT declarations
-    return TME_glob.gatt_declarations_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+    return TME.TME_glob.gatt_declarations_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
 def get_uuid16_gatt_descriptor_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT descriptors
-    return TME_glob.gatt_descriptors_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+    return TME.TME_glob.gatt_descriptors_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
 def get_uuid16_gatt_characteristic_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT characteristic
-    return TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+    return TME.TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
 def match_known_GATT_UUID_or_custom_UUID(uuid128):
     uuid128.strip().lower()

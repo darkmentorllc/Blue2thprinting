@@ -3,8 +3,8 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-import TME_glob
-from TME_helpers import *
+import TME.TME_glob
+from TME.TME_helpers import *
 
 def get_uuid16_stats(arg):
     seen_btc_uuid16s_hash = {}
@@ -34,7 +34,7 @@ def get_uuid16_stats(arg):
         print(f"count \t uuid16 \t company")
         for item in sorted_items:
             (uuid16,count) = item
-#                print(TME_glob.bt_member_UUID16s_to_names)
+#                print(TME.TME_glob.bt_member_UUID16s_to_names)
 #                print(item)
 #                print(uuid16)
 #                print(count)
@@ -44,8 +44,8 @@ def get_uuid16_stats(arg):
                 if(arg != "quiet"): print(f"Skipping '{uuid16}', it can't be converted to an integer")
                 continue
 
-            if(decimal_uuid16 in TME_glob.bt_member_UUID16s_to_names.keys()):
-                print(f"{count} \t {uuid16} \t {TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
+            if(decimal_uuid16 in TME.TME_glob.bt_member_UUID16s_to_names.keys()):
+                print(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
                 company_uuid_count += 1
         print(f"*** {company_uuid_count} UUID16s matched a company name ***")
 
@@ -75,7 +75,7 @@ def get_uuid16_stats(arg):
         print(f"count \t uuid16 \t company")
         for item in sorted_items:
             (uuid16,count) = item
-#                print(TME_glob.bt_member_UUID16s_to_names)
+#                print(TME.TME_glob.bt_member_UUID16s_to_names)
 #                print(item)
 #                print(uuid16)
 #                print(count)
@@ -84,8 +84,8 @@ def get_uuid16_stats(arg):
             except ValueError:
                 if(arg != "quiet"): print(f"Skipping '{uuid16}', it can't be converted to an integer")
                 continue
-            if(decimal_uuid16 in TME_glob.bt_member_UUID16s_to_names.keys()):
-                print(f"{count} \t {uuid16} \t {TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
+            if(decimal_uuid16 in TME.TME_glob.bt_member_UUID16s_to_names.keys()):
+                print(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
                 company_uuid_count += 1
 
         print(f"*** {company_uuid_count} UUID16s matched a company name ***")
@@ -124,8 +124,8 @@ def get_uuid128_stats(arg):
 #                print(item)
 #                print(uuid128)
 #                print(count)
-            if(uuid128 in TME_glob.custom_uuid128_hash):
-                known_info = TME_glob.custom_uuid128_hash[uuid128]
+            if(uuid128 in TME.TME_glob.custom_uuid128_hash):
+                known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
                 known_uuid_count += 1
             else:
                 known_info = ""
@@ -165,8 +165,8 @@ def get_uuid128_stats(arg):
 #                print(item)
 #                print(uuid128)
 #                print(count)
-            if(uuid128 in TME_glob.custom_uuid128_hash):
-                known_info = TME_glob.custom_uuid128_hash[uuid128]
+            if(uuid128 in TME.TME_glob.custom_uuid128_hash):
+                known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
                 known_uuid_count += 1
             else:
                 known_info = ""

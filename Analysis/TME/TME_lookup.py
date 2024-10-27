@@ -4,8 +4,8 @@
 ########################################
 
 import re
-import TME_glob
-from TME_helpers import *
+import TME.TME_glob
+from TME.TME_helpers import *
 
 ########################################
 # Lookup helpers
@@ -191,7 +191,7 @@ def get_bdaddrs_by_company_regex(companyregex):
         #########################################
 
         # Each company gets only one assigned number in this category
-        for key, value in TME_glob.bt_CID_to_names.items():
+        for key, value in TME.TME_glob.bt_CID_to_names.items():
             if re.search(pattern, value):
                 print(f"{companyregex} matched company name {value}, with ID 0x{key:04x}")
                 device_bt_cids_to_names[key] = value
@@ -259,7 +259,7 @@ def get_bdaddrs_by_company_regex(companyregex):
         #########################################
 
         # Each company can have multiple UUID16s assigned (e.g. Apple has 0xFEC6-FED4)
-        for key, value in TME_glob.bt_member_UUID16s_to_names.items():
+        for key, value in TME.TME_glob.r_UUID16s_to_names.items():
             if re.search(pattern, value):
                 print(f"{companyregex} matched company name {value}, with UUID16 0x{key:04x}")
                 device_uuid16s_to_names[key] = value

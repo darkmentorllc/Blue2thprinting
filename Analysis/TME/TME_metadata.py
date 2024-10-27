@@ -5,8 +5,8 @@
 
 import re
 import time
-from TME_helpers import *
-from TME_AdvChan import *
+from TME.TME_helpers import *
+from TME.TME_AdvChan import *
 
 ########################################
 # Metadata v2 helper functions
@@ -74,7 +74,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     if(we_have_a_name):
         # If we have a name, consult with the metadata_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
-        for heading, metadata in TME_glob.metadata_v2.items():
+        for heading, metadata in TME.TME_glob.metadata_v2.items():
             if('2thprint_NamePrint' in metadata.keys() and metadata_type in metadata.keys()):
                 # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
                 regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
@@ -141,7 +141,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
                         tmpstr = byte_values.decode('utf-8')
                         #print(f"byte_values: {tmpstr}")
                         # Now consult with the metadata_v2 data, and see if any entries have a 2thprint_Chip_GATT_Model_Number which matches the value observed in the database
-                        for heading, metadata in TME_glob.metadata_v2.items():
+                        for heading, metadata in TME.TME_glob.metadata_v2.items():
                             if('2thprint_Chip_GATT_Model_Number' in metadata):
                                 # FIXME: I think this is probably an insufficient matching criteria. E.g. a "Jabra Evolve 65e" device might match "Jabra Elite Active" metadata and then the printout would be a bit confusing
                                 if(tmpstr == metadata['2thprint_Chip_GATT_Model_Number']):
@@ -193,7 +193,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     if(we_have_GATT):
         # If we have GATT data, consult with the metadata_v2 data, and see if any entries have Chip Maker data
         # and if so, try that nameprint against the name(s) for this device
-        for heading, metadata in TME_glob.metadata_v2.items():
+        for heading, metadata in TME.TME_glob.metadata_v2.items():
             # Confirm that this entry even has what we're looking for
             if('GATT_Vendor_Specific' in metadata.keys() and metadata_input_type in metadata.keys() and metadata_output_type in metadata.keys()):
 

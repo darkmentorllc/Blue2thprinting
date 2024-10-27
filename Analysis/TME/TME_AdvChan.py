@@ -4,8 +4,8 @@
 ########################################
 
 import struct
-from TME_helpers import *
-from TME_BTIDES import *
+from TME.TME_helpers import *
+from TME.TME_BTIDES import *
 
 ########################################
 # Transmit Power

@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import json
-from TME_helpers import *
+from TME.TME_helpers import *
 
 # Global is only accessible within this file
 BTIDES_JSON = []
@@ -145,7 +145,7 @@ def BTIDES_insert_TxPower(bdaddr, random, type, type_str, data):
     ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
-    print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
+    #print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
     entry = lookup_entry(bdaddr, random)
     ###print("entry = ")
     ###print(json.dumps(entry, indent=2))
@@ -202,7 +202,7 @@ def BTIDES_insert_Flags(bdaddr, random, type, type_str, le_limited_discoverable_
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
     flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-    print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
+    #print(f"type = {type}, btype = {btype}, type_str = {type_str}, btype_str = {btype_str}")
     entry = lookup_entry(bdaddr, random)
     ###print("entry = ")
     ###print(json.dumps(entry, indent=2))
@@ -212,10 +212,10 @@ def BTIDES_insert_Flags(bdaddr, random, type, type_str, le_limited_discoverable_
         ###print(json.dumps(base, indent=2))
         acd = ff_AdvChanData(type=btype, type_str=btype_str)
         acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
-        print(json.dumps(acd, indent=2))
+        #print(json.dumps(acd, indent=2))
         base["AdvChanArray"] = [ acd ]
         BTIDES_JSON.append(base)
-        print(json.dumps(BTIDES_JSON, indent=2))
+        #print(json.dumps(BTIDES_JSON, indent=2))
     else:
         #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
         for AdvChanEntry in entry["AdvChanArray"]:
@@ -243,5 +243,5 @@ def BTIDES_insert_Flags(bdaddr, random, type, type_str, le_limited_discoverable_
                 acd = ff_AdvChanData(type=btype, type_str=btype_str)
                 acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
                 entry["AdvChanArray"].append(acd)
-                print(json.dumps(BTIDES_JSON, indent=2))
+                #print(json.dumps(BTIDES_JSON, indent=2))
                 return

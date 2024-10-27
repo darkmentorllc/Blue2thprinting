@@ -5,7 +5,7 @@
 
 import mysql.connector
 import re
-import TME_glob
+import TME.TME_glob
 
 ########################################
 # MYSQL specific
@@ -37,14 +37,14 @@ def execute_query(query):
 
 # Use the UUID16 names mapping to get the protocol ID
 def get_uuid16_protocol_string(uuid16):
-    return TME_glob.uuid16_protocol_names.get(int(uuid16.strip(),16), "Unknown")
+    return TME.TME_glob.uuid16_protocol_names.get(int(uuid16.strip(),16), "Unknown")
 
 # Use the UUID16 names mapping to get the service ID
 def get_uuid16_service_string(uuid16):
-    return TME_glob.uuid16_service_names.get(int(uuid16.strip(),16), "Unknown")
+    return TME.TME_glob.uuid16_service_names.get(int(uuid16.strip(),16), "Unknown")
 
 def get_bt_spec_version_numbers_to_names(number):
-    return TME_glob.bt_spec_version_numbers_to_names.get(number, "Unknown")
+    return TME.TME_glob.bt_spec_version_numbers_to_names.get(number, "Unknown")
 
 # Function to get the string representation of le_evt_type
 def get_le_event_type_string(le_evt_type):
@@ -289,8 +289,8 @@ def get_company_by_uuid16(uuid16):
 # Look up company name based on 16-bit BT Company ID (CID)
 def BT_CID_to_company_name(device_BT_CID):
     s = "No Match"
-    if(device_BT_CID in TME_glob.bt_CID_to_names):
-        s = TME_glob.bt_CID_to_names[device_BT_CID]
+    if(device_BT_CID in TME.TME_glob.bt_CID_to_names):
+        s = TME.TME_glob.bt_CID_to_names[device_BT_CID]
 ##    query = f"SELECT device_BT_CID, company_name FROM BT_CID_to_company WHERE device_BT_CID = '{device_BT_CID}'"
 ##    result = execute_query(query)
 ##    for device_BT_CID, company_name in result:
@@ -357,7 +357,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
 # that leads to failure to match on values from the NAMEPRINT_DB.csv, even when something could have been looked up by the nameregex
 
 def find_nameprint_match(name_string):
-    for key, value in TME_glob.nameprint_data.items():
+    for key, value in TME.TME_glob.nameprint_data.items():
         #regex_pattern = key
         # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
         regex_pattern = key.replace('\\\\\\', '\\')
@@ -388,7 +388,7 @@ def appearance_uint16_to_string(number):
     else:
         subcat_name = "Unknown"
 
-    for category in TME_glob.appearance_yaml_data['appearance_values']:
+    for category in TME.TME_glob.appearance_yaml_data['appearance_values']:
         if category['category'] == category_num:
             #print(category)
             cat_name = category['name']
@@ -426,10 +426,10 @@ def get_custom_uuid128_string(uuid128):
     uuid128.strip().lower()
     uuid128_no_dash = uuid128.replace('-','')
 
-    if(uuid128_no_dash in TME_glob.custom_uuid128_hash.keys()):
-        return f"Custom UUID128: {TME_glob.custom_uuid128_hash[uuid128_no_dash]}"
-    elif(uuid128_no_dash in TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
-        return f"Company UUID128: {TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}"
+    if(uuid128_no_dash in TME.TME_glob.custom_uuid128_hash.keys()):
+        return f"Custom UUID128: {TME.TME_glob.custom_uuid128_hash[uuid128_no_dash]}"
+    elif(uuid128_no_dash in TME.TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
+        return f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}"
 
     # TODO: Add lookup in Metadata_v2
 
@@ -443,7 +443,7 @@ def print_CoD_to_names(number):
     global CoD_yaml_data
     for i in range (13,24):
         if(number & (1 << i)):
-            for entry in TME_glob.CoD_yaml_data['cod_services']:
+            for entry in TME.TME_glob.CoD_yaml_data['cod_services']:
                 if (entry['bit'] == i):
                     print(f"\t\t\tCoD Major Service (bit {i}): {entry['name']}")
 
@@ -452,7 +452,7 @@ def print_CoD_to_names(number):
     minor_device_class = ((number >> 2) & 0x3F)
     #print(minor_device_class)
 
-    for entry in TME_glob.CoD_yaml_data['cod_device_class']:
+    for entry in TME.TME_glob.CoD_yaml_data['cod_device_class']:
         if(entry['major'] == major_device_class):
             print(f"\t\t\tCoD Major Device Class ({major_device_class}): {entry['name']}")
             if 'minor' in entry:
