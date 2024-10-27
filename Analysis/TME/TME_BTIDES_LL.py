@@ -9,7 +9,7 @@
 
 import json
 import TME.TME_glob
-from TME.TME_helpers import *
+#from TME.TME_helpers import *
 from TME.TME_BTIDES_base import *
 
 ############################
@@ -29,7 +29,7 @@ def BTIDES_insert_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
-    print(json.dumps(entry, indent=2))
+    ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
         base = ff_base(bdaddr, random)
@@ -54,6 +54,6 @@ def BTIDES_insert_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
-            entry["LLArray"].append(ff_LL_VERSION_IND(type=btype, type_str=btype_str))
+            entry["LLArray"].append(ff_LL_VERSION_IND(version, company_id, subversion))
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return

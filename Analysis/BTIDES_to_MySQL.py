@@ -24,13 +24,36 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
-#import referencing.jsonschema
+#from future.backports.test.pystone import TRUE
+
+###################################
+# Globals
+###################################
+
+# Same order as in BTIDES_base.json
+BTIDES_files = ["BTIDES_base.json", 
+                "BTIDES_AdvData.json", 
+                "BTIDES_LL.json",
+                "BTIDES_HCI.json",
+                "BTIDES_L2CAP.json",
+                "BTIDES_SMP.json",
+                "BTIDES_ATT.json",
+                "BTIDES_GATT.json",
+                "BTIDES_EIR.json",
+                "BTIDES_LMP.json",
+                "BTIDES_SDP.json",
+                "BTIDES_GPS.json"
+                ]
 
 
 # Global is only accessible within this file
 BTIDES_JSON = []
 
 insert_count = 0
+
+###################################
+# Helper functions
+###################################
 
 # Function to execute a MySQL query and fetch results
 def execute_query(query):
@@ -76,6 +99,10 @@ def execute_insert(query):
     finally:
         cursor.close()
         connection.close()
+
+###################################
+# BTIDES_AdvData.json information
+###################################
 
 def BTIDES_types_to_le_evt_type(type):
     # FIXME!: In the future once I update to have a src file type field (or foreign key pointer to row with that field)
@@ -153,7 +180,6 @@ def has_Flags(entry):
     else:
         return False
 
-
 def parse_AdvChanArray(entry):
     ###print(json.dumps(entry, indent=2))
     for AdvChanEntry in entry["AdvChanArray"]:
@@ -163,7 +189,6 @@ def parse_AdvChanArray(entry):
                     import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_Flags(AdvData)):
                     import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-    
 
 def has_AdvChanArray(entry):
     if(entry["AdvChanArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
@@ -171,20 +196,39 @@ def has_AdvChanArray(entry):
     else:
         return False
 
-# Same order as in BTIDES_base.json
-BTIDES_files = ["BTIDES_base.json", 
-                "BTIDES_AdvData.json", 
-                "BTIDES_LL.json",
-                "BTIDES_HCI.json",
-                "BTIDES_L2CAP.json",
-                "BTIDES_SMP.json",
-                "BTIDES_ATT.json",
-                "BTIDES_GATT.json",
-                "BTIDES_EIR.json",
-                "BTIDES_LMP.json",
-                "BTIDES_SDP.json",
-                "BTIDES_GPS.json"
-                ]
+###################################
+# BTIDES_LL.json information
+###################################
+
+def import_LL_VERSION_IND(bdaddr, random, ll_entry):
+    ll_version = ll_entry["version"]
+    device_BT_CID = ll_entry["company_id"]
+    ll_sub_version = ll_entry["subversion"]
+    le_insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
+    #print(le_insert)
+    execute_insert(le_insert)
+
+def has_LL_VERSION_IND(ll_entry):
+    if("opcode" in ll_entry.keys() and ll_entry["opcode"] == 12):
+        return True
+    else:
+        return False    
+
+def parse_LLArray(entry):
+    ###print(json.dumps(entry, indent=2))
+    for ll_entry in entry["LLArray"]:
+        if(has_LL_VERSION_IND(ll_entry)):
+            import_LL_VERSION_IND(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+
+def has_LLArray(entry):
+    if(entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
+        return True
+    else:
+        return False
+
+###################################
+# MAIN
+###################################
 
 def main():
     global BTIDES_JSON
@@ -227,8 +271,12 @@ def main():
         
         if(has_AdvChanArray(entry)):
             parse_AdvChanArray(entry)
+
+        if(has_LLArray(entry)):
+            parse_LLArray(entry)
+
             
-    print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplciates).")
+    print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplicates).")
 
 if __name__ == "__main__":
     main()
