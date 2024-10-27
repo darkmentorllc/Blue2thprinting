@@ -5,7 +5,7 @@
 
 import struct
 from TME.TME_helpers import *
-from TME.TME_BTIDES import *
+from TME.TME_BTIDES_AdvData import *
 
 ########################################
 # Transmit Power

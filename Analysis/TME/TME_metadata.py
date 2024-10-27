@@ -7,6 +7,8 @@ import re
 import time
 from TME.TME_helpers import *
 from TME.TME_AdvChan import *
+from TME.TME_BTIDES_LL import *
+from TME.TME_BTIDES_LMP import *
 
 ########################################
 # Metadata v2 helper functions
@@ -302,15 +304,16 @@ def print_ChipMakerPrint(bdaddr):
     #=====================#
 
     # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
-    ble_version_query = f"SELECT device_BT_CID, device_bdaddr_type FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
+    ble_version_query = f"SELECT device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
     ble_version_result = execute_query(ble_version_query)
 
     if(len(ble_version_result) != 0):
         no_results_found = False
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,device_bdaddr_type) in ble_version_result:
+        for (device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
+            BTIDES_insert_LL_VERSION_IND(bdaddr, device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version)
 
     if(time_profile): print(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#

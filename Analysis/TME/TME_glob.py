@@ -69,3 +69,8 @@ uuid16_protocol_names = {}
 #########################################
 # Global dictionary to store uuid16 to service name mappings
 uuid16_service_names = {}
+
+#########################################
+# BTIDES JSON data to export
+#########################################
+BTIDES_JSON = []

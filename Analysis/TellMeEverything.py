@@ -6,9 +6,6 @@
 ########################################
 
 import argparse
-#import mysql.connector
-#import struct
-#import time
 from TME.TME_helpers import *
 from TME.TME_import import *
 from TME.TME_lookup import *
@@ -23,7 +20,6 @@ from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
-from TME.TME_BTIDES import *
 
 ########################################
 # MAIN #################################
@@ -209,8 +205,8 @@ def main():
         print_service_solicit_uuid16s(bdaddr)
         print_uuid128s(bdaddr)
         print_service_solicit_uuid128s(bdaddr)
-        print_transmit_power(bdaddr, nametype)
-        print_flags(bdaddr)
+        print_transmit_power(bdaddr, nametype)              # Opportunistic BTIDES export
+        print_flags(bdaddr)                                 # Opportunistic BTIDES export
         print_appearance(bdaddr, nametype)
         print_manufacturer_data(bdaddr)
         print_class_of_device(bdaddr)
