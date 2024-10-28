@@ -115,21 +115,6 @@ def BTIDES_types_to_le_evt_type(type):
     # From manually inserting EIR type
     if(type == 50): return 50 # EIR
 
-def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_TxPower!")
-    
-    device_tx_power = leaf["tx_power"]
-    
-    if(db_type == 50):
-        # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, device_tx_power) VALUES ('{bdaddr}', {device_tx_power}); "
-        ###print(eir_insert)
-        execute_insert(eir_insert)
-    else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power}); "
-        ###print(le_insert)
-        execute_insert(le_insert)
-        
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Flags!")
     
@@ -161,14 +146,39 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
         #print(le_insert)
         execute_insert(le_insert)
 
+def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_TxPower!")
+
+    device_tx_power = leaf["tx_power"]
+
+    if(db_type == 50):
+        # EIR
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, device_tx_power) VALUES ('{bdaddr}', {device_tx_power}); "
+        ###print(eir_insert)
+        execute_insert(eir_insert)
+    else:
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power}); "
+        ###print(le_insert)
+        execute_insert(le_insert)
+
+def import_AdvData_MSD(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_MSD!")
+
+    device_BT_CID = int(leaf["company_id_hex_str"], 16)
+    manufacturer_specific_data = leaf["msd_hex_str"]
+
+    if(db_type == 50):
+        # EIR
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {device_BT_CID}, '{manufacturer_specific_data}'); "
+        ###print(eir_insert)
+        execute_insert(eir_insert)
+    else:
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_MSD (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {random}, {db_type}, {device_BT_CID}, '{manufacturer_specific_data}'); "
+        ###print(le_insert)
+        execute_insert(le_insert)
+
 def has_AdvDataArray(entry):
     if(entry != None and entry["AdvDataArray"] != None):
-        return True
-    else:
-        return False
-
-def has_TxPower(entry):
-    if(entry != None and entry["type"] == 10 and entry["tx_power"] != None and entry["tx_power"] >= -128 and entry["tx_power"] <= 127):
         return True
     else:
         return False
@@ -179,15 +189,31 @@ def has_Flags(entry):
     else:
         return False
 
+def has_TxPower(entry):
+    if(entry != None and entry["type"] == 10 and entry["tx_power"] != None and entry["tx_power"] >= -128 and entry["tx_power"] <= 127):
+        return True
+    else:
+        return False
+
+def has_MSD(entry):
+    if(entry != None and entry["type"] == 255 and entry["company_id_hex_str"] != None and len(entry["company_id_hex_str"]) == 4 and entry["msd_hex_str"] != None):
+        return True
+    else:
+        return False
+
+
 def parse_AdvChanArray(entry):
     ###print(json.dumps(entry, indent=2))
     for AdvChanEntry in entry["AdvChanArray"]:
         if(has_AdvDataArray(AdvChanEntry)):
             for AdvData in AdvChanEntry["AdvDataArray"]:
-                if(has_TxPower(AdvData)):
-                    import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_Flags(AdvData)):
                     import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                if(has_TxPower(AdvData)):
+                    import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                if(has_MSD(AdvData)):
+                    import_AdvData_MSD(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
 
 def has_AdvChanArray(entry):
     if("AdvChanArray" in entry.keys() and entry["AdvChanArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):

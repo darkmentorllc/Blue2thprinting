@@ -9,6 +9,7 @@ from TME.TME_helpers import *
 from TME.TME_AdvChan import *
 from TME.TME_BTIDES_LL import *
 from TME.TME_BTIDES_LMP import *
+from TME.TME_BTIDES_AdvData import *
 
 ########################################
 # Metadata v2 helper functions
@@ -378,13 +379,14 @@ def print_ChipMakerPrint(bdaddr):
     # Manufacturer-Specific Data (MSD) - BTC #
     #========================================#
     # In general more companies tend to leave this uninitialized for BTC, than for BLE. So a BTC hit is more likely to be accurate than BLE
-    MSD_query = f"SELECT device_BT_CID FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    MSD_query = f"SELECT device_BT_CID,manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     MSD_result = execute_query(MSD_query)
 
     if(len(MSD_result) != 0):
         # There could be multiple results if there are multiple distinct data blobs seen
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,) in MSD_result:
+        for (device_BT_CID,manufacturer_specific_data) in MSD_result:
+            BTIDES_insert_MSD(bdaddr, 0, 50, device_BT_CID, manufacturer_specific_data)
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
@@ -397,13 +399,14 @@ def print_ChipMakerPrint(bdaddr):
     #========================================#
     # Manufacturer-Specific Data (MSD) - BLE #
     #========================================#
-    MSD_query = f"SELECT device_BT_CID, le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
+    MSD_query = f"SELECT bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
     MSD_result = execute_query(MSD_query)
 
     if(len(MSD_result) != 0):
         # There could be multiple results if there are multiple distinct data blobs seen or multiple event types
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_BT_CID,le_evt_type, manufacturer_specific_data) in MSD_result:
+        for (bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) in MSD_result:
+            BTIDES_insert_MSD(bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data)
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]

@@ -28,7 +28,7 @@ def print_transmit_power(bdaddr, nametype):
         print(f"\tTransmit Power: {device_tx_power}dB")
         print(f"\t\tIn BT LE Data (LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-        BTIDES_insert_TxPower(bdaddr, random, le_evt_type, get_le_event_type_string(le_evt_type), device_tx_power)
+        BTIDES_insert_TxPower(bdaddr, random, le_evt_type, device_tx_power)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
         print("\tNo transmit power found.")
@@ -62,7 +62,7 @@ def print_flags(bdaddr):
         print(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
-        BTIDES_insert_Flags(bdaddr, bdaddr_random, le_evt_type, get_le_event_type_string(le_evt_type), le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+        BTIDES_insert_Flags(bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
         print("\tNo flags found.")
