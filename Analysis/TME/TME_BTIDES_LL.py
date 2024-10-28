@@ -91,7 +91,7 @@ def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_UNKNOWN_RSP and 
                    ll_entry["unknown_type"] == unknown_type):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LL_UNKNOWN_RSP: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LL_UNKNOWN_RSP: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
@@ -124,7 +124,7 @@ def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_FEATURE_RSP and 
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LL_FEATURE_RSP: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LL_FEATURE_RSP: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
@@ -157,7 +157,7 @@ def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_FEATURE_REQ and 
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
@@ -190,7 +190,7 @@ def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_PERIPHERAL_FEATURE_REQ and 
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LL_PERIPHERAL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LL_PERIPHERAL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
@@ -223,7 +223,7 @@ def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_VERSION_IND and 
                    ll_entry["version"] == version and ll_entry["company_id"] == company_id and ll_entry["subversion"] == subversion):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 

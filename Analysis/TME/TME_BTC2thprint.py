@@ -7,6 +7,7 @@
 from TME.TME_helpers import *
 from TME.TME_names import *
 from TME.TME_BTIDES_LMP import *
+from TME.TME_BTIDES_HCI import *
 
 ########################################
 # 2thprint_BTC Info
@@ -107,6 +108,8 @@ def print_BTC_2thprint(bdaddr):
     for (device_name,) in name_result:
         print(f"\t\tBTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
+        # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RSP fragments (it's defragmented)
+        BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         print("\n\tRaw BTC 2thprint:")

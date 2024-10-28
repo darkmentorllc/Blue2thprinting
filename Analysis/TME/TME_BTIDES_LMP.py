@@ -69,7 +69,7 @@ def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
                 if(lmp_entry != None and "opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode_LMP_VERSION_RSP and 
                    lmp_entry["version"] == version and lmp_entry["company_id"] == company_id and lmp_entry["subversion"] == subversion):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LMP_VERSION_RSP: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LMP_VERSION_RSP: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LMPArray 
@@ -102,7 +102,7 @@ def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
                 if(lmp_entry != None and "opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode_LMP_FEATURES_RSP and 
                    lmp_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_export_LMP_FEATURES_RSP: found existing match. Nothing to do. Returning.")
+                    #print("BTIDES_export_LMP_FEATURES_RSP: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LMPArray 

@@ -311,6 +311,36 @@ def has_LMPArray(entry):
         return False
 
 ###################################
+# BTIDES_HCI.json information
+###################################
+
+def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
+    device_name = hci_entry["remote_name"]
+    insert = f"INSERT IGNORE INTO BTC2th_LMP_name_res (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
+    #print(insert)
+    execute_insert(insert)
+
+event_code_HCI_Remote_Name_Request_Complete = 7
+def has_known_HCI_entry(event_code, hci_entry):
+    if("event_code" in hci_entry.keys() and hci_entry["event_code"] == event_code_HCI_Remote_Name_Request_Complete):
+        return True
+    else:
+        return False
+
+def parse_HCIArray(entry):
+    ###print(json.dumps(entry, indent=2))
+    for hci_entry in entry["HCIArray"]:
+        if(has_known_HCI_entry(event_code_HCI_Remote_Name_Request_Complete, hci_entry)):
+            import_HCI_Remote_Name_Request_Complete(entry["bdaddr"], hci_entry)
+
+def has_HCIArray(entry):
+    #print(json.dumps(entry, indent=2))
+    if("HCIArray" in entry.keys() and entry["HCIArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None and entry["bdaddr_rand"] == 0):
+        return True
+    else:
+        return False
+
+###################################
 # MAIN
 ###################################
 
@@ -370,6 +400,9 @@ def main():
 
         if(has_LMPArray(entry)):
             parse_LMPArray(entry)
+
+        if(has_HCIArray(entry)):
+            parse_HCIArray(entry)
 
             
     print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplicates).")
