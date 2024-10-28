@@ -329,7 +329,7 @@ def print_ChipMakerPrint(bdaddr):
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
-            BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
+            BTIDES_export_LMP_VERSION_RSP(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
     if(time_profile): print(f"NamePrint = {time.time()}")
     #================#

@@ -6,6 +6,7 @@
 #import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_names import *
+from TME.TME_BTIDES_LMP import *
 
 ########################################
 # 2thprint_BTC Info
@@ -101,6 +102,7 @@ def print_BTC_2thprint(bdaddr):
     for page, features in features_result:
         print("\t\tBTC LMP Features: 0x%016x" % features)
         decode_BTC_features(page, features)
+        BTIDES_export_LMP_FEATURES_RSP(bdaddr, features)
 
     for (device_name,) in name_result:
         print(f"\t\tBTC LMP Name Response: {device_name}")

@@ -55,17 +55,17 @@ def ff_LL_PERIPHERAL_FEATURE_REQ(features):
     return obj
 
 
+# TODO: Pretty sure this is where OO programming would save me a lot of copy-paste...
 ############################
 # JSON insertion functions
 ############################
-
-# TODO: Pretty sure this is where OO programming would save me a lot of copy-paste...
-
+# All functions follow this flow:
 # Opens existing JSON object, searches for an entry for the given bdaddr
 # If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the LL_UNKNOWN_RSP data into a LLArray entry
+# If an entry already exists, it tries to insert the data into a LLArray entry
 #  If an existing LLArray entry already exists, this is done
 #  If no LLArray exists, it creates one
+
 def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -99,11 +99,6 @@ def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the LL_FEATURE_RSP data into a LLArray entry
-#  If an existing LLArray entry already exists, this is done
-#  If no LLArray exists, it creates one
 def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -137,11 +132,6 @@ def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the LL_FEATURE_RSP data into a LLArray entry
-#  If an existing LLArray entry already exists, this is done
-#  If no LLArray exists, it creates one
 def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -175,11 +165,6 @@ def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the LL_FEATURE_RSP data into a LLArray entry
-#  If an existing LLArray entry already exists, this is done
-#  If no LLArray exists, it creates one
 def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -213,11 +198,6 @@ def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the LL_VERSION_IND data into a LLArray entry
-#  If an existing LLArray entry already exists, this is done
-#  If no LLArray exists, it creates one
 def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)

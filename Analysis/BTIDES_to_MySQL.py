@@ -24,6 +24,7 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
+from _ast import Or
 
 ###################################
 # Globals
@@ -183,37 +184,26 @@ def has_AdvDataArray(entry):
     else:
         return False
 
-def has_Flags(entry):
-    if(entry != None and entry["type"] == 1 and entry["flags_hex_str"] != None and len(entry["flags_hex_str"]) == 2):
+type_AdvData_Flags          = 1
+type_AdvData_TxPower        = 10
+type_AdvData_MSD            = 255
+def has_known_AdvData_type(type, entry):
+    if(entry != None and "type" in entry.keys() and entry["type"] == type):
         return True
     else:
         return False
-
-def has_TxPower(entry):
-    if(entry != None and entry["type"] == 10 and entry["tx_power"] != None and entry["tx_power"] >= -128 and entry["tx_power"] <= 127):
-        return True
-    else:
-        return False
-
-def has_MSD(entry):
-    if(entry != None and entry["type"] == 255 and entry["company_id_hex_str"] != None and len(entry["company_id_hex_str"]) == 4 and entry["msd_hex_str"] != None):
-        return True
-    else:
-        return False
-
 
 def parse_AdvChanArray(entry):
     ###print(json.dumps(entry, indent=2))
     for AdvChanEntry in entry["AdvChanArray"]:
         if(has_AdvDataArray(AdvChanEntry)):
             for AdvData in AdvChanEntry["AdvDataArray"]:
-                if(has_Flags(AdvData)):
+                if(has_known_AdvData_type(type_AdvData_Flags, AdvData)):
                     import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-                if(has_TxPower(AdvData)):
+                if(has_known_AdvData_type(type_AdvData_TxPower, AdvData)):
                     import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-                if(has_MSD(AdvData)):
+                if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
                     import_AdvData_MSD(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-
 
 def has_AdvChanArray(entry):
     if("AdvChanArray" in entry.keys() and entry["AdvChanArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
@@ -225,11 +215,11 @@ def has_AdvChanArray(entry):
 # BTIDES_LL.json information
 ###################################
 
-opcode_LL_UNKNOWN_RSP =             7
-opcode_LL_FEATURE_REQ =             8
-opcode_LL_FEATURE_RSP =             9
-opcode_LL_VERSION_IND =             12
-opcode_LL_PERIPHERAL_FEATURE_REQ =  14
+opcode_LL_UNKNOWN_RSP               = 7
+opcode_LL_FEATURE_REQ               = 8
+opcode_LL_FEATURE_RSP               = 9
+opcode_LL_VERSION_IND               = 12
+opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
@@ -259,7 +249,6 @@ def has_known_LL_packet(opcode, ll_entry):
     else:
         return False
 
-
 def parse_LLArray(entry):
     ###print(json.dumps(entry, indent=2))
     for ll_entry in entry["LLArray"]:
@@ -283,7 +272,7 @@ def has_LLArray(entry):
 # BTIDES_LMP.json information
 ###################################
 
-def import_LMP_VERSION_RES(bdaddr, lmp_entry):
+def import_LMP_VERSION_RSP(bdaddr, lmp_entry):
     lmp_version = lmp_entry["version"]
     device_BT_CID = lmp_entry["company_id"]
     lmp_sub_version = lmp_entry["subversion"]
@@ -291,8 +280,17 @@ def import_LMP_VERSION_RES(bdaddr, lmp_entry):
     #print(insert)
     execute_insert(insert)
 
-def has_LMP_VERSION_RES(lmp_entry):
-    if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == 38):
+def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
+    #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename BTC2th_LMP_features_res to BTC2th_LMP_FEATURES
+    features = int(lmp_entry["lmp_features_hex_str"], 16)
+    insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES ('{bdaddr}', 0, {features});"
+    #print(insert)
+    execute_insert(insert)
+
+opcode_LMP_VERSION_RSP          = 38
+opcode_LMP_FEATURES_RSP         = 40
+def has_known_LMP_packet(opcode, lmp_entry):
+    if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
         return True
     else:
         return False
@@ -300,8 +298,10 @@ def has_LMP_VERSION_RES(lmp_entry):
 def parse_LMPArray(entry):
     ###print(json.dumps(entry, indent=2))
     for lmp_entry in entry["LMPArray"]:
-        if(has_LMP_VERSION_RES(lmp_entry)):
-            import_LMP_VERSION_RES(entry["bdaddr"], lmp_entry)
+        if(has_known_LL_packet(opcode_LMP_VERSION_RSP, lmp_entry)):
+            import_LMP_VERSION_RSP(entry["bdaddr"], lmp_entry)
+        if(has_known_LL_packet(opcode_LMP_FEATURES_RSP, lmp_entry)):
+            import_LMP_FEATURES_RSP(entry["bdaddr"], lmp_entry)
 
 def has_LMPArray(entry):
     #print(json.dumps(entry, indent=2))
