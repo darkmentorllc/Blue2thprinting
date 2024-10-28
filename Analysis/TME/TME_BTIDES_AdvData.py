@@ -40,8 +40,10 @@ def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, Ad
         return None
 
 def ff_TxPower(power):
-    TxPower = {"type": 10, "length": 2, "tx_power": power}
-    return TxPower
+    obj = {"type": 10, "length": 2, "tx_power": power}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "TxPower"
+    return obj
 
 def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     flags_int = 0x00
@@ -60,12 +62,16 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
 
 def ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-    Flags = {"type": 1, "length": 2, "flags_hex_str": flags_hex_str}
-    return Flags
+    obj = {"type": 1, "length": 2, "flags_hex_str": flags_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "Flags"
+    return obj
 
 def ff_MSD(length, company_id_hex_str, MSD_hex_str):
-    msd = {"type": 255, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
-    return msd
+    obj = {"type": 255, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "ManufacturerSpecificData"
+    return obj
 
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
@@ -126,7 +132,7 @@ def le_evt_type_to_BTIDES_type_str(type):
 # If an entry already exists, it tries to insert the TxPower data into a AdvChanArray->AdvChanData->AdvDataArray entry
 #  If an existing AdvChanData entry already exists, this is done
 #  If no AdvChanData exists, it creates one 
-def BTIDES_insert_TxPower(bdaddr, random, type, data):
+def BTIDES_export_TxPower(bdaddr, random, type, data):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
@@ -165,7 +171,7 @@ def BTIDES_insert_TxPower(bdaddr, random, type, data):
                         if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
                            "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
                             # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_insert_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
                             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
@@ -185,8 +191,8 @@ def BTIDES_insert_TxPower(bdaddr, random, type, data):
 # If an entry already exists, it tries to insert the flags_hex_str data into a AdvChanArray->AdvChanData->AdvDataArray entry
 #  If an existing AdvChanData entry already exists, this is done
 #  If no AdvChanData exists, it creates one 
-# Example: BTIDES_insert_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-def BTIDES_insert_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
+# Example: BTIDES_export_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
@@ -226,7 +232,7 @@ def BTIDES_insert_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
                         if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
                            "flags_hex_str" in AdvDataEntry.keys() and AdvDataEntry["flags_hex_str"] == flags_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_insert_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
                             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
@@ -246,8 +252,8 @@ def BTIDES_insert_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
 # If an entry already exists, it tries to insert the flags_hex_str data into a AdvChanArray->AdvChanData->AdvDataArray entry
 #  If an existing AdvChanData entry already exists, this is done
 #  If no AdvChanData exists, it creates one 
-# Example: BTIDES_insert_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-def BTIDES_insert_MSD(bdaddr, random, type, company_id, MSD_hex_str):
+# Example: BTIDES_export_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
@@ -289,7 +295,7 @@ def BTIDES_insert_MSD(bdaddr, random, type, company_id, MSD_hex_str):
                            "company_id_hex_str" in AdvDataEntry.keys() and AdvDataEntry["company_id_hex_str"] == company_id_hex_str and
                             "msd_hex_str" in AdvDataEntry.keys() and AdvDataEntry["msd_hex_str"] == MSD_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_insert_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
                             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry

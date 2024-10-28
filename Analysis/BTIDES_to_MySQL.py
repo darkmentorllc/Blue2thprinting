@@ -225,25 +225,53 @@ def has_AdvChanArray(entry):
 # BTIDES_LL.json information
 ###################################
 
+opcode_LL_UNKNOWN_RSP =             7
+opcode_LL_FEATURE_REQ =             8
+opcode_LL_FEATURE_RSP =             9
+opcode_LL_VERSION_IND =             12
+opcode_LL_PERIPHERAL_FEATURE_REQ =  14
+
+def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
+    unknown_opcode = ll_entry["unknown_type"]
+    insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES ( {random}, '{bdaddr}', {unknown_opcode});"
+    #print(insert)
+    execute_insert(insert)
+
 def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     ll_version = ll_entry["version"]
     device_BT_CID = ll_entry["company_id"]
     ll_sub_version = ll_entry["subversion"]
-    le_insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
-    #print(le_insert)
-    execute_insert(le_insert)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
+    #print(insert)
+    execute_insert(insert)
 
-def has_LL_VERSION_IND(ll_entry):
-    if("opcode" in ll_entry.keys() and ll_entry["opcode"] == 12):
+# This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
+def import_LL_FEATUREs(bdaddr, random, ll_entry):
+    opcode = ll_entry["opcode"]
+    features = int(ll_entry["le_features_hex_str"], 16)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES ( {random}, '{bdaddr}', {opcode}, {features});"
+    #print(insert)
+    execute_insert(insert)
+
+def has_known_LL_packet(opcode, ll_entry):
+    if("opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode):
         return True
     else:
-        return False    
+        return False
+
 
 def parse_LLArray(entry):
     ###print(json.dumps(entry, indent=2))
     for ll_entry in entry["LLArray"]:
-        if(has_LL_VERSION_IND(ll_entry)):
+        if(has_known_LL_packet(opcode_LL_UNKNOWN_RSP, ll_entry)):
+            import_LL_UNKNOWN_RSP(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+        if(has_known_LL_packet(opcode_LL_VERSION_IND, ll_entry)):
             import_LL_VERSION_IND(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+        if(has_known_LL_packet(opcode_LL_FEATURE_REQ, ll_entry) or 
+           has_known_LL_packet(opcode_LL_FEATURE_RSP, ll_entry) or 
+           has_known_LL_packet(opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
+            import_LL_FEATUREs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+
 
 def has_LLArray(entry):
     if("LLArray" in entry.keys() and entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):

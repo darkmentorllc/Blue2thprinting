@@ -74,3 +74,4 @@ uuid16_service_names = {}
 # BTIDES JSON data to export
 #########################################
 BTIDES_JSON = []
+verbose_BTIDES = True

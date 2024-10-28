@@ -5,6 +5,7 @@
 
 #import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_BTIDES_LL import *
 
 ########################################
 # 2thprint_BLE Info
@@ -75,7 +76,7 @@ def print_BLE_2thprint(bdaddr):
     version_query = f"SELECT ll_version, ll_sub_version, device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
     version_result = execute_query(version_query)
 
-    features_query = f"SELECT opcode, features FROM BLE2th_LL_FEATUREs WHERE device_bdaddr = '{bdaddr}'"
+    features_query = f"SELECT device_bdaddr_type, opcode, features FROM BLE2th_LL_FEATUREs WHERE device_bdaddr = '{bdaddr}'"
     features_result = execute_query(features_query)
 
     phys_query = f"SELECT tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = '{bdaddr}'"
@@ -87,7 +88,7 @@ def print_BLE_2thprint(bdaddr):
     ping_query = f"SELECT ping_rsp FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = '{bdaddr}'"
     ping_result = execute_query(ping_query)
 
-    unknown_query = f"SELECT unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = '{bdaddr}'"
+    unknown_query = f"SELECT device_bdaddr_type, unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = '{bdaddr}'"
     unknown_result = execute_query(unknown_query)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
@@ -100,10 +101,16 @@ def print_BLE_2thprint(bdaddr):
         print("\t\tLL Sub-version: 0x%04x" % ll_sub_version)
         print(f"\t\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
-    for opcode, features in features_result:
+    for device_bdaddr_type, opcode, features in features_result:
         print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
         print("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
+        if(opcode == 8):
+            BTIDES_export_LL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
+        elif(opcode == 9):
+            BTIDES_export_LL_FEATURE_RSP(bdaddr, device_bdaddr_type, features)
+        elif(opcode == 14):
+            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
 
     for tx_phys, rx_phys in phys_result:
         print(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
@@ -116,9 +123,9 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\t\tMax TX octets: {max_tx_octets}")
         print(f"\t\t\tMax TX time: {max_tx_time} microseconds")
 
-    #FIXME: Why is there a , showing up on the end of this?!
-    for (unknown_opcode,) in unknown_result:
+    for device_bdaddr_type, unknown_opcode in unknown_result:
         print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes[unknown_opcode]})")
+        BTIDES_export_LL_UNKNOWN_RSP(bdaddr, device_bdaddr_type, unknown_opcode)
 
     for ping_rsp in ping_result:
         print(f"\t\tLL Ping Response Received")
@@ -136,7 +143,7 @@ def print_BLE_2thprint(bdaddr):
                 print(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
                 file.write(f"\"version_BT_CID\",\"0x%04x\"\n" % device_BT_CID)
 
-            for opcode, features in features_result:
+            for device_bdaddr_type, opcode, features in features_result:
                 print(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
                 file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"\n" % (opcode, features))
 
@@ -150,7 +157,7 @@ def print_BLE_2thprint(bdaddr):
                 print(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
                 file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"\n" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
 
-            for (unknown_opcode,) in unknown_result:
+            for device_bdaddr_type, unknown_opcode in unknown_result:
                 print(f"\t\t\"unknown_ll_ctrl_opcode\",\"0x%02x\"" % unknown_opcode)
                 file.write(f"\"unknown_ll_ctrl_opcode\",\"0x%02x\"\n" % unknown_opcode)
 

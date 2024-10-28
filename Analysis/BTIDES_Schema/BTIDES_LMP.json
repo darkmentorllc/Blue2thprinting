@@ -31,6 +31,11 @@
       "required": [ "opcode", "name_offset" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_NAME_REQ"
+	},
 	"opcode": {
 		"description": "This should always be 1. This is required to differentiate from other data types in an array.",
 		"const": 1
@@ -49,6 +54,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_NAME_REQ"
+	},
 	"opcode": {
 		"description": "This should always be 1. This is required to differentiate from other data types in an array.",
 		"const": 1
@@ -62,6 +72,11 @@
       "required": [ "opcode", "name_offset", "name_length", "name_fragment_hex_str"],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_NAME_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 2. This is required to differentiate from other data types in an array.",
 		"const": 2
@@ -90,6 +105,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_NAME_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 2. This is required to differentiate from other data types in an array.",
 		"const": 2
@@ -103,6 +123,11 @@
       "required": [ "opcode", "version", "company_id", "subversion" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_VERSION_REQ"
+	},
 	"opcode": {
 		"description": "This should always be 37. This is required to differentiate from other data types in an array.",
 		"const": 37
@@ -118,6 +143,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_VERSION_REQ"
+	},
 	"opcode": {
 		"description": "This should always be 37. This is required to differentiate from other data types in an array.",
 		"const": 37
@@ -131,6 +161,11 @@
       "required": [ "opcode", "version", "company_id", "subversion" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_VERSION_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 38. This is required to differentiate from other data types in an array.",
 		"const": 38
@@ -146,6 +181,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_VERSION_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 38. This is required to differentiate from other data types in an array.",
 		"const": 38
@@ -165,6 +205,11 @@
       "required": [ "opcode", "lmp_features_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_FEATURES_REQ"
+	},
 	"opcode": {
 		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
 		"const": 39
@@ -179,6 +224,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_FEATURES_REQ"
+	},
 	"opcode": {
 		"description": "This should always be 38. This is required to differentiate from other data types in an array.",
 		"const": 39
@@ -192,12 +242,16 @@
       "required": [ "opcode", "lmp_features_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_FEATURES_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 38. This is required to differentiate from other data types in an array.",
 		"const": 40
 	},
-	"lmp_features_hex_str": { "$ref": "#/definitions/lmp_features_hex_str"
-	}
+	"lmp_features_hex_str": { "$ref": "#/definitions/lmp_features_hex_str"}
       }
     },
     "LMP_FEATURES_RSP2": {
@@ -206,6 +260,11 @@
       "required": [ "opcode", "full_pkt_hex_str" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "LMP_FEATURES_RSP"
+	},
 	"opcode": {
 		"description": "This should always be 40. This is required to differentiate from other data types in an array.",
 		"const": 40

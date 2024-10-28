@@ -16,8 +16,10 @@ from TME.TME_BTIDES_base import *
 ############################  
 
 def ff_LMP_VERSION_RES(version, company_id, subversion):
-    lmp_version_res = {"opcode": 38, "version": version, "company_id": company_id, "subversion": subversion}
-    return lmp_version_res
+    obj = {"opcode": 38, "version": version, "company_id": company_id, "subversion": subversion}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_VERSION_IND"
+    return obj
 
 ############################
 # JSON insertion functions
@@ -28,7 +30,7 @@ def ff_LMP_VERSION_RES(version, company_id, subversion):
 # If an entry already exists, it tries to insert the LMP_VERSION_RES data into a LMPArray entry
 #  If an existing LMPArray entry already exists, this is done
 #  If no LMPArray exists, it creates one 
-def BTIDES_insert_LMP_VERSION_RES(bdaddr, version, company_id, subversion):
+def BTIDES_export_LMP_VERSION_RES(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
     entry = lookup_entry(bdaddr, 0)
@@ -53,7 +55,7 @@ def BTIDES_insert_LMP_VERSION_RES(bdaddr, version, company_id, subversion):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == 12 and 
                    ll_entry["version"] == version and ll_entry["company_id"] == company_id and ll_entry["subversion"] == subversion):
                     # We already have the entry we would insert, so just go ahead and return
-                    print("BTIDES_insert_LMP_VERSION_RES: found existing match. Nothing to do. Returning.")
+                    print("BTIDES_export_LMP_VERSION_RES: found existing match. Nothing to do. Returning.")
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LMPArray 

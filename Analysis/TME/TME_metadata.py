@@ -313,7 +313,7 @@ def print_ChipMakerPrint(bdaddr):
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
-            BTIDES_insert_LL_VERSION_IND(bdaddr, device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version)
+            BTIDES_export_LL_VERSION_IND(bdaddr, device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version)
 
     if(time_profile): print(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#
@@ -329,7 +329,7 @@ def print_ChipMakerPrint(bdaddr):
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
-            BTIDES_insert_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
+            BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
     if(time_profile): print(f"NamePrint = {time.time()}")
     #================#
@@ -386,7 +386,7 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if there are multiple distinct data blobs seen
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (device_BT_CID,manufacturer_specific_data) in MSD_result:
-            BTIDES_insert_MSD(bdaddr, 0, 50, device_BT_CID, manufacturer_specific_data)
+            BTIDES_export_MSD(bdaddr, 0, 50, device_BT_CID, manufacturer_specific_data)
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
@@ -406,7 +406,7 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if there are multiple distinct data blobs seen or multiple event types
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) in MSD_result:
-            BTIDES_insert_MSD(bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data)
+            BTIDES_export_MSD(bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data)
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
