@@ -316,7 +316,7 @@ def has_LMPArray(entry):
 
 def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     device_name = hci_entry["remote_name"]
-    insert = f"INSERT IGNORE INTO BTC2th_LMP_name_res (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
+    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
     #print(insert)
     execute_insert(insert)
 
