@@ -4,8 +4,8 @@
 ########################################
 
 import re
-#import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_BTIDES_HCI import *
 
 ########################################
 # Device Name
@@ -19,18 +19,19 @@ def print_device_names(bdaddr, nametype):
     # Query for EIR_bdaddr_to_name table
     eir_query = f"SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
-    for name in eir_result:
-        print(f"\tDeviceName: {name[0]}")
+    for name, in eir_result:
+        print(f"\tDeviceName: {name}")
         print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
-        find_nameprint_match(name[0])
+        find_nameprint_match(name)
 
     # Query for RSP_bdaddr_to_name table
     rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     rsp_result = execute_query(rsp_query)
-    for name in rsp_result:
-        print(f"\tDeviceName: {name[0]}")
+    for name, in rsp_result:
+        print(f"\tDeviceName: {name}")
         print("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
-        find_nameprint_match(name[0])
+        find_nameprint_match(name)
+        BTIDES_export_HCI_Name_Response(bdaddr, name)
 
     # Query for LE_bdaddr_to_name table
     le_query = f"SELECT device_name, bdaddr_random, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
