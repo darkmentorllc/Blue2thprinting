@@ -243,6 +243,9 @@ opcode_LL_VERSION_IND               = 12
 opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
 opcode_LL_PING_REQ                  = 18
 opcode_LL_PING_RSP                  = 19
+opcode_LL_LENGTH_REQ                = 20
+opcode_LL_LENGTH_RSP                = 21
+
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
@@ -263,6 +266,17 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     opcode = ll_entry["opcode"]
     features = int(ll_entry["le_features_hex_str"], 16)
     insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES ( {random}, '{bdaddr}', {opcode}, {features});"
+    #print(insert)
+    execute_insert(insert)
+
+# This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
+def import_LL_LENGTHs(bdaddr, random, ll_entry):
+    opcode = ll_entry["opcode"]
+    max_rx_octets = ll_entry["max_rx_octets"]
+    max_rx_time = ll_entry["max_rx_time"]
+    max_tx_octets = ll_entry["max_tx_octets"]
+    max_tx_time = ll_entry["max_tx_time"]
+    insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
     #print(insert)
     execute_insert(insert)
 
@@ -292,6 +306,8 @@ def parse_LLArray(entry):
             import_LL_FEATUREs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
         if(has_known_LL_packet(opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(opcode_LL_PING_REQ, ll_entry)):
             import_LL_PING_RSP(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+        if(has_known_LL_packet(opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(opcode_LL_LENGTH_RSP, ll_entry)):
+            import_LL_LENGTHs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
 
 def has_LLArray(entry):
     if("LLArray" in entry.keys() and entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):

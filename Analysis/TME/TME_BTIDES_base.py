@@ -42,7 +42,7 @@ def write_BTIDES(out_filename):
             #print(s["$id"])
             schema = Resource.from_contents(s)
             all_schemas.append((s["$id"], schema))
-        
+
     registry = Registry().with_resources( all_schemas )
 
     # Sanity check every entry against the Schema
@@ -55,7 +55,7 @@ def write_BTIDES(out_filename):
     except ValidationError as e:
         print("JSON data is invalid per BTIDES Schema. Check any changes to schema or code. Error:", e.message)
         exit(-1)
-    
+
     with open(out_filename, 'w') as f:
         json.dump(TME.TME_glob.BTIDES_JSON, fp=f) # For saving space
         #json.dump(TME.TME_glob.BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable

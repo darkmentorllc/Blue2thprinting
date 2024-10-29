@@ -82,7 +82,7 @@ def print_BLE_2thprint(bdaddr):
     phys_query = f"SELECT tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = '{bdaddr}'"
     phys_result = execute_query(phys_query)
 
-    lengths_query = f"SELECT opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = '{bdaddr}'"
+    lengths_query = f"SELECT device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = '{bdaddr}'"
     lengths_result = execute_query(lengths_query)
 
     ping_query = f"SELECT device_bdaddr_type FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = '{bdaddr}'"
@@ -116,12 +116,16 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
         print(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
 
-    for opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
+    for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         print(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
         print(f"\t\t\tMax RX octets: {max_rx_octets}")
         print(f"\t\t\tMax RX time: {max_rx_time} microseconds")
         print(f"\t\t\tMax TX octets: {max_tx_octets}")
         print(f"\t\t\tMax TX time: {max_tx_time} microseconds")
+        if(opcode == opcode_LL_LENGTH_REQ):
+            BTIDES_export_LL_LENGTH_REQ(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+        elif(opcode == opcode_LL_LENGTH_RSP):
+            BTIDES_export_LL_LENGTH_RSP(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
 
     for device_bdaddr_type, unknown_opcode in unknown_result:
         print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes[unknown_opcode]})")
@@ -154,7 +158,7 @@ def print_BLE_2thprint(bdaddr):
                 print(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
                 file.write(f"\"rx_phys\",\"0x%02x\"\n" % rx_phys)
 
-            for opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
+            for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
                 print(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
                 file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"\n" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
 
@@ -165,8 +169,6 @@ def print_BLE_2thprint(bdaddr):
             for ping_rsp in ping_result:
                 print(f"\t\t\"ll_ping_rsp\",\"1\"")
                 file.write(f"\"ll_ping_rsp\",\"1\"\n")
-
-
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
         print("\tNo BLE 2thprint Info found.")

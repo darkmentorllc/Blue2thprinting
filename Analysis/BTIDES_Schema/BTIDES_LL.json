@@ -276,7 +276,7 @@
     "LL_LENGTH_REQ": {
       "type": "object",
       "description": "Structure for LL\\_LENGTH\\_REQ packet.",
-      "required": [ "opcode", "MaxRxOctets","MaxRxTime","MaxTxOctets","MaxTxTime" ],
+      "required": [ "opcode", "max_rx_octets", "max_rx_time", "max_tx_octets", "max_tx_time" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
 	"opcode_str": {
@@ -288,25 +288,25 @@
 		"description": "This should always be 20. This is required to differentiate from other data types in an array.",
 		"const": 20
 	},
-	"MaxRxOctets": {
+	"max_rx_octets": {
 		"description": "2-byte MaxRxOctets from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxRxTime": {
+	"max_rx_time": {
 		"description": "2-byte MaxRxTime from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxTxOctets": {
+	"max_tx_octets": {
 		"description": "2-byte MaxTxOctets from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxTxTime": {
+	"max_tx_time": {
 		"description": "2-byte MaxTxTime from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
@@ -335,7 +335,7 @@
     "LL_LENGTH_RSP": {
       "type": "object",
       "description": "Structure for LL\\_LENGTH\\_RSP packet.",
-      "required": [ "opcode", "MaxRxOctets","MaxRxTime","MaxTxOctets","MaxTxTime" ],
+      "required": [ "opcode", "max_rx_octets","max_rx_time","max_tx_octets","max_tx_time" ],
       "properties": {
 	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
 	"opcode_str": {
@@ -347,25 +347,25 @@
 		"description": "This should always be 21. This is required to differentiate from other data types in an array.",
 		"const": 21
 	},
-	"MaxRxOctets": {
+	"max_rx_octets": {
 		"description": "2-byte MaxRxOctets from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxRxTime": {
+	"max_rx_time": {
 		"description": "2-byte MaxRxTime from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxTxOctets": {
+	"max_tx_octets": {
 		"description": "2-byte MaxTxOctets from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,
 		"maximum": 65535
 	},
-	"MaxTxTime": {
+	"max_tx_time": {
 		"description": "2-byte MaxTxTime from BT Core Spec.",
 		"type": "integer",
 		"minimum": 0,

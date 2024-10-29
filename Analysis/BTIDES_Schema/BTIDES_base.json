@@ -45,12 +45,19 @@
 	"anyOf": [
 		{ "$ref": "#/definitions/time" },
 		{ "$ref": "#/definitions/src_file" },
+		{ "$ref": "#/definitions/channel_freq" },
 		{ "$ref": "#/definitions/RSSI" }
 	]
     },
     "src_file": {
 	"description": "Optional source file where this data came from. Useful for backtracking data when debugging if something was parsed correctly or not.",
 	"type": "string"
+    },
+    "channel_freq": {
+	"description": "Which channel frequency this data was observed on, in MHz. Using this instead of channel ID so that this field can be used equally for BLE and BREDR.",
+	"type": "integer",
+	"minimum": 2402,
+	"maximum": 2480
     },
     "RSSI": {
 	"description": "Received Signal Strength Indicator in dBm (deciBel-milliwatts) at the time this record was collected.\n Optional because it may not be available.\n But in general if you want to attempt trilateration, you'll need this.",
