@@ -245,7 +245,8 @@ opcode_LL_PING_REQ                  = 18
 opcode_LL_PING_RSP                  = 19
 opcode_LL_LENGTH_REQ                = 20
 opcode_LL_LENGTH_RSP                = 21
-
+opcode_LL_PHY_REQ                   = 22
+opcode_LL_PHY_RSP                   = 23
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
@@ -269,6 +270,14 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     #print(insert)
     execute_insert(insert)
 
+# This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
+# TODO: I should really update the table to have the opcode field for differentiation of types
+def import_LL_PING_RSP(bdaddr, random, ll_entry):
+    #opcode = ll_entry["opcode"]
+    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
+    #print(insert)
+    execute_insert(insert)
+
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
 def import_LL_LENGTHs(bdaddr, random, ll_entry):
     opcode = ll_entry["opcode"]
@@ -280,10 +289,13 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     #print(insert)
     execute_insert(insert)
 
-# This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
-# TODO: I should really update the table though to differentiate which something is
-def import_LL_PING_RSP(bdaddr, random, ll_entry):
-    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
+# This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
+# TODO: I should really update the table to have the opcode field for differentiation of types
+def import_LL_PHYs(bdaddr, random, ll_entry):
+    #opcode = ll_entry["opcode"]
+    tx_phys = ll_entry["TX_PHYS"]
+    rx_phys = ll_entry["RX_PHYS"]
+    insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES ( {random}, '{bdaddr}', {tx_phys}, {rx_phys});"
     #print(insert)
     execute_insert(insert)
 
@@ -308,6 +320,8 @@ def parse_LLArray(entry):
             import_LL_PING_RSP(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
         if(has_known_LL_packet(opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(opcode_LL_LENGTH_RSP, ll_entry)):
             import_LL_LENGTHs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
+        if(has_known_LL_packet(opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(opcode_LL_PHY_RSP, ll_entry)):
+            import_LL_PHYs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
 
 def has_LLArray(entry):
     if("LLArray" in entry.keys() and entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):

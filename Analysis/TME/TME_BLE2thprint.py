@@ -79,7 +79,7 @@ def print_BLE_2thprint(bdaddr):
     features_query = f"SELECT device_bdaddr_type, opcode, features FROM BLE2th_LL_FEATUREs WHERE device_bdaddr = '{bdaddr}'"
     features_result = execute_query(features_query)
 
-    phys_query = f"SELECT tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = '{bdaddr}'"
+    phys_query = f"SELECT device_bdaddr_type, tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = '{bdaddr}'"
     phys_result = execute_query(phys_query)
 
     lengths_query = f"SELECT device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = '{bdaddr}'"
@@ -105,16 +105,17 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
         print("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
-        if(opcode == 8):
+        if(opcode == opcode_LL_FEATURE_REQ):
             BTIDES_export_LL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
-        elif(opcode == 9):
+        elif(opcode == opcode_LL_FEATURE_RSP):
             BTIDES_export_LL_FEATURE_RSP(bdaddr, device_bdaddr_type, features)
-        elif(opcode == 14):
+        elif(opcode == opcode_LL_PERIPHERAL_FEATURE_REQ):
             BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
 
-    for tx_phys, rx_phys in phys_result:
+    for device_bdaddr_type, tx_phys, rx_phys in phys_result:
         print(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
         print(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
+        BTIDES_export_LL_PHY_RSP(bdaddr, device_bdaddr_type, tx_phys, rx_phys)
 
     for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         print(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
@@ -152,7 +153,7 @@ def print_BLE_2thprint(bdaddr):
                 print(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
                 file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"\n" % (opcode, features))
 
-            for tx_phys, rx_phys in phys_result:
+            for device_bdaddr_type, tx_phys, rx_phys in phys_result:
                 print(f"\t\t\"tx_phys\",\"0x%02x\"" % tx_phys)
                 file.write(f"\"tx_phys\",\"0x%02x\"\n" % tx_phys)
                 print(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
