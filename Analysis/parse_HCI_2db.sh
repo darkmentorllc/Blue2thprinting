@@ -63,8 +63,8 @@ echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_flags2.sh "$1"
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_MSD.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_MSD.sh "$1"
 
-echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_name.sh "$1"
-./parse_HCI_2db_helpers/fill_LE_bdaddr_to_name.sh "$1"
+echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_name2.sh "$1"
+./parse_HCI_2db_helpers/fill_LE_bdaddr_to_name2.sh "$1"
 
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_other_le_bdaddr.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_other_le_bdaddr.sh "$1"

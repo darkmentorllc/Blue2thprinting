@@ -15,8 +15,8 @@ echo ./parse_PCAP_2db_helpers/pcap_fill_BLE2th_LL_FEATUREs.sh "$1"
 echo ./parse_PCAP_2db_helpers/pcap_fill_BLE2th_LL_LENGTHs.sh "$1"
 ./parse_PCAP_2db_helpers/pcap_fill_BLE2th_LL_LENGTHs.sh "$1"
 
-echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_name.sh "$1"
-./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_name.sh "$1"
+echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_name2.sh "$1"
+./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_name2.sh "$1"
 
 echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_MSD.sh "$1"
 ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_MSD.sh "$1"
