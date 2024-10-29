@@ -447,8 +447,8 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
     if(len(UUID128) == 4):
         UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
     insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {service_type}, {begin_handle}, {end_handle}, '{UUID128}');"
-    print(insert)
-    #execute_insert(insert)
+    #print(insert)
+    execute_insert(insert)
     
     #TODO: Next comes embedded characteristic parsing
 
