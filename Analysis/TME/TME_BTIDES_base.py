@@ -15,7 +15,6 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
-
 # Same order as in BTIDES_base.json
 BTIDES_files = ["BTIDES_base.json",
                 "BTIDES_AdvData.json",

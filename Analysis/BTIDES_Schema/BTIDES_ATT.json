@@ -18,74 +18,16 @@
     }
   },
   "definitions": {
-    "ATT_EXCHANGE_MTU_REQ": {
-      "type": "object",
-      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet.",
-      "required": [ "client_rx_mtu" ],
-      "properties": {
-	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
-	"opcode": {
-		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
-		"const": 2
-	},
-	"client_rx_mtu": {
-		"description": "2-byte \"Client Rx MTU\" from spec. Maximum number of bytes the ATT Client can receive via ATT.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	}
-      }
-    },
-    "ATT_EXCHANGE_MTU_REQ2": {
-      "type": "object",
-      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet, as single raw hex string.",
-      "required": [ "full_pkt_hex_str" ],
-      "properties": {
-	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
-	"opcode": {
-		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
-		"const": 2
-	},
-	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
-      }
-    },
-    "ATT_EXCHANGE_MTU_RSP": {
-      "type": "object",
-      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet.",
-      "required": [ "server_rx_mtu" ],
-      "properties": {
-	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
-	"opcode": {
-		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
-		"const": 3
-	},
-	"server_rx_mtu": {
-		"description": "2-byte \"Server Rx MTU\" from spec. Maximum number of bytes the ATT Server can receive via ATT.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	}
-      }
-    },
-    "ATT_EXCHANGE_MTU_RSP2": {
-      "type": "object",
-      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet, as single raw hex string.",
-      "required": [ "full_pkt_hex_str" ],
-      "properties": {
-	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
-	"opcode": {
-		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
-		"const": 3
-	},
-	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
-      }
-    },
     "ATT_handle_enumeration": {
-      "$comment": "Making an array instead of object and leaving out time and RSSI for now, because this is done over many packets, so one would need to mandate a beginning time/RSSI or ending time/RSSI, and I'm not sure I want to spec that out yet.",
+      "$comment": "Leaving out time and RSSI for now, because this is done over many packets, so one would need to mandate a beginning time/RSSI or ending time/RSSI, and I'm not sure I want to spec that out yet.",
       "description": "An array of all known ATT handle number/UUID pairs.",
-      "type": "array",
-      "items": {
-	"$ref": "#/definitions/handle_entry"
+      "type": "object",
+      "properties": {
+	"ATT_handle_enumeration": {
+		"description": "Each entry is a handle and UUID",
+		"type": "array",
+	  	"items": { "$ref": "#/definitions/handle_entry" }
+	}
       }
     },
     "handle_entry": {
@@ -100,6 +42,88 @@
                 "maximum": 65535
 	},
 	"UUID": { "$ref": "BTIDES_base.json#/definitions/UUID" }
+      }
+    },
+    "ATT_EXCHANGE_MTU_REQ": {
+      "type": "object",
+      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet.",
+      "required": [ "opcode", "client_rx_mtu" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "ATT_EXCHANGE_MTU_REQ"
+	},
+	"opcode": {
+		"description": "ATT packet opcode.",
+		"const": 2
+	},
+	"client_rx_mtu": {
+		"description": "2-byte \"Client Rx MTU\" from spec. Maximum number of bytes the ATT Client can receive via ATT.",
+		"type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+	}
+      }
+    },
+    "ATT_EXCHANGE_MTU_REQ2": {
+      "type": "object",
+      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "ATT_EXCHANGE_MTU_REQ"
+	},
+	"opcode": {
+		"description": "ATT packet opcode.",
+		"const": 2
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
+      }
+    },
+    "ATT_EXCHANGE_MTU_RSP": {
+      "type": "object",
+      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet.",
+      "required": [ "opcode", "server_rx_mtu" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "ATT packet opcode.",
+		"type": "string",
+		"const": "ATT_EXCHANGE_MTU_RSP"
+	},
+	"opcode": {
+		"description": "ATT packet opcode.",
+		"const": 3
+	},
+	"server_rx_mtu": {
+		"description": "2-byte \"Server Rx MTU\" from spec. Maximum number of bytes the ATT Server can receive via ATT.",
+		"type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+	}
+      }
+    },
+    "ATT_EXCHANGE_MTU_RSP2": {
+      "type": "object",
+      "description": "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet, as single raw hex string.",
+      "required": [ "opcode", "full_pkt_hex_str" ],
+      "properties": {
+	"std_optional_fields": { "$ref": "BTIDES_base.json#/definitions/std_optional_fields" },
+	"opcode_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "ATT_EXCHANGE_MTU_RSP"
+	},
+	"opcode": {
+		"description": "Optional field just if you don't want to look up the opcode for this packet type.",
+		"const": 3
+	},
+	"full_pkt_hex_str": {"$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"}
       }
     }
   }

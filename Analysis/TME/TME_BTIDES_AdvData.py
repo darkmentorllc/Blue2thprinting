@@ -7,7 +7,6 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import json
 import TME.TME_glob
 from TME.TME_BTIDES_base import *
     
@@ -191,7 +190,7 @@ def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
                             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
                             return
-                    # If we get here we didn't find any match, so we now need to insert our entry
+                    # If we got here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
                     AdvChanEntry["AdvDataArray"].append(ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host))
                     ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))

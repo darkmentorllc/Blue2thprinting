@@ -7,7 +7,6 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import json
 import TME.TME_glob
 from TME.TME_BTIDES_base import *
 
@@ -376,7 +375,7 @@ def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_
             entry["LLArray"].append(ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
-        
+
 def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)

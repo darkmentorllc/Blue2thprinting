@@ -24,6 +24,7 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
+from _ast import Or
 #from _ast import Or
 
 ###################################
@@ -383,7 +384,7 @@ def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
 
 event_code_HCI_Remote_Name_Request_Complete = 7
 def has_known_HCI_entry(event_code, hci_entry):
-    if("event_code" in hci_entry.keys() and hci_entry["event_code"] == event_code_HCI_Remote_Name_Request_Complete):
+    if("event_code" in hci_entry.keys() and hci_entry["event_code"] == event_code):
         return True
     else:
         return False
@@ -396,7 +397,46 @@ def parse_HCIArray(entry):
 
 def has_HCIArray(entry):
     #print(json.dumps(entry, indent=2))
-    if("HCIArray" in entry.keys() and entry["HCIArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None and entry["bdaddr_rand"] == 0):
+    if("HCIArray" in entry.keys() and entry["HCIArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
+        return True
+    else:
+        return False
+
+###################################
+# BTIDES_ATT.json information
+###################################
+
+def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
+    attribute_handle = att_handle_entry["handle"]
+    UUID128 = att_handle_entry["UUID"]
+    if(len(UUID128) == 4):
+        UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
+    insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {attribute_handle}, '{UUID128}');"
+    #print(insert)
+    execute_insert(insert)
+
+def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
+    for att_handle_entry in att_entry["ATT_handle_enumeration"]:
+        import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry)
+
+opcode_ATT_EXCHANGE_MTU_REQ          = 2
+opcode_ATT_EXCHANGE_MTU_RSP          = 3
+def has_known_att_entry(opcode, att_entry):
+    if("ATT_handle_enumeration" in att_entry.keys() or 
+       ("opcode" in att_entry.keys() and att_entry["opcode"] == opcode)):
+        return True
+    else:
+        return False
+
+def parse_ATTArray(entry):
+    ###print(json.dumps(entry, indent=2))
+    for att_entry in entry["ATTArray"]:
+        if(has_known_att_entry(None, att_entry)):
+            import_ATT_handle_enumeration(entry["bdaddr"], entry["bdaddr_rand"], att_entry)
+
+def has_ATTArray(entry):
+    #print(json.dumps(entry, indent=2))
+    if("ATTArray" in entry.keys() and entry["ATTArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):
         return True
     else:
         return False
@@ -465,7 +505,10 @@ def main():
         if(has_HCIArray(entry)):
             parse_HCIArray(entry)
 
-            
+        if(has_ATTArray(entry)):
+            parse_ATTArray(entry)
+
+
     print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplicates).")
 
 if __name__ == "__main__":

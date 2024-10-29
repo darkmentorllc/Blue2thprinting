@@ -197,7 +197,7 @@ def main():
         print("================================================================================")
         print(f"For bdaddr = {bdaddr}:")
         print_ChipPrint(bdaddr)
-        print_ChipMakerPrint(bdaddr)                        # Opportunistic BTIDES export
+        print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)
         print_device_names(bdaddr, nametype)
@@ -205,14 +205,14 @@ def main():
         print_service_solicit_uuid16s(bdaddr)
         print_uuid128s(bdaddr)
         print_service_solicit_uuid128s(bdaddr)
-        print_transmit_power(bdaddr, nametype)              # Opportunistic BTIDES export
-        print_flags(bdaddr)                                 # Opportunistic BTIDES export
+        print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
+        print_flags(bdaddr)                                 # Includes BTIDES export
         print_appearance(bdaddr, nametype)
         print_manufacturer_data(bdaddr)
         print_class_of_device(bdaddr)
-        print_GATT_info(bdaddr, hideBLEScopedata)
-        print_BLE_2thprint(bdaddr)
-        print_BTC_2thprint(bdaddr)
+        print_GATT_info(bdaddr, hideBLEScopedata)           # Includes BTIDES export
+        print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
+        print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
         print_UniqueIDReport(bdaddr)
 
         #BTIDES_insert_TxPower(bdaddr, "public", 1)

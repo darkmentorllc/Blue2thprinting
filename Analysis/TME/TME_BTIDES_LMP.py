@@ -7,7 +7,6 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import json
 import TME.TME_glob
 from TME.TME_BTIDES_base import *
 

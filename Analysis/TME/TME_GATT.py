@@ -7,6 +7,7 @@ import re
 import struct
 import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_BTIDES_ATT import *
 
 def get_uuid16_gatt_service_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT services
@@ -27,7 +28,7 @@ def get_uuid16_gatt_characteristic_string(uuid16):
 def match_known_GATT_UUID_or_custom_UUID(uuid128):
     uuid128.strip().lower()
     uuid128_no_dash = uuid128.replace('-','')
-    pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb'
+    pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb' 
     match = re.match(pattern, uuid128)
     if match:
         common_part = match.group()  # Extract the matched part
@@ -188,9 +189,13 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
 
-    query = f"SELECT attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT device_bdaddr_type, attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
-    attribute_handles_dict = {attribute_handle: UUID128 for attribute_handle,UUID128 in GATT_attribute_handles_result}
+    attribute_handles_dict = {}
+###    attribute_handles_dict = {attribute_handle: UUID128 for attribute_handle,UUID128 in GATT_attribute_handles_result}
+    for device_bdaddr_type, attribute_handle,UUID128 in GATT_attribute_handles_result:
+        attribute_handles_dict[attribute_handle] = UUID128
+        BTIDES_export_ATT_handles(bdaddr, device_bdaddr_type, attribute_handle, UUID128)
 
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
@@ -324,7 +329,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             for svc_begin_handle,svc_end_handle,UUID128 in GATT_services_result:
                 print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
                 file.write(f"Svc: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128}\n")
-            for attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+            for device_bdaddr_type, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
                 print(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
                 file.write(f"Descriptor Handle: {attribute_handle:03}, {UUID128_2}\n")
             for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
