@@ -7,8 +7,9 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import TME.TME_glob
+#import TME.TME_glob
 from TME.TME_BTIDES_base import *
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 ############################
 # Helper "factory functions"
@@ -21,7 +22,7 @@ status_SUCCESS = 0
 # TODO: we need to update database to keep track of status
 def ff_HCI_Remote_Name_Request_Complete(name):    
     obj = {"event_code": event_code_HCI_Remote_Name_Request_Complete, "status": status_SUCCESS, "remote_name": name}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["event_code_str"] = "HCI_Remote_Name_Request_Complete"
     return obj
 
@@ -38,7 +39,7 @@ def ff_HCI_Remote_Name_Request_Complete(name):
 
 def BTIDES_export_HCI_Name_Response(bdaddr, name):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -46,8 +47,8 @@ def BTIDES_export_HCI_Name_Response(bdaddr, name):
         base = ff_base(bdaddr, 0)
         base["HCIArray"] = [ ff_HCI_Remote_Name_Request_Complete(name) ]
         #print(json.dumps(base, indent=2))
-        TME.TME_glob.BTIDES_JSON.append(base)
-        #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("HCIArray" not in entry.keys()):
@@ -62,9 +63,9 @@ def BTIDES_export_HCI_Name_Response(bdaddr, name):
                    hci_entry["status"] == status_SUCCESS and hci_entry["remote_name"] == name):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_HCI_Name_Response: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into HCIArray 
             entry["HCIArray"].append(ff_HCI_Remote_Name_Request_Complete(name))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return

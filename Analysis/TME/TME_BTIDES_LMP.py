@@ -7,8 +7,8 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import TME.TME_glob
 from TME.TME_BTIDES_base import *
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 ############################
 # Helper "factory functions"
@@ -20,7 +20,7 @@ opcode_LMP_FEATURES_RSP         = 40
 # TODO: we need to update database to keep track of opcode so we know whether something is a REQ or RSP
 def ff_LMP_VERSION_RSP(version, company_id, subversion):
     obj = {"opcode": opcode_LMP_VERSION_RSP, "version": version, "company_id": company_id, "subversion": subversion}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LMP_VERSION_RSP"
     return obj
 
@@ -28,7 +28,7 @@ def ff_LMP_VERSION_RSP(version, company_id, subversion):
 def ff_LMP_FEATURES_RSP(features):
     lmp_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LMP_FEATURES_RSP, "lmp_features_hex_str": lmp_features_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LMP_FEATURES_RSP"
     return obj
 
@@ -45,7 +45,7 @@ def ff_LMP_FEATURES_RSP(features):
 
 def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -53,8 +53,8 @@ def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
         base = ff_base(bdaddr, 0)
         ###print(json.dumps(acd, indent=2))
         base["LMPArray"] = [ ff_LMP_VERSION_RSP(version, company_id, subversion) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LMPArray" not in entry.keys()):
@@ -69,16 +69,16 @@ def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
                    lmp_entry["version"] == version and lmp_entry["company_id"] == company_id and lmp_entry["subversion"] == subversion):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LMP_VERSION_RSP: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LMPArray 
             entry["LMPArray"].append(ff_LMP_VERSION_RSP(version, company_id, subversion))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -86,8 +86,8 @@ def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
         base = ff_base(bdaddr, 0)
         ###print(json.dumps(acd, indent=2))
         base["LMPArray"] = [ ff_LMP_FEATURES_RSP(features) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LMPArray" not in entry.keys()):
@@ -102,9 +102,9 @@ def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
                    lmp_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LMP_FEATURES_RSP: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LMPArray 
             entry["LMPArray"].append(ff_LMP_FEATURES_RSP(features))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return

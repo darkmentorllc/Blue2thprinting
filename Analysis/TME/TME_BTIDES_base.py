@@ -8,8 +8,9 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import json
-import TME.TME_glob
+#import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_glob import BTIDES_JSON
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
@@ -49,19 +50,21 @@ def write_BTIDES(out_filename):
         Draft202012Validator(
             {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
             registry=registry,
-        ).validate(instance=TME.TME_glob.BTIDES_JSON)
+        ).validate(instance=BTIDES_JSON)
         #print("JSON is valid according to BTIDES Schema")
     except ValidationError as e:
         print("JSON data is invalid per BTIDES Schema. Check any changes to schema or code. Error:", e.message)
+        print(json.dumps(BTIDES_JSON, indent=2))
         exit(-1)
 
     with open(out_filename, 'w') as f:
-        json.dump(TME.TME_glob.BTIDES_JSON, fp=f) # For saving space
-        #json.dump(TME.TME_glob.BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
+        json.dump(BTIDES_JSON, fp=f) # For saving space
+        #json.dump(BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
 
 def lookup_entry(bdaddr, random):
+    bdaddr = bdaddr.lower()
     ###print("lookup_entry: ")
-    for item in TME.TME_glob.BTIDES_JSON:
+    for item in BTIDES_JSON:
         ###print(item)
         ###print(f"lookup_entry: bdaddr = {bdaddr}")
         ###print(f"lookup_entry: random = {random}")
@@ -69,6 +72,16 @@ def lookup_entry(bdaddr, random):
             return item
         
     return None
+
+def convert_UUID128_to_UUID16_if_possible(UUID128):
+    UUID128_tmp = UUID128.strip().lower()
+    UUID128_tmp = UUID128_tmp.replace('-','')
+    pattern = r'0000[a-f0-9]{4}00001000800000805f9b34fb'
+    match = re.match(pattern, UUID128_tmp)
+    if match:
+        return UUID128_tmp[4:8]
+    else:
+        return UUID128
 
 ############################
 # Helper "factory functions"

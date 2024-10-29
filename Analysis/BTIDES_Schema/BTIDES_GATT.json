@@ -19,7 +19,7 @@
     "PrimaryService": {
       "type": "object",
       "description": "Structure for GATT Primary Service (\"attribute type\" UUID always 0x2800). Use UUID for brevity, and type_str for readability.",
-      "required": [ "UUID", "begin_handle", "end_handle" ],
+      "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
       "properties": {
 	"type_str": {
 		"description": "Optional field to make JSON instance more readable.",
@@ -54,7 +54,7 @@
     "SecondaryService": {
       "type": "object",
       "description": "Structure for GATT Secondary Service (\"attribute type\" UUID always 0x2801). Use UUID for brevity, and type_str for readability",
-      "required": [ "UUID", "begin_handle", "end_handle" ],
+      "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
       "properties": {
 	"type_str": {
 		"description": "Optional field to make JSON instance more readable",

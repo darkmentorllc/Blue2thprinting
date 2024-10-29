@@ -7,8 +7,8 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import TME.TME_glob
 from TME.TME_BTIDES_base import *
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 opcode_LL_UNKNOWN_RSP               = 7
 opcode_LL_FEATURE_REQ               = 8
@@ -28,70 +28,70 @@ opcode_LL_PHY_RSP                   = 23
 
 def ff_LL_VERSION_IND(version, company_id, subversion):
     obj = {"opcode": opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_VERSION_IND"
     return obj
 
 def ff_LL_UNKNOWN_RSP(unknown_type):
     obj = {"opcode": opcode_LL_UNKNOWN_RSP, "unknown_type": unknown_type}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_UNKNOWN_RSP"
     return obj
 
 def ff_LL_FEATURE_REQ(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_FEATURE_REQ"
     return obj
 
 def ff_LL_FEATURE_RSP(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_FEATURE_RSP, "le_features_hex_str": le_features_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_FEATURE_RSP"
     return obj
 
 def ff_LL_PERIPHERAL_FEATURE_REQ(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_PERIPHERAL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_PERIPHERAL_FEATURE_REQ"
     return obj
 
 def ff_LL_PING_REQ():
     obj = {"opcode": opcode_LL_PING_REQ}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_PING_REQ"
     return obj
 
 def ff_LL_PING_RSP():
     obj = {"opcode": opcode_LL_PING_RSP}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_PING_RSP"
     return obj
 
 def ff_LL_LENGTH_REQ(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     obj = {"opcode": opcode_LL_LENGTH_REQ, "max_rx_octets": max_rx_octets, "max_rx_time": max_rx_time, "max_tx_octets": max_tx_octets, "max_tx_time": max_tx_time}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_LENGTH_REQ"
     return obj
 
 def ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     obj = {"opcode": opcode_LL_LENGTH_RSP, "max_rx_octets": max_rx_octets, "max_rx_time": max_rx_time, "max_tx_octets": max_tx_octets, "max_tx_time": max_tx_time}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_LENGTH_RSP"
     return obj
 
 def ff_LL_PHY_REQ(tx_phys, rx_phys):
     obj = {"opcode": opcode_LL_PHY_REQ, "TX_PHYS": tx_phys, "RX_PHYS": rx_phys}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_PHY_REQ"
     return obj
 
 def ff_LL_PHY_RSP(tx_phys, rx_phys):
     obj = {"opcode": opcode_LL_PHY_RSP, "TX_PHYS": tx_phys, "RX_PHYS": rx_phys}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["opcode_str"] = "LL_PHY_RSP"
     return obj
 
@@ -109,7 +109,7 @@ def ff_LL_PHY_RSP(tx_phys, rx_phys):
 
 def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -117,8 +117,8 @@ def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_UNKNOWN_RSP(unknown_type) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -133,16 +133,16 @@ def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
                    ll_entry["unknown_type"] == unknown_type):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_UNKNOWN_RSP: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_UNKNOWN_RSP(unknown_type))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -150,8 +150,8 @@ def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_FEATURE_RSP(features) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -166,16 +166,16 @@ def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_FEATURE_RSP: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_FEATURE_RSP(features))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -183,8 +183,8 @@ def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_FEATURE_REQ(features) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -199,16 +199,16 @@ def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_FEATURE_REQ(features))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -216,8 +216,8 @@ def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_PERIPHERAL_FEATURE_REQ(features) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -232,16 +232,16 @@ def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
                    ll_entry["le_features_hex_str"] == f"{features:016x}"):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_PERIPHERAL_FEATURE_REQ: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_PERIPHERAL_FEATURE_REQ(features))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -249,8 +249,8 @@ def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_VERSION_IND(version, company_id, subversion) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -265,16 +265,16 @@ def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
                    ll_entry["version"] == version and ll_entry["company_id"] == company_id and ll_entry["subversion"] == subversion):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_VERSION_IND(version, company_id, subversion))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_PING_RSP(bdaddr, random):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -282,8 +282,8 @@ def BTIDES_export_LL_PING_RSP(bdaddr, random):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_PING_RSP() ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -297,16 +297,16 @@ def BTIDES_export_LL_PING_RSP(bdaddr, random):
                 if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_PING_RSP):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_PING_RSP())
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_LENGTH_REQ(bdaddr, random, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -314,8 +314,8 @@ def BTIDES_export_LL_LENGTH_REQ(bdaddr, random, max_rx_octets, max_rx_time, max_
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_LENGTH_REQ(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -333,16 +333,16 @@ def BTIDES_export_LL_LENGTH_REQ(bdaddr, random, max_rx_octets, max_rx_time, max_
                    "max_tx_time" in ll_entry.keys() and ll_entry["max_tx_time"] == max_tx_time):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_LENGTH_REQ(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -350,8 +350,8 @@ def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -369,16 +369,16 @@ def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_
                    "max_tx_time" in ll_entry.keys() and ll_entry["max_tx_time"] == max_tx_time):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -386,8 +386,8 @@ def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_PHY_REQ(tx_phys, rx_phys) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -403,16 +403,16 @@ def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
                    "RX_PHYS" in ll_entry.keys() and ll_entry["RX_PHYS"] == rx_phys):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_PHY_REQ(tx_phys, rx_phys))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_PHY_RSP(bdaddr, random, tx_phys, rx_phys):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     entry = lookup_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
@@ -420,8 +420,8 @@ def BTIDES_export_LL_PHY_RSP(bdaddr, random, tx_phys, rx_phys):
         base = ff_base(bdaddr, random)
         ###print(json.dumps(acd, indent=2))
         base["LLArray"] = [ ff_LL_PHY_RSP(tx_phys, rx_phys) ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("LLArray" not in entry.keys()):
@@ -437,9 +437,9 @@ def BTIDES_export_LL_PHY_RSP(bdaddr, random, tx_phys, rx_phys):
                    "RX_PHYS" in ll_entry.keys() and ll_entry["RX_PHYS"] == rx_phys):
                     # We already have the entry we would insert, so just go ahead and return
                     #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_PHY_RSP(tx_phys, rx_phys))
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return

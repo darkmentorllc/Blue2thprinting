@@ -29,11 +29,11 @@ def print_device_names(bdaddr, nametype):
     # Query for RSP_bdaddr_to_name table
     rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     rsp_result = execute_query(rsp_query)
-    for name, in rsp_result:
+    for device_name, in rsp_result:
         print(f"\tDeviceName: {device_name}")
         print("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
-        find_nameprint_match(name)
-        BTIDES_export_HCI_Name_Response(bdaddr, name)
+        find_nameprint_match(device_name)
+        BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     # Query for LE_bdaddr_to_name2 table
     le_query = f"SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info

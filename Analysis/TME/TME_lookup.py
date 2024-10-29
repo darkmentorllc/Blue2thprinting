@@ -150,7 +150,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT CONVERT(device_bdaddr USING utf8) FROM BTC2th_LMP_version_res "
         f"    UNION ALL "
-        f"    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services "
+        f"    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services2 "
         f") AS t "
         f"WHERE t.device_bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');"
     )
@@ -377,7 +377,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 f"    UNION ALL "
                 f"    SELECT CONVERT(device_bdaddr USING utf8) FROM BTC2th_LMP_version_res "
                 f"    UNION ALL "
-                f"    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services "
+                f"    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services2 "
                 f") AS t "
                 f"WHERE t.device_bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');"
             )
@@ -448,7 +448,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     print(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_service_query = f"SELECT device_bdaddr FROM GATT_services WHERE UUID128 REGEXP '{uuid128regex}'"
+    gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID128 REGEXP '{uuid128regex}'"
     gatt_service_result = execute_query(gatt_service_query)
     for (bdaddr,) in gatt_service_result:
         bdaddr_hash[bdaddr] = 1
@@ -472,11 +472,11 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     if(try_with_dashes and len(uuid128regex) == 32):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
 
-        gatt_service_query = f"SELECT device_bdaddr FROM GATT_services WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
         gatt_service_result = execute_query(gatt_service_query)
         for (bdaddr,) in gatt_service_result:
             bdaddr_hash[bdaddr] = 1
-        print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services by adding dashes to regex")
+        print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services2 by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
         gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"

@@ -23,7 +23,9 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-sql_GATT_services = "INSERT IGNORE INTO GATT_services (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
+#sql_GATT_services = "INSERT IGNORE INTO GATT_services (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
+# Currently date from gatttool can only capture primary services, so hardcode service_type to 0 (for 0x2800, but to save space. 0x2801 would therefore be 1))
+sql_GATT_services2 = "INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
 sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
 sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
 sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s)"
@@ -213,7 +215,7 @@ def func_SERVICE(device_bdaddr_type, new, args):
     values = (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
-    cursor.execute(sql_GATT_services, values)
+    cursor.execute(sql_GATT_services2, values)
     # Commit the changes to the database
     db_connection.commit()
 

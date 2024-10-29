@@ -26,7 +26,7 @@
 	"ATT_handle_enumeration": {
 		"description": "Each entry is a handle and UUID",
 		"type": "array",
-	  	"items": { "$ref": "#/definitions/handle_entry" }
+		"items": { "$ref": "#/definitions/handle_entry" }
 	}
       }
     },

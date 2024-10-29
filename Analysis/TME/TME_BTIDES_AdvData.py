@@ -7,15 +7,15 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import TME.TME_glob
 from TME.TME_BTIDES_base import *
-    
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+
 type_AdvData_Flags          = 1
 type_AdvData_IncompleteName = 8
 type_AdvData_CompleteName   = 9
 type_AdvData_TxPower        = 10
 type_AdvData_MSD            = 255
-    
+
 def lookup_AdvChanData(entry, type=None, type_str=None):
     for ad in entry["AdvChanArray"]:
         if(ad.type == type and ad.type_str == type_str):
@@ -62,13 +62,13 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
 def ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
     obj = {"type": type_AdvData_Flags, "length": 2, "flags_hex_str": flags_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["type_str"] = "Flags"
     return obj
 
 def ff_Name(length, name_type, name):
     obj = {"type": name_type, "length": length, "name": name}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         if(name_type == type_AdvData_IncompleteName):
             obj["type_str"] = "IncompleteName"
         elif(name_type == type_AdvData_CompleteName):
@@ -77,13 +77,13 @@ def ff_Name(length, name_type, name):
 
 def ff_TxPower(power):
     obj = {"type": type_AdvData_TxPower, "length": 2, "tx_power": power}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["type_str"] = "TxPower"
     return obj
 
 def ff_MSD(length, company_id_hex_str, MSD_hex_str):
     obj = {"type": type_AdvData_MSD, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
-    if(TME.TME_glob.verbose_BTIDES):
+    if(verbose_BTIDES):
         obj["type_str"] = "ManufacturerSpecificData"
     return obj
 
@@ -149,7 +149,7 @@ def le_evt_type_to_BTIDES_type_str(type):
 
 def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
     flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
@@ -164,8 +164,8 @@ def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
         acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
         #print(json.dumps(acd, indent=2))
         base["AdvChanArray"] = [ acd ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("AdvChanArray" not in entry.keys()):
@@ -188,23 +188,23 @@ def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
                            "flags_hex_str" in AdvDataEntry.keys() and AdvDataEntry["flags_hex_str"] == flags_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            ###print(json.dumps(BTIDES_JSON, indent=2))
                             return
                     # If we got here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
                     AdvChanEntry["AdvDataArray"].append(ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host))
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # Insert into outer AdvChanArray
             acd = ff_AdvChanData(type=btype, type_str=btype_str)
             acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
             entry["AdvChanArray"].append(acd)
-            #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            #print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_Name(bdaddr, random, type, name_type, name):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
     #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
@@ -219,8 +219,8 @@ def BTIDES_export_Name(bdaddr, random, type, name_type, name):
         acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
         #print(json.dumps(acd, indent=2))
         base["AdvChanArray"] = [ acd ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("AdvChanArray" not in entry.keys()):
@@ -243,7 +243,7 @@ def BTIDES_export_Name(bdaddr, random, type, name_type, name):
                            "name" in AdvDataEntry.keys() and AdvDataEntry["name"] == name):
                             # We already have the entry we would insert, so just go ahead and return
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            ###print(json.dumps(BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
@@ -252,18 +252,18 @@ def BTIDES_export_Name(bdaddr, random, type, name_type, name):
                     AdvChanEntry["AdvDataArray"].append( ff_Name(length, name_type, name) )
                     print("after")
                     print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # Insert into outer AdvChanArray
             acd = ff_AdvChanData(type=btype, type_str=btype_str)
             acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
             entry["AdvChanArray"].append(acd)
-            #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            #print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_TxPower(bdaddr, random, type, data):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
     #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
@@ -277,8 +277,8 @@ def BTIDES_export_TxPower(bdaddr, random, type, data):
         acd["AdvDataArray"] = [ ff_TxPower(data) ]
         ###print(json.dumps(acd, indent=2))
         base["AdvChanArray"] = [ acd ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("AdvChanArray" not in entry.keys()):
@@ -301,23 +301,23 @@ def BTIDES_export_TxPower(bdaddr, random, type, data):
                            "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
                             # We already have the entry we would insert, so just go ahead and return
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            ###print(json.dumps(BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
                     AdvChanEntry["AdvDataArray"].append(ff_TxPower(data))
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # Insert into outer AdvChanArray
             acd = ff_AdvChanData(type=btype, type_str=btype_str)
             acd["AdvDataArray"] = [ ff_TxPower(data) ] 
             entry["AdvChanArray"].append(acd)
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
     global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
+    ###print(BTIDES_JSON)
     btype = le_evt_type_to_BTIDES_types(type)
     btype_str = le_evt_type_to_BTIDES_type_str(type)
     #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
@@ -333,8 +333,8 @@ def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
         acd["AdvDataArray"] = [ ff_MSD(length, company_id_hex_str, MSD_hex_str) ]
         #print(json.dumps(acd, indent=2))
         base["AdvChanArray"] = [ acd ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        BTIDES_JSON.append(base)
+        #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("AdvChanArray" not in entry.keys()):
@@ -358,20 +358,18 @@ def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
                             "msd_hex_str" in AdvDataEntry.keys() and AdvDataEntry["msd_hex_str"] == MSD_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            ###print(json.dumps(BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
-                    print("before")
-                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
+                    ###print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
                     AdvChanEntry["AdvDataArray"].append( ff_MSD(length, company_id_hex_str, MSD_hex_str) )
-                    print("after")
-                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    ###print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # Insert into outer AdvChanArray
             acd = ff_AdvChanData(type=btype, type_str=btype_str)
             acd["AdvDataArray"] = [ ff_MSD(length, company_id_hex_str, MSD_hex_str) ]
             entry["AdvChanArray"].append(acd)
-            #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            #print(json.dumps(BTIDES_JSON, indent=2))
             return

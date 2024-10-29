@@ -170,7 +170,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     # First see if we have GATT data for this device
     we_have_GATT = False
 
-    services_query = f"SELECT UUID128 FROM GATT_services WHERE device_bdaddr = '{bdaddr}'"
+    services_query = f"SELECT UUID128 FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'"
     services_result = execute_query(services_query)
     if(len(services_result) > 0): we_have_GATT = True
 
@@ -205,7 +205,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                     UUID128_metadata_ = UUID128_metadata.replace('-','').lower()
 
                     if(len(services_result) > 0):
-                        # Iterate through every UUID128 from the GATT_services database query
+                        # Iterate through every UUID128 from the GATT_services2 database query
                         for (UUID128_db,) in services_result:
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
