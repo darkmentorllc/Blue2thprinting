@@ -166,7 +166,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_name
+    FROM LE_bdaddr_to_name2
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1

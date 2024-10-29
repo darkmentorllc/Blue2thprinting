@@ -40,8 +40,8 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     rsp_result = execute_query(rsp_query)
     if(len(rsp_result) > 0): we_have_a_name = True
 
-    # Query for LE_bdaddr_to_name table
-    le_query = f"SELECT device_name, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    # Query for LE_bdaddr_to_name2 table
+    le_query = f"SELECT device_name, le_evt_type FROM LE_bdaddr_to_name2 WHERE device_bdaddr = '{bdaddr}'"
     le_result = execute_query(le_query)
     if(len(le_result) > 0): we_have_a_name = True
 
@@ -92,7 +92,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                 if(len(le_result) > 0):
                     for name, le_evt_type in le_result:
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name2 table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
                         name = byte_values.decode('utf-8', 'ignore')

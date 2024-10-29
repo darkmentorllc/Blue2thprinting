@@ -11,6 +11,12 @@ import json
 import TME.TME_glob
 from TME.TME_BTIDES_base import *
     
+type_AdvData_Flags          = 1
+type_AdvData_IncompleteName = 8
+type_AdvData_CompleteName   = 9
+type_AdvData_TxPower        = 10
+type_AdvData_MSD            = 255
+    
 def lookup_AdvChanData(entry, type=None, type_str=None):
     for ad in entry["AdvChanArray"]:
         if(ad.type == type and ad.type_str == type_str):
@@ -39,12 +45,6 @@ def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, Ad
     else:
         return None
 
-def ff_TxPower(power):
-    obj = {"type": 10, "length": 2, "tx_power": power}
-    if(TME.TME_glob.verbose_BTIDES):
-        obj["type_str"] = "TxPower"
-    return obj
-
 def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     flags_int = 0x00
     if(le_limited_discoverable_mode):
@@ -62,13 +62,28 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
 
 def ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-    obj = {"type": 1, "length": 2, "flags_hex_str": flags_hex_str}
+    obj = {"type": type_AdvData_Flags, "length": 2, "flags_hex_str": flags_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["type_str"] = "Flags"
     return obj
 
+def ff_Name(length, name_type, name):
+    obj = {"type": name_type, "length": length, "name": name}
+    if(TME.TME_glob.verbose_BTIDES):
+        if(name_type == type_AdvData_IncompleteName):
+            obj["type_str"] = "IncompleteName"
+        elif(name_type == type_AdvData_CompleteName):
+            obj["type_str"] = "CompleteName"
+    return obj
+
+def ff_TxPower(power):
+    obj = {"type": type_AdvData_TxPower, "length": 2, "tx_power": power}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "TxPower"
+    return obj
+
 def ff_MSD(length, company_id_hex_str, MSD_hex_str):
-    obj = {"type": 255, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
+    obj = {"type": type_AdvData_MSD, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["type_str"] = "ManufacturerSpecificData"
     return obj
@@ -126,72 +141,13 @@ def le_evt_type_to_BTIDES_type_str(type):
 ############################
 # JSON insertion functions
 ############################
-
+# All functions follow this flow:
 # Opens existing JSON object, searches for an entry for the given bdaddr
 # If no entry already exists, it creates a new one
 # If an entry already exists, it tries to insert the TxPower data into a AdvChanArray->AdvChanData->AdvDataArray entry
 #  If an existing AdvChanData entry already exists, this is done
 #  If no AdvChanData exists, it creates one 
-def BTIDES_export_TxPower(bdaddr, random, type, data):
-    global BTIDES_JSON
-    ###print(TME.TME_glob.BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    entry = lookup_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_TxPower(data) ]
-        ###print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        TME.TME_glob.BTIDES_JSON.append(base)
-        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
-        return
-    else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_TxPower(data) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches 
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
-                           "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
-                            return
-                    # If we get here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    AdvChanEntry["AdvDataArray"].append(ff_TxPower(data))
-                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_TxPower(data) ] 
-            entry["AdvChanArray"].append(acd)
-            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
-            return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the flags_hex_str data into a AdvChanArray->AdvChanData->AdvDataArray entry
-#  If an existing AdvChanData entry already exists, this is done
-#  If no AdvChanData exists, it creates one 
-# Example: BTIDES_export_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
 def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -229,7 +185,7 @@ def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
                     # Now check if there's an AdvDataArray entry that exactly matches 
                     for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
                         # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == 10 and AdvDataEntry["length"] == 2 and 
+                        if(AdvDataEntry["type"] == type_AdvData_Flags and AdvDataEntry["length"] == 2 and 
                            "flags_hex_str" in AdvDataEntry.keys() and AdvDataEntry["flags_hex_str"] == flags_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
                             ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
@@ -247,12 +203,119 @@ def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_g
             #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
 
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the flags_hex_str data into a AdvChanArray->AdvChanData->AdvDataArray entry
-#  If an existing AdvChanData entry already exists, this is done
-#  If no AdvChanData exists, it creates one 
-# Example: BTIDES_export_Flags(bdaddr, 0, 50, "EIR", le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+def BTIDES_export_Name(bdaddr, random, type, name_type, name):
+    global BTIDES_JSON
+    ###print(TME.TME_glob.BTIDES_JSON)
+    btype = le_evt_type_to_BTIDES_types(type)
+    btype_str = le_evt_type_to_BTIDES_type_str(type)
+    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
+    length = int(1 + len(name)) # 1 bytes for opcode + length of the string
+    entry = lookup_entry(bdaddr, random)
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # Insert new one
+        base = ff_base(bdaddr, random)
+        ###print(json.dumps(base, indent=2))
+        acd = ff_AdvChanData(type=btype, type_str=btype_str)
+        acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
+        #print(json.dumps(acd, indent=2))
+        base["AdvChanArray"] = [ acd ]
+        TME.TME_glob.BTIDES_JSON.append(base)
+        #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        return
+    else:
+        if("AdvChanArray" not in entry.keys()):
+            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
+            entry["AdvChanArray"] = [ acd ]
+            #print(json.dumps(acd, indent=2))
+            return
+        else:
+            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+            for AdvChanEntry in entry["AdvChanArray"]:
+                ###print(AdvChanEntry)
+                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
+                    # This AdvData is of the same type as we're currently processing for this insert
+                    # Now check if there's an AdvDataArray entry that exactly matches
+                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
+                        # TODO: pass through length in the future
+                        if(AdvDataEntry["type"] == name_type and AdvDataEntry["length"] == length and 
+                           "name" in AdvDataEntry.keys() and AdvDataEntry["name"] == name):
+                            # We already have the entry we would insert, so just go ahead and return
+                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            return
+                    # If we get here we didn't find any match, so we now need to insert our entry
+                    # Insert into inner AdvDataArray
+                    print("before")
+                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
+                    AdvChanEntry["AdvDataArray"].append( ff_Name(length, name_type, name) )
+                    print("after")
+                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
+                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    return
+            # Insert into outer AdvChanArray
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
+            entry["AdvChanArray"].append(acd)
+            #print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            return
+
+def BTIDES_export_TxPower(bdaddr, random, type, data):
+    global BTIDES_JSON
+    ###print(TME.TME_glob.BTIDES_JSON)
+    btype = le_evt_type_to_BTIDES_types(type)
+    btype_str = le_evt_type_to_BTIDES_type_str(type)
+    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
+    entry = lookup_entry(bdaddr, random)
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # Insert new one
+        base = ff_base(bdaddr, random)
+        ###print(json.dumps(base, indent=2))
+        acd = ff_AdvChanData(type=btype, type_str=btype_str)
+        acd["AdvDataArray"] = [ ff_TxPower(data) ]
+        ###print(json.dumps(acd, indent=2))
+        base["AdvChanArray"] = [ acd ]
+        TME.TME_glob.BTIDES_JSON.append(base)
+        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        return
+    else:
+        if("AdvChanArray" not in entry.keys()):
+            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_TxPower(data) ]
+            entry["AdvChanArray"] = [ acd ]
+            #print(json.dumps(acd, indent=2))
+            return
+        else:
+            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+            for AdvChanEntry in entry["AdvChanArray"]:
+                ###print(AdvChanEntry)
+                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
+                    # This AdvData is of the same type as we're currently processing for this insert
+                    # Now check if there's an AdvDataArray entry that exactly matches 
+                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
+                        # TODO: pass through length in the future
+                        if(AdvDataEntry["type"] == type_AdvData_TxPower and AdvDataEntry["length"] == 2 and 
+                           "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
+                            # We already have the entry we would insert, so just go ahead and return
+                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                            return
+                    # If we get here we didn't find any match, so we now need to insert our entry
+                    # Insert into inner AdvDataArray
+                    AdvChanEntry["AdvDataArray"].append(ff_TxPower(data))
+                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    return
+            # Insert into outer AdvChanArray
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_TxPower(data) ] 
+            entry["AdvChanArray"].append(acd)
+            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            return
+
 def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
     global BTIDES_JSON
     ###print(TME.TME_glob.BTIDES_JSON)
@@ -291,7 +354,7 @@ def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
                     # Now check if there's an AdvDataArray entry that exactly matches
                     for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
                         # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == 255 and AdvDataEntry["length"] == length and 
+                        if(AdvDataEntry["type"] == type_AdvData_MSD and AdvDataEntry["length"] == length and 
                            "company_id_hex_str" in AdvDataEntry.keys() and AdvDataEntry["company_id_hex_str"] == company_id_hex_str and
                             "msd_hex_str" in AdvDataEntry.keys() and AdvDataEntry["msd_hex_str"] == MSD_hex_str):
                             # We already have the entry we would insert, so just go ahead and return

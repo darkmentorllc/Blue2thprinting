@@ -137,13 +137,30 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
     if(flags_int & (1 << 4)):
         le_bredr_support_host = 1
     
-    if(db_type == 50):
+    le_evt_type = db_type
+    if(le_evt_type == 50):
         # EIR
         eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_flags2 (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host}); "
         #print(eir_insert)
         execute_insert(eir_insert)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {random}, {db_type}, {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host}); "
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {random}, {le_evt_type}, {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host}); "
+        #print(le_insert)
+        execute_insert(le_insert)
+
+def import_AdvData_Names(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_Names!")
+    device_name_type = leaf["type"]
+    device_name = leaf["name"]
+
+    le_evt_type = db_type
+    if(le_evt_type == 50):
+        # EIR
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, device_name) VALUES ('{bdaddr}', {device_name_type}, '{device_name}'); "
+        #print(eir_insert)
+        execute_insert(eir_insert)
+    else:
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name2 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name) VALUES ('{bdaddr}', {random}, {le_evt_type}, {device_name_type}, '{device_name}'); "
         #print(le_insert)
         execute_insert(le_insert)
 
@@ -185,6 +202,8 @@ def has_AdvDataArray(entry):
         return False
 
 type_AdvData_Flags          = 1
+type_AdvData_IncompleteName = 8
+type_AdvData_CompleteName   = 9
 type_AdvData_TxPower        = 10
 type_AdvData_MSD            = 255
 def has_known_AdvData_type(type, entry):
@@ -200,6 +219,8 @@ def parse_AdvChanArray(entry):
             for AdvData in AdvChanEntry["AdvDataArray"]:
                 if(has_known_AdvData_type(type_AdvData_Flags, AdvData)):
                     import_AdvData_Flags(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData)):
+                    import_AdvData_Names(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_known_AdvData_type(type_AdvData_TxPower, AdvData)):
                     import_AdvData_TxPower(entry["bdaddr"], entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):

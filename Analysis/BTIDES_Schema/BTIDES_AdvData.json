@@ -256,7 +256,7 @@
       "type": "object",
       "$comment": "Going with a schema name of \"Incomplete\" rather than the terser \"Short\", because I think that term is more explicit about the truncation that could be occurring, for people learning about BT. (See \"Wingman Rem\" vs. \"Wingman Remote\" names)",
       "description": "Structure for AdvData of type 0x08 = \"Shortened Local Name\".",
-      "required": [ "type", "length", "incomplete_name" ],
+      "required": [ "type", "length", "name" ],
       "properties": {
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -275,7 +275,7 @@
 		"minimum": 1,
 		"maximum": 255
 	},
-        "incomplete_name": {
+        "name": {
 		"description": "AKA \"Short Name\", this is a name string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
 		"type": "string",
 		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",
@@ -287,7 +287,7 @@
     "CompleteName": {
       "type": "object",
       "description": "Structure for AdvData of type 0x09 = \"Complete Local Name\".",
-      "required": [ "type", "length", "complete_name" ],
+      "required": [ "type", "length", "name" ],
       "properties": {
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -306,7 +306,7 @@
 		"minimum": 1,
 		"maximum": 255
 	},
-        "complete_name": {
+        "name": {
 		"description": "AKA \"Short Name\", this is a name string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
 		"type": "string",
 		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",

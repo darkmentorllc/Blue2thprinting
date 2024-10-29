@@ -50,12 +50,12 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for LE_bdaddr_to_name table
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE device_name REGEXP '{nameregex}'"
+    # Query for LE_bdaddr_to_name2 table
+    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE device_name REGEXP '{nameregex}'"
     le_result = execute_query(le_query)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name")
+    print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name2")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -96,7 +96,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
+        f"    SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE bdaddr_random = 0 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
         f"    UNION ALL "
@@ -323,7 +323,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
-                f"    SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
+                f"    SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
                 f"    SELECT device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
                 f"    UNION ALL "
