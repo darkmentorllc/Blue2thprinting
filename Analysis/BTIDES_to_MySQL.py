@@ -24,7 +24,7 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
-from _ast import Or
+#from _ast import Or
 
 ###################################
 # Globals
@@ -241,6 +241,8 @@ opcode_LL_FEATURE_REQ               = 8
 opcode_LL_FEATURE_RSP               = 9
 opcode_LL_VERSION_IND               = 12
 opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
+opcode_LL_PING_REQ                  = 18
+opcode_LL_PING_RSP                  = 19
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
@@ -264,6 +266,13 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     #print(insert)
     execute_insert(insert)
 
+# This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
+# TODO: I should really update the table though to differentiate which something is
+def import_LL_PING_RSP(bdaddr, random, ll_entry):
+    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
+    #print(insert)
+    execute_insert(insert)
+
 def has_known_LL_packet(opcode, ll_entry):
     if("opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode):
         return True
@@ -281,7 +290,8 @@ def parse_LLArray(entry):
            has_known_LL_packet(opcode_LL_FEATURE_RSP, ll_entry) or 
            has_known_LL_packet(opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
             import_LL_FEATUREs(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
-
+        if(has_known_LL_packet(opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(opcode_LL_PING_REQ, ll_entry)):
+            import_LL_PING_RSP(entry["bdaddr"], entry["bdaddr_rand"], ll_entry)
 
 def has_LLArray(entry):
     if("LLArray" in entry.keys() and entry["LLArray"] != None and entry["bdaddr"] != None and entry["bdaddr_rand"] != None):

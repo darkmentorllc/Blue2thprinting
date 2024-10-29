@@ -85,7 +85,7 @@ def print_BLE_2thprint(bdaddr):
     lengths_query = f"SELECT opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = '{bdaddr}'"
     lengths_result = execute_query(lengths_query)
 
-    ping_query = f"SELECT ping_rsp FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = '{bdaddr}'"
+    ping_query = f"SELECT device_bdaddr_type FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = '{bdaddr}'"
     ping_result = execute_query(ping_query)
 
     unknown_query = f"SELECT device_bdaddr_type, unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = '{bdaddr}'"
@@ -127,8 +127,9 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes[unknown_opcode]})")
         BTIDES_export_LL_UNKNOWN_RSP(bdaddr, device_bdaddr_type, unknown_opcode)
 
-    for ping_rsp in ping_result:
+    for device_bdaddr_type, in ping_result:
         print(f"\t\tLL Ping Response Received")
+        BTIDES_export_LL_PING_RSP(bdaddr, device_bdaddr_type)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         print("\tRaw BLE 2thprint:")

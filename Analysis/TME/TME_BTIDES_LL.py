@@ -16,6 +16,8 @@ opcode_LL_FEATURE_REQ =             8
 opcode_LL_FEATURE_RSP =             9
 opcode_LL_VERSION_IND =             12
 opcode_LL_PERIPHERAL_FEATURE_REQ =  14
+opcode_LL_PING_REQ =                18
+opcode_LL_PING_RSP =                19
 
 ############################
 # Helper "factory functions"
@@ -52,6 +54,18 @@ def ff_LL_PERIPHERAL_FEATURE_REQ(features):
     obj = {"opcode": opcode_LL_PERIPHERAL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_PERIPHERAL_FEATURE_REQ"
+    return obj
+
+def ff_LL_PING_REQ():
+    obj = {"opcode": opcode_LL_PING_REQ}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_PING_REQ"
+    return obj
+
+def ff_LL_PING_RSP():
+    obj = {"opcode": opcode_LL_PING_RSP}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_PING_RSP"
     return obj
 
 
@@ -228,5 +242,37 @@ def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
             entry["LLArray"].append(ff_LL_VERSION_IND(version, company_id, subversion))
+            ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+            return
+        
+def BTIDES_export_LL_PING_RSP(bdaddr, random):
+    global BTIDES_JSON
+    ###print(TME.TME_glob.BTIDES_JSON)
+    entry = lookup_entry(bdaddr, random)
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # There is no entry yet for this BDADDR. Insert a brand new one
+        base = ff_base(bdaddr, random)
+        ###print(json.dumps(acd, indent=2))
+        base["LLArray"] = [ ff_LL_PING_RSP() ]
+        TME.TME_glob.BTIDES_JSON.append(base)
+        ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+        return
+    else:
+        if("LLArray" not in entry.keys()):
+            # There is an entry for this BDADDR but not yet any LLArray entries, so just insert ours
+            entry["LLArray"] = [ ff_LL_PING_RSP() ]
+            return
+        else:
+            # There is an entry for this BDADDR, and LLArray entries, so check if ours already exists, and if so, we're done
+            for ll_entry in entry["LLArray"]:
+                ###print(AdvChanEntry)
+                if(ll_entry != None and "opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode_LL_PING_RSP):
+                    # We already have the entry we would insert, so just go ahead and return
+                    #print("BTIDES_export_LL_VERSION_IND: found existing match. Nothing to do. Returning.")
+                    ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
+                    return
+            # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray 
+            entry["LLArray"].append(ff_LL_PING_RSP())
             ###print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return
