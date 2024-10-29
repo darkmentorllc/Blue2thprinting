@@ -51,6 +51,7 @@ BTIDES_files = ["BTIDES_base.json",
 BTIDES_JSON = []
 
 insert_count = 0
+duplicate_count = 0
 
 ###################################
 # Helper functions
@@ -78,7 +79,7 @@ def execute_query(query):
 
 # Function to execute a MySQL query and fetch results
 def execute_insert(query):
-    global insert_count
+    global insert_count, duplicate_count
     connection = mysql.connector.connect(
         host='localhost',
         user='user',
@@ -93,7 +94,12 @@ def execute_insert(query):
     try:
         cursor.execute(query)
         connection.commit()
-        insert_count += 1
+
+        if cursor._warning_count > 0:
+            duplicate_count += 1
+        else:
+            insert_count += 1  # Increment insert_count only if no duplicates
+
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         connection.rollback()
@@ -509,7 +515,8 @@ def main():
             parse_ATTArray(entry)
 
 
-    print(f"Inserted {insert_count} records to the database (this counts any that may have been ignored due to being duplicates).")
+    print(f"New records inserted:\t\t{insert_count}")
+    print(f"Duplicate records ignored:\t{duplicate_count}")
 
 if __name__ == "__main__":
     main()
