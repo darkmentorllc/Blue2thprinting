@@ -183,8 +183,23 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
         execute_insert(eir_insert)
     else:
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power}); "
-        ###print(le_insert)
+        #print(le_insert)
         execute_insert(le_insert)
+
+def import_AdvData_DeviceID(bdaddr, db_type, leaf):
+    #print("import_AdvData_TxPower!")
+
+    vendor_id_source = leaf["vendor_id_source"]
+    vendor_id = leaf["vendor_id"]
+    product_id = leaf["product_id"]
+    product_version = leaf["version"]
+
+    if(db_type == 50):
+        # EIR
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES ('{bdaddr}', {vendor_id_source}, {vendor_id}, {product_id}, {product_version}); "
+        #print(eir_insert)
+        execute_insert(eir_insert)
+    # AFAIK this can't exist in LE AdvData, only EIR
 
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     #print("import_AdvData_MSD!")
@@ -212,6 +227,7 @@ type_AdvData_Flags          = 1
 type_AdvData_IncompleteName = 8
 type_AdvData_CompleteName   = 9
 type_AdvData_TxPower        = 10
+type_AdvData_DeviceID       = 16
 type_AdvData_MSD            = 255
 def has_known_AdvData_type(type, entry):
     if(entry != None and "type" in entry.keys() and entry["type"] == type):
@@ -233,8 +249,11 @@ def parse_AdvChanArray(entry):
                     import_AdvData_Names(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_known_AdvData_type(type_AdvData_TxPower, AdvData)):
                     import_AdvData_TxPower(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                if(has_known_AdvData_type(type_AdvData_DeviceID, AdvData)):
+                    import_AdvData_DeviceID(entry["bdaddr"].lower(), BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
                     import_AdvData_MSD(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    
 
 ###################################
 # BTIDES_LL.json information
@@ -449,7 +468,7 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
     insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {service_type}, {begin_handle}, {end_handle}, '{UUID128}');"
     #print(insert)
     execute_insert(insert)
-    
+
     #TODO: Next comes embedded characteristic parsing
 
 def parse_GATTArray(entry):

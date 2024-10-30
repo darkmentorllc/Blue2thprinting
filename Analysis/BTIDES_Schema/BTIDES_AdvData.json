@@ -46,8 +46,8 @@
 					{"$ref": "#/definitions/UUID128ListComplete"},
 					{"$ref": "#/definitions/IncompleteName"},
 					{"$ref": "#/definitions/CompleteName"},
-					{"$ref": "#/definitions/DeviceID"},
 					{"$ref": "#/definitions/TxPower"},
+					{"$ref": "#/definitions/DeviceID"},
 					{"$ref": "#/definitions/ClassOfDevice"},
 					{"$ref": "#/definitions/PeripheralConnectionIntervalRange"},
 					{"$ref": "#/definitions/UUID16ListServiceSolicitation"},
@@ -315,46 +315,6 @@
 	}
       }
     },
-    "DeviceID": {
-      "type": "object",
-      "description": "Structure for AdvData of type 0x10 = \"DeviceID\". Note: Actual definition comes from Device ID **Profile** document \"EIR Transactions to Obtain Device ID Information\" section.",
-      "required": [ "type", "vendor_id_source", "vendor_id", "product_id", "version" ],
-      "properties": {
-	"type_str": {
-		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
-		"type": "string",
-		"const": "CompleteName"
-	},
-	"type": {
-		"description": "This should always be exactly == 0x09. (Per the assigned numbers document, \"Common Data Type\" table.)",
-		"type": "integer",
-		"const": 9
-	},
-	"vendor_id_source": {
-		"description": "Must be 1 for Bluetooth SIG, and 2 for USB SIG. Other values are RFU.",
-		"type": "integer",
-		"enum": [ 1, 2 ]
-	},
-        "vendor_id": {
-		"description": "16-bit ID looked up according to vendor_id_source value.",
-		"type": "integer",
-		"minLength": 0,
-		"maxLength": 65535
-	},
-        "product_id": {
-		"description": "16-bit ID that is set to a value that is meaningful to the vendor themselves.",
-		"type": "integer",
-		"minLength": 0,
-		"maxLength": 65535
-	},
-        "version": {
-		"description": "16-bit ID that is set to a value that is meaningful to the vendor themselves.",
-		"type": "integer",
-		"minLength": 0,
-		"maxLength": 65535
-	}
-      }
-    },
     "TxPower": {
       "type": "object",
       "description": "Structure for AdvData of type 0x0A = \"Transmit Power Level\" (in dBm).",
@@ -379,6 +339,46 @@
 		"type": "integer",
 		"minimum": -128,
 		"maximum": 127
+	}
+      }
+    },
+    "DeviceID": {
+      "type": "object",
+      "description": "Structure for AdvData of type 0x10 = \"DeviceID\". Note: Actual definition comes from Device ID **Profile** document \"EIR Transactions to Obtain Device ID Information\" section.",
+      "required": [ "type", "vendor_id_source", "vendor_id", "product_id", "version" ],
+      "properties": {
+	"type_str": {
+		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+		"type": "string",
+		"const": "DeviceID"
+	},
+	"type": {
+		"description": "This should always be exactly == 0x10. (Per the assigned numbers document, \"Common Data Type\" table.)",
+		"type": "integer",
+		"const": 16
+	},
+	"vendor_id_source": {
+		"description": "Must be 1 for Bluetooth SIG, and 2 for USB SIG. Other values are RFU.",
+		"type": "integer",
+		"enum": [ 1, 2 ]
+	},
+        "vendor_id": {
+		"description": "16-bit ID looked up according to vendor_id_source value.",
+		"type": "integer",
+		"minLength": 0,
+		"maxLength": 65535
+	},
+        "product_id": {
+		"description": "16-bit ID that is set to a value that is meaningful to the vendor themselves.",
+		"type": "integer",
+		"minLength": 0,
+		"maxLength": 65535
+	},
+        "version": {
+		"description": "16-bit ID that is set to a value that is meaningful to the vendor themselves.",
+		"type": "integer",
+		"minLength": 0,
+		"maxLength": 65535
 	}
       }
     },

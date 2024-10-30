@@ -5,6 +5,7 @@
 
 #import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_BTIDES_AdvData import *
 
 ########################################
 # BTC EIR Device CID
@@ -26,6 +27,7 @@ def print_classic_EIR_CID_info(bdaddr):
             print(f"\t\t: Error: Unknown vendor_id_source = {vendor_id_source}")
         print(f"\t\tProduct ID: 0x%04x" % product_id)
         print(f"\t\tProduct Version: 0x%04x" % product_version)
+        BTIDES_export_DeviceID(bdaddr, 0, 50, vendor_id_source, vendor_id, product_id, product_version)
 
     if (len(eir_result) == 0):
         print("\tNo BTC Extended Inquiry Result Device info.")

@@ -27,7 +27,7 @@
 		"const": "Primary Service"
 	},
 	"utype": {
-		"description": "UUID type alternative to type\\_str for brevity.",
+		"description": "UUID type hex string. Alternative to type\\_str for brevity.",
 		"type": "string",
 		"const": "2800"
 	},
@@ -62,7 +62,7 @@
 		"const": "Secondary Service"
 	},
 	"utype": {
-		"description": "UUID type alternative to type\\_str for brevity.",
+		"description": "UUID type hex string. Alternative to type\\_str for brevity.",
 		"type": "string",
 		"const": "2801"
 	},

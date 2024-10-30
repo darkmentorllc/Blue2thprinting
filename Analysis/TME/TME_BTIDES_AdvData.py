@@ -14,6 +14,7 @@ type_AdvData_Flags          = 1
 type_AdvData_IncompleteName = 8
 type_AdvData_CompleteName   = 9
 type_AdvData_TxPower        = 10
+type_AdvData_DeviceID       = 16
 type_AdvData_MSD            = 255
 
 def lookup_AdvChanData(entry, type=None, type_str=None):
@@ -80,6 +81,13 @@ def ff_TxPower(power):
     if(verbose_BTIDES):
         obj["type_str"] = "TxPower"
     return obj
+
+def ff_DeviceID(vendor_id_source, vendor_id, product_id, version):
+    obj = {"type": type_AdvData_DeviceID, "length": 9, "vendor_id_source": vendor_id_source, "vendor_id": vendor_id, "product_id": product_id, "version": version}
+    if(verbose_BTIDES):
+        obj["type_str"] = "DeviceID"
+    return obj
+
 
 def ff_MSD(length, company_id_hex_str, MSD_hex_str):
     obj = {"type": type_AdvData_MSD, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
@@ -247,11 +255,7 @@ def BTIDES_export_Name(bdaddr, random, type, name_type, name):
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry
                     # Insert into inner AdvDataArray
-                    print("before")
-                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
                     AdvChanEntry["AdvDataArray"].append( ff_Name(length, name_type, name) )
-                    print("after")
-                    print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
                     ###print(json.dumps(BTIDES_JSON, indent=2))
                     return
             # Insert into outer AdvChanArray
@@ -315,6 +319,63 @@ def BTIDES_export_TxPower(bdaddr, random, type, data):
             ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
+def BTIDES_export_DeviceID(bdaddr, random, type, vendor_id_source, vendor_id, product_id, version):
+    global BTIDES_JSON
+    ###print(BTIDES_JSON)
+    btype = le_evt_type_to_BTIDES_types(type)
+    btype_str = le_evt_type_to_BTIDES_type_str(type)
+    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
+    entry = lookup_entry(bdaddr, random)
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # Insert new one
+        base = ff_base(bdaddr, random)
+        ###print(json.dumps(base, indent=2))
+        acd = ff_AdvChanData(type=btype, type_str=btype_str)
+        acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ]
+        ###print(json.dumps(acd, indent=2))
+        base["AdvChanArray"] = [ acd ]
+        BTIDES_JSON.append(base)
+        ###print(json.dumps(BTIDES_JSON, indent=2))
+        return
+    else:
+        if("AdvChanArray" not in entry.keys()):
+            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ]
+            entry["AdvChanArray"] = [ acd ]
+            #print(json.dumps(acd, indent=2))
+            return
+        else:
+            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+            for AdvChanEntry in entry["AdvChanArray"]:
+                ###print(AdvChanEntry)
+                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
+                    # This AdvData is of the same type as we're currently processing for this insert
+                    # Now check if there's an AdvDataArray entry that exactly matches 
+                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
+                        # TODO: pass through length in the future
+                        if(AdvDataEntry["type"] == type_AdvData_DeviceID and AdvDataEntry["length"] == 9 and
+                           "vendor_id_source" in AdvDataEntry.keys() and AdvDataEntry["vendor_id_source"] == vendor_id_source and
+                           "vendor_id" in AdvDataEntry.keys() and AdvDataEntry["vendor_id"] == vendor_id and
+                           "product_id" in AdvDataEntry.keys() and AdvDataEntry["product_id"] == vendor_id_source and
+                           "version" in AdvDataEntry.keys() and AdvDataEntry["version"] == vendor_id_source):
+                            # We already have the entry we would insert, so just go ahead and return
+                            ###print("BTIDES_export_DeviceID: found existing match. Nothing to do. Returning.")
+                            ###print(json.dumps(BTIDES_JSON, indent=2))
+                            return
+                    # If we get here we didn't find any match, so we now need to insert our entry
+                    # Insert into inner AdvDataArray
+                    AdvChanEntry["AdvDataArray"].append(ff_DeviceID(vendor_id_source, vendor_id, product_id, version))
+                    ###print(json.dumps(BTIDES_JSON, indent=2))
+                    return
+            # Insert into outer AdvChanArray
+            acd = ff_AdvChanData(type=btype, type_str=btype_str)
+            acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ] 
+            entry["AdvChanArray"].append(acd)
+            ###print(json.dumps(BTIDES_JSON, indent=2))
+            return
+
 def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
@@ -357,7 +418,7 @@ def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
                            "company_id_hex_str" in AdvDataEntry.keys() and AdvDataEntry["company_id_hex_str"] == company_id_hex_str and
                             "msd_hex_str" in AdvDataEntry.keys() and AdvDataEntry["msd_hex_str"] == MSD_hex_str):
                             # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
+                            ###print("BTIDES_export_MSD: found existing match. Nothing to do. Returning.")
                             ###print(json.dumps(BTIDES_JSON, indent=2))
                             return
                     # If we get here we didn't find any match, so we now need to insert our entry

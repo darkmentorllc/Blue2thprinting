@@ -199,7 +199,7 @@ def main():
         print_ChipPrint(bdaddr)
         print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
-        print_classic_EIR_CID_info(bdaddr)
+        print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
         print_device_names(bdaddr, nametype)
         print_uuid16s(bdaddr)
         print_service_solicit_uuid16s(bdaddr)
