@@ -24,8 +24,6 @@ import mysql.connector
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
-from _ast import Or
-#from _ast import Or
 
 ###################################
 # Globals
@@ -546,6 +544,14 @@ def has_GATTArray(entry):
 # MAIN
 ###################################
 
+last_printed_percentage = 0
+def progress_update(total, count):
+    global last_printed_percentage
+    percent_complete = int((count / total) * 100)
+    if(percent_complete > last_printed_percentage):
+        print(f"{percent_complete}% done")
+        last_printed_percentage = percent_complete
+
 ######################################################
 ##################### WARNING!!! #####################
 ##################### WARNING!!! #####################
@@ -563,7 +569,7 @@ def main():
     args = parser.parse_args()
 
     in_filename = args.input
-    
+
     with open(in_filename, 'r') as f:
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
         #print(json.dumps(BTIDES_JSON, indent=2))
@@ -577,8 +583,10 @@ def main():
             #print(s["$id"])
             schema = Resource.from_contents(s)
             all_schemas.append((s["$id"], schema))
-        
+
     registry = Registry().with_resources( all_schemas )
+
+    print("Validating all entries against BTIDES schema... (this will take a while for large files)")
 
     # Sanity check every entry against the Schema
     try:
@@ -591,6 +599,9 @@ def main():
         print("JSON data is invalid per BTIDES Schema:", e.message)
         exit(-1)
 
+    total = len(BTIDES_JSON)
+    print(f"Validation passed. Importing {total} BDADDRs' entries.")
+    count = 0;
     # If we get here, every entry validates and we can process them all
     for entry in BTIDES_JSON:
         if(entry["bdaddr"] == None or entry["bdaddr_rand"] == None):
@@ -609,8 +620,11 @@ def main():
 
         parse_GATTArray(entry)
 
-    print(f"New records inserted:\t\t{insert_count}")
-    print(f"Duplicate records ignored:\t{duplicate_count}")
+        count += 1
+        progress_update(total, count)
+
+    print(f"New db records inserted:\t\t{insert_count}")
+    print(f"Duplicate db records ignored:\t{duplicate_count}")
 
 if __name__ == "__main__":
     main()
