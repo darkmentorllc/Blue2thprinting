@@ -47,6 +47,7 @@ valid_adv_chan_types = [btype_ADV_IND, btype_ADV_DIRECT_IND, btype_ADV_NONCONN_I
 valid_adv_chan_type_strs = ["ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "ADV_SCAN_IND", "AUX_ADV_IND", "SCAN_RSP", "AUX_SCAN_RSP", "EIR"]
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
+    #print(f"type = {type}, type_str = {type_str}")
     if (type != None and (type in valid_adv_chan_types)):
         AdvChanData["type"] = type
     if (CSA != None):
@@ -80,8 +81,8 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
     return flags_hex_str
 
 def ff_Flags(data):
-    flags_hex_str = get_flags_hex_str(data["le_limited_discoverable_mode"], data["le_general_discoverable_mode"], data["bredr_not_supported"], data["le_bredr_support_controller"], data["le_bredr_support_host"])
-    obj = {"type": type_AdvData_Flags, "length": 2, "flags_hex_str": flags_hex_str}
+###    flags_hex_str = get_flags_hex_str(data["le_limited_discoverable_mode"], data["le_general_discoverable_mode"], data["bredr_not_supported"], data["le_bredr_support_controller"], data["le_bredr_support_host"])
+    obj = {"type": type_AdvData_Flags, "length": data["length"], "flags_hex_str": data["flags_hex_str"]}
     if(verbose_BTIDES):
         obj["type_str"] = "Flags"
     return obj
@@ -109,13 +110,13 @@ def ff_Names(name_type, data):
     return obj
 
 def ff_TxPower(data):
-    obj = {"type": type_AdvData_TxPower, "length": 2, "tx_power": data["tx_power"]}
+    obj = {"type": type_AdvData_TxPower, "length": data["length"], "tx_power": data["tx_power"]}
     if(verbose_BTIDES):
         obj["type_str"] = "TxPower"
     return obj
 
 def ff_DeviceID(data):
-    obj = {"type": type_AdvData_DeviceID, "length": 9, "vendor_id_source": data["vendor_id_source"], "vendor_id": data["vendor_id"], "product_id": data["product_id"], "version": data["version"]}
+    obj = {"type": type_AdvData_DeviceID, "length": data["length"], "vendor_id_source": data["vendor_id_source"], "vendor_id": data["vendor_id"], "product_id": data["product_id"], "version": data["version"]}
     if(verbose_BTIDES):
         obj["type_str"] = "DeviceID"
     return obj
@@ -231,6 +232,7 @@ def insert_new_AdvChanData(base, adv_type, adv_data_type, data):
         btype_str = pdu_type_to_BTIDES_type_str(adv_type)
 
     acd = ff_AdvChanData(type=btype, type_str=btype_str)
+    #print(acd)
     acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
     #print(json.dumps(acd, indent=2))
     base["AdvChanArray"].append(acd)
@@ -287,6 +289,7 @@ def pdu_type_to_BTIDES_type(type):
     if(type == pdutype_ADV_SCAN_IND):       return btype_ADV_SCAN_IND
     if(type == pdutype_ADV_NONCONN_IND):    return btype_ADV_NONCONN_IND
     if(type == pdutype_SCAN_RSP):           return btype_SCAN_RSP # SCAN_RSP
+    if(type == pdutype_SCAN_REQ):           return pdutype_ADV_NONCONN_IND #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
     #if(type == 6): return btype_SCAN_RSP # SCAN_RSP # FIXME: From accidental incorrect pcap mix-in
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
@@ -314,6 +317,7 @@ def pdu_type_to_BTIDES_type_str(type):
     if(type == pdutype_ADV_SCAN_IND):       return "ADV_SCAN_IND"
     if(type == pdutype_ADV_NONCONN_IND):    return "ADV_NONCONN_IND"
     if(type == pdutype_SCAN_RSP):           return "SCAN_RSP"
+    if(type == pdutype_SCAN_REQ):           return "ADV_NONCONN_IND" #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
     #if(type == 6): return "SCAN_RSP" # FIXME: From accidental incorrect pcap mix-in. Replace with proper 
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
@@ -346,5 +350,6 @@ def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
         return
     else:
         #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+        #print(f"adv_type = {adv_type}, adv_data_type = {adv_data_type}, data = {data}")
         insert_new_AdvChanArray_entry_only(base, adv_type, adv_data_type, data)
         return

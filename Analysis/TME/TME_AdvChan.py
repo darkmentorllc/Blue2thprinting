@@ -56,7 +56,8 @@ def print_flags(bdaddr):
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
 
-        data = {"le_limited_discoverable_mode": le_limited_discoverable_mode, "le_general_discoverable_mode": le_general_discoverable_mode, "bredr_not_supported": bredr_not_supported, "le_bredr_support_controller": le_bredr_support_controller, "le_bredr_support_host": le_bredr_support_host}
+        flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+        data = {"length": 2, "flags_hex_str": flags_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_Flags, data)
 
     le_query = f"SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
@@ -69,7 +70,8 @@ def print_flags(bdaddr):
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
         print(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
 
-        data = {"length": 2, "le_limited_discoverable_mode": le_limited_discoverable_mode, "le_general_discoverable_mode": le_general_discoverable_mode, "bredr_not_supported": bredr_not_supported, "le_bredr_support_controller": le_bredr_support_controller, "le_bredr_support_host": le_bredr_support_host}
+        flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+        data = {"length": 2, "flags_hex_str": flags_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_Flags, data)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
