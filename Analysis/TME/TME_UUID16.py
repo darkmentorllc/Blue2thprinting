@@ -3,9 +3,10 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-import TME.TME_glob
+#import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_GATT import *
+from TME.TME_BTIDES_AdvData import *
 
 ########################################
 # UUID16s
@@ -26,7 +27,16 @@ def print_uuid16s(device_bdaddr):
 
     # Process EIR_bdaddr_to_UUID16s results
     for list_type, str_UUID16s in eir_uuid16s_result:
-        str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
+        # Export BTIDES data first
+        UUID16List = str_UUID16s.split(",")
+        for i in range(len(UUID16List)):
+            UUID16List[i] = UUID16List[i].replace("0x","") # This won't be needed in the future after I change db import
+        length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
+        data = {"length": length, "UUID16List": UUID16List}
+        BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
+        
+        # Then human UI output
+        str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]        
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             if(uuid16 == ''):
@@ -50,6 +60,15 @@ def print_uuid16s(device_bdaddr):
 
     # Process LE_bdaddr_to_UUID16s results
     for bdaddr_random, le_evt_type, list_type, str_UUID16s in le_uuid16s_result:
+        # Export BTIDES data first
+        UUID16List = str_UUID16s.split(",")
+        for i in range(len(UUID16List)):
+            UUID16List[i] = UUID16List[i].replace("0x","") # This won't be needed in the future after I change db import
+        length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
+        data = {"length": length, "UUID16List": UUID16List}
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, list_type, data)
+
+        # Then human UI output
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()

@@ -46,7 +46,7 @@ def ff_LMP_FEATURES_RSP(features):
 def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, 0)
+    entry = lookup_base_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -79,7 +79,7 @@ def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
 def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, 0)
+    entry = lookup_base_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one

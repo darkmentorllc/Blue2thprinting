@@ -110,7 +110,7 @@ def ff_LL_PHY_RSP(tx_phys, rx_phys):
 def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -143,7 +143,7 @@ def BTIDES_export_LL_UNKNOWN_RSP(bdaddr, random, unknown_type):
 def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -176,7 +176,7 @@ def BTIDES_export_LL_FEATURE_RSP(bdaddr, random, features):
 def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -209,7 +209,7 @@ def BTIDES_export_LL_FEATURE_REQ(bdaddr, random, features):
 def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -242,7 +242,7 @@ def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, random, features):
 def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -275,7 +275,7 @@ def BTIDES_export_LL_VERSION_IND(bdaddr, random, version, company_id, subversion
 def BTIDES_export_LL_PING_RSP(bdaddr, random):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -307,7 +307,7 @@ def BTIDES_export_LL_PING_RSP(bdaddr, random):
 def BTIDES_export_LL_LENGTH_REQ(bdaddr, random, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -343,7 +343,7 @@ def BTIDES_export_LL_LENGTH_REQ(bdaddr, random, max_rx_octets, max_rx_time, max_
 def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -379,7 +379,7 @@ def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_
 def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
@@ -413,7 +413,7 @@ def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):
 def BTIDES_export_LL_PHY_RSP(bdaddr, random, tx_phys, rx_phys):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one

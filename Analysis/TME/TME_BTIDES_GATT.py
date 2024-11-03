@@ -56,7 +56,7 @@ def BTIDES_export_GATT_Services(bdaddr, random, service_type, begin_handle, end_
     ###print(BTIDES_JSON)
     UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Save space on exported data if possible
     utype = db_service_type_to_BTIDES_utype(service_type)
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one

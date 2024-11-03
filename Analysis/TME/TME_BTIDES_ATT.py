@@ -44,7 +44,7 @@ def BTIDES_export_ATT_handles(bdaddr, random, handle, UUID):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
     UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Save space on exported data if possible
-    entry = lookup_entry(bdaddr, random)
+    entry = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one

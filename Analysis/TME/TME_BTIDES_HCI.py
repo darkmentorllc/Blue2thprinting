@@ -40,7 +40,7 @@ def ff_HCI_Remote_Name_Request_Complete(name):
 def BTIDES_export_HCI_Name_Response(bdaddr, name):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_entry(bdaddr, 0)
+    entry = lookup_base_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one

@@ -10,36 +10,55 @@
 from TME.TME_BTIDES_base import *
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
-type_AdvData_Flags          = 1
-type_AdvData_IncompleteName = 8
-type_AdvData_CompleteName   = 9
-type_AdvData_TxPower        = 10
-type_AdvData_DeviceID       = 16
-type_AdvData_MSD            = 255
-
-def lookup_AdvChanData(entry, type=None, type_str=None):
-    for ad in entry["AdvChanArray"]:
-        if(ad.type == type and ad.type_str == type_str):
-            return ad
-
-    return None
+type_AdvData_Flags                  = 1
+type_AdvData_UUID16ListIncomplete   = 2
+type_AdvData_UUID16ListComplete     = 3
+type_AdvData_IncompleteName         = 8
+type_AdvData_CompleteName           = 9
+type_AdvData_TxPower                = 10
+type_AdvData_DeviceID               = 16
+type_AdvData_MSD                    = 255
 
 ############################
 # Helper "factory functions"
 ############################  
 
+# Advertisement channel PDU types defined in BT spec
+pdutype_ADV_IND           = 0
+pdutype_ADV_DIRECT_IND    = 1
+pdutype_ADV_NONCONN_IND   = 2
+pdutype_SCAN_REQ          = 3
+pdutype_SCAN_RSP          = 4
+pdutype_CONNECT_IND       = 5
+pdutype_ADV_SCAN_IND      = 6
+pdutype_AUX_ADV_IND       = 7
+pdutype_AUX_SCAN_RSP      = 7
+
 # Valid types defined in BTIDES schema
-valid_adv_chan_types = [0, 1, 2, 3, 10, 20, 21, 50]
+btype_ADV_IND           = 0
+btype_ADV_DIRECT_IND    = 1
+btype_ADV_NONCONN_IND   = 2
+btype_ADV_SCAN_IND      = 3
+btype_AUX_ADV_IND       = 10
+btype_SCAN_RSP          = 20
+btype_AUX_SCAN_RSP      = 10
+btype_EIR               = 50
+valid_adv_chan_types = [btype_ADV_IND, btype_ADV_DIRECT_IND, btype_ADV_NONCONN_IND, btype_ADV_SCAN_IND, btype_AUX_ADV_IND, btype_SCAN_RSP, btype_AUX_SCAN_RSP, btype_EIR]
 valid_adv_chan_type_strs = ["ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "ADV_SCAN_IND", "AUX_ADV_IND", "SCAN_RSP", "AUX_SCAN_RSP", "EIR"]
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
-    ###print(f"ff_AdvChanData: type = {type}")
-    ###print(f"ff_AdvChanData: type_str = {type_str}")
     if (type != None and (type in valid_adv_chan_types)):
         AdvChanData["type"] = type
-    if (type_str != None and (type_str in valid_adv_chan_type_strs)):
+    if (CSA != None):
+        AdvChanData["CSA"] = CSA
+    if (full_pkt_hex_str != None):
+        AdvChanData["full_pkt_hex_str"] = full_pkt_hex_str
+    if (AdvDataArray != None):
+        AdvChanData["AdvDataArray"] = AdvDataArray
+
+    if(verbose_BTIDES and type_str != None and (type_str in valid_adv_chan_type_strs)):
         AdvChanData["type_str"] = type_str
-    
+
     if(AdvChanData):
         return AdvChanData
     else:
@@ -60,84 +79,249 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
     flags_hex_str = f"{flags_int:02X}"
     return flags_hex_str
 
-def ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
-    flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+def ff_Flags(data):
+    flags_hex_str = get_flags_hex_str(data["le_limited_discoverable_mode"], data["le_general_discoverable_mode"], data["bredr_not_supported"], data["le_bredr_support_controller"], data["le_bredr_support_host"])
     obj = {"type": type_AdvData_Flags, "length": 2, "flags_hex_str": flags_hex_str}
     if(verbose_BTIDES):
         obj["type_str"] = "Flags"
     return obj
 
-def ff_Name(length, name_type, name):
-    obj = {"type": name_type, "length": length, "name": name}
+def ff_UUID16Lists(list_type, data):
+    obj = {"type": list_type, "length": data["length"], "UUID16List": data["UUID16List"]}
+    if(verbose_BTIDES):
+        if(list_type == type_AdvData_IncompleteName):
+            obj["type_str"] = "UUID16ListIncomplete"
+        elif(list_type == type_AdvData_CompleteName):
+            obj["type_str"] = "UUID16ListComplete"
+    return obj
+
+def ff_Names(name_type, data):
+    obj = {"type": name_type, "length":  data["length"], "name_hex_str": data["name_hex_str"]}
     if(verbose_BTIDES):
         if(name_type == type_AdvData_IncompleteName):
             obj["type_str"] = "IncompleteName"
         elif(name_type == type_AdvData_CompleteName):
             obj["type_str"] = "CompleteName"
+            
+        if(data["utf8_name"]):
+            obj["utf8_name"] = data["utf8_name"]
+
     return obj
 
-def ff_TxPower(power):
-    obj = {"type": type_AdvData_TxPower, "length": 2, "tx_power": power}
+def ff_TxPower(data):
+    obj = {"type": type_AdvData_TxPower, "length": 2, "tx_power": data["tx_power"]}
     if(verbose_BTIDES):
         obj["type_str"] = "TxPower"
     return obj
 
-def ff_DeviceID(vendor_id_source, vendor_id, product_id, version):
-    obj = {"type": type_AdvData_DeviceID, "length": 9, "vendor_id_source": vendor_id_source, "vendor_id": vendor_id, "product_id": product_id, "version": version}
+def ff_DeviceID(data):
+    obj = {"type": type_AdvData_DeviceID, "length": 9, "vendor_id_source": data["vendor_id_source"], "vendor_id": data["vendor_id"], "product_id": data["product_id"], "version": data["version"]}
     if(verbose_BTIDES):
         obj["type_str"] = "DeviceID"
     return obj
 
-
-def ff_MSD(length, company_id_hex_str, MSD_hex_str):
-    obj = {"type": type_AdvData_MSD, "length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": MSD_hex_str}
+def ff_MSD(data):
+    obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
     if(verbose_BTIDES):
         obj["type_str"] = "ManufacturerSpecificData"
     return obj
 
+########################################################
+# Building up generic all-type export capability
+########################################################
+
+# data should be a shallow dictionary with keys that exactly match the keys in the BTIDES data
+def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
+    #print(json.dumps(AdvDataArrayEntry, indent=2))
+    # Type has already been checked before finding the match, no need to check it again
+    if(adv_data_type == type_AdvData_Flags):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["flags_hex_str"] == data["flags_hex_str"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["name_hex_str"] == data["name_hex_str"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_TxPower):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["tx_power"] == data["tx_power"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_UUID16ListIncomplete or adv_data_type == type_AdvData_UUID16ListComplete):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["UUID16List"] == data["UUID16List"]): # TODO: Can list equality be checked this way?
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_DeviceID):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["vendor_id_source"] == data["vendor_id_source"] and
+           AdvDataArrayEntry["vendor_id"] == data["vendor_id"] and
+           AdvDataArrayEntry["product_id"] == data["product_id"] and
+           AdvDataArrayEntry["version"] == data["version"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_MSD):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and 
+           AdvDataArrayEntry["msd_hex_str"] == data["msd_hex_str"]):
+            return True
+        else: return False
+
+    # Shouldn't be able to get here, because this should never be called for types we haven't handled yet
+    print("adv_data_exact_match: unknown adv_data_type. Something is wrong. Exiting so you can debug...")
+    exit(-1)
+
+# This just returns true or false of whether a specific entry already exists 
+# If it returns True, there's no insert needed
+def AdvDataArray_entry_by_btype_exists(AdvChanData, btype, adv_data_type, data):
+    #print(json.dumps(AdvChanData, indent=2))
+    for AdvChanDataEntry in AdvChanData["AdvDataArray"]:
+        if(AdvChanDataEntry["type"] == adv_data_type):
+            # matches the type we're searching for, now do other type-specific field checks
+            if(adv_data_exact_match(AdvChanDataEntry, adv_data_type, data)):
+                return True
+
+    # If none of the entries match, return False
+    return False
+
+# lookup_base_entry(bdaddr, random) searches for a base entry in the base array
+# lookup_AdvChanData_entry_by_btype() searches for an AdvChanData entry in the AdvChanArray
+# If none is found, one needs to be added
+def lookup_AdvChanData_entry_by_btype(base_entry, btype):
+    for AdvChanData in base_entry["AdvChanArray"]:
+        if(AdvChanData["type"] == btype): # Only type is required, not type_str
+            return AdvChanData
+
+    return None
+
+##################
+
+def ff_adv_data_type_specific_obj(adv_data_type, data):
+    if(adv_data_type == type_AdvData_Flags):
+        return ff_Flags(data)
+
+    if(adv_data_type == type_AdvData_UUID16ListIncomplete or adv_data_type == type_AdvData_UUID16ListComplete):
+        return ff_UUID16Lists(adv_data_type, data)
+
+    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
+        return ff_Names(adv_data_type, data)
+
+    if(adv_data_type == type_AdvData_TxPower):
+        return ff_TxPower(data)
+
+    if(adv_data_type == type_AdvData_DeviceID):
+        return ff_DeviceID(data)
+
+    if(adv_data_type == type_AdvData_MSD):
+        return ff_MSD(data)
+
+    return None
+
+def insert_new_AdvChanData(base, adv_type, adv_data_type, data):
+    btype = pdu_type_to_BTIDES_type(adv_type)
+    btype_str = None
+    if(verbose_BTIDES):
+        btype_str = pdu_type_to_BTIDES_type_str(adv_type)
+
+    acd = ff_AdvChanData(type=btype, type_str=btype_str)
+    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
+    #print(json.dumps(acd, indent=2))
+    base["AdvChanArray"].append(acd)
+
+def insert_new_AdvChanArray(base, adv_type, adv_data_type, data):
+    btype = pdu_type_to_BTIDES_type(adv_type)
+    btype_str = None
+    if(verbose_BTIDES):
+        btype_str = pdu_type_to_BTIDES_type_str(adv_type)
+    acd = ff_AdvChanData(type=btype, type_str=btype_str)
+    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
+    #print(json.dumps(acd, indent=2))
+    base["AdvChanArray"] = [ acd ]
+
+def insert_new_AdvChanArray_entry_only(base, adv_type, adv_data_type, data):
+    # btype = BTIDES-specific advertisement event type
+    btype = pdu_type_to_BTIDES_type(adv_type)
+
+    if("AdvChanArray" not in base.keys()):
+        # There is an entry for this BDADDR (base) but not yet any AdvChanArray entries, so just insert ours
+        insert_new_AdvChanArray(base, adv_type, adv_data_type, data)
+        #print(json.dumps(acd, indent=2))
+        return
+
+    acd = lookup_AdvChanData_entry_by_btype(base, btype)
+    if(acd == None):
+        insert_new_AdvChanData(base, adv_type, adv_data_type, data)
+        return
+    else:
+        if(AdvDataArray_entry_by_btype_exists(acd, btype, adv_data_type, data)):
+            # Nothing to do
+            return
+        else:
+            acd["AdvDataArray"].append(ff_adv_data_type_specific_obj(adv_data_type, data))
+            return
+
+def insert_new_base_and_AdvChanArray_entry(device_bdaddr, bdaddr_random, adv_type, adv_data_type, data):
+    global BTIDES_JSON
+    base = ff_base(device_bdaddr, bdaddr_random)
+    insert_new_AdvChanArray(base, adv_type, adv_data_type, data)
+    ###print(json.dumps(base, indent=2))
+    BTIDES_JSON.append(base)
+    #print(json.dumps(BTIDES_JSON, indent=2))
+    return
+
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
-def le_evt_type_to_BTIDES_types(type):
+def pdu_type_to_BTIDES_type(type):
     # FIXME!: I found based on this that I'm overloading PCAP types and old HCI types and they're off by 1!
     # I will need to change db and re-process everything to fix :-/
     # Values from pcaps and newer HCI logs
-    if(type >= 0 and type <= 3): return type
-    if(type == 4): return 20 # SCAN_RSP
-    if(type == 6): return 20 # SCAN_RSP # From accidental incorrect pcap mix-in
+    if(type == pdutype_ADV_IND):            return btype_ADV_IND
+    if(type == pdutype_ADV_DIRECT_IND):     return btype_ADV_DIRECT_IND
+    if(type == pdutype_ADV_SCAN_IND):       return btype_ADV_SCAN_IND
+    if(type == pdutype_ADV_NONCONN_IND):    return btype_ADV_NONCONN_IND
+    if(type == pdutype_SCAN_RSP):           return btype_SCAN_RSP # SCAN_RSP
+    #if(type == 6): return btype_SCAN_RSP # SCAN_RSP # FIXME: From accidental incorrect pcap mix-in
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
     # From "Event_Type values for legacy PDUs" in spec apparently 
-    if(type == 19): return 0 # 0x13 ADV_IND
-    if(type == 16): return 2 # 0x10 ADV_NONCONN_IND
-    if(type == 18): return 3 # 0x12 ADV_SCAN_IND
-    if(type == 21): return 1 # 0x15 ADV_DIRECT_IND
-    if(type == 26): return 20 # 0x1A SCAN_RSP to ADV_SCAN_IND
-    if(type == 27): return 20 # 0x1B SCAN_RSP to ADV_IND
+    if(type == 16): return btype_ADV_NONCONN_IND # 0x10 ADV_NONCONN_IND
+    if(type == 18): return btype_ADV_SCAN_IND # 0x12 ADV_SCAN_IND
+    if(type == 19): return btype_ADV_IND # 0x13 ADV_IND
+    if(type == 21): return btype_ADV_DIRECT_IND # 0x15 ADV_DIRECT_IND
+    if(type == 26): return btype_SCAN_RSP # 0x1A SCAN_RSP to ADV_SCAN_IND
+    if(type == 27): return btype_SCAN_RSP # 0x1B SCAN_RSP to ADV_IND
     
     # From manually inserting EIR type
     if(type == 50): return 50 # EIR
     
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
-def le_evt_type_to_BTIDES_type_str(type):
+def pdu_type_to_BTIDES_type_str(type):
     # FIXME!: I found based on this that I'm overloading PCAP types and old HCI types and they're off by 1!
     # I will need to change db and re-process everything to fix :-/
     # Values from pcaps and newer HCI logs
     # FOR NOW I'M USING THE HCI TYPES, BECAUSE THAT'S WHAT MOST OF MY DATA IS IN
-    if(type == 0): return "ADV_IND"
-    if(type == 1): return "ADV_DIRECT_IND" # FIXME: I don't know if that's what this actually is, since I have no examples in the HCI log I'm looking at
-    if(type == 2): return "ADV_SCAN_IND"
-    if(type == 3): return "ADV_NONCONN_IND"
-    if(type == 4): return "SCAN_RSP"
-    if(type == 6): return "SCAN_RSP" # From accidental incorrect pcap mix-in
+    if(type == pdutype_ADV_IND):            return "ADV_IND"
+    if(type == pdutype_ADV_DIRECT_IND):     return "ADV_DIRECT_IND" # FIXME: I don't know if that's what this actually is, since I have no examples in the HCI log I'm looking at
+    if(type == pdutype_ADV_SCAN_IND):       return "ADV_SCAN_IND"
+    if(type == pdutype_ADV_NONCONN_IND):    return "ADV_NONCONN_IND"
+    if(type == pdutype_SCAN_RSP):           return "SCAN_RSP"
+    #if(type == 6): return "SCAN_RSP" # FIXME: From accidental incorrect pcap mix-in. Replace with proper 
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
     # From "Event_Type values for legacy PDUs" in spec apparently 
-    if(type == 19): return "ADV_IND" # 0x13 ADV_IND
     if(type == 16): return "ADV_NONCONN_IND" # 0x10 ADV_NONCONN_IND
     if(type == 18): return "ADV_SCAN_IND" # 0x12 ADV_SCAN_IND
+    if(type == 19): return "ADV_IND" # 0x13 ADV_IND
     if(type == 21): return "ADV_DIRECT_IND" # 0x15 ADV_DIRECT_IND
     if(type == 26): return "SCAN_RSP" # 0x1A SCAN_RSP to ADV_SCAN_IND
     if(type == 27): return "SCAN_RSP" # 0x1B SCAN_RSP to ADV_IND
@@ -146,291 +330,21 @@ def le_evt_type_to_BTIDES_type_str(type):
     if(type == 50): return "EIR"
 
 ############################
-# JSON insertion functions
+# JSON insertion function
 ############################
-# All functions follow this flow:
-# Opens existing JSON object, searches for an entry for the given bdaddr
-# If no entry already exists, it creates a new one
-# If an entry already exists, it tries to insert the TxPower data into a AdvChanArray->AdvChanData->AdvDataArray entry
-#  If an existing AdvChanData entry already exists, this is done
-#  If no AdvChanData exists, it creates one 
 
-def BTIDES_export_Flags(bdaddr, random, type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host):
+# Generalized export capability for all AdvData types
+def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
     global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    entry = lookup_entry(bdaddr, random)
+    #print(json.dumps(BTIDES_JSON, indent=2))
+    base = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))
-    if (entry == None):
+    if (base == None):
         # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
-        #print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        BTIDES_JSON.append(base)
+        insert_new_base_and_AdvChanArray_entry(bdaddr, random, adv_type, adv_data_type, data)
         #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches 
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == type_AdvData_Flags and AdvDataEntry["length"] == 2 and 
-                           "flags_hex_str" in AdvDataEntry.keys() and AdvDataEntry["flags_hex_str"] == flags_hex_str):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we got here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    AdvChanEntry["AdvDataArray"].append(ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_Flags(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) ]
-            entry["AdvChanArray"].append(acd)
-            #print(json.dumps(BTIDES_JSON, indent=2))
-            return
-
-def BTIDES_export_Name(bdaddr, random, type, name_type, name):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    length = int(1 + len(name)) # 1 bytes for opcode + length of the string
-    entry = lookup_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
-        #print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
+        #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
+        insert_new_AdvChanArray_entry_only(base, adv_type, adv_data_type, data)
         return
-    else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == name_type and AdvDataEntry["length"] == length and 
-                           "name" in AdvDataEntry.keys() and AdvDataEntry["name"] == name):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we get here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    AdvChanEntry["AdvDataArray"].append( ff_Name(length, name_type, name) )
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_Name(length, name_type, name) ]
-            entry["AdvChanArray"].append(acd)
-            #print(json.dumps(BTIDES_JSON, indent=2))
-            return
-
-def BTIDES_export_TxPower(bdaddr, random, type, data):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    entry = lookup_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_TxPower(data) ]
-        ###print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        BTIDES_JSON.append(base)
-        ###print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_TxPower(data) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches 
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == type_AdvData_TxPower and AdvDataEntry["length"] == 2 and 
-                           "tx_power" in AdvDataEntry.keys() and AdvDataEntry["tx_power"] == data):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we get here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    AdvChanEntry["AdvDataArray"].append(ff_TxPower(data))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_TxPower(data) ] 
-            entry["AdvChanArray"].append(acd)
-            ###print(json.dumps(BTIDES_JSON, indent=2))
-            return
-
-def BTIDES_export_DeviceID(bdaddr, random, type, vendor_id_source, vendor_id, product_id, version):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    entry = lookup_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ]
-        ###print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        BTIDES_JSON.append(base)
-        ###print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches 
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == type_AdvData_DeviceID and AdvDataEntry["length"] == 9 and
-                           "vendor_id_source" in AdvDataEntry.keys() and AdvDataEntry["vendor_id_source"] == vendor_id_source and
-                           "vendor_id" in AdvDataEntry.keys() and AdvDataEntry["vendor_id"] == vendor_id and
-                           "product_id" in AdvDataEntry.keys() and AdvDataEntry["product_id"] == vendor_id_source and
-                           "version" in AdvDataEntry.keys() and AdvDataEntry["version"] == vendor_id_source):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_DeviceID: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we get here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    AdvChanEntry["AdvDataArray"].append(ff_DeviceID(vendor_id_source, vendor_id, product_id, version))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_DeviceID(vendor_id_source, vendor_id, product_id, version) ] 
-            entry["AdvChanArray"].append(acd)
-            ###print(json.dumps(BTIDES_JSON, indent=2))
-            return
-
-def BTIDES_export_MSD(bdaddr, random, type, company_id, MSD_hex_str):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    btype = le_evt_type_to_BTIDES_types(type)
-    btype_str = le_evt_type_to_BTIDES_type_str(type)
-    #print(f"type = {type}, btype = {btype}, btype_str = {btype_str}")
-    company_id_hex_str = f"{company_id:04x}"
-    length = int(3 + (len(MSD_hex_str) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
-    entry = lookup_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # Insert new one
-        base = ff_base(bdaddr, random)
-        ###print(json.dumps(base, indent=2))
-        acd = ff_AdvChanData(type=btype, type_str=btype_str)
-        acd["AdvDataArray"] = [ ff_MSD(length, company_id_hex_str, MSD_hex_str) ]
-        #print(json.dumps(acd, indent=2))
-        base["AdvChanArray"] = [ acd ]
-        BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        if("AdvChanArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any AdvChanArray entries, so just insert ours
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_MSD(length, company_id_hex_str, MSD_hex_str) ]
-            entry["AdvChanArray"] = [ acd ]
-            #print(json.dumps(acd, indent=2))
-            return
-        else:
-            #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-            for AdvChanEntry in entry["AdvChanArray"]:
-                ###print(AdvChanEntry)
-                if(AdvChanEntry != None and AdvChanEntry["type"] == btype and AdvChanEntry["type_str"] == btype_str):
-                    # This AdvData is of the same type as we're currently processing for this insert
-                    # Now check if there's an AdvDataArray entry that exactly matches
-                    for AdvDataEntry in AdvChanEntry["AdvDataArray"]:
-                        # TODO: pass through length in the future
-                        if(AdvDataEntry["type"] == type_AdvData_MSD and AdvDataEntry["length"] == length and 
-                           "company_id_hex_str" in AdvDataEntry.keys() and AdvDataEntry["company_id_hex_str"] == company_id_hex_str and
-                            "msd_hex_str" in AdvDataEntry.keys() and AdvDataEntry["msd_hex_str"] == MSD_hex_str):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_MSD: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we get here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner AdvDataArray
-                    ###print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
-                    AdvChanEntry["AdvDataArray"].append( ff_MSD(length, company_id_hex_str, MSD_hex_str) )
-                    ###print(json.dumps(AdvChanEntry["AdvDataArray"], indent=2))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert into outer AdvChanArray
-            acd = ff_AdvChanData(type=btype, type_str=btype_str)
-            acd["AdvDataArray"] = [ ff_MSD(length, company_id_hex_str, MSD_hex_str) ]
-            entry["AdvChanArray"].append(acd)
-            #print(json.dumps(BTIDES_JSON, indent=2))
-            return

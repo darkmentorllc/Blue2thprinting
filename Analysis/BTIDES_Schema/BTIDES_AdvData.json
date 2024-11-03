@@ -254,10 +254,17 @@
     },
     "IncompleteName": {
       "type": "object",
-      "$comment": "Going with a schema name of \"Incomplete\" rather than the terser \"Short\", because I think that term is more explicit about the truncation that could be occurring, for people learning about BT. (See \"Wingman Rem\" vs. \"Wingman Remote\" names)",
+      "$comment": "Going with a schema name of \"Incomplete\" rather than the terser \"Shortened\", because I think that term is more explicit about the truncation that could be occurring, for people learning about BT. (See \"Wingman Rem\" vs. \"Wingman Remote\" names)",
       "description": "Structure for AdvData of type 0x08 = \"Shortened Local Name\".",
-      "required": [ "type", "length", "name" ],
+      "required": [ "type", "length", "name_hex_str"],
       "properties": {
+        "utf8_name": {
+		"description": "This is an optional human-readable version of the \"Shortened Local Name\" string. This string will contain only printable UTF8 characters, whereas the \"name_hex_str\" field contains the exact bytes which were sent for the name (which may not be printable, or which may contain terminating/trailing/padding NULLs). A Short Name is a string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
+		"type": "string",
+		"minLength": 0,
+		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",
+		"maxLength": 255
+	},
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
 		"type": "string",
@@ -275,8 +282,8 @@
 		"minimum": 1,
 		"maximum": 255
 	},
-        "name": {
-		"description": "AKA \"Short Name\", this is a name string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
+        "name_hex_str": {
+		"description": "AKA \"Shortened Local Name\", as a hex string, to capture the exact bytes the device used, even if they're unencodable. Use utf8_name if you need to display something for a user. A Short Name is a string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
 		"type": "string",
 		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",
 		"minLength": 0,
@@ -287,8 +294,15 @@
     "CompleteName": {
       "type": "object",
       "description": "Structure for AdvData of type 0x09 = \"Complete Local Name\".",
-      "required": [ "type", "length", "name" ],
+      "required": [ "type", "length", "name_hex_str" ],
       "properties": {
+        "utf8_name": {
+		"description": "This is an optional human-readable version of the \"Complete Local Name\" string. This string will contain only printable UTF8 characters, whereas the \"name_hex_str\" field contains the exact bytes which were sent for the name (which may not be printable, or which may contain terminating/trailing/padding NULLs).",
+		"type": "string",
+		"minLength": 0,
+		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",
+		"maxLength": 255
+	},
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
 		"type": "string",
@@ -306,8 +320,8 @@
 		"minimum": 1,
 		"maximum": 255
 	},
-        "name": {
-		"description": "AKA \"Short Name\", this is a name string where the device is telling you explicitly that it couldn't fit the entire string into the packet.",
+        "name_hex_str": {
+		"description": "AKA \"Complete Local Name\", as a hex string, to capture the exact bytes the device used, even if they're unencodable. Use utf8_name if you need to display something for a user.",
 		"type": "string",
 		"$comment": "The extended advertisements can have larger lengths to work with, so I'm just putting a simple, possibly-incorrect, sanity check on the length to warn of possible future errors",
 		"minLength": 0,

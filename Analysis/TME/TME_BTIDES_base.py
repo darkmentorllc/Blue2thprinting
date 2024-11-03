@@ -61,16 +61,16 @@ def write_BTIDES(out_filename):
         json.dump(BTIDES_JSON, fp=f) # For saving space
         #json.dump(BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
 
-def lookup_entry(bdaddr, random):
+def lookup_base_entry(bdaddr, random):
     bdaddr = bdaddr.lower()
-    ###print("lookup_entry: ")
+    ###print("lookup_base_entry: ")
     for item in BTIDES_JSON:
         ###print(item)
-        ###print(f"lookup_entry: bdaddr = {bdaddr}")
-        ###print(f"lookup_entry: random = {random}")
+        ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
+        ###print(f"lookup_base_entry: random = {random}")
         if(item["bdaddr"] == bdaddr and item["bdaddr_rand"] == random):
             return item
-        
+
     return None
 
 def convert_UUID128_to_UUID16_if_possible(UUID128):

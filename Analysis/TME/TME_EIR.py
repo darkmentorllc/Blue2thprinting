@@ -27,7 +27,9 @@ def print_classic_EIR_CID_info(bdaddr):
             print(f"\t\t: Error: Unknown vendor_id_source = {vendor_id_source}")
         print(f"\t\tProduct ID: 0x%04x" % product_id)
         print(f"\t\tProduct Version: 0x%04x" % product_version)
-        BTIDES_export_DeviceID(bdaddr, 0, 50, vendor_id_source, vendor_id, product_id, product_version)
+
+        data = {"length": 9, "vendor_id_source": vendor_id_source, "vendor_id": vendor_id, "product_id": product_id, "version": product_version}
+        BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_DeviceID, data)
 
     if (len(eir_result) == 0):
         print("\tNo BTC Extended Inquiry Result Device info.")
