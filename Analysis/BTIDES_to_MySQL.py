@@ -78,7 +78,7 @@ def execute_query(query):
     return result
 
 # Function to execute a MySQL query and fetch results
-def execute_insert(query):
+def execute_insert(query, values):
     global insert_count, duplicate_count
     connection = mysql.connector.connect(
         host='localhost',
@@ -92,7 +92,7 @@ def execute_insert(query):
 
     cursor = connection.cursor()
     try:
-        cursor.execute(query)
+        cursor.execute(query, values)
         connection.commit()
 
         if cursor._warning_count > 0:
@@ -147,13 +147,17 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
     le_evt_type = db_type
     if(le_evt_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_flags2 (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host});"
-        #print(eir_insert)
-        execute_insert(eir_insert)
+        values = (bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_flags2 (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES (%s, %s, %s, %s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_flags2 (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host});"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {random}, {le_evt_type}, {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host});"
-        #print(le_insert)
-        execute_insert(le_insert)
+        values = (bdaddr, random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+        #le_insert2 = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES ('{bdaddr}', {random}, {le_evt_type}, {le_limited_discoverable_mode}, {le_general_discoverable_mode}, {bredr_not_supported}, {le_bredr_support_controller}, {le_bredr_support_host});"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
 
 def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
@@ -163,44 +167,57 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
     le_evt_type = db_type
     if(le_evt_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID16s (device_bdaddr, list_type, str_UUID16s) VALUES ('{bdaddr}', {list_type}, '{str_UUID16s}');"
-        print(eir_insert)
-        #execute_insert(eir_insert)
+        values = (bdaddr, list_type, str_UUID16s)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID16s (device_bdaddr, list_type, str_UUID16s) VALUES (%s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID16s (device_bdaddr, list_type, str_UUID16s) VALUES ('{bdaddr}', {list_type}, '{str_UUID16s}');"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES ('{bdaddr}', {random}, {le_evt_type}, {list_type}, '{str_UUID16s}');"
-        print(le_insert)
-        #execute_insert(le_insert)
+        values = (bdaddr, random, le_evt_type, list_type, str_UUID16s)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES (%s, %s, %s, %s, %s);"
+        #le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES ('{bdaddr}', {random}, {le_evt_type}, {list_type}, '{str_UUID16s}');"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
 
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
     device_name_type = leaf["type"]
-    device_name = leaf["name"]
+    device_name = leaf["utf8_name"]
+    # FIXME: Need to create new Table to use name_hex_str instead
 
     le_evt_type = db_type
     if(le_evt_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, device_name) VALUES ('{bdaddr}', {device_name_type}, '{device_name}');"
-        #print(eir_insert)
-        execute_insert(eir_insert)
+        values = (bdaddr, device_name_type, device_name)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, device_name) VALUES (%s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, device_name) VALUES ('{bdaddr}', {device_name_type}, '{device_name}');"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name2 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name) VALUES ('{bdaddr}', {random}, {le_evt_type}, {device_name_type}, '{device_name}');"
-        #print(le_insert)
-        execute_insert(le_insert)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name2 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name) VALUES (%s, %s, %s, %s, %s);"
+        #le_insert2 = f"INSERT IGNORE INTO LE_bdaddr_to_name2 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name) VALUES ('{bdaddr}', {random}, {le_evt_type}, {device_name_type}, '{device_name}');"
+        #print(le_insert2)
+        values = (bdaddr, random, le_evt_type, device_name_type, device_name)
+        execute_insert(le_insert, values)
 
 def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
     #print("import_AdvData_TxPower!")
-
     device_tx_power = leaf["tx_power"]
 
+    le_evt_type = db_type
     if(db_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, device_tx_power) VALUES ('{bdaddr}', {device_tx_power});"
-        ###print(eir_insert)
-        execute_insert(eir_insert)
+        values = (bdaddr, device_tx_power)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, device_tx_power) VALUES (%s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, device_tx_power) VALUES ('{bdaddr}', {device_tx_power});"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power});"
-        #print(le_insert)
-        execute_insert(le_insert)
+        values = (bdaddr, random, le_evt_type, device_tx_power)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES (%s, %s, %s, %s);"
+        #le_insert2 = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES ('{bdaddr}', {random}, {db_type}, {device_tx_power});"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
 
 def import_AdvData_DeviceID(bdaddr, db_type, leaf):
     #print("import_AdvData_TxPower!")
@@ -212,9 +229,11 @@ def import_AdvData_DeviceID(bdaddr, db_type, leaf):
 
     if(db_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES ('{bdaddr}', {vendor_id_source}, {vendor_id}, {product_id}, {product_version});"
-        #print(eir_insert)
-        execute_insert(eir_insert)
+        values = (bdaddr, vendor_id_source, vendor_id, product_id, product_version)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES ('%s, %s, %s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES ('{bdaddr}', {vendor_id_source}, {vendor_id}, {product_id}, {product_version});"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     # AFAIK this can't exist in LE AdvData, only EIR
 
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
@@ -223,15 +242,20 @@ def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     device_BT_CID = int(leaf["company_id_hex_str"], 16)
     manufacturer_specific_data = leaf["msd_hex_str"]
 
+    le_evt_type = db_type
     if(db_type == 50):
         # EIR
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {device_BT_CID}, '{manufacturer_specific_data}');"
-        ###print(eir_insert)
-        execute_insert(eir_insert)
+        values = (bdaddr, device_BT_CID, manufacturer_specific_data)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES (%s, %s, %s');"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {device_BT_CID}, '{manufacturer_specific_data}');"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_MSD (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {random}, {db_type}, {device_BT_CID}, '{manufacturer_specific_data}');"
-        ###print(le_insert)
-        execute_insert(le_insert)
+        values = (bdaddr, random, le_evt_type, device_BT_CID, manufacturer_specific_data)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_MSD (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) VALUES (%s, %s, %s, %s, %s);"
+        #le_insert2 = f"INSERT IGNORE INTO LE_bdaddr_to_MSD (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) VALUES ('{bdaddr}', {random}, {db_type}, {device_BT_CID}, '{manufacturer_specific_data}');"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
 
 def has_AdvDataArray(entry):
     if(entry != None and entry["AdvDataArray"] != None):
