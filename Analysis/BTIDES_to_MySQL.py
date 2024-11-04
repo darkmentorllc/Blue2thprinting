@@ -51,6 +51,8 @@ BTIDES_JSON = []
 insert_count = 0
 duplicate_count = 0
 
+verbose_print = False
+
 ###################################
 # Helper functions
 ###################################
@@ -326,33 +328,41 @@ opcode_LL_PHY_RSP                   = 23
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
-    insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES ( {random}, '{bdaddr}', {unknown_opcode});"
-    #print(insert)
-    execute_insert(insert)
+    values = (random, bdaddr, unknown_opcode)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES ( {random}, '{bdaddr}', {unknown_opcode});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     ll_version = ll_entry["version"]
     device_BT_CID = ll_entry["company_id"]
     ll_sub_version = ll_entry["subversion"]
-    insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
-    #print(insert)
-    execute_insert(insert)
+    values = (random, bdaddr, ll_version, device_BT_CID, ll_sub_version)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
 def import_LL_FEATUREs(bdaddr, random, ll_entry):
     opcode = ll_entry["opcode"]
     features = int(ll_entry["le_features_hex_str"], 16)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES ( {random}, '{bdaddr}', {opcode}, {features});"
-    #print(insert)
-    execute_insert(insert)
+    values = (random, bdaddr, opcode, features)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES ( {random}, '{bdaddr}', {opcode}, {features});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 # This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
 # TODO: I should really update the table to have the opcode field for differentiation of types
 def import_LL_PING_RSP(bdaddr, random, ll_entry):
     #opcode = ll_entry["opcode"]
-    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
-    #print(insert)
-    execute_insert(insert)
+    values = (random, bdaddr, 1)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
+    #print(insert2)
+    execute_insert(insert, values)
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
 def import_LL_LENGTHs(bdaddr, random, ll_entry):
@@ -361,9 +371,11 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     max_rx_time = ll_entry["max_rx_time"]
     max_tx_octets = ll_entry["max_tx_octets"]
     max_tx_time = ll_entry["max_tx_time"]
+    values = (random, bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
     insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
-    #print(insert)
-    execute_insert(insert)
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 # This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
 # TODO: I should really update the table to have the opcode field for differentiation of types
@@ -371,9 +383,11 @@ def import_LL_PHYs(bdaddr, random, ll_entry):
     #opcode = ll_entry["opcode"]
     tx_phys = ll_entry["TX_PHYS"]
     rx_phys = ll_entry["RX_PHYS"]
-    insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES ( {random}, '{bdaddr}', {tx_phys}, {rx_phys});"
-    #print(insert)
-    execute_insert(insert)
+    values = (random, bdaddr, tx_phys, rx_phys)
+    insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES ( {random}, '{bdaddr}', {tx_phys}, {rx_phys});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 def has_known_LL_packet(opcode, ll_entry):
     if("opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode):
@@ -410,16 +424,20 @@ def import_LMP_VERSION_RSP(bdaddr, lmp_entry):
     lmp_version = lmp_entry["version"]
     device_BT_CID = lmp_entry["company_id"]
     lmp_sub_version = lmp_entry["subversion"]
-    insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES ('{bdaddr}', {lmp_version}, {device_BT_CID}, {lmp_sub_version});"
-    #print(insert)
-    execute_insert(insert)
+    values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
+    insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES ('{bdaddr}', {lmp_version}, {device_BT_CID}, {lmp_sub_version});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
     #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename BTC2th_LMP_features_res to BTC2th_LMP_FEATURES
     features = int(lmp_entry["lmp_features_hex_str"], 16)
-    insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES ('{bdaddr}', 0, {features});"
-    #print(insert)
-    execute_insert(insert)
+    values = (bdaddr, 0, features)
+    insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES (%s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES ('{bdaddr}', 0, {features});"
+    #print(insert2)
+    execute_insert(insert, values)
 
 opcode_LMP_VERSION_RSP          = 38
 opcode_LMP_FEATURES_RSP         = 40
@@ -446,9 +464,11 @@ def parse_LMPArray(entry):
 
 def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     device_name = hci_entry["remote_name"]
-    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
-    #print(insert)
-    execute_insert(insert)
+    values = (bdaddr, device_name)
+    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES (%s, %s);"
+    #insert2 = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
+    #print(insert2)
+    execute_insert(insert, values)
 
 event_code_HCI_Remote_Name_Request_Complete = 7
 def has_known_HCI_entry(event_code, hci_entry):
@@ -475,9 +495,11 @@ def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
     UUID128 = att_handle_entry["UUID"]
     if(len(UUID128) == 4):
         UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-    insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {attribute_handle}, '{UUID128}');"
-    #print(insert)
-    execute_insert(insert)
+    values = ()
+    insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {attribute_handle}, '{UUID128}');"
+    #print(insert2)
+    execute_insert(insert, values)
 
 def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
     for att_handle_entry in att_entry["ATT_handle_enumeration"]:
@@ -518,9 +540,11 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
     UUID128 = gatt_service_entry["UUID"]
     if(len(UUID128) == 4):
         UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-    insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {service_type}, {begin_handle}, {end_handle}, '{UUID128}');"
-    #print(insert)
-    execute_insert(insert)
+    values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
+    insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+    #insert2 = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {service_type}, {begin_handle}, {end_handle}, '{UUID128}');"
+    #print(insert2)
+    execute_insert(insert, values)
 
     #TODO: Next comes embedded characteristic parsing
 
@@ -561,14 +585,20 @@ def progress_update(total, count):
 # SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
 # OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
 
+
+
 def main():
-    global BTIDES_JSON
+    global verbose_print
 
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema.')
+    parser.add_argument('--verbose', action='store_true',required=False, help='Print verbose output.')
     args = parser.parse_args()
 
     in_filename = args.input
+    verbose_print = args.verbose
+    skip_invalid = args.skipinvalid
 
     with open(in_filename, 'r') as f:
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
@@ -586,27 +616,31 @@ def main():
 
     registry = Registry().with_resources( all_schemas )
 
-    print("Validating all entries against BTIDES schema... (this will take a while for large files)")
-
-    # Sanity check every entry against the Schema
-    try:
-        Draft202012Validator(
-            {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
-            registry=registry,
-        ).validate(instance=BTIDES_JSON)
-        #print("JSON is valid according to BTIDES Schema")
-    except ValidationError as e:
-        print("JSON data is invalid per BTIDES Schema:", e.message)
-        exit(-1)
-
     total = len(BTIDES_JSON)
-    print(f"Validation passed. Importing {total} BDADDRs' entries.")
     count = 0;
-    # If we get here, every entry validates and we can process them all
     for entry in BTIDES_JSON:
+        # Sanity check every entry against the Schema's RootType (this way we don't have to validate all up front)
+        try:
+            Draft202012Validator(
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/RootType"},
+                registry=registry,
+            ).validate(instance=entry)
+            #print("JSON is valid according to BTIDES Schema")
+        except ValidationError as e:
+            print("JSON data is invalid per BTIDES Schema:", e.message)
+            if(skip_invalid):
+                continue
+            else:
+                print(json.dumps(entry, indent=2))
+                exit(-1)
+
         if(entry["bdaddr"] == None or entry["bdaddr_rand"] == None):
             print("It shouldn't be possible to get here, due to schema validation. Code needs to be debugged. Exiting.")
-            exit(-1)
+            if(skip_invalid):
+                continue
+            else:
+                print(json.dumps(entry, indent=2))
+                exit(-1)
 
         parse_AdvChanArray(entry)
 
