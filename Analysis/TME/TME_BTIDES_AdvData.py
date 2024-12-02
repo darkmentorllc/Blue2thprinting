@@ -13,6 +13,8 @@ from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 type_AdvData_Flags                  = 1
 type_AdvData_UUID16ListIncomplete   = 2
 type_AdvData_UUID16ListComplete     = 3
+type_AdvData_UUID32ListIncomplete   = 4
+type_AdvData_UUID32ListComplete     = 5
 type_AdvData_IncompleteName         = 8
 type_AdvData_CompleteName           = 9
 type_AdvData_TxPower                = 10
@@ -96,6 +98,15 @@ def ff_UUID16Lists(list_type, data):
             obj["type_str"] = "UUID16ListComplete"
     return obj
 
+def ff_UUID32Lists(list_type, data):
+    obj = {"type": list_type, "length": data["length"], "UUID32List": data["UUID32List"]}
+    if(verbose_BTIDES):
+        if(list_type == type_AdvData_IncompleteName):
+            obj["type_str"] = "UUID32ListIncomplete"
+        elif(list_type == type_AdvData_CompleteName):
+            obj["type_str"] = "UUID32ListComplete"
+    return obj
+
 def ff_Names(name_type, data):
     obj = {"type": name_type, "length":  data["length"], "name_hex_str": data["name_hex_str"]}
     if(verbose_BTIDES):
@@ -159,6 +170,13 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_UUID32ListIncomplete or adv_data_type == type_AdvData_UUID32ListComplete):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["UUID32List"] == data["UUID32List"]): # TODO: Can list equality be checked this way?
+            return True
+        else: return False
+
+
     if(adv_data_type == type_AdvData_DeviceID):
         if(AdvDataArrayEntry["length"] == data["length"] and 
            AdvDataArrayEntry["vendor_id_source"] == data["vendor_id_source"] and
@@ -210,6 +228,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_UUID16ListIncomplete or adv_data_type == type_AdvData_UUID16ListComplete):
         return ff_UUID16Lists(adv_data_type, data)
+
+    if(adv_data_type == type_AdvData_UUID32ListIncomplete or adv_data_type == type_AdvData_UUID32ListComplete):
+        return ff_UUID32Lists(adv_data_type, data)
 
     if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
         return ff_Names(adv_data_type, data)
