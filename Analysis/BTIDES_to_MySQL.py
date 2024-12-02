@@ -25,10 +25,14 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+from TME.TME_BTIDES_base import *
+from TME.TME_BTIDES_AdvData import *
+
 ###################################
 # Globals
 ###################################
-
+'''
 # Same order as in BTIDES_base.json
 BTIDES_files = ["BTIDES_base.json",
                 "BTIDES_AdvData.json",
@@ -47,6 +51,7 @@ BTIDES_files = ["BTIDES_base.json",
 
 # Global is only accessible within this file
 BTIDES_JSON = []
+'''
 
 insert_count = 0
 duplicate_count = 0
@@ -115,13 +120,17 @@ def BTIDES_types_to_le_evt_type(type):
     # FIXME!: In the future once I update to have a src file type field (or foreign key pointer to row with that field)
     # I will need to 
     # For now I will just use the pcap PDU values, since they correspond 1:1 to BTIDES for the first 4 entries
-    if(type >= 0 and type <= 3): return type
-    if(type == 10): return 7 # AUX_ADV_IND
-    if(type == 20): return 6 # SCAN_RSP # From accidental incorrect pcap mix-in
-    if(type == 21): return 7 # AUX_SCAN_RSP # FIXME: I don't yet know what value this should take on
+    if(type == btype_ADV_IND):          return pdutype_ADV_IND # AUX_ADV_IND
+    if(type == btype_ADV_DIRECT_IND):   return pdutype_ADV_DIRECT_IND # AUX_ADV_IND
+    if(type == btype_ADV_NONCONN_IND):  return pdutype_ADV_NONCONN_IND # AUX_ADV_IND
+    if(type == btype_ADV_SCAN_IND):     return pdutype_ADV_SCAN_IND # AUX_ADV_IND
+    if(type == btype_AUX_ADV_IND):      return pdutype_AUX_ADV_IND # AUX_ADV_IND
+    if(type == btype_SCAN_RSP):         return pdutype_SCAN_RSP # SCAN_RSP # From accidental incorrect pcap mix-in
+    if(type == btype_AUX_SCAN_RSP):     return pdutype_AUX_SCAN_RSP # AUX_SCAN_RSP # FIXME: I don't yet know what value this should take on
 
     # From manually inserting EIR type
-    if(type == 50): return 50 # EIR
+    # There is of course no corresponding LE type
+    if(type == btype_EIR):              return btype_EIR
 
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Flags!")
@@ -178,6 +187,27 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
         #le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES ('{bdaddr}', {random}, {le_evt_type}, {list_type}, '{str_UUID16s}');"
         #print(le_insert2)
         execute_insert(le_insert, values)
+
+def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_Names!")
+    str_UUID32s = ",".join(leaf["UUID32List"])
+    list_type = leaf["type"]
+
+    le_evt_type = db_type
+    if(le_evt_type == 50):
+        # EIR
+        values = (bdaddr, list_type, str_UUID32s)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID32s (device_bdaddr, list_type, str_UUID32s) VALUES (%s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID32s (device_bdaddr, list_type, str_UUID32s) VALUES ('{bdaddr}', {list_type}, '{str_UUID32s}');"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
+    else:
+        values = (bdaddr, random, le_evt_type, list_type, str_UUID32s)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID32s) VALUES (%s, %s, %s, %s, %s);"
+        #le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID32s) VALUES ('{bdaddr}', {random}, {le_evt_type}, {list_type}, '{str_UUID32s}');"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
+
 
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
@@ -263,14 +293,20 @@ def has_AdvDataArray(entry):
     else:
         return False
 
+'''
+# These should come from TME_BTIDES_AdvData
 type_AdvData_Flags                  = 1
 type_AdvData_UUID16ListIncomplete   = 2
 type_AdvData_UUID16ListComplete     = 3
+type_AdvData_UUID32ListIncomplete   = 4
+type_AdvData_UUID32ListComplete     = 5
 type_AdvData_IncompleteName         = 8
 type_AdvData_CompleteName           = 9
 type_AdvData_TxPower                = 10
 type_AdvData_DeviceID               = 16
 type_AdvData_MSD                    = 255
+'''
+
 def has_known_AdvData_type(type, entry):
     if(entry != None and "type" in entry.keys() and entry["type"] == type):
         return True
@@ -293,6 +329,10 @@ def parse_AdvChanArray(entry):
                 # UUID16ListIncomplete & UUID16ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID16ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID16ListComplete, AdvData)):
                     import_AdvData_UUID16s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # UUID32ListIncomplete & UUID32ListComplete
+                if(has_known_AdvData_type(type_AdvData_UUID32ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID32ListComplete, AdvData)):
+                    import_AdvData_UUID32s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # IncompleteName & CompleteName
                 if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData)):
@@ -372,7 +412,7 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     max_tx_octets = ll_entry["max_tx_octets"]
     max_tx_time = ll_entry["max_tx_time"]
     values = (random, bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
+    insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     #insert2 = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
     #print(insert2)
     execute_insert(insert, values)

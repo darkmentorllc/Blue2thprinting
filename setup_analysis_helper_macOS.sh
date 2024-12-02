@@ -13,7 +13,7 @@ fi
 USERNAME="$SUDO_USER"
 echo "Username detected as '$USERNAME'."
 
-if [ ! -d "/Users/$USERNAME/Blue2thprinting" && ! -d "/Users/$USERNAME/blue2thprinting" ]; then
+if [[ ! -d "/Users/$USERNAME/Blue2thprinting" && ! -d "/Users/$USERNAME/blue2thprinting" ]]; then
     echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
     echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
     exit -1
@@ -30,7 +30,7 @@ fi
 mysql --version
 if [ ! $? ]; then
     echo "================================================================================================================================================="
-    echo "This script assumes you've already run "brew install mysql" on macOS per the instructions in the git repository. Please run that first.
+    echo "This script assumes you've already run \"brew install mysql\" on macOS per the instructions in the git repository. Please run that first."
     echo "================================================================================================================================================="
     exit -1
 fi
@@ -38,7 +38,39 @@ fi
 tshark --version
 if [ ! $? ]; then
     echo "================================================================================================================================================="
-    echo "This script assumes you've already run "brew install tshark" on macOS per the instructions in the git repository. Please run that first.
+    echo "This script assumes you've already run \"brew install wireshark\" on macOS per the instructions in the git repository. Please run that first."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+pip3 install pyyaml
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "The command \"pip3 install pyyaml\" did not succeed. Please ensure you have python3 and pip3 installed first."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+pip3 install mysql-connector-python
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "The command \"pip3 install mysql-connector-python\" did not succeed. Please ensure you have python3 and pip3 installed first."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+pip3 install jsonschema
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "The command \"pip3 install jsonschema\" did not succeed. Please ensure you have python3 and pip3 installed first."
+    echo "================================================================================================================================================="
+    exit -1
+fi
+
+pip3 install scapy
+if [ ! $? ]; then
+    echo "================================================================================================================================================="
+    echo "The command \"pip3 install scapy\" did not succeed. Please ensure you have python3 and pip3 installed first."
     echo "================================================================================================================================================="
     exit -1
 fi
@@ -69,6 +101,7 @@ echo "===================================="
 #### The oui.txt came from "https://standards-oui.ieee.org/oui/oui.txt"
 #### oui.txt will periodically be updated
 ./translator_fill_IEEE_bdaddr_to_company.sh ./oui.txt
+
 echo "==========================================================="
 echo "You should see 10 (XEROX) IEEE OUIs after the next command:"
 echo "==========================================================="
@@ -79,6 +112,7 @@ echo "==================================================="
 echo "Filling database with Bluetooth 16-bit company IDs."
 echo "==================================================="
 ./translator_fill_UUID16_to_company.sh
+
 echo "======================================================================"
 echo "You should see 10 16-bit Bluetooth company IDs after the next command:"
 echo "======================================================================"
@@ -88,7 +122,8 @@ echo ""
 echo "==================================================================================================="
 echo "Filling database with BLEScope research paper's mappings between UUI128s and Android package names."
 echo "==================================================================================================="
-python3 ./translator_fill_BLEScope_UUID128s.py
+/usr/bin/python3 ./translator_fill_BLEScope_UUID128s.py
+
 echo "============================================================================================"
 echo "You should see 10 mappings between UUI128s and Android package names after the next command:"
 echo "============================================================================================"

@@ -4,6 +4,7 @@ from scapy.all import PcapReader, BTLE, BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN
 # All the AdvData types
 from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
 from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
+from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
 from scapy.all import EIR_TX_Power_Level, EIR_Device_ID, EIR_Manufacturer_Specific_Data
 
 from jsonschema import validate, ValidationError
@@ -94,6 +95,26 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListComplete, data)
 
+    elif isinstance(entry.payload, EIR_IncompleteList32BitServiceUUIDs):
+        #entry.show()
+        uuid_list = entry.svc_uuids
+        UUID32List = [f"{uuid:08x}" for uuid in uuid_list]
+        length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID32List": UUID32List}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID32 list: {','.join(UUID32List)}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListIncomplete, data)
+
+    elif isinstance(entry.payload, EIR_CompleteList32BitServiceUUIDs):
+        #entry.show()
+        uuid_list = entry.svc_uuids
+        UUID32List = [f"{uuid:08x}" for uuid in uuid_list]
+        length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID32List": UUID32List}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID32 list: {','.join(UUID32List)}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListComplete, data)
+
     elif isinstance(entry.payload, EIR_TX_Power_Level):
         device_tx_power = entry.level
         length = 2 # 1 byte for opcode, 1 byte power level
@@ -112,9 +133,15 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_DeviceID, data)
 
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
+        #entry.show()
+        #print(f"{device_bdaddr}")
         company_id_hex_str = f"{entry.company_id:04x}"
         length = entry.len # 1 byte for opcode + 2 bytes * 4 fields
-        msd_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+        msd_hex_str = ""
+        # Some devices don't include any actual MSD (whether that's because they ran out of space in the advertisement,
+        # or just choose to, I don't know. But this ensures we have at least 1 byte of MSD beyond the company_id before accessing .load
+        if(length > 3):
+            msd_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
         data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": msd_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} MSD: company_id = {company_id_hex_str}, data = {msd_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_MSD, data)
