@@ -208,6 +208,25 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
         #print(le_insert2)
         execute_insert(le_insert, values)
 
+def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_Names!")
+    str_UUID128s = ",".join(leaf["UUID128List"])
+    list_type = leaf["type"]
+
+    le_evt_type = db_type
+    if(le_evt_type == 50):
+        # EIR
+        values = (bdaddr, list_type, str_UUID128s)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID128s (device_bdaddr, list_type, str_UUID128s) VALUES (%s, %s, %s);"
+        #eir_insert2 = f"INSERT IGNORE INTO EIR_bdaddr_to_UUID128s (device_bdaddr, list_type, str_UUID128s) VALUES ('{bdaddr}', {list_type}, '{str_UUID128s}');"
+        #print(eir_insert2)
+        execute_insert(eir_insert, values)
+    else:
+        values = (bdaddr, random, le_evt_type, list_type, str_UUID128s)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s) VALUES (%s, %s, %s, %s, %s);"
+        #le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s) VALUES ('{bdaddr}', {random}, {le_evt_type}, {list_type}, '{str_UUID128s}');"
+        #print(le_insert2)
+        execute_insert(le_insert, values)
 
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
@@ -333,6 +352,10 @@ def parse_AdvChanArray(entry):
                 # UUID32ListIncomplete & UUID32ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID32ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID32ListComplete, AdvData)):
                     import_AdvData_UUID32s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # UUID128ListIncomplete & UUID128ListComplete
+                if(has_known_AdvData_type(type_AdvData_UUID128ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID128ListComplete, AdvData)):
+                    import_AdvData_UUID128s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # IncompleteName & CompleteName
                 if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData)):

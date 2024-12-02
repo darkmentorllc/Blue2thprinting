@@ -5,6 +5,7 @@ from scapy.all import PcapReader, BTLE, BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN
 from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
 from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
 from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
+from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
 from scapy.all import EIR_TX_Power_Level, EIR_Device_ID, EIR_Manufacturer_Specific_Data
 
 from jsonschema import validate, ValidationError
@@ -114,6 +115,26 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID32List": UUID32List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListComplete, data)
+
+    elif isinstance(entry.payload, EIR_IncompleteList128BitServiceUUIDs):
+        entry.show()
+        uuid_list = entry.svc_uuids
+        UUID128List = [str(uuid) for uuid in uuid_list]
+        length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID128List": UUID128List}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID128 list: {','.join(UUID128List)}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListIncomplete, data)
+
+    elif isinstance(entry.payload, EIR_CompleteList128BitServiceUUIDs):
+        entry.show()
+        uuid_list = entry.svc_uuids
+        UUID128List = [str(uuid) for uuid in uuid_list]
+        length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID128List": UUID128List}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID128 list: {','.join(UUID128List)}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListComplete, data)
 
     elif isinstance(entry.payload, EIR_TX_Power_Level):
         device_tx_power = entry.level
