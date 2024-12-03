@@ -12,7 +12,12 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_name (id
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_tx_power (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, device_tx_power TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, device_tx_power)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+# TODO: Remove EIR_bdaddr_to_PSRM_CoD - I can't do that though until I remove or update the parse_{PCAP/HCI}_2db.sh helpers
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_PSRM_CoD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, page_scan_rep_mode TINYINT NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, page_scan_rep_mode, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_PSRM (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, page_scan_rep_mode TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, page_scan_rep_mode)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_UUID16s (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, list_type TINYINT NOT NULL, str_UUID16s VARCHAR(480), PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, list_type, str_UUID16s)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
@@ -20,7 +25,7 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_UUID32s 
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_UUID128s (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, list_type TINYINT NOT NULL, str_UUID128s VARCHAR(480), PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, list_type, str_UUID128s)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# TODO: remove the broken EIR_bdaddr_to_flags table in the future once I re-process all my data
+# TODO: remove the broken EIR_bdaddr_to_flags table in the future once I re-process all my data - I can't do that though until I remove or update the parse_{PCAP/HCI}_2db.sh helpers
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_flags (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL, le_general_discoverable_mode BOOLEAN NOT NULL, le_bredr_support_controller BOOLEAN NOT NULL, le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, le_bredr_support_controller, le_bredr_support_host)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_flags2 (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL, le_general_discoverable_mode BOOLEAN NOT NULL, bredr_not_supported BOOLEAN NOT NULL, le_bredr_support_controller BOOLEAN NOT NULL, le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -30,8 +35,9 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE EIR_bdaddr_to_MSD (id 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE RSP_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, device_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 echo "Creating BT Low Energy tables"
-# TODO: remove the broken LE_bdaddr_to_name table in the future once I re-process all my data
+# TODO: remove the broken LE_bdaddr_to_name table in the future once I re-process all my data - I can't do that though until I remove or update the parse_{PCAP/HCI}_2db.sh helpers
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, device_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_name2 (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, device_name_type TINYINT NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_UUID16s (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, list_type TINYINT NOT NULL, str_UUID16s VARCHAR(480), PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -42,7 +48,7 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_UUID128s 
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_service_data (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, str_UUID16s VARCHAR(100), service_data VARCHAR(480), PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, str_UUID16s, service_data)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# TODO: remove the broken LE_bdaddr_to_flags table in the future once I re-process all my data
+# TODO: remove the broken LE_bdaddr_to_flags table in the future once I re-process all my data - I can't do that though until I remove or update the parse_{PCAP/HCI}_2db.sh helpers
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_flags (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL, le_general_discoverable_mode BOOLEAN NOT NULL, le_bredr_support_controller BOOLEAN NOT NULL, le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, le_bredr_support_controller, le_bredr_support_host)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_flags2 (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL, le_general_discoverable_mode BOOLEAN NOT NULL, bredr_not_supported BOOLEAN NOT NULL, le_bredr_support_controller BOOLEAN NOT NULL, le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -68,7 +74,9 @@ mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_URI (id I
 mysql -u user -pa --database='bt' --execute="CREATE TABLE LE_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, device_bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type SMALLINT NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr, bdaddr_random, le_evt_type, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 echo "Creating GATT tables"
+# TODO: remove the GATT_services table in the future once I re-process all my data 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE GATT_services (id INT NOT NULL AUTO_INCREMENT, device_bdaddr_type INT NOT NULL, device_bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, begin_handle SMALLINT UNSIGNED NOT NULL, end_handle SMALLINT UNSIGNED NOT NULL, UUID128 CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bt' --execute="CREATE TABLE GATT_services2 (id INT NOT NULL AUTO_INCREMENT, device_bdaddr_type INT NOT NULL, device_bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, service_type SMALLINT UNSIGNED NOT NULL, begin_handle SMALLINT UNSIGNED NOT NULL, end_handle SMALLINT UNSIGNED NOT NULL, UUID128 CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt' --execute="CREATE TABLE GATT_attribute_handles (id INT NOT NULL AUTO_INCREMENT, device_bdaddr_type INT NOT NULL, device_bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, attribute_handle SMALLINT UNSIGNED NOT NULL, UUID128 CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"

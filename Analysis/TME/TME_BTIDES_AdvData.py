@@ -10,18 +10,20 @@
 from TME.TME_BTIDES_base import *
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
-type_AdvData_Flags                  = 1
-type_AdvData_UUID16ListIncomplete   = 2
-type_AdvData_UUID16ListComplete     = 3
-type_AdvData_UUID32ListIncomplete   = 4
-type_AdvData_UUID32ListComplete     = 5
-type_AdvData_UUID128ListIncomplete  = 6
-type_AdvData_UUID128ListComplete    = 7
-type_AdvData_IncompleteName         = 8
-type_AdvData_CompleteName           = 9
-type_AdvData_TxPower                = 10
-type_AdvData_DeviceID               = 16
-type_AdvData_MSD                    = 255
+type_AdvData_Flags                              = 1
+type_AdvData_UUID16ListIncomplete               = 2
+type_AdvData_UUID16ListComplete                 = 3
+type_AdvData_UUID32ListIncomplete               = 4
+type_AdvData_UUID32ListComplete                 = 5
+type_AdvData_UUID128ListIncomplete              = 6
+type_AdvData_UUID128ListComplete                = 7
+type_AdvData_IncompleteName                     = 8
+type_AdvData_CompleteName                       = 9
+type_AdvData_TxPower                            = 10
+type_AdvData_ClassOfDevice                      = 13
+type_AdvData_DeviceID                           = 16
+type_AdvData_PeripheralConnectionIntervalRange  = 18
+type_AdvData_MSD                                = 255
 
 ############################
 # Helper "factory functions"
@@ -84,6 +86,7 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
     flags_hex_str = f"{flags_int:02X}"
     return flags_hex_str
 
+# type 1
 def ff_Flags(data):
 ###    flags_hex_str = get_flags_hex_str(data["le_limited_discoverable_mode"], data["le_general_discoverable_mode"], data["bredr_not_supported"], data["le_bredr_support_controller"], data["le_bredr_support_host"])
     obj = {"type": type_AdvData_Flags, "length": data["length"], "flags_hex_str": data["flags_hex_str"]}
@@ -91,6 +94,7 @@ def ff_Flags(data):
         obj["type_str"] = "Flags"
     return obj
 
+# type 2 & 3
 def ff_UUID16Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID16List": data["UUID16List"]}
     if(verbose_BTIDES):
@@ -100,6 +104,7 @@ def ff_UUID16Lists(list_type, data):
             obj["type_str"] = "UUID16ListComplete"
     return obj
 
+# type 4 & 5
 def ff_UUID32Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID32List": data["UUID32List"]}
     if(verbose_BTIDES):
@@ -109,6 +114,7 @@ def ff_UUID32Lists(list_type, data):
             obj["type_str"] = "UUID32ListComplete"
     return obj
 
+# type 6 & 7
 def ff_UUID128Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID128List": data["UUID128List"]}
     if(verbose_BTIDES):
@@ -118,6 +124,7 @@ def ff_UUID128Lists(list_type, data):
             obj["type_str"] = "UUID128ListComplete"
     return obj
 
+# type 8 & 9
 def ff_Names(name_type, data):
     obj = {"type": name_type, "length":  data["length"], "name_hex_str": data["name_hex_str"]}
     if(verbose_BTIDES):
@@ -131,18 +138,35 @@ def ff_Names(name_type, data):
 
     return obj
 
+# type 0x0A
 def ff_TxPower(data):
     obj = {"type": type_AdvData_TxPower, "length": data["length"], "tx_power": data["tx_power"]}
     if(verbose_BTIDES):
         obj["type_str"] = "TxPower"
     return obj
 
+# type 0x0D
+def ff_ClassOfDevice(data):
+    obj = {"type": type_AdvData_ClassOfDevice, "length": data["length"], "CoD_hex_str": data["CoD_hex_str"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "ClassOfDevice"
+    return obj
+
+# type 0x10
 def ff_DeviceID(data):
     obj = {"type": type_AdvData_DeviceID, "length": data["length"], "vendor_id_source": data["vendor_id_source"], "vendor_id": data["vendor_id"], "product_id": data["product_id"], "version": data["version"]}
     if(verbose_BTIDES):
         obj["type_str"] = "DeviceID"
     return obj
 
+# type 0x12
+def ff_PeripheralConnectionIntervalRange(data):
+    obj = {"type": type_AdvData_PeripheralConnectionIntervalRange, "length": data["length"], "conn_interval_min": data["conn_interval_min"], "conn_interval_max": data["conn_interval_max"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "PeripheralConnectionIntervalRange"
+    return obj
+
+# type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
     if(verbose_BTIDES):
@@ -172,6 +196,12 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
     if(adv_data_type == type_AdvData_TxPower):
         if(AdvDataArrayEntry["length"] == data["length"] and 
            AdvDataArrayEntry["tx_power"] == data["tx_power"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_ClassOfDevice):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["CoD_hex_str"] == data["CoD_hex_str"]):
             return True
         else: return False
 
@@ -247,7 +277,7 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_UUID32ListIncomplete or adv_data_type == type_AdvData_UUID32ListComplete):
         return ff_UUID32Lists(adv_data_type, data)
-    
+
     if(adv_data_type == type_AdvData_UUID128ListIncomplete or adv_data_type == type_AdvData_UUID128ListComplete):
         return ff_UUID128Lists(adv_data_type, data)
 
@@ -257,8 +287,14 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
     if(adv_data_type == type_AdvData_TxPower):
         return ff_TxPower(data)
 
+    if(adv_data_type == type_AdvData_ClassOfDevice):
+        return ff_ClassOfDevice(data)
+
     if(adv_data_type == type_AdvData_DeviceID):
         return ff_DeviceID(data)
+
+    if(adv_data_type == type_AdvData_PeripheralConnectionIntervalRange):
+        return ff_PeripheralConnectionIntervalRange(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)

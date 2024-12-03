@@ -6,7 +6,9 @@ from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLo
 from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
 from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
 from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
-from scapy.all import EIR_TX_Power_Level, EIR_Device_ID, EIR_Manufacturer_Specific_Data
+from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
+from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
+from scapy.all import EIR_Manufacturer_Specific_Data
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
@@ -50,6 +52,7 @@ def scapy_flags_to_hex_str(entry):
 def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
     global g
 
+    # type 1
     if isinstance(entry.payload, EIR_Flags):
         flags_hex_str = scapy_flags_to_hex_str(entry)
         length = 2 # 1 bytes for opcode + 1 byte for flags
@@ -58,26 +61,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Flags: {flags_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_Flags, data)
 
-    elif isinstance(entry.payload, EIR_CompleteLocalName):
-        local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8')
-        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
-        length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
-        exit_on_len_mismatch(length, entry)
-        data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
-        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete Local Name: {utf8_name}")
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_CompleteName, data)
-
-    elif isinstance(entry.payload, EIR_ShortenedLocalName):
-        local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8')
-        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
-        length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
-        exit_on_len_mismatch(length, entry)
-        data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_IncompleteName, data)
-        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete Local Name: {utf8_name}")
-
+    # type 2
     elif isinstance(entry.payload, EIR_IncompleteList16BitServiceUUIDs):
         uuid_list = entry.svc_uuids
         UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
@@ -87,6 +71,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListIncomplete, data)
 
+    # type 3
     elif isinstance(entry.payload, EIR_CompleteList16BitServiceUUIDs):
         uuid_list = entry.svc_uuids
         UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
@@ -96,6 +81,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListComplete, data)
 
+    # type 4
     elif isinstance(entry.payload, EIR_IncompleteList32BitServiceUUIDs):
         #entry.show()
         uuid_list = entry.svc_uuids
@@ -106,6 +92,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListIncomplete, data)
 
+    # type 5
     elif isinstance(entry.payload, EIR_CompleteList32BitServiceUUIDs):
         #entry.show()
         uuid_list = entry.svc_uuids
@@ -116,6 +103,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListComplete, data)
 
+    # type 6
     elif isinstance(entry.payload, EIR_IncompleteList128BitServiceUUIDs):
         entry.show()
         uuid_list = entry.svc_uuids
@@ -126,6 +114,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListIncomplete, data)
 
+    # type 7
     elif isinstance(entry.payload, EIR_CompleteList128BitServiceUUIDs):
         entry.show()
         uuid_list = entry.svc_uuids
@@ -136,6 +125,29 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListComplete, data)
 
+    # type 8
+    elif isinstance(entry.payload, EIR_ShortenedLocalName):
+        local_name = entry.local_name
+        utf8_name = local_name.decode('utf-8')
+        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
+        length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_IncompleteName, data)
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete Local Name: {utf8_name}")
+
+    # type 9
+    elif isinstance(entry.payload, EIR_CompleteLocalName):
+        local_name = entry.local_name
+        utf8_name = local_name.decode('utf-8')
+        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
+        length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete Local Name: {utf8_name}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_CompleteName, data)
+
+    # type 0x0A
     elif isinstance(entry.payload, EIR_TX_Power_Level):
         device_tx_power = entry.level
         length = 2 # 1 byte for opcode, 1 byte power level
@@ -144,6 +156,23 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} TxPower level: {device_tx_power}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_TxPower, data)
 
+    # type 0x0D
+    elif isinstance(entry.payload, EIR_ClassOfDevice):
+        #entry.show()
+        major_service_classes = entry.major_service_classes.value # Note the .value, which is how we turn a Scapy FlagsField into an integer apparently...
+        major_device_class = entry.major_device_class
+        minor_device_class = entry.minor_device_class
+        fixed = entry.fixed
+        CoD_int = (major_service_classes << 13) | (major_device_class << 8) | (minor_device_class << 2) | fixed
+        #print(f"{CoD_int:06x}")
+        CoD_hex_str = f"{CoD_int:06x}"
+        length = 4 # 1 byte for opcode, 3 byte CoD
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "CoD_hex_str": CoD_hex_str}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} Class of Device: {CoD_hex_str}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_ClassOfDevice, data)
+
+    # type 0x10
     # I don't think this can actually appear in BLE as opposed to EIR...so I'm not sure if this will get any testing...
     elif isinstance(entry.payload, EIR_Device_ID):
         device_tx_power = entry.level
@@ -153,6 +182,18 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Device ID: {data}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_DeviceID, data)
 
+    # type 0x12
+    elif isinstance(entry.payload, EIR_PeripheralConnectionIntervalRange):
+        entry.show()
+        conn_interval_min = entry.conn_interval_min
+        conn_interval_max = entry.conn_interval_max
+        length = 5 # 1 byte for opcode, 2*2 byte parameters
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "conn_interval_min": conn_interval_min, "conn_interval_max": conn_interval_max}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
+
+    # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()
         #print(f"{device_bdaddr}")

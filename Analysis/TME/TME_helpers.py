@@ -83,7 +83,11 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_PSRM_CoD
+    FROM EIR_bdaddr_to_PSRM
+    WHERE device_bdaddr = '{bdaddr}'
+    UNION
+    SELECT 1
+    FROM EIR_bdaddr_to_CoD
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1

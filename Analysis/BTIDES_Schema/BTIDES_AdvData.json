@@ -411,7 +411,7 @@
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
 		"type": "string",
-		"const": "TxPower"
+		"const": "ClassOfDevice"
 	},
 	"type": {
 		"description": "This should always be exactly == 0x0D (13). (Per the assigned numbers document, \"Common Data Type\" table.)",
@@ -428,7 +428,7 @@
     "PeripheralConnectionIntervalRange": {
       "type": "object",
       "description": "Structure for AdvData of type 0x12 = \"Peripheral Connection Interval Range\".",
-      "required": [ "type", "length", "Conn_Interval_Min_hex_str", "Conn_Interval_Max_hex_str" ],
+      "required": [ "type", "length", "conn_interval_min", "conn_interval_max" ],
       "properties": {
 	"type_str": {
 		"description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -444,17 +444,17 @@
 		"description": "You should store whatever value actually came in from the device, because they could be sending malformed data, and if so, you want to capture that.",
 		"type": "integer"
 	},
-        "Conn_Interval_Min_hex_str": {
-		"description": "Connection interval minimum, 16 bits, as hex string. Technically the range should be 0x0006 to 0x0C80 (or 0xFFFF) according to the spec, but devices could misbehave, so just record exactly what was seen.",
-		"type": "string",
-		"minLength": 4,
-		"maxLength": 4
+        "conn_interval_min": {
+		"description": "Connection interval minimum, 16 bits. Technically the range should be 0x0006 to 0x0C80 (or 0xFFFF) according to the spec, but devices could misbehave, so just record exactly what was seen.",
+		"type": "integer",
+		"minLength": 0,
+		"maxLength": 65535
 	},
-        "Conn_Interval_Max_hex_str": {
-		"description": "Connection interval maximum, 16 bits, as hex string. Technically the range should be 0x0006 to 0x0C80 (or 0xFFFF) and >= Conn_Interval_Min according to the spec, but devices could misbehave, so just record exactly what was seen.",
-		"type": "string",
-		"minLength": 4,
-		"maxLength": 4
+        "conn_interval_max": {
+		"description": "Connection interval maximum, 16 bits. Technically the range should be 0x0006 to 0x0C80 (or 0xFFFF) and >= Conn_Interval_Min according to the spec, but devices could misbehave, so just record exactly what was seen.",
+		"type": "integer",
+		"minLength": 0,
+		"maxLength": 65535
 	}
       }
     },
