@@ -318,12 +318,11 @@ def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, le
     le_evt_type = db_type
     if(db_type == 50):
         # EIR
-        values = (bdaddr, conn_interval_min, conn_interval_max)
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_tx_power (device_bdaddr, conn_interval_min, conn_interval_max) VALUES (%s, %s);"
-        execute_insert(eir_insert, values)
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
     else:
         values = (bdaddr, random, le_evt_type, conn_interval_min, conn_interval_max)
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max) VALUES (%s, %s, %s, %s,  %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_connect_interval (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max) VALUES (%s, %s, %s, %s,  %s);"
         execute_insert(le_insert, values)
 
 # type 0xFF
