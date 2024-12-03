@@ -8,6 +8,7 @@ from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32Bit
 from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
 from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
 from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
+from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
 from scapy.all import EIR_Manufacturer_Specific_Data
 
 from jsonschema import validate, ValidationError
@@ -105,7 +106,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
 
     # type 6
     elif isinstance(entry.payload, EIR_IncompleteList128BitServiceUUIDs):
-        entry.show()
+        #entry.show()
         uuid_list = entry.svc_uuids
         UUID128List = [str(uuid) for uuid in uuid_list]
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
@@ -116,7 +117,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
 
     # type 7
     elif isinstance(entry.payload, EIR_CompleteList128BitServiceUUIDs):
-        entry.show()
+        #entry.show()
         uuid_list = entry.svc_uuids
         UUID128List = [str(uuid) for uuid in uuid_list]
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
@@ -184,7 +185,7 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
 
     # type 0x12
     elif isinstance(entry.payload, EIR_PeripheralConnectionIntervalRange):
-        entry.show()
+        #entry.show()
         conn_interval_min = entry.conn_interval_min
         conn_interval_max = entry.conn_interval_max
         length = 5 # 1 byte for opcode, 2*2 byte parameters
@@ -193,12 +194,60 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
 
+    # type 0x16
+    elif isinstance(entry.payload, EIR_ServiceData16BitUUID):
+        #entry.show()
+        length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
+        UUID16_hex_str = f"{entry.svc_uuid:04x}"
+        # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
+        # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID16 before accessing .load
+        if(length > 3): # 1 byte type + 2 byte UUID16
+            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+        else:
+            service_data_hex_str = ""
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID16: {UUID16_hex_str}, service_data_hex_str: {service_data_hex_str}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
+
+    # type 0x20
+    elif isinstance(entry.payload, EIR_ServiceData32BitUUID):
+        #entry.show()
+        length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
+        UUID32_hex_str = f"{entry.svc_uuid:08x}"
+        # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
+        # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID32 before accessing .load
+        if(length > 5): # 1 byte type + 4 byte UUID32
+            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+        else:
+            service_data_hex_str = ""
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID32": UUID32_hex_str, "service_data_hex_str": service_data_hex_str}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID32: {UUID32_hex_str}, service_data_hex_str: {service_data_hex_str}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ServiceData, data)
+
+    # type 0x21
+    elif isinstance(entry.payload, EIR_ServiceData128BitUUID):
+        #entry.show()
+        length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
+        UUID128 = str(entry.svc_uuid)
+        # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
+        # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID128 before accessing .load
+        if(length > 17): # 1 byte type + 16 byte UUID128
+            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+        else:
+            service_data_hex_str = ""
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID128": UUID128, "service_data_hex_str": service_data_hex_str}
+        if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID128: {UUID128}, service_data_hex_str: {service_data_hex_str}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
+
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()
         #print(f"{device_bdaddr}")
         company_id_hex_str = f"{entry.company_id:04x}"
-        length = entry.len # 1 byte for opcode + 2 bytes * 4 fields
+        length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
         msd_hex_str = ""
         # Some devices don't include any actual MSD (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of MSD beyond the company_id before accessing .load

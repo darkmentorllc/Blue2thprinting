@@ -23,6 +23,9 @@ type_AdvData_TxPower                            = 10
 type_AdvData_ClassOfDevice                      = 13
 type_AdvData_DeviceID                           = 16
 type_AdvData_PeripheralConnectionIntervalRange  = 18
+type_AdvData_UUID16ServiceData                  = 22
+type_AdvData_UUID32ServiceData                  = 32
+type_AdvData_UUID128ServiceData                 = 33
 type_AdvData_MSD                                = 255
 
 ############################
@@ -166,6 +169,27 @@ def ff_PeripheralConnectionIntervalRange(data):
         obj["type_str"] = "PeripheralConnectionIntervalRange"
     return obj
 
+# type 0x16
+def ff_UUID16ServiceData(data):
+    obj = {"type": type_AdvData_UUID16ServiceData, "length": data["length"], "UUID16": data["UUID16"], "service_data_hex_str": data["service_data_hex_str"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "UUID16ServiceData"
+    return obj
+
+# type 0x20
+def ff_UUID32ServiceData(data):
+    obj = {"type": type_AdvData_UUID32ServiceData, "length": data["length"], "UUID32": data["UUID32"], "service_data_hex_str": data["service_data_hex_str"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "UUID32ServiceData"
+    return obj
+
+# type 0x21
+def ff_UUID128ServiceData(data):
+    obj = {"type": type_AdvData_UUID128ServiceData, "length": data["length"], "UUID128": data["UUID128"], "service_data_hex_str": data["service_data_hex_str"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "UUID128ServiceData"
+    return obj
+
 # type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
@@ -187,24 +211,6 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
-    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
-           AdvDataArrayEntry["name_hex_str"] == data["name_hex_str"]):
-            return True
-        else: return False
-
-    if(adv_data_type == type_AdvData_TxPower):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
-           AdvDataArrayEntry["tx_power"] == data["tx_power"]):
-            return True
-        else: return False
-
-    if(adv_data_type == type_AdvData_ClassOfDevice):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
-           AdvDataArrayEntry["CoD_hex_str"] == data["CoD_hex_str"]):
-            return True
-        else: return False
-
     if(adv_data_type == type_AdvData_UUID16ListIncomplete or adv_data_type == type_AdvData_UUID16ListComplete):
         if(AdvDataArrayEntry["length"] == data["length"] and 
            AdvDataArrayEntry["UUID16List"] == data["UUID16List"]): # TODO: Can list equality be checked this way?
@@ -223,6 +229,24 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["name_hex_str"] == data["name_hex_str"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_TxPower):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["tx_power"] == data["tx_power"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_ClassOfDevice):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["CoD_hex_str"] == data["CoD_hex_str"]):
+            return True
+        else: return False
+
     if(adv_data_type == type_AdvData_DeviceID):
         if(AdvDataArrayEntry["length"] == data["length"] and 
            AdvDataArrayEntry["vendor_id_source"] == data["vendor_id_source"] and
@@ -231,6 +255,35 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
            AdvDataArrayEntry["version"] == data["version"]):
             return True
         else: return False
+
+    if(adv_data_type == type_AdvData_PeripheralConnectionIntervalRange):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["conn_interval_min"] == data["conn_interval_min"] and
+           AdvDataArrayEntry["conn_interval_max"] == data["conn_interval_max"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_UUID16ServiceData):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["UUID16"] == data["UUID16"] and
+           AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_UUID32ServiceData):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["UUID32"] == data["UUID32"] and
+           AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_UUID128ServiceData):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["UUID128"] == data["UUID128"] and
+           AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
+            return True
+        else: return False
+
 
     if(adv_data_type == type_AdvData_MSD):
         if(AdvDataArrayEntry["length"] == data["length"] and 
@@ -295,6 +348,16 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_PeripheralConnectionIntervalRange):
         return ff_PeripheralConnectionIntervalRange(data)
+
+    if(adv_data_type == type_AdvData_UUID16ServiceData):
+        return ff_UUID16ServiceData(data)
+
+    if(adv_data_type == type_AdvData_UUID32ServiceData):
+        return ff_UUID32ServiceData(data)
+
+    if(adv_data_type == type_AdvData_UUID128ServiceData):
+        return ff_UUID128ServiceData(data)
+
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)

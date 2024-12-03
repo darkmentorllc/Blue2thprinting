@@ -492,7 +492,7 @@ def print_CoD_to_names(number):
 def print_class_of_device(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = '{bdaddr}'"
+    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
 
     le_query = f"SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'" 
