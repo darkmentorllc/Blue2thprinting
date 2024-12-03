@@ -202,7 +202,10 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
 # types 0x06 & 0x07
 def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
-    str_UUID128s = ",".join(leaf["UUID128List"])
+    UUID128List = leaf["UUID128List"]
+    for i in range(len(UUID128List)):
+        UUID128List[i] = UUID128List[i].replace('-','')
+    str_UUID128s = ",".join(UUID128List)
     list_type = leaf["type"]
 
     le_evt_type = db_type
