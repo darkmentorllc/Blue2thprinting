@@ -1,11 +1,10 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2024
+# Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
 #import TME.TME_glob
 from TME.TME_helpers import *
-from TME.TME_names import *
 from TME.TME_BTIDES_LMP import *
 from TME.TME_BTIDES_HCI import *
 

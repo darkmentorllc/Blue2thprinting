@@ -2,7 +2,7 @@
 
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2024
+# Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
 import argparse
@@ -11,10 +11,6 @@ from TME.TME_import import *
 from TME.TME_lookup import *
 from TME.TME_stats import *
 from TME.TME_AdvChan import *
-from TME.TME_names import *
-from TME.TME_UUID16 import *
-from TME.TME_UUID32 import *
-from TME.TME_UUID128 import *
 from TME.TME_EIR import *
 from TME.TME_GATT import *
 from TME.TME_BLE2thprint import *
@@ -201,20 +197,7 @@ def main():
         print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
-        print_device_names(bdaddr, nametype)
-        print_uuid16s(bdaddr)                               # Includes BTIDES export
-        print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
-        print_uuid16s_service_solicit(bdaddr)
-        print_uuid32s(bdaddr)                               # Includes BTIDES export
-        print_uuid32_service_data(bdaddr)                   # Includes BTIDES export
-        print_uuid128s(bdaddr)                              # Includes BTIDES export
-        print_uuid128_service_data(bdaddr)                   # Includes BTIDES export
-        print_uuid128s_service_solicit(bdaddr)
-        print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
-        print_flags(bdaddr)                                 # Includes BTIDES export
-        print_appearance(bdaddr, nametype)                  # Includes BTIDES export
-        print_manufacturer_data(bdaddr)
-        print_class_of_device(bdaddr)                       # Includes BTIDES export
+        print_all_advdata(bdaddr, nametype)
         print_GATT_info(bdaddr, hideBLEScopedata)           # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export

@@ -1,11 +1,14 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2024
+# Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
 import struct
 from TME.TME_helpers import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_UUID16 import *
+from TME.TME_UUID32 import *
+from TME.TME_UUID128 import *
 
 ########################################
 # Transmit Power
@@ -238,3 +241,23 @@ def print_manufacturer_data(bdaddr):
         print("\tNo Manufacturer-specific Data found.")
 
     print("")
+
+# Changing up the formatting to print all the AdvData underneath whatever advertisement/scan response it originally appeared in
+def print_all_advdata(bdaddr, nametype):
+    # TODO: Ideally I want to have information grouped by the source packet type it came in on 
+    # TODO: But looping through and printing only the information for a single type at a time seem like it would be inefficeint in terms of db queries
+    # TODO: Maybe build up data structure (effectively recreating BTIDES hierarchy?) and then print that?
+    print_device_names(bdaddr, nametype)
+    print_uuid16s(bdaddr)                               # Includes BTIDES export
+    print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
+    print_uuid16s_service_solicit(bdaddr)
+    print_uuid32s(bdaddr)                               # Includes BTIDES export
+    print_uuid32_service_data(bdaddr)                   # Includes BTIDES export
+    print_uuid128s(bdaddr)                              # Includes BTIDES export
+    print_uuid128_service_data(bdaddr)                   # Includes BTIDES export
+    print_uuid128s_service_solicit(bdaddr)
+    print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
+    print_flags(bdaddr)                                 # Includes BTIDES export
+    print_appearance(bdaddr, nametype)                  # Includes BTIDES export
+    print_manufacturer_data(bdaddr)
+    print_class_of_device(bdaddr)                       # Includes BTIDES export
