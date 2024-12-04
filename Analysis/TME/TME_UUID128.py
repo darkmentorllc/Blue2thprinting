@@ -3,9 +3,7 @@
 # Copyright(c) Dark Mentor LLC 2023-2024
 ########################################
 
-#import TME.TME_glob
 from TME.TME_helpers import *
-#from TME.TME_GATT import *
 from TME.TME_BTIDES_AdvData import *
 
 ########################################
@@ -29,37 +27,49 @@ def print_uuid128s(device_bdaddr):
     # Process EIR_bdaddr_to_UUID128s results
     for list_type, str_UUID128s in eir_UUID128s_result:
         # Export BTIDES data first
-        UUID128List = str_UUID128s.split(",")
-        for i in range(len(UUID128List)):
-            UUID128List[i] = add_dashes_to_UUID128(UUID128List[i])
+        if(str_UUID128s != ""):
+            UUID128List = str_UUID128s.split(",")
+            for i in range(len(UUID128List)):
+                UUID128List[i] = add_dashes_to_UUID128(UUID128List[i])
+        else:
+            UUID128List = []
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
         data = {"length": length, "UUID128List": UUID128List}
         BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
 
         # Then human UI output
-        str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
-        for uuid128 in str_UUID128s_list:
-            uuid128 = uuid128.strip().lower()
-            dashed_uuid128 = add_dashes_to_UUID128(uuid128)
-            print(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
+        if(str_UUID128s == ""):
+            print("\t\tEmpty list present")
+        else:
+            str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
+            for uuid128 in str_UUID128s_list:
+                uuid128 = uuid128.strip().lower()
+                dashed_uuid128 = add_dashes_to_UUID128(uuid128)
+                print(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
         print("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID128s)")
 
     # Process LE_bdaddr_to_UUID128s results
     for bdaddr_random, le_evt_type, list_type, str_UUID128s in le_UUID128s_result:
         # Export BTIDES data first
-        UUID128List = str_UUID128s.split(",")
-        for i in range(len(UUID128List)):
-            UUID128List[i] = add_dashes_to_UUID128(UUID128List[i])
+        if(str_UUID128s != ""):
+            UUID128List = str_UUID128s.split(",")
+            for i in range(len(UUID128List)):
+                UUID128List[i] = add_dashes_to_UUID128(UUID128List[i])
+        else:
+            UUID128List = []
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
         data = {"length": length, "UUID128List": UUID128List}
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, list_type, data)
 
         # Then human UI output
-        str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
-        for uuid128 in str_UUID128s_list:
-            uuid128 = uuid128.strip().lower()
-            dashed_uuid128 = add_dashes_to_UUID128(uuid128)
-            print(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
+        if(str_UUID128s == ""):
+            print("\t\tEmpty list present")
+        else:
+            str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
+            for uuid128 in str_UUID128s_list:
+                uuid128 = uuid128.strip().lower()
+                dashed_uuid128 = add_dashes_to_UUID128(uuid128)
+                print(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
         print(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
         print(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 

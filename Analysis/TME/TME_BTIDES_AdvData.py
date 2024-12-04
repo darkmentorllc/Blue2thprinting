@@ -101,9 +101,9 @@ def ff_Flags(data):
 def ff_UUID16Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID16List": data["UUID16List"]}
     if(verbose_BTIDES):
-        if(list_type == type_AdvData_IncompleteName):
+        if(list_type == type_AdvData_UUID16ListIncomplete):
             obj["type_str"] = "UUID16ListIncomplete"
-        elif(list_type == type_AdvData_CompleteName):
+        elif(list_type == type_AdvData_UUID16ListComplete):
             obj["type_str"] = "UUID16ListComplete"
     return obj
 
@@ -111,9 +111,9 @@ def ff_UUID16Lists(list_type, data):
 def ff_UUID32Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID32List": data["UUID32List"]}
     if(verbose_BTIDES):
-        if(list_type == type_AdvData_IncompleteName):
+        if(list_type == type_AdvData_UUID32ListIncomplete):
             obj["type_str"] = "UUID32ListIncomplete"
-        elif(list_type == type_AdvData_CompleteName):
+        elif(list_type == type_AdvData_UUID32ListComplete):
             obj["type_str"] = "UUID32ListComplete"
     return obj
 
@@ -121,9 +121,9 @@ def ff_UUID32Lists(list_type, data):
 def ff_UUID128Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID128List": data["UUID128List"]}
     if(verbose_BTIDES):
-        if(list_type == type_AdvData_IncompleteName):
+        if(list_type == type_AdvData_UUID128ListIncomplete):
             obj["type_str"] = "UUID128ListIncomplete"
-        elif(list_type == type_AdvData_CompleteName):
+        elif(list_type == type_AdvData_UUID128ListComplete):
             obj["type_str"] = "UUID128ListComplete"
     return obj
 
@@ -357,7 +357,6 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_UUID128ServiceData):
         return ff_UUID128ServiceData(data)
-
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)

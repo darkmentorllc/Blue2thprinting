@@ -13,6 +13,7 @@ from TME.TME_stats import *
 from TME.TME_AdvChan import *
 from TME.TME_names import *
 from TME.TME_UUID16 import *
+from TME.TME_UUID32 import *
 from TME.TME_UUID128 import *
 from TME.TME_EIR import *
 from TME.TME_GATT import *
@@ -203,6 +204,7 @@ def main():
         print_device_names(bdaddr, nametype)
         print_uuid16s(bdaddr)
         print_service_solicit_uuid16s(bdaddr)
+        print_uuid32s(bdaddr)
         print_uuid128s(bdaddr)
         print_service_solicit_uuid128s(bdaddr)
         print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
