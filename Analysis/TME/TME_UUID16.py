@@ -90,6 +90,7 @@ def print_uuid16s(device_bdaddr):
                 gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
                 protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
                 company_by_uuid16 = get_company_by_uuid16(uuid16)
+                # TODO: Create a function that looks up a more-specific name for a service given a company ID
                 if(service_by_uuid16 != "Unknown"):
                     print(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
                 elif(gatt_service_by_uuid16 != "Unknown"):
@@ -128,6 +129,7 @@ def print_service_solicit_uuid16s(device_bdaddr):
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
             company_by_uuid16 = get_company_by_uuid16(uuid16)
+            # TODO: Create a function that looks up a more-specific name for a service given a company ID
             if(service_by_uuid16 != "Unknown"):
                 print(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
             elif(gatt_service_by_uuid16 != "Unknown"):
@@ -161,10 +163,12 @@ def print_uuid16_service_data(device_bdaddr):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID16ServiceData, data)
 
         # Then human UI output
+        # Lookup the UUID16 and see if it matches any well-known UUID16s
         service_by_uuid16 = get_uuid16_service_string(UUID16_hex_str)
         gatt_service_by_uuid16 = get_uuid16_gatt_service_string(UUID16_hex_str)
         protocol_by_uuid16 = get_uuid16_protocol_string(UUID16_hex_str)
         company_by_uuid16 = get_company_by_uuid16(UUID16_hex_str)
+        # TODO: Create a function that looks up a more-specific name for a service given a company ID
         if(service_by_uuid16 != "Unknown"):
             print(f"\t\tUUID16 {UUID16_hex_str} (Service ID: {service_by_uuid16})")
         elif(gatt_service_by_uuid16 != "Unknown"):

@@ -202,11 +202,12 @@ def main():
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
         print_device_names(bdaddr, nametype)
-        print_uuid16s(bdaddr)
-        print_uuid16_service_data(bdaddr)
+        print_uuid16s(bdaddr)                               # Includes BTIDES export
+        print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
         print_service_solicit_uuid16s(bdaddr)
-        print_uuid32s(bdaddr)
-        print_uuid128s(bdaddr)
+        print_uuid32s(bdaddr)                               # Includes BTIDES export
+        print_uuid32_service_data(bdaddr)
+        print_uuid128s(bdaddr)                              # Includes BTIDES export
         print_service_solicit_uuid128s(bdaddr)
         print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
         print_flags(bdaddr)                                 # Includes BTIDES export
