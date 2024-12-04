@@ -652,13 +652,11 @@ def parse_HCIArray(entry):
 
 def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
     attribute_handle = att_handle_entry["handle"]
-    UUID128 = att_handle_entry["UUID"]
+    UUID128 = att_handle_entry["UUID"].replace('-','')
     if(len(UUID128) == 4):
-        UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-    values = ()
+        UUID128 = f"0000{UUID128}00001000800000805f9b34fb" # Convert it to a full UUID128 based on base UUID
+    values = (device_bdaddr_type, bdaddr, attribute_handle, UUID128)
     insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {attribute_handle}, '{UUID128}');"
-    #print(insert2)
     execute_insert(insert, values)
 
 def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
@@ -702,11 +700,22 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
         UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
     values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
     insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES ({device_bdaddr_type}, '{bdaddr}', {service_type}, {begin_handle}, {end_handle}, '{UUID128}');"
-    #print(insert2)
     execute_insert(insert, values)
 
-    #TODO: Next comes embedded characteristic parsing
+    # Now insert any characteristics
+    if("characteristics" in gatt_service_entry.keys()):
+        char_array = gatt_service_entry["characteristics"]
+        for char in char_array:
+            declaration_handle = char["handle"]
+            char_properties = char["properties"]
+            char_value_handle = char["value_handle"]
+            UUID128 = char["value_uuid"].replace('-','')
+            if(UUID128 == 4):
+                #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
+                UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
+            values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
+            insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+            execute_insert(insert, values)
 
 def parse_GATTArray(entry):
     #print(json.dumps(entry, indent=2))
@@ -744,8 +753,6 @@ def progress_update(total, count):
 # THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY ACID!
 # SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
 # OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
-
-
 
 def main():
     global verbose_print

@@ -203,6 +203,9 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
     declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID128) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
+    for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
+        data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID128}
+        BTIDES_export_GATT_Characteristics(bdaddr, device_bdaddr_type, data)
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_values_result = execute_query(query)
