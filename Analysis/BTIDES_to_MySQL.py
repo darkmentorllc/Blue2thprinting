@@ -686,36 +686,40 @@ def parse_ATTArray(entry):
 ###################################
 
 def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
-    if(gatt_service_entry["utype"] == "2800"):
-        service_type = 0
-    elif(gatt_service_entry["utype"] == "2801"):
-        service_type = 1
-    else:
-        print("It shouldn't be possible to get here, due to schema validation. Code needs to be debugged. Exiting.")
-        exit(-1)
-    begin_handle = gatt_service_entry["begin_handle"]
-    end_handle = gatt_service_entry["end_handle"]
-    UUID128 = gatt_service_entry["UUID"]
-    if(len(UUID128) == 4):
-        UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-    values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
-    insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
-    execute_insert(insert, values)
+    # Skip inserting the service itself if it's designated a placeholder
+    if("placeholder_entry" not in gatt_service_entry.keys()):
+        if(gatt_service_entry["utype"] == "2800"):
+            service_type = 0
+        elif(gatt_service_entry["utype"] == "2801"):
+            service_type = 1
+        else:
+            print("It shouldn't be possible to get here, due to schema validation. Code needs to be debugged. Exiting.")
+            exit(-1)
+        begin_handle = gatt_service_entry["begin_handle"]
+        end_handle = gatt_service_entry["end_handle"]
+        UUID128 = gatt_service_entry["UUID"]
+        if(len(UUID128) == 4):
+            UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
+        values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
+        insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+        execute_insert(insert, values)
 
     # Now insert any characteristics
     if("characteristics" in gatt_service_entry.keys()):
         char_array = gatt_service_entry["characteristics"]
         for char in char_array:
-            declaration_handle = char["handle"]
-            char_properties = char["properties"]
-            char_value_handle = char["value_handle"]
-            UUID128 = char["value_uuid"].replace('-','')
-            if(UUID128 == 4):
-                #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
-                UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
-            values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
-            insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
-            execute_insert(insert, values)
+            # Skip inserting the characteristic itself if it's designated a placeholder
+            if("placeholder_entry" not in char.keys()):
+                declaration_handle = char["handle"]
+                char_properties = char["properties"]
+                char_value_handle = char["value_handle"]
+                UUID128 = char["value_uuid"].replace('-','')
+                if(UUID128 == 4):
+                    #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
+                    UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
+                values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
+                insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+                execute_insert(insert, values)
 
 def parse_GATTArray(entry):
     #print(json.dumps(entry, indent=2))
