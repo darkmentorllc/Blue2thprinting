@@ -286,7 +286,7 @@ def get_bdaddr_type(bdaddr, random):
 
 # Function to get the company name by UUID16 from UUID16_to_company table
 def get_company_by_uuid16(uuid16):
-    company_query = f"SELECT company_name FROM UUID16_to_company WHERE str_UUID16_CID = '{uuid16.strip()}'"
+    company_query = f"SELECT company_name FROM UUID16_to_company WHERE str_UUID16_CID = '0x{uuid16.strip()}'"
     result = execute_query(company_query)
     return result[0][0] if result else "Unknown"
 

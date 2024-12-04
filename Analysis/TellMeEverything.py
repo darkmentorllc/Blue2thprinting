@@ -203,6 +203,7 @@ def main():
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
         print_device_names(bdaddr, nametype)
         print_uuid16s(bdaddr)
+        print_uuid16_service_data(bdaddr)
         print_service_solicit_uuid16s(bdaddr)
         print_uuid32s(bdaddr)
         print_uuid128s(bdaddr)

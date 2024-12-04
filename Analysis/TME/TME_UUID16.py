@@ -108,7 +108,7 @@ def print_uuid16s(device_bdaddr):
 
     print("")
 
-# Function to print UUID16s for a given device_bdaddr
+# Function to print UUID16s service solicitation data for a given device_bdaddr
 def print_service_solicit_uuid16s(device_bdaddr):
     le_uuid16s_query = f"SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE device_bdaddr = '{device_bdaddr}'"
     le_uuid16s_result = execute_query(le_uuid16s_query)
@@ -143,5 +143,44 @@ def print_service_solicit_uuid16s(device_bdaddr):
 
     if(len(le_uuid16s_result) == 0):
         print("\tNo Service Solicit UUID16s found.")
+
+    print("")
+
+# Function to print UUID16s service data for a given device_bdaddr
+def print_uuid16_service_data(device_bdaddr):
+    le_uuid16_service_data_query = f"SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE device_bdaddr = '{device_bdaddr}'"
+    le_uuid16_service_data_result = execute_query(le_uuid16_service_data_query)
+
+    if(len(le_uuid16_service_data_result) != 0):
+        print("\tUUID16 service data found:")
+
+    for bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str in le_uuid16_service_data_result:
+        # Export BTIDES data first
+        length = 3 + int(len(service_data_hex_str) / 2) # 1 byte for opcode + 2 bytes for UUID16 + half as many bytes as there are hex nibble characters
+        data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID16ServiceData, data)
+
+        # Then human UI output
+        service_by_uuid16 = get_uuid16_service_string(UUID16_hex_str)
+        gatt_service_by_uuid16 = get_uuid16_gatt_service_string(UUID16_hex_str)
+        protocol_by_uuid16 = get_uuid16_protocol_string(UUID16_hex_str)
+        company_by_uuid16 = get_company_by_uuid16(UUID16_hex_str)
+        if(service_by_uuid16 != "Unknown"):
+            print(f"\t\tUUID16 {UUID16_hex_str} (Service ID: {service_by_uuid16})")
+        elif(gatt_service_by_uuid16 != "Unknown"):
+            print(f"\t\tUUID16 {UUID16_hex_str} (GATT Service ID: {gatt_service_by_uuid16})")
+        elif(protocol_by_uuid16 != "Unknown"):
+            print(f"\t\tUUID16 {UUID16_hex_str} (Protocol ID: {protocol_by_uuid16})")
+        elif(company_by_uuid16 != "Unknown"):
+            print(f"\t\tUUID16 {UUID16_hex_str} (Company ID: {company_by_uuid16})")
+        else:
+            print(f"\t\tUUID16 {UUID16_hex_str} (No matches)")
+        print(f"\t\tRaw service data: {service_data_hex_str}")
+
+        print(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+    if(len(le_uuid16_service_data_result) == 0):
+        print("\tNo UUID16 service data found.")
 
     print("")
