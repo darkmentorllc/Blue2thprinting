@@ -75,3 +75,8 @@ uuid16_service_names = {}
 #########################################
 BTIDES_JSON = []
 verbose_BTIDES = True
+
+#########################################
+# Verbose printing
+#########################################
+verbose_print = False

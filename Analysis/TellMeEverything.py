@@ -17,6 +17,7 @@ from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
+from TME.TME_glob import verbose_print
 
 ########################################
 # MAIN #################################
@@ -24,8 +25,10 @@ from TME.TME_trackability import *
 
 # Main function to handle command line arguments
 def main():
+    global verbose_print
     parser = argparse.ArgumentParser(description='Query device names from MySQL tables.')
     parser.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
+    parser.add_argument('--verbose', action='store_true',required=False, help='Show explicit data-not-found output.')
     parser.add_argument('--bdaddr', type=str, required=False, help='Device bdaddr value.')
     parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     parser.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
@@ -45,6 +48,7 @@ def main():
 
     args = parser.parse_args()
     out_filename = args.output
+    TME.TME_glob.verbose_print = args.verbose
     bdaddr = args.bdaddr
     bdaddrregex = args.bdaddrregex
     nametype = 0 # Default to non-random

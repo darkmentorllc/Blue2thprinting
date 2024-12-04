@@ -19,26 +19,28 @@ def print_transmit_power(bdaddr, nametype):
 
     eir_query = f"SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
+#    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype}"
+    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
+    le_result = execute_query(le_query)
+
+    if (len(eir_result)== 0 and len(le_result) == 0):
+        vprint("\tNo transmit power found.")
+        return
+
     for (device_tx_power,) in eir_result:
         print(f"\tTransmit Power: {device_tx_power}dB")
-        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_tx_power)")
+        vprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_tx_power)")
 
         data = {"length": 2, "tx_power": device_tx_power}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_TxPower, data)
 
-#    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype}"
-    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
-    le_result = execute_query(le_query)
     for device_tx_power, random, le_evt_type in le_result:
         print(f"\tTransmit Power: {device_tx_power}dB")
-        print(f"\t\tIn BT LE Data (LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
         data = {"length": 2, "tx_power": device_tx_power}
         BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_TxPower, data)
-
-    if (len(eir_result)== 0 and len(le_result) == 0):
-        print("\tNo transmit power found.")
 
     print("")
 
@@ -51,6 +53,15 @@ def print_flags(bdaddr):
 
     eir_query = f"SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
+    le_query = f"SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
+    le_result = execute_query(le_query)
+
+    if (len(eir_result) == 0 and len(le_result) == 0):
+        vprint("\tNo flags found.")
+        return
+    else:
+        print("\tFlags found:")
+
     for (le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in eir_result:
         print(f"\tIn BT Classic Data (EIR_bdaddr_to_flags2)")
         print(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
@@ -63,8 +74,6 @@ def print_flags(bdaddr):
         data = {"length": 2, "flags_hex_str": flags_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_Flags, data)
 
-    le_query = f"SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
-    le_result = execute_query(le_query)
     for (bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in le_result:
         print(f"\tIn BLE Data (LE_bdaddr_to_flags2)")
         print(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
@@ -76,9 +85,6 @@ def print_flags(bdaddr):
         flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
         data = {"length": 2, "flags_hex_str": flags_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_Flags, data)
-
-    if (len(eir_result) == 0 and len(le_result) == 0):
-        print("\tNo flags found.")
 
     print("")
 
@@ -122,7 +128,7 @@ def print_manufacturer_data(bdaddr):
         # TODO: DELETEME? I don't think there can be BT classic iBeacons can there?
         if({BT_CID_to_company_name(device_BT_CID)} == "Apple, Inc." and manufacturer_specific_data[0:3] == "0215"):
             print(f"\t\tApple iBeacon:")
-        print(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_MSD)")
+        vprint(f"\t\t\tIn BT Classic Data (EIR_bdaddr_to_MSD)")
 
     for le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data in le_result:
         print(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))

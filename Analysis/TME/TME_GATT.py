@@ -242,7 +242,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     for handle, in GATT_all_known_handles_result:
         service_match_dict[handle] = 0
 
-    if(len(GATT_services_result) != 0):
+    if(len(GATT_services_result) == 0):
+        vprint("\tNo GATT Information found.")
+        return
+    else:
         print("\tGATT Information:")
 
     unknown_UUID128_hash = {}
@@ -323,8 +326,6 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
                     characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
-
-
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         print(f"\n\t\tGATTPrint:")
@@ -351,6 +352,4 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             else:
                 print()
 
-    if(len(GATT_services_result) == 0):
-        print("\tNo GATT Information found.")
-        print("")
+    print("")

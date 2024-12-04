@@ -91,7 +91,10 @@ def print_BTC_2thprint(bdaddr):
     name_query = f"SELECT device_name FROM BTC2th_LMP_name_res WHERE device_bdaddr = '{bdaddr}'"
     name_result = execute_query(name_query)
 
-    if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
+    if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
+        vprint("\tNo BTC 2thprint Info found.")
+        return
+    else:
         print("\tBTC 2thprint Info:")
 
     for lmp_version, lmp_sub_version, device_BT_CID in version_result:
@@ -124,8 +127,5 @@ def print_BTC_2thprint(bdaddr):
             for page, features in features_result:
                 print("\t\t\"features\",\"0x%016x\"" % features)
                 file.write("\"features\",\"0x%016x\"\n" % features)
-
-    if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
-        print("\tNo BTC 2thprint Info found.")
 
     print("")

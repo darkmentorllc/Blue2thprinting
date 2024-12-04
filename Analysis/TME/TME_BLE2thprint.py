@@ -91,7 +91,10 @@ def print_BLE_2thprint(bdaddr):
     unknown_query = f"SELECT device_bdaddr_type, unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = '{bdaddr}'"
     unknown_result = execute_query(unknown_query)
 
-    if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
+    if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
+        vprint("\tNo BLE 2thprint Info found.")
+        return
+    else:
         print("\tBLE 2thprint Info:")
 
     ll_ctrl_pdu_opcodes = {9: "LL_FEATURE_RSP", 14: "LL_PERIPHERAL_FEATURE_REQ", 18: "LL_PING_REQ", 20: "LL_LENGTH_REQ", 21: "LL_LENGTH_RSP", 22: "LL_PHY_REQ", 23: "LL_PHY_RSP"}
@@ -170,8 +173,5 @@ def print_BLE_2thprint(bdaddr):
             for ping_rsp in ping_result:
                 print(f"\t\t\"ll_ping_rsp\",\"1\"")
                 file.write(f"\"ll_ping_rsp\",\"1\"\n")
-
-    if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
-        print("\tNo BLE 2thprint Info found.")
 
     print("")

@@ -37,6 +37,9 @@ def execute_query(query):
 # Helpers
 ########################################
 
+def vprint(fmt):
+    if(TME.TME_glob.verbose_print): print(fmt)
+
 # Use the UUID16 names mapping to get the protocol ID
 def get_uuid16_protocol_string(uuid16):
     return TME.TME_glob.uuid16_protocol_names.get(int(uuid16.strip(),16), "Unknown")
@@ -425,7 +428,7 @@ def print_appearance(bdaddr, nametype):
 
         # Then human UI output
         print(f"\tAppearance: {appearance_uint16_to_string(appearance)}")
-        print(f"\t\tIn BT LE Data (LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     if (len(le_result) == 0):
@@ -512,7 +515,10 @@ def print_class_of_device(bdaddr):
     le_query = f"SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'" 
     le_result = execute_query(le_query)
 
-    if (len(eir_result) != 0 or len(le_result) != 0):
+    if (len(eir_result)== 0 and len(le_result) == 0):
+        vprint("\tNo Class of Device Data found.")
+        return
+    else:
         print("\tClass of Device Data:")
 
     for (class_of_device,) in eir_result:
@@ -537,12 +543,9 @@ def print_class_of_device(bdaddr):
         # Then human UI output
         print(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
-        print(f"\t\tIn BT LE Data (LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         #DELETEME? Copy/paste error? - find_nameprint_match(name)
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-    if (len(eir_result)== 0 and len(le_result) == 0):
-        print("\tNo Class of Device Data found.")
 
     print("")
     
@@ -558,6 +561,17 @@ def print_device_names(bdaddr, nametype):
     # Query for EIR_bdaddr_to_name table
     eir_query = f"SELECT device_name_type, device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
+    rsp_result = execute_query(rsp_query)
+    # Query for LE_bdaddr_to_name2 table
+    le_query = f"SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
+    le_result = execute_query(le_query)
+
+    if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
+        vprint("\tNo Names found.")
+        return
+
     for device_name_type, device_name in eir_result:
         print(f"\tDeviceName: {device_name}")
         print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
@@ -569,21 +583,15 @@ def print_device_names(bdaddr, nametype):
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, device_name_type, data)
 
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    rsp_result = execute_query(rsp_query)
     for device_name, in rsp_result:
         print(f"\tDeviceName: {device_name}")
         print("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
-    # Query for LE_bdaddr_to_name2 table
-    le_query = f"SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
-    le_result = execute_query(le_query)
     for bdaddr_random, le_evt_type, device_name_type, device_name in le_result:
         print(f"\tDeviceName: {device_name}")
-        print(f"\t\tIn BT LE Data (LE_bdaddr_to_name2), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name2), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
@@ -592,8 +600,5 @@ def print_device_names(bdaddr, nametype):
         name_hex_str = ''.join(format(byte, '02x') for byte in byte_data)
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, device_name_type, data)
-
-    if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
-        print("\tNo Names found.")
 
     print("")

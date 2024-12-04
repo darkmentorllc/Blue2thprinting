@@ -21,7 +21,10 @@ def print_uuid32s(device_bdaddr):
     le_uuid32s_query = f"SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE device_bdaddr = '{device_bdaddr}'"
     le_uuid32s_result = execute_query(le_uuid32s_query)
 
-    if(len(eir_uuid32s_result) != 0 or len(le_uuid32s_result) != 0):
+    if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
+        vprint("\tNo UUID32s found.")
+        return
+    else:
         print("\tUUID32s found:")
 
     # Process EIR_bdaddr_to_UUID32s results
@@ -63,7 +66,7 @@ def print_uuid32s(device_bdaddr):
             else:
                 print(f"\t\tUUID32 {uuid32} (No matches)")
             '''
-        print("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID32s)")
+        vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID32s)")
 
     # Process LE_bdaddr_to_UUID32s results
     for bdaddr_random, le_evt_type, list_type, str_UUID32s in le_uuid32s_result:
@@ -103,11 +106,8 @@ def print_uuid32s(device_bdaddr):
                 print(f"\t\tUUID32 {uuid32} (No matches)")
             '''
 
-        print(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-    if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
-        print("\tNo UUID32s found.")
 
     print("")
 
@@ -116,7 +116,10 @@ def print_service_solicit_uuid32s(device_bdaddr):
     le_uuid32s_query = f"SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE device_bdaddr = '{device_bdaddr}'"
     le_uuid32s_result = execute_query(le_uuid32s_query)
 
-    if(len(le_uuid32s_result) != 0):
+    if(len(le_uuid32s_result) == 0):
+        vprint("\tNo Service Solicit UUID32s found.")
+        return
+    else:
         print("\tService solicit UUID32s found:")
 
     # Process LE_bdaddr_to_UUID32s results
@@ -146,11 +149,8 @@ def print_service_solicit_uuid32s(device_bdaddr):
             else:
                 print(f"\t\tUUID32 {uuid32} (No matches)")
             '''
-        print(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-    if(len(le_uuid32s_result) == 0):
-        print("\tNo Service Solicit UUID32s found.")
 
     print("")
 
@@ -159,7 +159,10 @@ def print_uuid32_service_data(device_bdaddr):
     le_uuid32_service_data_query = f"SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE device_bdaddr = '{device_bdaddr}'"
     le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query)
 
-    if(len(le_uuid32_service_data_result) != 0):
+    if(len(le_uuid32_service_data_result) == 0):
+        vprint("\tNo UUID32 service data found.")
+        return
+    else:
         print("\tUUID32 service data found:")
 
     for bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str in le_uuid32_service_data_result:
@@ -191,10 +194,7 @@ def print_uuid32_service_data(device_bdaddr):
 
         print(f"\t\tRaw service data: {service_data_hex_str}")
 
-        print(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-    if(len(le_uuid32_service_data_result) == 0):
-        print("\tNo UUID32 service data found.")
 
     print("")

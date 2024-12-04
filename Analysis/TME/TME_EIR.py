@@ -15,7 +15,10 @@ def print_classic_EIR_CID_info(bdaddr):
     eir_query = f"SELECT vendor_id_source, vendor_id, product_id, product_version FROM EIR_bdaddr_to_DevID WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
 
-    if (len(eir_result) != 0):
+    if (len(eir_result) == 0):
+        vprint("\tNo BTC Extended Inquiry Result Device info.")
+        return
+    else:
         print("\tBTC Extended Inquiry Result Device info:")
     
     for vendor_id_source, vendor_id, product_id, product_version in eir_result:
@@ -30,8 +33,5 @@ def print_classic_EIR_CID_info(bdaddr):
 
         data = {"length": 9, "vendor_id_source": vendor_id_source, "vendor_id": vendor_id, "product_id": product_id, "version": product_version}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_DeviceID, data)
-
-    if (len(eir_result) == 0):
-        print("\tNo BTC Extended Inquiry Result Device info.")
 
     print("")
