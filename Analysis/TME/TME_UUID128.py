@@ -103,6 +103,13 @@ def print_uuid128s_service_solicit(device_bdaddr):
 
     print("")
 
+# PoC for how this could be done. In practice the interpretation for the data needs to be encoded into a separate file, not hardcoded in the code
+def print_service_data_interpretation(UUID128, service_data_hex_str, indent):
+    uuid128_no_dashes = UUID128.lower().replace('-','')
+    if(uuid128_no_dashes == "9ec5d2b88f514dea9cd3f3dea220b5e0"): # Taser example
+        serial = get_utf8_string_from_hex_string(service_data_hex_str)
+        print(f"{indent}Possible interpretation: Serial Number: {serial}")
+
 # Function to print UUID128s service data for a given device_bdaddr
 def print_uuid128_service_data(device_bdaddr):
     le_uuid128_service_data_query = f"SELECT bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID128_service_data WHERE device_bdaddr = '{device_bdaddr}'"
@@ -122,8 +129,9 @@ def print_uuid128_service_data(device_bdaddr):
         custom_uuid128 = get_custom_uuid128_string(UUID128_hex_str)
         print(f"\t\tUUID128 {dashed_uuid128} ({custom_uuid128})")
         print(f"\t\tRaw service data: {service_data_hex_str}")
+        print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, "\t\t")
 
-        print(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        print(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     if(len(le_uuid128_service_data_result) == 0):

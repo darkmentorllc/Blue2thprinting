@@ -24,6 +24,7 @@ type_AdvData_ClassOfDevice                      = 13
 type_AdvData_DeviceID                           = 16
 type_AdvData_PeripheralConnectionIntervalRange  = 18
 type_AdvData_UUID16ServiceData                  = 22
+type_AdvData_Appearance                         = 25
 type_AdvData_UUID32ServiceData                  = 32
 type_AdvData_UUID128ServiceData                 = 33
 type_AdvData_MSD                                = 255
@@ -176,6 +177,13 @@ def ff_UUID16ServiceData(data):
         obj["type_str"] = "UUID16ServiceData"
     return obj
 
+# type 0x19
+def ff_Appearance(data):
+    obj = {"type": type_AdvData_Appearance, "length": data["length"], "appearance_hex_str": data["appearance_hex_str"]}
+    if(verbose_BTIDES):
+        obj["type_str"] = "Appearance"
+    return obj
+
 # type 0x20
 def ff_UUID32ServiceData(data):
     obj = {"type": type_AdvData_UUID32ServiceData, "length": data["length"], "UUID32": data["UUID32"], "service_data_hex_str": data["service_data_hex_str"]}
@@ -260,6 +268,12 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
         if(AdvDataArrayEntry["length"] == data["length"] and 
            AdvDataArrayEntry["conn_interval_min"] == data["conn_interval_min"] and
            AdvDataArrayEntry["conn_interval_max"] == data["conn_interval_max"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_Appearance):
+        if(AdvDataArrayEntry["length"] == data["length"] and 
+           AdvDataArrayEntry["appearance_hex_str"] == data["appearance_hex_str"]):
             return True
         else: return False
 
@@ -348,6 +362,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_PeripheralConnectionIntervalRange):
         return ff_PeripheralConnectionIntervalRange(data)
+
+    if(adv_data_type == type_AdvData_Appearance):
+        return ff_Appearance(data)
 
     if(adv_data_type == type_AdvData_UUID16ServiceData):
         return ff_UUID16ServiceData(data)

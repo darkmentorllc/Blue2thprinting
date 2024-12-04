@@ -6,6 +6,7 @@
 import mysql.connector
 import re
 import TME.TME_glob
+from TME.TME_BTIDES_AdvData import *
 
 ########################################
 # MYSQL specific
@@ -45,6 +46,9 @@ def get_uuid16_service_string(uuid16):
 
 def get_bt_spec_version_numbers_to_names(number):
     return TME.TME_glob.bt_spec_version_numbers_to_names.get(number, "Unknown")
+
+def get_utf8_string_from_hex_string(hex_str):
+    return bytes.fromhex(hex_str).decode('utf8')
 
 # Function to get the string representation of le_evt_type
 def get_le_event_type_string(le_evt_type):
@@ -412,6 +416,13 @@ def print_appearance(bdaddr, nametype):
     le_query = f"SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query)
     for appearance, random, le_evt_type in le_result:
+        # Export BTIDES data first
+        appearance_hex_str = f"{appearance:04x}"
+        length = 3 # 1 byte for opcode + 2 bytes for Appearance
+        data = {"length": length, "appearance_hex_str": appearance_hex_str}
+        BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_Appearance, data)
+
+        # Then human UI output
         print(f"\tAppearance: {appearance_uint16_to_string(appearance)}")
         print(f"\t\tIn BT LE Data (LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
@@ -492,7 +503,9 @@ def print_CoD_to_names(number):
 def print_class_of_device(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
+    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = '{bdaddr}'"
+    # FIXME: change to this in the future after reprocessing all data
+    #eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
 
     le_query = f"SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'" 
@@ -502,11 +515,25 @@ def print_class_of_device(bdaddr):
         print("\tClass of Device Data:")
 
     for (class_of_device,) in eir_result:
+        # Export BTIDES data first
+        CoD_hex_str = f"{class_of_device:06x}"
+        length = 4 # 1 byte for opcode + 3 bytes for CoD
+        data = {"length": length, "CoD_hex_str": CoD_hex_str}
+        BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_ClassOfDevice, data)
+
+        # Then human UI output
         print(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
         print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
 
     for bdaddr_random, le_evt_type, class_of_device in le_result:
+        # Export BTIDES data first
+        CoD_hex_str = f"{class_of_device:06x}"
+        length = 4 # 1 byte for opcode + 3 bytes for CoD
+        data = {"length": length, "CoD_hex_str": CoD_hex_str}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_ClassOfDevice, data)
+
+        # Then human UI output
         print(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
         print(f"\t\tIn BT LE Data (LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")

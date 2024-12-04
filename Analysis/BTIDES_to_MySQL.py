@@ -321,6 +321,22 @@ def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID16_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+# type 0x19
+def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
+    #print("import_AdvData_Appearance!")
+
+    appearance_int = int(leaf["appearance_hex_str"], 16)
+
+    le_evt_type = db_type
+    if(db_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, appearance_int)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_appearance (device_bdaddr, bdaddr_random, le_evt_type, appearance) VALUES (%s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
 # type 0x20
 def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
     #print("import_AdvData_UUID32ServiceData!")
@@ -434,6 +450,10 @@ def parse_AdvChanArray(entry):
                 if(has_known_AdvData_type(type_AdvData_PeripheralConnectionIntervalRange, AdvData)):
                     import_AdvData_PeripheralConnectionIntervalRange(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
+                # Appearance
+                if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
+                    import_AdvData_Appearance(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
                 # UUID16ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID16ServiceData, AdvData)):
                     import_AdvData_UUID16ServiceData(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
@@ -445,7 +465,6 @@ def parse_AdvChanArray(entry):
                 # UUID128ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID128ServiceData, AdvData)):
                     import_AdvData_UUID128ServiceData(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-
 
                 # Manufacturer-Specific Data
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):

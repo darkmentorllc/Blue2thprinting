@@ -212,9 +212,9 @@ def main():
         print_uuid128s_service_solicit(bdaddr)
         print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
         print_flags(bdaddr)                                 # Includes BTIDES export
-        print_appearance(bdaddr, nametype)
+        print_appearance(bdaddr, nametype)                  # Includes BTIDES export
         print_manufacturer_data(bdaddr)
-        print_class_of_device(bdaddr)
+        print_class_of_device(bdaddr)                       # Includes BTIDES export
         print_GATT_info(bdaddr, hideBLEScopedata)           # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export

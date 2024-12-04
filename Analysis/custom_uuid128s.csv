@@ -204,3 +204,6 @@
 "cbbfe0e1f7f3420684e084cbb3d09dfc","ASSOCIATED WITH: ADV_IND: Android TV Remote? () https://android-review.linaro.org/plugins/gitiles/platform/cts/+/8bb61c456cb5dcc0c1f48c7651c98679ca384dde%5E%21/"
 
 "4de17a0052cb11e6bdf40800200c9a66","ASSOCIATED WITH: BTC EIR: Android Auto Wireless Gateway (https://github.com/hkfuertes/AAGW/blob/efad8bfe9ab99a2be1a77d9d329a3520669d7557/app/src/main/java/net/mfuertes/aagw/gateway/connectivity/BluetoothProfileHandler.kt#L20)
+
+"9ec5d2b88f514dea9cd3f3dea220b5e0","ASSOCIATED WITH: ADV_IND: Taser/Axon UUID = ASCII string 'METROPOLISDEVICE')"
+"41584a414e5553425743444556494345","ASSOCIATED WITH: ADV_IND: Taser/Axon UUID = ASCII string 'AXJANUSBWCDEVICE' (Axon Janus Body-Worn-Camera)"
