@@ -114,7 +114,6 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                             if re.search(regex_pattern, ms_msd_name2):
                                 return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data in manufacturer_specific_data table)"
 
-
     # Else return an empty string to indicate we have no name or no match
     return ""
 

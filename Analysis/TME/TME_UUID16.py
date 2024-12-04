@@ -110,7 +110,7 @@ def print_uuid16s(device_bdaddr):
     print("")
 
 # Function to print UUID16s service solicitation data for a given device_bdaddr
-def print_service_solicit_uuid16s(device_bdaddr):
+def print_uuid16s_service_solicit(device_bdaddr):
     le_uuid16s_query = f"SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE device_bdaddr = '{device_bdaddr}'"
     le_uuid16s_result = execute_query(le_uuid16s_query)
 
