@@ -1,366 +1,392 @@
 {
-  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_GATT.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "BTIDES GATT semantic information data types",
-  "type": "object",
-  "properties": {
-    "GATTArray": {
-	"description": "Array of GATT Services",
-	"type": "array",
-	"items": {
-          "anyOf": [
-            {"$ref": "#/definitions/PrimaryService"},
-            {"$ref": "#/definitions/SecondaryService"}
-          ]
-	}
+  "$id" : "https://darkmentor.com/BTIDES_Schema/BTIDES_GATT.json",
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "description" : "BTIDES GATT semantic information data types",
+  "type" : "object",
+  "properties" : {
+    "GATTArray" : {
+      "description" : "Array of GATT Services",
+      "type" : "array",
+      "items" : {
+        "anyOf" : [ {
+          "$ref" : "#/definitions/PrimaryService"
+        }, {
+          "$ref" : "#/definitions/SecondaryService"
+        } ]
+      }
     }
   },
-  "definitions": {
-    "placeholder_entry": {
-	"description": "Optional field to indicate that the given service or characteristic is a placeholder to hold data lower down in the hierarchy, and the service or characteristic itself shouldn't be imported into storage like a database, or printed as if it's real data.",
-	"type": "boolean",
-	"const": true
+  "definitions" : {
+    "placeholder_entry" : {
+      "description" : "Optional field to indicate that the given service or characteristic is a placeholder to hold data lower down in the hierarchy, and the service or characteristic itself shouldn't be imported into storage like a database, or printed as if it's real data.",
+      "type" : "boolean",
+      "const" : true
     },
-    "PrimaryService": {
-      "type": "object",
-      "description": "Structure for GATT Primary Service (\"attribute type\" UUID always 0x2800). Use UUID for brevity, and type_str for readability.",
-      "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
-      "properties": {
-	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
-	"type_str": {
-		"description": "Optional field to make JSON instance more readable.",
-		"type": "string",
-		"const": "Primary Service"
-	},
-	"utype": {
-		"description": "UUID type hex string. Alternative to type\\_str for brevity.",
-		"type": "string",
-		"const": "2800"
-	},
-	"UUID": {"$ref": "BTIDES_base.json#/definitions/UUID"},
-	"begin_handle": {
-		"description": "2-byte ATT handle number. (Handle 0 is invalid.)",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"end_handle": {
-		"description": "2-byte ATT handle number. (Handle 0 is invalid.)",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"characteristics": {
-		"description": "*0 or more* Characteristics. While every service should technically have characteristics, this data may have been sourced in such a way that that information is not available.",
-		"type": "array",
-		"items": {"$ref": "#/definitions/Characteristic"}
-	}
+    "PrimaryService" : {
+      "type" : "object",
+      "description" : "Structure for GATT Primary Service (\"attribute type\" UUID always 0x2800). Use UUID for brevity, and type_str for readability.",
+      "required" : [ "utype", "UUID", "begin_handle", "end_handle" ],
+      "properties" : {
+        "placeholder_entry" : {
+          "$ref" : "#/definitions/placeholder_entry"
+        },
+        "type_str" : {
+          "description" : "Optional field to make JSON instance more readable.",
+          "type" : "string",
+          "const" : "Primary Service"
+        },
+        "utype" : {
+          "description" : "UUID type hex string. Alternative to type\\_str for brevity.",
+          "type" : "string",
+          "const" : "2800"
+        },
+        "UUID" : {
+          "$ref" : "BTIDES_base.json#/definitions/UUID"
+        },
+        "begin_handle" : {
+          "description" : "2-byte ATT handle number. (Handle 0 is invalid.)",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "end_handle" : {
+          "description" : "2-byte ATT handle number. (Handle 0 is invalid.)",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "characteristics" : {
+          "description" : "*0 or more* Characteristics. While every service should technically have characteristics, this data may have been sourced in such a way that that information is not available.",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Characteristic"
+          }
+        }
       }
     },
-    "SecondaryService": {
-      "type": "object",
-      "description": "Structure for GATT Secondary Service (\"attribute type\" UUID always 0x2801). Use UUID for brevity, and type_str for readability",
-      "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
-      "properties": {
-	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
-	"type_str": {
-		"description": "Optional field to make JSON instance more readable",
-		"type": "string",
-		"const": "Secondary Service"
-	},
-	"utype": {
-		"description": "UUID type hex string. Alternative to type\\_str for brevity.",
-		"type": "string",
-		"const": "2801"
-	},
-	"UUID": {"$ref": "BTIDES_base.json#/definitions/UUID"},
-	"begin_handle": {
-		"description": "2-byte ATT handle number. (Handle 0 is invalid.)",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"end_handle": {
-		"description": "2-byte ATT handle number. (Handle 0 is invalid.)",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"characteristics": {
-		"description": "*0 or more* Characteristics. While every service should technically have characteristics, this data may have been sourced in such a way that that information is not available.",
-		"type": "array",
-		"items": {"$ref": "#/definitions/Characteristic"}
-	}
+    "SecondaryService" : {
+      "type" : "object",
+      "description" : "Structure for GATT Secondary Service (\"attribute type\" UUID always 0x2801). Use UUID for brevity, and type_str for readability",
+      "required" : [ "utype", "UUID", "begin_handle", "end_handle" ],
+      "properties" : {
+        "placeholder_entry" : {
+          "$ref" : "#/definitions/placeholder_entry"
+        },
+        "type_str" : {
+          "description" : "Optional field to make JSON instance more readable",
+          "type" : "string",
+          "const" : "Secondary Service"
+        },
+        "utype" : {
+          "description" : "UUID type hex string. Alternative to type\\_str for brevity.",
+          "type" : "string",
+          "const" : "2801"
+        },
+        "UUID" : {
+          "$ref" : "BTIDES_base.json#/definitions/UUID"
+        },
+        "begin_handle" : {
+          "description" : "2-byte ATT handle number. (Handle 0 is invalid.)",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "end_handle" : {
+          "description" : "2-byte ATT handle number. (Handle 0 is invalid.)",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "characteristics" : {
+          "description" : "*0 or more* Characteristics. While every service should technically have characteristics, this data may have been sourced in such a way that that information is not available.",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Characteristic"
+          }
+        }
       }
     },
-    "Characteristic": {
-      "type": "object",
-      "description": "Structure for GATT Characteristic (\"attribute type\" UUID always 0x2803). Use UUID for brevity, and type_str for readability.",
-      "required": [ "handle", "properties", "value_handle", "value_uuid"],
-      "properties": {
-	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
-	"type_str": {
-		"description": "Optional field to make JSON instance more readable",
-		"type": "string",
-		"const": "Characteristic"
-	},
-	"utype": {
-		"description": "UUID type alternative to type\\_str for brevity.",
-		"type": "string",
-		"const": "2803"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"properties": {
-		"description": "1-byte \"Characteristic Properties\", which encodes characteristic permission and properties in bits.\n 0x01 (bit 0) = Broadcast\n 0x02 (bit 1) = Read\n 0x04 (bit 2) = Write without response\n 0x08 (bit 3) = Write (with response)\n 0x10 (bit 4) = Notify\n 0x20 (bit 5) = Indicate\n 0x04 (bit 6) = Authenticated signed writes\n 0x80 (bit 7) = Extended Properties Characteristic Descriptor should be present",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 255
-	},
-	"value_handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Value\" attribute, that this Characteristic points to.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"value_uuid": {"$ref": "BTIDES_base.json#/definitions/UUID"},
-	"char_value": {"$ref": "#/definitions/CharacteristicValue"},
-	"descriptors": {
-		"description": "Any of the optional Characteristic Descriptors which can be associated with a Characteristic.",
-		"type": "array",
-		"items": {
-			"anyOf": [
-				{"$ref": "#/definitions/Descriptor2900"},
-				{"$ref": "#/definitions/Descriptor2901"},
-				{"$ref": "#/definitions/Descriptor2902"},
-				{"$ref": "#/definitions/Descriptor2903"},
-				{"$ref": "#/definitions/Descriptor2904"},
-				{"$ref": "#/definitions/Descriptor2905"}
-			]
-		}
-	}
+    "Characteristic" : {
+      "type" : "object",
+      "description" : "Structure for GATT Characteristic (\"attribute type\" UUID always 0x2803). Use UUID for brevity, and type_str for readability.",
+      "required" : [ "handle", "properties", "value_handle", "value_uuid" ],
+      "properties" : {
+        "placeholder_entry" : {
+          "$ref" : "#/definitions/placeholder_entry"
+        },
+        "type_str" : {
+          "description" : "Optional field to make JSON instance more readable",
+          "type" : "string",
+          "const" : "Characteristic"
+        },
+        "utype" : {
+          "description" : "UUID type alternative to type\\_str for brevity.",
+          "type" : "string",
+          "const" : "2803"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "properties" : {
+          "description" : "1-byte \"Characteristic Properties\", which encodes characteristic permission and properties in bits.\n 0x01 (bit 0) = Broadcast\n 0x02 (bit 1) = Read\n 0x04 (bit 2) = Write without response\n 0x08 (bit 3) = Write (with response)\n 0x10 (bit 4) = Notify\n 0x20 (bit 5) = Indicate\n 0x04 (bit 6) = Authenticated signed writes\n 0x80 (bit 7) = Extended Properties Characteristic Descriptor should be present",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "value_handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Value\" attribute, that this Characteristic points to.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "value_uuid" : {
+          "$ref" : "BTIDES_base.json#/definitions/UUID"
+        },
+        "char_value" : {
+          "$ref" : "#/definitions/CharacteristicValue"
+        },
+        "descriptors" : {
+          "description" : "Any of the optional Characteristic Descriptors which can be associated with a Characteristic.",
+          "type" : "array",
+          "items" : {
+            "anyOf" : [ {
+              "$ref" : "#/definitions/Descriptor2900"
+            }, {
+              "$ref" : "#/definitions/Descriptor2901"
+            }, {
+              "$ref" : "#/definitions/Descriptor2902"
+            }, {
+              "$ref" : "#/definitions/Descriptor2903"
+            }, {
+              "$ref" : "#/definitions/Descriptor2904"
+            }, {
+              "$ref" : "#/definitions/Descriptor2905"
+            } ]
+          }
+        }
       }
     },
-    "CharacteristicValue": {
-      "type": "object",
-      "description": "Structure for GATT Characteristic (\"attribute type\" UUID always 0x2803). Optional io_array captures input/output seen to/from this Characteristic Value.",
-      "properties": {
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"uuid_hex_str": {
-		"$comment": "While it could be argued that it's redundant to include this UUID in both the Characteristic and the Characteristic Value, in reality the particular way that GATT is enumerated could mean you have the value for one field but not the other.\n E.g. if gatttool did a ATT\\_READ\\_BY\\_TYPE\\_REQ for type 0x2803 (Characteristic), and it succeeded, you would have it for the Characteristic level but not yet the Characteristic Value level. And gattool could then error out so it never gets further information.\n On the other hand, a tool could do a ATT\\_FIND\\_INFORMATION\\_REQ-based enumeration of all handles, and it would have the handle and this uuid\\_hex\\_str value (and it could furthermore infer some information about the enclosing Characteristic), but it wouldn't have *all* the Characteristic information. So for now, for flexibility I recommend keeping the information in both places, but making it optional here, to support the maximum types and strategies of data collection.",
-		"description": "2-byte UUID for this \"Characteristic Value\" attribute, as a hex string.",
-		"type": "string"
-	},
-	"io_array": {
-		"description": "This optional field is used if you want to capture a log of all the values you've seen for intput/output via reads, writes, notification, indication, or broadcast.",
-		"type": "array",
-		"items": {"$ref": "#/definitions/GATTIO"}
-	}
+    "CharacteristicValue" : {
+      "type" : "object",
+      "description" : "Structure for GATT Characteristic (\"attribute type\" UUID always 0x2803). Optional io_array captures input/output seen to/from this Characteristic Value.",
+      "properties" : {
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "uuid_hex_str" : {
+          "$comment" : "While it could be argued that it's redundant to include this UUID in both the Characteristic and the Characteristic Value, in reality the particular way that GATT is enumerated could mean you have the value for one field but not the other.\n E.g. if gatttool did a ATT\\_READ\\_BY\\_TYPE\\_REQ for type 0x2803 (Characteristic), and it succeeded, you would have it for the Characteristic level but not yet the Characteristic Value level. And gattool could then error out so it never gets further information.\n On the other hand, a tool could do a ATT\\_FIND\\_INFORMATION\\_REQ-based enumeration of all handles, and it would have the handle and this uuid\\_hex\\_str value (and it could furthermore infer some information about the enclosing Characteristic), but it wouldn't have *all* the Characteristic information. So for now, for flexibility I recommend keeping the information in both places, but making it optional here, to support the maximum types and strategies of data collection.",
+          "description" : "2-byte UUID for this \"Characteristic Value\" attribute, as a hex string.",
+          "type" : "string"
+        },
+        "io_array" : {
+          "description" : "This optional field is used if you want to capture a log of all the values you've seen for intput/output via reads, writes, notification, indication, or broadcast.",
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/GATTIO"
+          }
+        }
       }
     },
-    "GATTIO": {
-      "type": "object",
-      "description": "Structure for capturing GATT Input/Output.",
-      "required": [ "io_type", "value_hex_str" ],
-      "properties": {
-	"io_type_str": {
-		"description": "Optional field to make JSON more human-readable.",
-		"type": "string",
-		"enum": [ "Read", "Write with response", "Write without response", "Notification", "Indication"]
-	},
-	"io_type": {
-		"description": "What type of IO does this value correspond to? \n 0 = Read (e.g. via ATT\\_FIND\\_INFORMATION\\_REQ or ATT\\_READ\\_RSP or ATT\\_READ\\_BLOB\\_RSP) \n 1 = Write with notification (e.g. via ATT\\_WRITE\\_REQ)\n 2 = Write without notification (e.g. via ATT\\_WRITE\\_CMD)\n 3 = Notification (e.g. via ATT\\_HANDLE\\_VALUE\\_NTF)\n 4 = Indication (e.g. via ATT\\_HANDLE\\_VALUE\\_IND)",
-		"type": "integer",
-		"enum": [0, 1, 2, 3, 4]
-	},
-	"value_hex_str": {
-		"description": "The uninterpreted literal data seen, as a hex_str (i.e. least significant bytes 0x86 0x75 0x30 0x99 stored as string \"86753099\".",
-		"type": "string"
-	}
+    "GATTIO" : {
+      "type" : "object",
+      "description" : "Structure for capturing GATT Input/Output.",
+      "required" : [ "io_type", "value_hex_str" ],
+      "properties" : {
+        "io_type_str" : {
+          "description" : "Optional field to make JSON more human-readable.",
+          "type" : "string",
+          "enum" : [ "Read", "Write with response", "Write without response", "Notification", "Indication" ]
+        },
+        "io_type" : {
+          "description" : "What type of IO does this value correspond to? \n 0 = Read (e.g. via ATT\\_FIND\\_INFORMATION\\_REQ or ATT\\_READ\\_RSP or ATT\\_READ\\_BLOB\\_RSP) \n 1 = Write with notification (e.g. via ATT\\_WRITE\\_REQ)\n 2 = Write without notification (e.g. via ATT\\_WRITE\\_CMD)\n 3 = Notification (e.g. via ATT\\_HANDLE\\_VALUE\\_NTF)\n 4 = Indication (e.g. via ATT\\_HANDLE\\_VALUE\\_IND)",
+          "type" : "integer",
+          "enum" : [ 0, 1, 2, 3, 4 ]
+        },
+        "value_hex_str" : {
+          "description" : "The uninterpreted literal data seen, as a hex_str (i.e. least significant bytes 0x86 0x75 0x30 0x99 stored as string \"86753099\".",
+          "type" : "string"
+        }
       }
     },
-    "Descriptor2900": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Characteristic Extended Properties\" data type (\"attribute type\" UUID always 0x2900).",
-      "required": [ "UUID", "handle", "extended_properties" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2900"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic Extended Properties\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"extended_properties": {
-		"description": "1-byte \"Characteristic Properties\", which encodes characteristic permission and properties in bits.\n bit 0 = Reliable Write \n bit 1 = Writable Auxilaries.\n",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 255
-	}
+    "Descriptor2900" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Characteristic Extended Properties\" data type (\"attribute type\" UUID always 0x2900).",
+      "required" : [ "UUID", "handle", "extended_properties" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2900"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic Extended Properties\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "extended_properties" : {
+          "description" : "1-byte \"Characteristic Properties\", which encodes characteristic permission and properties in bits.\n bit 0 = Reliable Write \n bit 1 = Writable Auxilaries.\n",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        }
       }
     },
-    "Descriptor2901": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Characteristic User Description\" data type (\"attribute type\" UUID always 0x2901).",
-      "required": [ "UUID", "handle", "user_description" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2901"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic User Description\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"user_description": {
-		"description": "Human-readable string which describes the associated Characteristic to users (if so desired.)",
-		"type": "string"
-	}
+    "Descriptor2901" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Characteristic User Description\" data type (\"attribute type\" UUID always 0x2901).",
+      "required" : [ "UUID", "handle", "user_description" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2901"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic User Description\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "user_description" : {
+          "description" : "Human-readable string which describes the associated Characteristic to users (if so desired.)",
+          "type" : "string"
+        }
       }
     },
-    "Descriptor2902": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Client Characteristic Configuration\" data type (\"attribute type\" UUID always 0x2902).",
-      "required": [ "UUID", "handle", "config_bits" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2902"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Descriptor: Client Characteristic Configuration\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"config_bits": {
-		"description": "2-byte bit field read from or written to by the Client to view or control Server Notification and Indication status for this Characteristic. Only honored if the Characteristic properties also says it support Notification or Indication. \n bit 0 set = Notification enabled\n bit 1 set = Indication enabled",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	}
+    "Descriptor2902" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Client Characteristic Configuration\" data type (\"attribute type\" UUID always 0x2902).",
+      "required" : [ "UUID", "handle", "config_bits" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2902"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Descriptor: Client Characteristic Configuration\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "config_bits" : {
+          "description" : "2-byte bit field read from or written to by the Client to view or control Server Notification and Indication status for this Characteristic. Only honored if the Characteristic properties also says it support Notification or Indication. \n bit 0 set = Notification enabled\n bit 1 set = Indication enabled",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        }
       }
     },
-    "Descriptor2903": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Server Characteristic Configuration\" data type (\"attribute type\" UUID always 0x2903).",
-      "required": [ "UUID", "handle", "config_bits" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2903"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Server Characteristic Configuration\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"config_bits": {
-		"description": "2-byte bit field read from or written to by the Client to view or control Server Notification and Indication status for this Characteristic. Only honored if the Characteristic properties also says it support Broadcast. \n This Descriptor is shared by all clients (unlike Client Characteristic Configuration). \n If Broadcast is enabled, the value for this Characteristic is broadcast as part of the \"Service Data\" type in advertisements, if there is space in the advertisements. \n bit 0 set = Broadcast enabled",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	}
+    "Descriptor2903" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Server Characteristic Configuration\" data type (\"attribute type\" UUID always 0x2903).",
+      "required" : [ "UUID", "handle", "config_bits" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2903"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Server Characteristic Configuration\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "config_bits" : {
+          "description" : "2-byte bit field read from or written to by the Client to view or control Server Notification and Indication status for this Characteristic. Only honored if the Characteristic properties also says it support Broadcast. \n This Descriptor is shared by all clients (unlike Client Characteristic Configuration). \n If Broadcast is enabled, the value for this Characteristic is broadcast as part of the \"Service Data\" type in advertisements, if there is space in the advertisements. \n bit 0 set = Broadcast enabled",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        }
       }
     },
-    "Descriptor2904": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Characteristic Presentation Format\" data type (\"attribute type\" UUID always 0x2904).",
-      "required": [ "UUID", "handle", "format", "exponent", "unit", "name_space", "description" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2904"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Descriptor: Client Characteristic Configuration\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"format": {
-		"description": "1-byte \"Format\" field from spec.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 255
-	},
-	"exponent": {
-		"description": "1-byte \"Exponent\" field from spec.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 255
-	},
-	"unit": {
-		"description": "2-byte \"Unit\" field from spec.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	},
-	"name_space": {
-		"description": "1-byte \"Name Space\" field from spec.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 255
-	},
-	"description": {
-		"description": "2-byte \"Description\" field from spec.",
-		"type": "integer",
-                "minimum": 0,
-                "maximum": 65535
-	}
+    "Descriptor2904" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Characteristic Presentation Format\" data type (\"attribute type\" UUID always 0x2904).",
+      "required" : [ "UUID", "handle", "format", "exponent", "unit", "name_space", "description" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2904"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Descriptor: Client Characteristic Configuration\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "format" : {
+          "description" : "1-byte \"Format\" field from spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "exponent" : {
+          "description" : "1-byte \"Exponent\" field from spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "unit" : {
+          "description" : "2-byte \"Unit\" field from spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "name_space" : {
+          "description" : "1-byte \"Name Space\" field from spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "description" : {
+          "description" : "2-byte \"Description\" field from spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        }
       }
     },
-    "Descriptor2905": {
-      "type": "object",
-      "$comment": "Trying to save a little space on the name for this.",
-      "description": "\"Characteristic Descriptor: Characteristic Aggregate Format\" data type (\"attribute type\" UUID always 0x2905).",
-      "required": [ "UUID", "handle", "attribute_handles_list" ],
-      "properties": {
-	"UUID": {
-		"description": "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
-		"type": "string",
-		"const": "2905"
-	},
-	"handle": {
-		"description": "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic Aggregate Format\" attribute itself.",
-		"type": "integer",
-                "minimum": 1,
-                "maximum": 65535
-	},
-	"attribute_handles_list": {
-		"description": "From spec: \"List of Attribute Handles for the Characteristic Presenta- tion Format Declarations\".",
-		"type": "array",
-		"items": {
-			"type": "integer",
-	                "minimum": 1,
-	                "maximum": 65535
-		}
-	}
+    "Descriptor2905" : {
+      "type" : "object",
+      "$comment" : "Trying to save a little space on the name for this.",
+      "description" : "\"Characteristic Descriptor: Characteristic Aggregate Format\" data type (\"attribute type\" UUID always 0x2905).",
+      "required" : [ "UUID", "handle", "attribute_handles_list" ],
+      "properties" : {
+        "UUID" : {
+          "description" : "This is just here to make it more clear which object this in the Characteristic->descriptors array.",
+          "type" : "string",
+          "const" : "2905"
+        },
+        "handle" : {
+          "description" : "2-byte ATT handle number of the \"Characteristic Descriptor: Characteristic Aggregate Format\" attribute itself.",
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 65535
+        },
+        "attribute_handles_list" : {
+          "description" : "From spec: \"List of Attribute Handles for the Characteristic Presenta- tion Format Declarations\".",
+          "type" : "array",
+          "items" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "maximum" : 65535
+          }
+        }
       }
     }
   }

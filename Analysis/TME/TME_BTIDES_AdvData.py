@@ -15,7 +15,7 @@ from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
     #print(f"type = {type}, type_str = {type_str}")
-    if (type != None and (type in valid_adv_chan_types)):
+    if (type != None and (type in adv_chan_types_to_strings.keys())):
         AdvChanData["type"] = type
     if (CSA != None):
         AdvChanData["CSA"] = CSA
@@ -24,7 +24,7 @@ def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, Ad
     if (AdvDataArray != None):
         AdvChanData["AdvDataArray"] = AdvDataArray
 
-    if(verbose_BTIDES and type_str != None and (type_str in valid_adv_chan_type_strs)):
+    if(verbose_BTIDES and type_str != None and (type_str in adv_chan_types_to_strings.values())):
         AdvChanData["type_str"] = type_str
 
     if(AdvChanData):

@@ -19,8 +19,17 @@ type_BTIDES_AUX_ADV_IND       = 10
 type_BTIDES_SCAN_RSP          = 20
 type_BTIDES_AUX_SCAN_RSP      = 10
 type_BTIDES_EIR               = 50
-valid_adv_chan_types = [type_BTIDES_ADV_IND, type_BTIDES_ADV_DIRECT_IND, type_BTIDES_ADV_NONCONN_IND, type_BTIDES_ADV_SCAN_IND, type_BTIDES_AUX_ADV_IND, type_BTIDES_SCAN_RSP, type_BTIDES_AUX_SCAN_RSP, type_BTIDES_EIR]
-valid_adv_chan_type_strs = ["ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "ADV_SCAN_IND", "AUX_ADV_IND", "SCAN_RSP", "AUX_SCAN_RSP", "EIR"]
+
+adv_chan_types_to_strings = {
+    type_BTIDES_ADV_IND: "ADV_IND", 
+    type_BTIDES_ADV_DIRECT_IND: "ADV_DIRECT_IND",
+    type_BTIDES_ADV_NONCONN_IND: "ADV_NONCONN_IND",
+    type_BTIDES_ADV_SCAN_IND: "ADV_SCAN_IND",
+    type_BTIDES_AUX_ADV_IND: "AUX_ADV_IND",
+    type_BTIDES_SCAN_RSP: "SCAN_RSP",
+    type_BTIDES_AUX_SCAN_RSP: "AUX_SCAN_RSP",
+    type_BTIDES_EIR: "EIR"
+}
 
 # ATT IO types
 type_BTIDES_ATT_Read =                  0

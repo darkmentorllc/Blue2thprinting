@@ -1,37 +1,45 @@
 {
-  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_GPS.json",
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "BTIDES GPS data",
-  "type": "object",
-  "properties": {
-    "GPSArray": {
-      "type": "array",
-      "description": "Array of GPS records.",
-      "items": { "$ref": "#/definitions/record" }
+  "$id" : "https://darkmentor.com/BTIDES_Schema/BTIDES_GPS.json",
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "description" : "BTIDES GPS data",
+  "type" : "object",
+  "properties" : {
+    "GPSArray" : {
+      "type" : "array",
+      "description" : "Array of GPS records.",
+      "items" : {
+        "$ref" : "#/definitions/record"
+      }
     }
   },
-  "definitions": {
-    "record": {
-      "type": "object",
-      "description": "Time and GPS coordinates (as floats), with RSSI optional (but desired). src_file also optional.",
-      "$comment": "I don't know how to syntactically specify that std_optional_fields->time is required, so I just put all those fields at the top level here.",
-      "required": [ "time", "lat", "lon" ],
-      "properties": {
-        "RSSI": { "$ref": "BTIDES_base.json#/definitions/RSSI" },
-        "src_file": { "$ref": "BTIDES_base.json#/definitions/src_file" },
-	"time": { "$ref": "BTIDES_base.json#/definitions/time" },
-	"lat": {
-		"description": "Latitude as floating point number. E.g. 38.9612369.",
-		"type": "number",
-		"minimum": -90,
-		"maximum": 90
-	},
-	"lon": {
-		"description": "Longitude as floating point number. E.g. -76.835567.",
-		"type": "number",
-		"minimum": -180,
-		"maximum": 180
-	}
+  "definitions" : {
+    "record" : {
+      "type" : "object",
+      "description" : "Time and GPS coordinates (as floats), with RSSI optional (but desired). src_file also optional.",
+      "$comment" : "I don't know how to syntactically specify that std_optional_fields->time is required, so I just put all those fields at the top level here.",
+      "required" : [ "time", "lat", "lon" ],
+      "properties" : {
+        "RSSI" : {
+          "$ref" : "BTIDES_base.json#/definitions/RSSI"
+        },
+        "src_file" : {
+          "$ref" : "BTIDES_base.json#/definitions/src_file"
+        },
+        "time" : {
+          "$ref" : "BTIDES_base.json#/definitions/time"
+        },
+        "lat" : {
+          "description" : "Latitude as floating point number. E.g. 38.9612369.",
+          "type" : "number",
+          "minimum" : -90,
+          "maximum" : 90
+        },
+        "lon" : {
+          "description" : "Longitude as floating point number. E.g. -76.835567.",
+          "type" : "number",
+          "minimum" : -180,
+          "maximum" : 180
+        }
       }
     }
   }

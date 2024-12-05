@@ -40,6 +40,15 @@ type_AdvChanPDU_ADV_SCAN_IND      = 6
 type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
-# Advertisement channel PDU types defined in BT spec
-type_ATT_0x0A_Read_Request        = 0x0A
-type_ATT_0x0B_Read_Response       = 0x0B
+# ATT PDU types defined in BT spec
+type_ATT_EXCHANGE_MTU_REQ  = 0x02
+type_ATT_EXCHANGE_MTU_RSP  = 0x03
+type_ATT_READ_REQ          = 0x0A
+type_ATT_READ_RSP          = 0x0B
+
+att_opcode_strings = {
+    type_ATT_EXCHANGE_MTU_REQ: "ATT_EXCHANGE_MTU_REQ",
+    type_ATT_EXCHANGE_MTU_RSP: "ATT_EXCHANGE_MTU_RSP",
+    type_ATT_READ_REQ: "ATT_READ_REQ",
+    type_ATT_READ_RSP: "ATT_READ_RSP"
+}
