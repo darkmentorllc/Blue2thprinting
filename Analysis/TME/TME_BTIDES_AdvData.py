@@ -9,7 +9,7 @@
 
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
-from TME.TME_BTIDES_base import lookup_base_entry, ff_base, generic_insertion_into_BTIDES_second_level_array
+from TME.TME_BTIDES_base import generic_insertion_into_BTIDES_second_level_array
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):

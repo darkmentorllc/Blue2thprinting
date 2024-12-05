@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import re
-from TME.TME_BTIDES_base import *
+from TME.TME_BTIDES_base import generic_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
 from TME.TME_glob import BTIDES_JSON
 
 ############################
@@ -40,102 +40,12 @@ def ff_ATT_handle_entry(handle, UUID):
 #  If an existing ATTArray entry already exists, this is done
 #  If no ATTArray exists, it creates one
 
-def BTIDES_export_ATT_handles(bdaddr, random, handle, UUID):
+def BTIDES_export_ATT_handle(bdaddr, random, data):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Save space on exported data if possible
-    entry = lookup_base_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, random)
-        att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-        base["ATTArray"] = [ att_enum_obj ] 
-        #print(json.dumps(base, indent=2))
-        BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        if("ATTArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any ATTArray entries, so just insert ours
-            att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-            entry["ATTArray"] = [ att_enum_obj ]
-            return
-        else:
-            # There is an entry for this BDADDR, and ATTArray entries, so check if ours already exists, and if so, we're done
-            for att_entry in entry["ATTArray"]:
-                ###print(att_entry)
-                if(att_entry != None and "ATT_handle_enumeration" in att_entry.keys()):
-                    # This att_entry has an ATT_handle_enumeration
-                    # Now check if there's an entry that exactly matches 
-                    for att_handle_entry in att_entry["ATT_handle_enumeration"]:
-                        # TODO: pass through length in the future
-                        if(att_handle_entry != None and "handle" in att_handle_entry.keys() and att_handle_entry["handle"] == handle and
-                           "UUID" in att_handle_entry.keys() and att_handle_entry["UUID"] == UUID):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we got here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner ATT_handle_enumeration
-                    # This should be the most common case when inserting successive handle entries
-                    att_entry["ATT_handle_enumeration"].append(ff_ATT_handle_entry(handle, UUID))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert new ATT_handle_enumeration into outer ATTArray
-            att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-            entry["ATTArray"].append(att_enum_obj)
-            #print(json.dumps(BTIDES_JSON, indent=2))
-            return
+    data["UUID"] = convert_UUID128_to_UUID16_if_possible(data["UUID"]) # Save space on exported data if possible
+    handle_enumeration = ff_ATT_handle_enumeration(data)
+    
+    generic_insertion_into_BTIDES_second_level_array(bdaddr, random, handle_enumeration, "ATTArray", data, "ATT_handle_enumeration")
 
-# If there's no entry for this BDADDR, create one
-# If there's an entry, but no array type, create one
-# If there's an entry, and array type, and this exact thing is already inserted, done
-# If there's an entry, and array type, and this exact thing is not already inserted, append or create list
-
-def BTIDES_export_ATT_READ_REQ(bdaddr, random, handle):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    entry = lookup_base_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (entry == None):
-        # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, random)
-        att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-        base["ATTArray"] = [ att_enum_obj ] 
-        #print(json.dumps(base, indent=2))
-        BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        if("ATTArray" not in entry.keys()):
-            # There is an entry for this BDADDR but not yet any ATTArray entries, so just insert ours
-            att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-            entry["ATTArray"] = [ att_enum_obj ]
-            return
-        else:
-            # There is an entry for this BDADDR, and ATTArray entries, so check if ours already exists, and if so, we're done
-            for att_entry in entry["ATTArray"]:
-                ###print(att_entry)
-                if(att_entry != None and "ATT_handle_enumeration" in att_entry.keys()):
-                    # This att_entry has an ATT_handle_enumeration
-                    # Now check if there's an entry that exactly matches 
-                    for att_handle_entry in att_entry["ATT_handle_enumeration"]:
-                        # TODO: pass through length in the future
-                        if(att_handle_entry != None and "handle" in att_handle_entry.keys() and att_handle_entry["handle"] == handle and
-                           "UUID" in att_handle_entry.keys() and att_handle_entry["UUID"] == UUID):
-                            # We already have the entry we would insert, so just go ahead and return
-                            ###print("BTIDES_export_TxPower: found existing match. Nothing to do. Returning.")
-                            ###print(json.dumps(BTIDES_JSON, indent=2))
-                            return
-                    # If we got here we didn't find any match, so we now need to insert our entry
-                    # Insert into inner ATT_handle_enumeration
-                    # This should be the most common case when inserting successive handle entries
-                    att_entry["ATT_handle_enumeration"].append(ff_ATT_handle_entry(handle, UUID))
-                    ###print(json.dumps(BTIDES_JSON, indent=2))
-                    return
-            # Insert new ATT_handle_enumeration into outer ATTArray
-            att_enum_obj = ff_ATT_handle_enumeration(ff_ATT_handle_entry(handle, UUID))
-            entry["ATTArray"].append(att_enum_obj)
-            #print(json.dumps(BTIDES_JSON, indent=2))
-            return
+#def BTIDES_export_ATT_READ_REQ(bdaddr, random, handle):

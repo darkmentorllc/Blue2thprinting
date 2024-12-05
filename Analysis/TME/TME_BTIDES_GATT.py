@@ -117,6 +117,7 @@ def find_matching_characteristic(characteristics, target_handle):
             return char
     return None
 
+'''
 def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
     global BTIDES_JSON
     entry = lookup_base_entry(bdaddr, random)
@@ -174,6 +175,7 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
             #print(json.dumps(entry, indent=2))
             ###print(json.dumps(BTIDES_JSON, indent=2))
             return
+'''
 
 def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     global BTIDES_JSON
