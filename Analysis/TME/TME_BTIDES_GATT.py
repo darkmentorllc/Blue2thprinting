@@ -129,24 +129,22 @@ def find_enclosing_service(GATTArray, target_handle):
 def BTIDES_export_GATT_Characteristics(bdaddr, random, data):
     global BTIDES_JSON
     entry = lookup_base_entry(bdaddr, random)
-    placeholder_svc_obj = {"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF"}
+    data = ff_GATT_Characteristic(data)
+    placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
+
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
-        print("XENO1")
         # There is no entry yet for this BDADDR. Insert a brand new one
         base = ff_base(bdaddr, random)
         base["GATTArray"] = [ ff_GATT_Service(placeholder_svc_obj) ] # Placeholder service! 
-        base["GATTArray"][0]["characteristics"] = [ ff_GATT_Characteristic(data) ]
         #print(json.dumps(base, indent=2))
         BTIDES_JSON.append(base)
         #print(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("GATTArray" not in entry.keys()):
-            print("XENO2")
             # There is an entry for this BDADDR but not yet any GATTArray entries, so just insert ours
             entry["GATTArray"] = [ ff_GATT_Service(placeholder_svc_obj) ] # Placeholder service!
-            entry["GATTArray"][0]["characteristics"] = [ ff_GATT_Characteristic(data) ]
             #print(json.dumps(entry, indent=2))
             return
         else:
@@ -154,19 +152,15 @@ def BTIDES_export_GATT_Characteristics(bdaddr, random, data):
             service_entry = find_enclosing_service(entry["GATTArray"], data["handle"])
             if(service_entry != None):
                 if("characteristics" not in service_entry.keys()):
-                    print("XENO3-1")
-                    service_entry["characteristics"] = [ ff_GATT_Characteristic(data) ]
+                    service_entry["characteristics"] = [ data ]
                     #print(json.dumps(service_entry, indent=2))
                     return
                 else:
-                    print("XENO3-2")
-                    service_entry["characteristics"].append(ff_GATT_Characteristic(data))
+                    service_entry["characteristics"].append(data)
                     #print(json.dumps(service_entry, indent=2))
                     return
             # If we get here, we exhaused all services without a match. So insert our new entry into a placeholder service in GATTArray
-            print("XENO4")
             entry["GATTArray"].append(ff_GATT_Service(placeholder_svc_obj))
-            entry["GATTArray"][-1]["characteristics"] = [ ff_GATT_Characteristic(data) ]
             #print(json.dumps(entry, indent=2))
             ###print(json.dumps(BTIDES_JSON, indent=2))
             return
@@ -177,10 +171,8 @@ def find_matching_characteristic(characteristics, target_handle):
         print(char)
         # Check if the begin and end service handles enclose this characteristic value
         if(char != None and "value_handle" in char.keys() and char["value_handle"] == target_handle):
-            print("MATCH FOUND!")
             return char
     return None
-
 
 def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     global BTIDES_JSON
@@ -193,7 +185,6 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ placeholder_char_obj ]})
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
-        print("XENOCV1")
         # There is no entry yet for this BDADDR. Insert a brand new one
         base = ff_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
@@ -203,7 +194,6 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
         return
     else:
         if("GATTArray" not in entry.keys()):
-            print("XENOCV2")
             # There is an entry for this BDADDR but not yet any GATTArray entries, so just insert ours
             entry["GATTArray"] = [ placeholder_svc_obj ]
             #print(json.dumps(entry, indent=2))
@@ -212,7 +202,6 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
             service_entry = find_enclosing_service(entry["GATTArray"], data["value_handle"])
             if(service_entry != None):
                 if("characteristics" not in service_entry.keys()):
-                    print("XENOCV3-1")
                     service_entry["characteristics"] = [ placeholder_char_obj ]
                     return
                 else:
@@ -238,7 +227,6 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
                                 characteristic_entry["char_value"]["io_array"].extend(data["io_array"])
 
             # If we get here, we exhaused all services without a match. So insert our new entry within the placeholder service & characteristic
-            print("XENOCV4")
             entry["GATTArray"].append(placeholder_svc_obj)
             #print(json.dumps(entry, indent=2))
             ###print(json.dumps(BTIDES_JSON, indent=2))
