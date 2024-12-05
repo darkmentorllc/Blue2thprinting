@@ -29,10 +29,6 @@ type_AdvData_UUID32ServiceData                  = 32
 type_AdvData_UUID128ServiceData                 = 33
 type_AdvData_MSD                                = 255
 
-############################
-# Helper "factory functions"
-############################  
-
 # Advertisement channel PDU types defined in BT spec
 type_AdvChanPDU_ADV_IND           = 0
 type_AdvChanPDU_ADV_DIRECT_IND    = 1
@@ -43,3 +39,7 @@ type_AdvChanPDU_CONNECT_IND       = 5
 type_AdvChanPDU_ADV_SCAN_IND      = 6
 type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
+
+# Advertisement channel PDU types defined in BT spec
+type_ATT_0x0A_Read_Request        = 0x0A
+type_ATT_0x0B_Read_Response       = 0x0B

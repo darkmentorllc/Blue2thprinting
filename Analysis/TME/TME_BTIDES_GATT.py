@@ -87,6 +87,9 @@ def find_exact_service_match(GATTArray, data):
 
     return None
 
+#def generic_insertion_into_BTIDES_base_array(bdaddr, random, data, target_sub_array):
+    
+
 def BTIDES_export_GATT_Service(bdaddr, random, data):
     global BTIDES_JSON
     ###print(BTIDES_JSON)

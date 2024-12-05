@@ -1,6 +1,9 @@
 import sys, re, json, argparse
 # All the advertisement channel types
-from scapy.all import PcapReader, BTLE, BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN_IND, BTLE_SCAN_RSP
+from scapy.all import PcapReader
+# Import Layers:
+from scapy.all import BTLE
+from scapy.all import BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN_IND, BTLE_SCAN_RSP
 # All the AdvData types
 from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
 from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
@@ -10,15 +13,19 @@ from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
 from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
 from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
 from scapy.all import EIR_Manufacturer_Specific_Data
+# L2CAP types
+from scapy.all import L2CAP_Hdr, ATT_Hdr
+# ATT types
+from scapy.all import ATT_Read_Request
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
-from TME.TME_BTIDES_base import write_BTIDES
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
+from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+from TME.TME_BTIDES_base import write_BTIDES
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 
 verbose_print = False
@@ -55,7 +62,7 @@ def scapy_flags_to_hex_str(entry):
 def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
     global g
 
-    entry.show()
+    #entry.show()
 
     # type 1
     if isinstance(entry.payload, EIR_Flags):
@@ -65,6 +72,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "flags_hex_str": flags_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Flags: {flags_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_Flags, data)
+        return True
 
     # type 2
     elif isinstance(entry.payload, EIR_IncompleteList16BitServiceUUIDs):
@@ -75,6 +83,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID16List": UUID16List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListIncomplete, data)
+        return True
 
     # type 3
     elif isinstance(entry.payload, EIR_CompleteList16BitServiceUUIDs):
@@ -85,6 +94,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID16List": UUID16List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListComplete, data)
+        return True
 
     # type 4
     elif isinstance(entry.payload, EIR_IncompleteList32BitServiceUUIDs):
@@ -96,6 +106,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID32List": UUID32List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListIncomplete, data)
+        return True
 
     # type 5
     elif isinstance(entry.payload, EIR_CompleteList32BitServiceUUIDs):
@@ -107,6 +118,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID32List": UUID32List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListComplete, data)
+        return True
 
     # type 6
     elif isinstance(entry.payload, EIR_IncompleteList128BitServiceUUIDs):
@@ -118,6 +130,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID128List": UUID128List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListIncomplete, data)
+        return True
 
     # type 7
     elif isinstance(entry.payload, EIR_CompleteList128BitServiceUUIDs):
@@ -129,6 +142,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID128List": UUID128List}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListComplete, data)
+        return True
 
     # type 8
     elif isinstance(entry.payload, EIR_ShortenedLocalName):
@@ -140,6 +154,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_IncompleteName, data)
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Incomplete Local Name: {utf8_name}")
+        return True
 
     # type 9
     elif isinstance(entry.payload, EIR_CompleteLocalName):
@@ -151,6 +166,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Complete Local Name: {utf8_name}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_CompleteName, data)
+        return True
 
     # type 0x0A
     elif isinstance(entry.payload, EIR_TX_Power_Level):
@@ -160,6 +176,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "tx_power": device_tx_power}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} TxPower level: {device_tx_power}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_TxPower, data)
+        return True
 
     # type 0x0D
     elif isinstance(entry.payload, EIR_ClassOfDevice):
@@ -176,6 +193,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "CoD_hex_str": CoD_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Class of Device: {CoD_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_ClassOfDevice, data)
+        return True
 
     # type 0x10
     # I don't think this can actually appear in BLE as opposed to EIR...so I'm not sure if this will get any testing...
@@ -186,6 +204,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "vendor_id_source": entry.vendor_id_source, "vendor_id": entry.vendor_id, "product_id": entry.product_id, "version": entry.version}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} Device ID: {data}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_DeviceID, data)
+        return True
 
     # type 0x12
     elif isinstance(entry.payload, EIR_PeripheralConnectionIntervalRange):
@@ -197,6 +216,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "conn_interval_min": conn_interval_min, "conn_interval_max": conn_interval_max}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
+        return True
 
     # type 0x16
     elif isinstance(entry.payload, EIR_ServiceData16BitUUID):
@@ -213,6 +233,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID16: {UUID16_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
+        return True
 
     # type 0x20
     elif isinstance(entry.payload, EIR_ServiceData32BitUUID):
@@ -229,6 +250,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID32": UUID32_hex_str, "service_data_hex_str": service_data_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID32: {UUID32_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ServiceData, data)
+        return True
 
     # type 0x21
     elif isinstance(entry.payload, EIR_ServiceData128BitUUID):
@@ -245,6 +267,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "UUID128": UUID128, "service_data_hex_str": service_data_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} UUID128: {UUID128}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
+        return True
 
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
@@ -260,12 +283,13 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": msd_hex_str}
         if(verbose_print): print(f"{device_bdaddr}: {adv_type} MSD: company_id = {company_id_hex_str}, data = {msd_hex_str}")
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_MSD, data)
+        return True
 
+    return False
 # Saved text for printing fields
 #                    print("BTLE Packet Fields:")
 #                    for field in btle_adv.fields_desc:
 #                        print(f"{field.name}: {field.__class__.__name__}")
-
 
 def export_ADV_IND(packet):
     btle_hdr = packet.getlayer(BTLE)
@@ -276,10 +300,10 @@ def export_ADV_IND(packet):
     device_bdaddr = btle_adv.AdvA
 
     for entry in btle_adv.data:
-        entry.show()
         if isinstance(entry, EIR_Hdr):
-            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)
-    return True
+            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)): return True
+
+    return False
 
 def export_ADV_NONCONN_IND(packet):
     btle_hdr = packet.getlayer(BTLE)
@@ -291,8 +315,9 @@ def export_ADV_NONCONN_IND(packet):
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)
-    return True
+            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)): return True
+
+    return False
 
 def export_SCAN_RSP(packet):
     btle_hdr = packet.getlayer(BTLE)
@@ -304,35 +329,35 @@ def export_SCAN_RSP(packet):
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)
-    return True
+            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)): return True
 
-def export_0x0A_Read_Request(bdaddr_random, packet):
+    return False
+
+def export_0x0A_Read_Request(packet):
     '''
     class ATT_Read_Request(Packet):
     name = "Read Request"
     fields_desc = [XLEShortField("gatt_handle", 0), ]
     '''
+#    if(isinstance(packet, ATT_Read_Request)):
+    att_hdr = packet.getlayer(ATT_Hdr)
+    if(att_hdr == None):
+        return
+    att_data = packet.getlayer(ATT_Read_Request)
+    if(att_data == None):
+        return
+    if(att_hdr.opcode == type_ATT_0x0A_Read_Request):
+        print(att_data)
+#        for field in att_data.fields_desc:
+#            print(f"{field.name}: {field.__class__.__name__}")
 
-    packet.show()
-    '''
-    if packet.haslayer(BTLE_SCAN_RSP):
-        # Access the SCAN_RSP layer
-        btle_adv = packet.getlayer(BTLE_SCAN_RSP)
-        device_bdaddr = btle_adv.AdvA
-    else: return False
+    return False
 
-    for entry in btle_adv.data:
-        if isinstance(entry, EIR_Hdr):
-            export_AdvData(device_bdaddr, bdaddr_random, pdutype_SCAN_RSP, entry)
-    '''
-    return True
-
-def export_ATTArray(bdaddr_random, packet):
+def export_ATTArray(packet):
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)
-    if(export_0x0A_Read_Request(bdaddr_random, packet)): return
+    if(export_0x0A_Read_Request(packet)): return True
     #if(export_0x0B_Read_Response(bdaddr_random, packet)): return
     # TODO: handle ALL opcodes
 
@@ -343,24 +368,30 @@ def read_pcap(file_path):
                 # Confirm packet is BTLE
                 if packet.haslayer(BTLE):
                     btle_hdr = packet.getlayer(BTLE)
-                    btle_hdr.show()
                     if(btle_hdr.access_addr == 0x8e89bed6):
                         if(btle_hdr.Length == 0):
                             print("Found empty advertisement packet, continuing")
                             continue
                     else:
                         if(btle_hdr.len == 0):
-                            print("Found empty non-advertisement packet, continuing") 
+                            #print("Found empty non-advertisement packet, continuing") 
                             continue
                     # If a packet matches on any export function, move on to the next packet
+                    # Advertisement channel packets
                     if packet.haslayer(BTLE_ADV_IND):
-                        if(export_ADV_IND(packet)): return True
+                        if(export_ADV_IND(packet)): continue
                     if packet.haslayer(BTLE_ADV_NONCONN_IND):
-                        if(export_ADV_NONCONN_IND(packet)): return True
+                        if(export_ADV_NONCONN_IND(packet)): continue
                     if packet.haslayer(BTLE_SCAN_RSP):
-                        if(export_SCAN_RSP(packet)): return True
-#                    if(export_ATTArray(bdaddr_random, packet)): continue
+                        if(export_SCAN_RSP(packet)): continue
+
+                    # ATT packets
+                    if packet.haslayer(ATT_Hdr):
+                        if(export_ATTArray(packet)): continue
                     # TODO: export other packet types like LL or L2CAP or ATT
+#                else:
+#                    packet.show()
+
         return
     except Exception as e:
         print(f"Error reading pcap file: {e}")
