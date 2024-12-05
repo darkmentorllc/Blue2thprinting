@@ -213,7 +213,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     GATT_characteristics_values_result = execute_query(query)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
-    for read_handle,byte_values in GATT_characteristics_values_result:
+    for read_handle, byte_values in GATT_characteristics_values_result:
+        data = {"value_handle": read_handle, "io_array": [ {"io_type": 0, "value_hex_str": byte_values.hex()} ] }
+        BTIDES_export_GATT_Characteristic_Value(bdaddr, device_bdaddr_type, data)
+
         if(read_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
             char_value_handles_dict[read_handle].append(byte_values)

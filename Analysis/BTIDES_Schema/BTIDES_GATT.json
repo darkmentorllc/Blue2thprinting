@@ -16,11 +16,17 @@
     }
   },
   "definitions": {
+    "placeholder_entry": {
+	"description": "Optional field to indicate that the given service or characteristic is a placeholder to hold data lower down in the hierarchy, and the service or characteristic itself shouldn't be imported into storage like a database, or printed as if it's real data.",
+	"type": "boolean",
+	"const": true
+    },
     "PrimaryService": {
       "type": "object",
       "description": "Structure for GATT Primary Service (\"attribute type\" UUID always 0x2800). Use UUID for brevity, and type_str for readability.",
       "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
       "properties": {
+	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
 	"type_str": {
 		"description": "Optional field to make JSON instance more readable.",
 		"type": "string",
@@ -56,6 +62,7 @@
       "description": "Structure for GATT Secondary Service (\"attribute type\" UUID always 0x2801). Use UUID for brevity, and type_str for readability",
       "required": [ "utype", "UUID", "begin_handle", "end_handle" ],
       "properties": {
+	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
 	"type_str": {
 		"description": "Optional field to make JSON instance more readable",
 		"type": "string",
@@ -91,6 +98,7 @@
       "description": "Structure for GATT Characteristic (\"attribute type\" UUID always 0x2803). Use UUID for brevity, and type_str for readability.",
       "required": [ "handle", "properties", "value_handle", "value_uuid"],
       "properties": {
+	"placeholder_entry": {"$ref": "#/definitions/placeholder_entry"},
 	"type_str": {
 		"description": "Optional field to make JSON instance more readable",
 		"type": "string",

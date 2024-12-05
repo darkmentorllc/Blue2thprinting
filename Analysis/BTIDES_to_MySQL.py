@@ -721,6 +721,23 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                 insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
                 execute_insert(insert, values)
 
+            # Now insert any characteristic values
+            if("char_value" in char.keys()):
+                char_array = char["characteristics"]
+                for char in char_array:
+                    # Skip inserting the characteristic itself if it's designated a placeholder
+                    if("placeholder_entry" not in char.keys()):
+                        declaration_handle = char["handle"]
+                        char_properties = char["properties"]
+                        char_value_handle = char["value_handle"]
+                        UUID128 = char["value_uuid"].replace('-','')
+                        if(UUID128 == 4):
+                            #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
+                            UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
+                        values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
+                        insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+                        execute_insert(insert, values)
+
 def parse_GATTArray(entry):
     #print(json.dumps(entry, indent=2))
     if("GATTArray" not in entry.keys() or entry["GATTArray"] == None):
