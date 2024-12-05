@@ -72,6 +72,99 @@ def lookup_base_entry(bdaddr, random):
 
     return None
 
+# Return True if it's done, else False if there's more checks left to do
+def generic_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
+    global BTIDES_JSON
+    bdaddr_specific_entry = lookup_base_entry(bdaddr, random)
+    if (bdaddr_specific_entry == None):
+        # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
+        base = ff_base(bdaddr, random)
+        base[target_tier1_array_name] = [ tier1_data ] 
+        BTIDES_JSON.append(base)
+        return True
+    else:
+        if(target_tier1_array_name not in bdaddr_specific_entry.keys()):
+            # There is an bdaddr_specific_entry for this BDADDR but not yet any target_tier1_array_name entries, so just insert ours as the baseline array
+            bdaddr_specific_entry[target_tier1_array_name] = [ tier1_data ]
+            return True
+        else:
+            # There is an bdaddr_specific_entry for this BDADDR, and GATTArray entries, so check if ours already exists, and if so, we're done
+            for obj in bdaddr_specific_entry[target_tier1_array_name]:
+                if(obj == tier1_data):
+                    return True
+            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_specific_entry onto GATTArray
+            bdaddr_specific_entry[target_tier1_array_name].append(tier1_data)
+            return True
+
+    return False # Shouldn't be able to get here
+
+# I want to check for equality between objects, while ignoring embedded dictionaries (otherwise there could never be equality in some cases)
+def non_recursive_primitive_equality_check(dict1, dict2):
+    # Compare only the top-level keys first
+    if set(dict1.keys()) != set(dict2.keys()):
+        return False
+
+    # Iterate over keys and compare values if they are primitive types
+    for key in dict1:
+        # Check if both values are primitive types (not dictionaries, lists, etc.)
+        value1 = dict1[key]
+        value2 = dict2[key]
+
+        if isinstance(value1, (int, float, str, bool)) and isinstance(value2, (int, float, str, bool)):
+            if value1 != value2:
+                return False
+
+        # If values are not primitive types (e.g., dictionaries, lists), skip comparison
+        elif isinstance(value1, dict) or isinstance(value2, dict):
+            continue  # Skip comparison for nested dictionaries
+
+    return True
+
+# Return True if it's done, else False if there's more checks left to do
+# This is for inserting things into not the top level array, but a sub-array
+# e.g. "AdvDataArray" (tier2) under "AdvChanArray" (tier1), or "characteristics" (tier1), under "GATTArray" (tier1)
+# This function requires you to already have the tier1_data so that it can be matched before descending into tier2
+# The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
+def generic_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
+    global BTIDES_JSON
+    bdaddr_specific_entry = lookup_base_entry(bdaddr, random)
+    if (bdaddr_specific_entry == None):
+        # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
+        base = ff_base(bdaddr, random)
+        base[target_tier1_array_name] = [ tier1_data ] 
+        BTIDES_JSON.append(base)
+        return True
+    else:
+        if(target_tier1_array_name not in bdaddr_specific_entry.keys()):
+            # There is an bdaddr_specific_entry for this BDADDR but not yet any target_tier1_array_name entries, so just insert ours as the baseline array
+            bdaddr_specific_entry[target_tier1_array_name] = [ tier1_data ]
+            return True
+        else:
+            # There is an bdaddr_specific_entry for this BDADDR, and GATTArray entries, so check if ours already exists, and if so, we're done
+            for t1_obj in bdaddr_specific_entry[target_tier1_array_name]:
+                # Do a shallow check of whether the found object matches the target tier1 data, while not recursing into embedded objects
+                if(non_recursive_primitive_equality_check(t1_obj, tier1_data)):
+                    # Descend into the second level
+                    if(target_tier2_array_name not in t1_obj.keys()):
+                        # Key is missing, so just insert new tier2_array with tier2_data
+                        t1_obj[target_tier2_array_name] = [ tier2_data ]
+                        return True
+                    else:
+                        # Check for an exact match of the tier2_data, and if so, we're done
+                        for t2_obj in t1_obj[target_tier2_array_name]:
+                            if(t2_obj == tier2_data):
+                                return True
+
+                        # If we got here, nothing matched, so append the tier2_data
+                        t1_obj[target_tier2_array_name].append(tier2_data)
+                        return True
+            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_specific_entry onto GATTArray
+            bdaddr_specific_entry[target_tier1_array_name].append(tier1_data)
+            return True
+
+    return False # Shouldn't be able to get here
+
+
 def convert_UUID128_to_UUID16_if_possible(UUID128):
     UUID128_tmp = UUID128.strip().lower()
     UUID128_tmp = UUID128_tmp.replace('-','')

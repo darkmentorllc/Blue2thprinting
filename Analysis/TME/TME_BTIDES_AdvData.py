@@ -9,7 +9,7 @@
 
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
-from TME.TME_BTIDES_base import lookup_base_entry, ff_base
+from TME.TME_BTIDES_base import lookup_base_entry, ff_base, generic_insertion_into_BTIDES_first_level_array
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
@@ -452,6 +452,17 @@ def pdu_type_to_BTIDES_type_str(type):
 # Generalized export capability for all AdvData types
 def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
     global BTIDES_JSON
+
+    '''    
+    btype = pdu_type_to_BTIDES_type(adv_type)
+    btype_str = None
+    if(verbose_BTIDES):
+        btype_str = pdu_type_to_BTIDES_type_str(adv_type)
+    acd = ff_AdvChanData(type=btype, type_str=btype_str)
+    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
+    
+    generic_insertion_into_BTIDES_base_array(bdaddr, random, acd, "AdvChanArray")
+    '''
     #print(json.dumps(BTIDES_JSON, indent=2))
     base = lookup_base_entry(bdaddr, random)
     ###print(json.dumps(entry, indent=2))

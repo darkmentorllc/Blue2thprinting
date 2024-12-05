@@ -191,7 +191,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     GATT_services_result = execute_query(query)
     for device_bdaddr_type, service_type, begin_handle, end_handle, UUID128 in GATT_services_result:
         utype = db_service_type_to_BTIDES_utype(service_type)
-        data = {"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID128}
+        data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID128})
         BTIDES_export_GATT_Service(bdaddr, device_bdaddr_type, data)
 
     query = f"SELECT device_bdaddr_type, attribute_handle, UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
