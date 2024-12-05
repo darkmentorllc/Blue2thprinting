@@ -72,7 +72,6 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in GATT_characteristics_values and GATT_characteristics")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash (len = {len(bdaddr_hash)}) = {bdaddr_hash}")
 
-
     return bdaddr_hash.keys()
 
 def get_bdaddrs_by_bdaddr_regex(bdaddrregex):

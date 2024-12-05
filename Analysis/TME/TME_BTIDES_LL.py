@@ -373,7 +373,7 @@ def BTIDES_export_LL_LENGTH_RSP(bdaddr, random, max_rx_octets, max_rx_time, max_
                     return
             # If we get here, we exhaused all ll_entries without a match. So insert our new entry into LLArray
             entry["LLArray"].append(ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
-            print(json.dumps(BTIDES_JSON, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
             return
 
 def BTIDES_export_LL_PHY_REQ(bdaddr, random, tx_phys, rx_phys):

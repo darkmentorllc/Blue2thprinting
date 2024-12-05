@@ -37,9 +37,7 @@ def ff_GATT_Characteristic(obj):
 
 def ff_GATT_IO(io_array):
     if(verbose_BTIDES):
-        print(io_array)
         for obj in io_array:
-            print(obj)
             if("io_type_str" not in obj.keys()):
                 if(obj["io_type"] == 0):
                     obj["io_type_str"] = "Read"
@@ -166,9 +164,7 @@ def BTIDES_export_GATT_Characteristics(bdaddr, random, data):
             return
 
 def find_matching_characteristic(characteristics, target_handle):
-    print(target_handle)
     for char in characteristics:
-        print(char)
         # Check if the begin and end service handles enclose this characteristic value
         if(char != None and "value_handle" in char.keys() and char["value_handle"] == target_handle):
             return char
