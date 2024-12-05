@@ -4,6 +4,8 @@
 ########################################
 
 import struct
+from TME.BT_Data_Types import *
+from TME.BTIDES_Data_Types import *
 from TME.TME_helpers import *
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_UUID16 import *

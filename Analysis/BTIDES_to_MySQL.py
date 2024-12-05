@@ -118,19 +118,18 @@ def execute_insert(query, values):
 
 def BTIDES_types_to_le_evt_type(type):
     # FIXME!: In the future once I update to have a src file type field (or foreign key pointer to row with that field)
-    # I will need to 
     # For now I will just use the pcap PDU values, since they correspond 1:1 to BTIDES for the first 4 entries
-    if(type == btype_ADV_IND):          return pdutype_ADV_IND # AUX_ADV_IND
-    if(type == btype_ADV_DIRECT_IND):   return pdutype_ADV_DIRECT_IND # AUX_ADV_IND
-    if(type == btype_ADV_NONCONN_IND):  return pdutype_ADV_NONCONN_IND # AUX_ADV_IND
-    if(type == btype_ADV_SCAN_IND):     return pdutype_ADV_SCAN_IND # AUX_ADV_IND
-    if(type == btype_AUX_ADV_IND):      return pdutype_AUX_ADV_IND # AUX_ADV_IND
-    if(type == btype_SCAN_RSP):         return pdutype_SCAN_RSP # SCAN_RSP # From accidental incorrect pcap mix-in
-    if(type == btype_AUX_SCAN_RSP):     return pdutype_AUX_SCAN_RSP # AUX_SCAN_RSP # FIXME: I don't yet know what value this should take on
+    if(type == type_BTIDES_ADV_IND):          return type_AdvChanPDU_ADV_IND # AUX_ADV_IND
+    if(type == type_BTIDES_ADV_DIRECT_IND):   return type_AdvChanPDU_ADV_DIRECT_IND # AUX_ADV_IND
+    if(type == type_BTIDES_ADV_NONCONN_IND):  return type_AdvChanPDU_ADV_NONCONN_IND # AUX_ADV_IND
+    if(type == type_BTIDES_ADV_SCAN_IND):     return type_AdvChanPDU_ADV_SCAN_IND # AUX_ADV_IND
+    if(type == type_BTIDES_AUX_ADV_IND):      return type_AdvChanPDU_AUX_ADV_IND # AUX_ADV_IND
+    if(type == type_BTIDES_SCAN_RSP):         return type_AdvChanPDU_SCAN_RSP # SCAN_RSP # From accidental incorrect pcap mix-in
+    if(type == type_BTIDES_AUX_SCAN_RSP):     return type_AdvChanPDU_AUX_SCAN_RSP # AUX_SCAN_RSP # FIXME: I don't yet know what value this should take on
 
     # From manually inserting EIR type
     # There is of course no corresponding LE type
-    if(type == btype_EIR):              return btype_EIR
+    if(type == type_BTIDES_EIR):              return type_BTIDES_EIR
 
 # type 0x01
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):

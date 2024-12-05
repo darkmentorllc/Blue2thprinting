@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import re
-#import TME.TME_glob
+from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import *
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
@@ -39,15 +39,15 @@ def ff_GATT_IO(io_array):
     if(verbose_BTIDES):
         for obj in io_array:
             if("io_type_str" not in obj.keys()):
-                if(obj["io_type"] == 0):
+                if(obj["io_type"] == type_BTIDES_ATT_Read):
                     obj["io_type_str"] = "Read"
-                elif(obj["io_type"] == 1):
+                elif(obj["io_type"] == type_BTIDES_ATT_WriteWithResponse):
                     obj["io_type_str"] = "Write with response"
-                elif(obj["io_type"] == 2):
+                elif(obj["io_type"] == type_BTIDES_ATT_WriteWithoutResponse):
                     obj["io_type_str"] = "Write without response"
-                elif(obj["io_type"] == 3):
+                elif(obj["io_type"] == type_BTIDES_ATT_Notification):
                     obj["io_type_str"] = "Notification"
-                elif(obj["io_type"] == 4):
+                elif(obj["io_type"] == type_BTIDES_ATT_Indication):
                     obj["io_type_str"] = "Indication"
     return io_array
 
@@ -87,7 +87,7 @@ def find_exact_service_match(GATTArray, data):
 
     return None
 
-def BTIDES_export_GATT_Services(bdaddr, random, data):
+def BTIDES_export_GATT_Service(bdaddr, random, data):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
     data["UUID"] = convert_UUID128_to_UUID16_if_possible(data["UUID"]) # Save space on exported data if possible
@@ -124,7 +124,7 @@ def find_enclosing_service(GATTArray, target_handle):
             return service_entry
     return None
 
-def BTIDES_export_GATT_Characteristics(bdaddr, random, data):
+def BTIDES_export_GATT_Characteristic(bdaddr, random, data):
     global BTIDES_JSON
     entry = lookup_base_entry(bdaddr, random)
     data = ff_GATT_Characteristic(data)
@@ -169,6 +169,64 @@ def find_matching_characteristic(characteristics, target_handle):
         if(char != None and "value_handle" in char.keys() and char["value_handle"] == target_handle):
             return char
     return None
+
+def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
+    global BTIDES_JSON
+    entry = lookup_base_entry(bdaddr, random)
+    # For the placeholder, first run it through the factory function to add any nice-to-haves for verbosity
+    data = ff_GATT_Characteristic_Value(data)
+    # Next for the embed the char_value data into the placeholder characteristic right from the start
+    placeholder_char_obj = ff_GATT_Characteristic({"placeholder_entry": True, "utype": "2803", "handle": 0xFFFE, "properties": 0xFF, "value_handle": data["value_handle"], "value_uuid": "FFFF", "char_value": data})
+    # And then embed the placeholder characteristic into the placeholder service
+    placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ placeholder_char_obj ]})
+    ###print(json.dumps(entry, indent=2))
+    if (entry == None):
+        # There is no entry yet for this BDADDR. Insert a brand new one
+        base = ff_base(bdaddr, random)
+        base["GATTArray"] = [ placeholder_svc_obj ]
+        #print(json.dumps(base, indent=2))
+        BTIDES_JSON.append(base)
+        #print(json.dumps(BTIDES_JSON, indent=2))
+        return
+    else:
+        if("GATTArray" not in entry.keys()):
+            # There is an entry for this BDADDR but not yet any GATTArray entries, so just insert ours
+            entry["GATTArray"] = [ placeholder_svc_obj ]
+            #print(json.dumps(entry, indent=2))
+            return
+        else:
+            service_entry = find_enclosing_service(entry["GATTArray"], data["value_handle"])
+            if(service_entry != None):
+                if("characteristics" not in service_entry.keys()):
+                    service_entry["characteristics"] = [ placeholder_char_obj ]
+                    return
+                else:
+                    # Check if there's already a characteristic within this service which has the matching value_handle
+                    characteristic_entry = find_matching_characteristic(service_entry["characteristics"], data["value_handle"])
+                    if(characteristic_entry == None):
+                        # If we get here, we exhaused all characteristics without a match.
+                        # Insert an entire placeholder characteristic
+                        service_entry["characteristics"].append(placeholder_char_obj)
+                        return
+                    else:
+                        # Check the match
+                        if("char_value" not in characteristic_entry.keys()):
+                            # Insert our io_array as the first thing
+                            characteristic_entry["char_value"] = data
+                            return
+                        else:
+                            if("io_array" not in characteristic_entry["char_value"].keys()):
+                                # Insert our io_array as the first thing
+                                characteristic_entry["char_value"]["io_array"] = data["io_array"]
+                            else:
+                                # Append (via extend!) our io_array entry(/ies) to the existing io_array
+                                characteristic_entry["char_value"]["io_array"].extend(data["io_array"])
+
+            # If we get here, we exhaused all services without a match. So insert our new entry within the placeholder service & characteristic
+            entry["GATTArray"].append(placeholder_svc_obj)
+            #print(json.dumps(entry, indent=2))
+            ###print(json.dumps(BTIDES_JSON, indent=2))
+            return
 
 def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     global BTIDES_JSON

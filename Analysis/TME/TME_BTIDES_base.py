@@ -7,9 +7,8 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import json
-#import TME.TME_glob
-from TME.TME_helpers import *
+import json, re
+#from TME.TME_helpers import *
 from TME.TME_glob import BTIDES_JSON
 
 from jsonschema import validate, ValidationError

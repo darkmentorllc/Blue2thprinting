@@ -192,7 +192,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     for device_bdaddr_type, service_type, begin_handle, end_handle, UUID128 in GATT_services_result:
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = {"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID128}
-        BTIDES_export_GATT_Services(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_GATT_Service(bdaddr, device_bdaddr_type, data)
 
     query = f"SELECT device_bdaddr_type, attribute_handle, UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
@@ -207,7 +207,11 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID128) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
     for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID128}
-        BTIDES_export_GATT_Characteristics(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_GATT_Characteristic(bdaddr, device_bdaddr_type, data)
+
+        # Now do another pass and insert any Chacteristic Descriptors under the Characteristics
+        #for device_bdaddr_type, attribute_handle, UUID128 in GATT_attribute_handles_result:
+        #    BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, device_bdaddr_type, attribute_handle, UUID128)
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_values_result = execute_query(query)

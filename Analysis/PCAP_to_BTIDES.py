@@ -16,8 +16,10 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
-from TME.TME_BTIDES_base import *
-from TME.TME_BTIDES_AdvData import *
+from TME.TME_BTIDES_base import write_BTIDES
+from TME.BT_Data_Types import *
+from TME.BTIDES_Data_Types import *
+from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 
 verbose_print = False
 
@@ -50,8 +52,10 @@ def scapy_flags_to_hex_str(entry):
     return flags_hex_str
 
 # This is the main function which converts from Scapy data format to BTIDES
-def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
+def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
     global g
+
+    entry.show()
 
     # type 1
     if isinstance(entry.payload, EIR_Flags):
@@ -263,31 +267,55 @@ def export_fields(device_bdaddr, bdaddr_random, adv_type, entry):
 #                        print(f"{field.name}: {field.__class__.__name__}")
 
 
-def export_ADV_IND(bdaddr_random, packet):
-    if packet.haslayer(BTLE_ADV_IND):
-        # Access the BTLE_ADV layer
-        btle_adv = packet.getlayer(BTLE_ADV_IND)
-        device_bdaddr = btle_adv.AdvA
-    else: return False
+def export_ADV_IND(packet):
+    btle_hdr = packet.getlayer(BTLE)
+    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+
+    # Access the BTLE_ADV layer
+    btle_adv = packet.getlayer(BTLE_ADV_IND)
+    device_bdaddr = btle_adv.AdvA
+
+    for entry in btle_adv.data:
+        entry.show()
+        if isinstance(entry, EIR_Hdr):
+            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)
+    return True
+
+def export_ADV_NONCONN_IND(packet):
+    btle_hdr = packet.getlayer(BTLE)
+    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+
+    # Access the BTLE_ADV layer
+    btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
+    device_bdaddr = btle_adv.AdvA
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            export_fields(device_bdaddr, bdaddr_random, pdutype_ADV_IND, entry)
+            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)
     return True
 
-def export_ADV_NONCONN_IND(bdaddr_random, packet):
-    if packet.haslayer(BTLE_ADV_NONCONN_IND):
-        # Access the BTLE_ADV layer
-        btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
-        device_bdaddr = btle_adv.AdvA
-    else: return False
+def export_SCAN_RSP(packet):
+    btle_hdr = packet.getlayer(BTLE)
+    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+
+    # Access the SCAN_RSP layer
+    btle_adv = packet.getlayer(BTLE_SCAN_RSP)
+    device_bdaddr = btle_adv.AdvA
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            export_fields(device_bdaddr, bdaddr_random, pdutype_ADV_NONCONN_IND, entry)
+            export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)
     return True
 
-def export_SCAN_RSP(bdaddr_random, packet):
+def export_0x0A_Read_Request(bdaddr_random, packet):
+    '''
+    class ATT_Read_Request(Packet):
+    name = "Read Request"
+    fields_desc = [XLEShortField("gatt_handle", 0), ]
+    '''
+
+    packet.show()
+    '''
     if packet.haslayer(BTLE_SCAN_RSP):
         # Access the SCAN_RSP layer
         btle_adv = packet.getlayer(BTLE_SCAN_RSP)
@@ -296,28 +324,42 @@ def export_SCAN_RSP(bdaddr_random, packet):
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            export_fields(device_bdaddr, bdaddr_random, pdutype_SCAN_RSP, entry)
+            export_AdvData(device_bdaddr, bdaddr_random, pdutype_SCAN_RSP, entry)
+    '''
     return True
 
-def export_all_AdvChanData(bdaddr_random, packet):
-    # The advertisement types are mutually exclusive, so if one returns true, we're done
-    # Order from most-prevalent to least, to increase the chance of ending earlier
-    if(export_ADV_IND(bdaddr_random, packet)): return
-    if(export_ADV_NONCONN_IND(bdaddr_random, packet)): return
-    if(export_SCAN_RSP(bdaddr_random, packet)): return
-    # TODO: export other AdvData-containing packet types
+def export_ATTArray(bdaddr_random, packet):
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    # To convert ATT data into a GATT hierarchy requires us to statefully
+    # remember information between packets (i.e. which UUID corresponds to which handle)
+    if(export_0x0A_Read_Request(bdaddr_random, packet)): return
+    #if(export_0x0B_Read_Response(bdaddr_random, packet)): return
+    # TODO: handle ALL opcodes
 
 def read_pcap(file_path):
     try:
         with PcapReader(file_path) as pcap_reader:
             for packet in pcap_reader:
-                # Concirm packet is BTLE
+                # Confirm packet is BTLE
                 if packet.haslayer(BTLE):
                     btle_hdr = packet.getlayer(BTLE)
-                    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
-
-                    export_all_AdvChanData(bdaddr_random, packet)
-
+                    btle_hdr.show()
+                    if(btle_hdr.access_addr == 0x8e89bed6):
+                        if(btle_hdr.Length == 0):
+                            print("Found empty advertisement packet, continuing")
+                            continue
+                    else:
+                        if(btle_hdr.len == 0):
+                            print("Found empty non-advertisement packet, continuing") 
+                            continue
+                    # If a packet matches on any export function, move on to the next packet
+                    if packet.haslayer(BTLE_ADV_IND):
+                        if(export_ADV_IND(packet)): return True
+                    if packet.haslayer(BTLE_ADV_NONCONN_IND):
+                        if(export_ADV_NONCONN_IND(packet)): return True
+                    if packet.haslayer(BTLE_SCAN_RSP):
+                        if(export_SCAN_RSP(packet)): return True
+#                    if(export_ATTArray(bdaddr_random, packet)): continue
                     # TODO: export other packet types like LL or L2CAP or ATT
         return
     except Exception as e:

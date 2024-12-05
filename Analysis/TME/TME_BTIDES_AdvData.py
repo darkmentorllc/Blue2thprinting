@@ -7,54 +7,11 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-from TME.TME_BTIDES_base import *
+from TME.BT_Data_Types import *
+from TME.BTIDES_Data_Types import *
+from TME.TME_BTIDES_base import lookup_base_entry, ff_base
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
-type_AdvData_Flags                              = 1
-type_AdvData_UUID16ListIncomplete               = 2
-type_AdvData_UUID16ListComplete                 = 3
-type_AdvData_UUID32ListIncomplete               = 4
-type_AdvData_UUID32ListComplete                 = 5
-type_AdvData_UUID128ListIncomplete              = 6
-type_AdvData_UUID128ListComplete                = 7
-type_AdvData_IncompleteName                     = 8
-type_AdvData_CompleteName                       = 9
-type_AdvData_TxPower                            = 10
-type_AdvData_ClassOfDevice                      = 13
-type_AdvData_DeviceID                           = 16
-type_AdvData_PeripheralConnectionIntervalRange  = 18
-type_AdvData_UUID16ServiceData                  = 22
-type_AdvData_Appearance                         = 25
-type_AdvData_UUID32ServiceData                  = 32
-type_AdvData_UUID128ServiceData                 = 33
-type_AdvData_MSD                                = 255
-
-############################
-# Helper "factory functions"
-############################  
-
-# Advertisement channel PDU types defined in BT spec
-pdutype_ADV_IND           = 0
-pdutype_ADV_DIRECT_IND    = 1
-pdutype_ADV_NONCONN_IND   = 2
-pdutype_SCAN_REQ          = 3
-pdutype_SCAN_RSP          = 4
-pdutype_CONNECT_IND       = 5
-pdutype_ADV_SCAN_IND      = 6
-pdutype_AUX_ADV_IND       = 7
-pdutype_AUX_SCAN_RSP      = 7
-
-# Valid types defined in BTIDES schema
-btype_ADV_IND           = 0
-btype_ADV_DIRECT_IND    = 1
-btype_ADV_NONCONN_IND   = 2
-btype_ADV_SCAN_IND      = 3
-btype_AUX_ADV_IND       = 10
-btype_SCAN_RSP          = 20
-btype_AUX_SCAN_RSP      = 10
-btype_EIR               = 50
-valid_adv_chan_types = [btype_ADV_IND, btype_ADV_DIRECT_IND, btype_ADV_NONCONN_IND, btype_ADV_SCAN_IND, btype_AUX_ADV_IND, btype_SCAN_RSP, btype_AUX_SCAN_RSP, btype_EIR]
-valid_adv_chan_type_strs = ["ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "ADV_SCAN_IND", "AUX_ADV_IND", "SCAN_RSP", "AUX_SCAN_RSP", "EIR"]
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
     #print(f"type = {type}, type_str = {type_str}")
@@ -439,23 +396,23 @@ def pdu_type_to_BTIDES_type(type):
     # FIXME!: I found based on this that I'm overloading PCAP types and old HCI types and they're off by 1!
     # I will need to change db and re-process everything to fix :-/
     # Values from pcaps and newer HCI logs
-    if(type == pdutype_ADV_IND):            return btype_ADV_IND
-    if(type == pdutype_ADV_DIRECT_IND):     return btype_ADV_DIRECT_IND
-    if(type == pdutype_ADV_SCAN_IND):       return btype_ADV_SCAN_IND
-    if(type == pdutype_ADV_NONCONN_IND):    return btype_ADV_NONCONN_IND
-    if(type == pdutype_SCAN_RSP):           return btype_SCAN_RSP # SCAN_RSP
-    if(type == pdutype_SCAN_REQ):           return pdutype_ADV_NONCONN_IND #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
+    if(type == type_AdvChanPDU_ADV_IND):            return type_BTIDES_ADV_IND
+    if(type == type_AdvChanPDU_ADV_DIRECT_IND):     return type_BTIDES_ADV_DIRECT_IND
+    if(type == type_AdvChanPDU_ADV_SCAN_IND):       return type_BTIDES_ADV_SCAN_IND
+    if(type == type_AdvChanPDU_ADV_NONCONN_IND):    return type_BTIDES_ADV_NONCONN_IND
+    if(type == type_AdvChanPDU_SCAN_RSP):           return type_BTIDES_SCAN_RSP # SCAN_RSP
+    if(type == type_AdvChanPDU_SCAN_REQ):           return type_AdvChanPDU_ADV_NONCONN_IND #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
     #if(type == 6): return btype_SCAN_RSP # SCAN_RSP # FIXME: From accidental incorrect pcap mix-in
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
     # From "Event_Type values for legacy PDUs" in spec apparently 
-    if(type == 16): return btype_ADV_NONCONN_IND # 0x10 ADV_NONCONN_IND
-    if(type == 18): return btype_ADV_SCAN_IND # 0x12 ADV_SCAN_IND
-    if(type == 19): return btype_ADV_IND # 0x13 ADV_IND
-    if(type == 21): return btype_ADV_DIRECT_IND # 0x15 ADV_DIRECT_IND
-    if(type == 26): return btype_SCAN_RSP # 0x1A SCAN_RSP to ADV_SCAN_IND
-    if(type == 27): return btype_SCAN_RSP # 0x1B SCAN_RSP to ADV_IND
+    if(type == 16): return type_BTIDES_ADV_NONCONN_IND # 0x10 ADV_NONCONN_IND
+    if(type == 18): return type_BTIDES_ADV_SCAN_IND # 0x12 ADV_SCAN_IND
+    if(type == 19): return type_BTIDES_ADV_IND # 0x13 ADV_IND
+    if(type == 21): return type_BTIDES_ADV_DIRECT_IND # 0x15 ADV_DIRECT_IND
+    if(type == 26): return type_BTIDES_SCAN_RSP # 0x1A SCAN_RSP to ADV_SCAN_IND
+    if(type == 27): return type_BTIDES_SCAN_RSP # 0x1B SCAN_RSP to ADV_IND
     
     # From manually inserting EIR type
     if(type == 50): return 50 # EIR
@@ -467,12 +424,12 @@ def pdu_type_to_BTIDES_type_str(type):
     # I will need to change db and re-process everything to fix :-/
     # Values from pcaps and newer HCI logs
     # FOR NOW I'M USING THE HCI TYPES, BECAUSE THAT'S WHAT MOST OF MY DATA IS IN
-    if(type == pdutype_ADV_IND):            return "ADV_IND"
-    if(type == pdutype_ADV_DIRECT_IND):     return "ADV_DIRECT_IND" # FIXME: I don't know if that's what this actually is, since I have no examples in the HCI log I'm looking at
-    if(type == pdutype_ADV_SCAN_IND):       return "ADV_SCAN_IND"
-    if(type == pdutype_ADV_NONCONN_IND):    return "ADV_NONCONN_IND"
-    if(type == pdutype_SCAN_RSP):           return "SCAN_RSP"
-    if(type == pdutype_SCAN_REQ):           return "ADV_NONCONN_IND" #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
+    if(type == type_AdvChanPDU_ADV_IND):            return "ADV_IND"
+    if(type == type_AdvChanPDU_ADV_DIRECT_IND):     return "ADV_DIRECT_IND" # FIXME: I don't know if that's what this actually is, since I have no examples in the HCI log I'm looking at
+    if(type == type_AdvChanPDU_ADV_SCAN_IND):       return "ADV_SCAN_IND"
+    if(type == type_AdvChanPDU_ADV_NONCONN_IND):    return "ADV_NONCONN_IND"
+    if(type == type_AdvChanPDU_SCAN_RSP):           return "SCAN_RSP"
+    if(type == type_AdvChanPDU_SCAN_REQ):           return "ADV_NONCONN_IND" #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
     #if(type == 6): return "SCAN_RSP" # FIXME: From accidental incorrect pcap mix-in. Replace with proper 
     
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
