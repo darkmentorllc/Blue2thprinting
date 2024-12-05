@@ -9,7 +9,7 @@
 
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
-from TME.TME_BTIDES_base import lookup_base_entry, ff_base, generic_insertion_into_BTIDES_first_level_array
+from TME.TME_BTIDES_base import lookup_base_entry, ff_base, generic_insertion_into_BTIDES_second_level_array
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
@@ -337,59 +337,6 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     return None
 
-def insert_new_AdvChanData(base, adv_type, adv_data_type, data):
-    btype = pdu_type_to_BTIDES_type(adv_type)
-    btype_str = None
-    if(verbose_BTIDES):
-        btype_str = pdu_type_to_BTIDES_type_str(adv_type)
-
-    acd = ff_AdvChanData(type=btype, type_str=btype_str)
-    #print(acd)
-    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
-    #print(json.dumps(acd, indent=2))
-    base["AdvChanArray"].append(acd)
-
-def insert_new_AdvChanArray(base, adv_type, adv_data_type, data):
-    btype = pdu_type_to_BTIDES_type(adv_type)
-    btype_str = None
-    if(verbose_BTIDES):
-        btype_str = pdu_type_to_BTIDES_type_str(adv_type)
-    acd = ff_AdvChanData(type=btype, type_str=btype_str)
-    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
-    #print(json.dumps(acd, indent=2))
-    base["AdvChanArray"] = [ acd ]
-
-def insert_new_AdvChanArray_entry_only(base, adv_type, adv_data_type, data):
-    # btype = BTIDES-specific advertisement event type
-    btype = pdu_type_to_BTIDES_type(adv_type)
-
-    if("AdvChanArray" not in base.keys()):
-        # There is an entry for this BDADDR (base) but not yet any AdvChanArray entries, so just insert ours
-        insert_new_AdvChanArray(base, adv_type, adv_data_type, data)
-        #print(json.dumps(acd, indent=2))
-        return
-
-    acd = lookup_AdvChanData_entry_by_btype(base, btype)
-    if(acd == None):
-        insert_new_AdvChanData(base, adv_type, adv_data_type, data)
-        return
-    else:
-        if(AdvDataArray_entry_by_btype_exists(acd, btype, adv_data_type, data)):
-            # Nothing to do
-            return
-        else:
-            acd["AdvDataArray"].append(ff_adv_data_type_specific_obj(adv_data_type, data))
-            return
-
-def insert_new_base_and_AdvChanArray_entry(device_bdaddr, bdaddr_random, adv_type, adv_data_type, data):
-    global BTIDES_JSON
-    base = ff_base(device_bdaddr, bdaddr_random)
-    insert_new_AdvChanArray(base, adv_type, adv_data_type, data)
-    ###print(json.dumps(base, indent=2))
-    BTIDES_JSON.append(base)
-    #print(json.dumps(BTIDES_JSON, indent=2))
-    return
-
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
 def pdu_type_to_BTIDES_type(type):
@@ -453,26 +400,12 @@ def pdu_type_to_BTIDES_type_str(type):
 def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
     global BTIDES_JSON
 
-    '''    
     btype = pdu_type_to_BTIDES_type(adv_type)
     btype_str = None
     if(verbose_BTIDES):
         btype_str = pdu_type_to_BTIDES_type_str(adv_type)
-    acd = ff_AdvChanData(type=btype, type_str=btype_str)
-    acd["AdvDataArray"] = [ ff_adv_data_type_specific_obj(adv_data_type, data) ]
-    
-    generic_insertion_into_BTIDES_base_array(bdaddr, random, acd, "AdvChanArray")
-    '''
-    #print(json.dumps(BTIDES_JSON, indent=2))
-    base = lookup_base_entry(bdaddr, random)
-    ###print(json.dumps(entry, indent=2))
-    if (base == None):
-        # Insert new one
-        insert_new_base_and_AdvChanArray_entry(bdaddr, random, adv_type, adv_data_type, data)
-        #print(json.dumps(BTIDES_JSON, indent=2))
-        return
-    else:
-        #Check every AdvData entry and if we find an exact match to what we'd be inserting, just go ahead and return as done
-        #print(f"adv_type = {adv_type}, adv_data_type = {adv_data_type}, data = {data}")
-        insert_new_AdvChanArray_entry_only(base, adv_type, adv_data_type, data)
-        return
+    adv_chan_array_entry = ff_AdvChanData(type=btype, type_str=btype_str)
+    adv_data = ff_adv_data_type_specific_obj(adv_data_type, data)
+    adv_chan_array_entry["AdvDataArray"] = [ adv_data ]
+
+    generic_insertion_into_BTIDES_second_level_array(bdaddr, random, adv_chan_array_entry, "AdvChanArray", adv_data, "AdvDataArray")
