@@ -19,6 +19,8 @@
           "$ref" : "#/definitions/ATT_EXCHANGE_MTU_RSP2"
         }, {
           "$ref" : "#/definitions/ATT_READ_REQ"
+        }, {
+          "$ref" : "#/definitions/ATT_READ_RSP"
         } ]
       }
     }
@@ -170,6 +172,29 @@
           "type" : "integer",
           "minimum" : 0,
           "maximum" : 65535
+        }
+      }
+    },
+    "ATT_READ_RSP" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_READ\\_RSP packet.",
+      "required" : [ "opcode", "handle" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_READ_RSP"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 11
+        },
+        "value_hex_str" : {
+          "description" : "Value read from a handle, as a hex string.",
+          "type" : "string"
         }
       }
     }

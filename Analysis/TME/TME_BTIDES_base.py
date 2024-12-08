@@ -60,25 +60,52 @@ def write_BTIDES(out_filename):
         json.dump(BTIDES_JSON, fp=f) # For saving space
         #json.dump(BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
 
-def lookup_base_entry(bdaddr, random):
+
+# Find SingleBDADDR type entries which match the given bdaddr and random
+def lookup_SingleBDADDR_base_entry(bdaddr, random):
     bdaddr = bdaddr.lower()
     ###print("lookup_base_entry: ")
     for item in BTIDES_JSON:
         ###print(item)
         ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
         ###print(f"lookup_base_entry: random = {random}")
-        if(item["bdaddr"] == bdaddr and item["bdaddr_rand"] == random):
+        if("bdaddr" in item.keys() and item["bdaddr"] == bdaddr and 
+           "bdaddr_rand" in item.keys() and item["bdaddr_rand"] == random):
             return item
 
     return None
 
-# Return True if it's done, else False if there's more checks left to do
-def generic_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
+
+# Find DualBDADDR type entries which match the given CONNECT_IND
+def lookup_DualBDADDR_base_entry(connect_ind_obj):
+    for item in BTIDES_JSON:
+        if "CONNECT_IND" in item.keys() and item["CONNECT_IND"] == connect_ind_obj:
+            return item
+    return None
+
+
+############################
+# Helper "factory functions"
+############################
+def ff_SingleBDADDR_base(bdaddr, random):
+    base = {}
+    base["bdaddr"] = bdaddr
+    base["bdaddr_rand"] = random
+    return base
+
+
+def ff_DualBDADDR_base(connect_ind_obj):
+    base = {}
+    base["CONNECT_IND"] = connect_ind_obj
+    return base
+
+
+def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
     global BTIDES_JSON
-    bdaddr_specific_entry = lookup_base_entry(bdaddr, random)
+    bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
-        base = ff_base(bdaddr, random)
+        base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ] 
         BTIDES_JSON.append(base)
         return True
@@ -97,6 +124,56 @@ def generic_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, 
             return True
 
     return False # Shouldn't be able to get here
+
+# The difference between SingleBDADDR and DualBDADDR is that the latter uses the CONNECT_IND as the unique identifier
+# and can be the only entry, due to that being its own packet type. Whereas the former uses a single BDADDR and random
+# as the unique identifier, but which can't standalone, and is only ever valid in the presence of additional data.
+# Therefore we need a level zero insertion function for DualBDADDR, but not for SingleBDADDR
+def generic_DualBDADDR_insertion_into_BTIDES_zeroth_level(connect_ind_obj):
+    global BTIDES_JSON
+    bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
+    if (bdaddr_pair_specific_entry == None):
+        if(len(BTIDES_JSON) == 0):
+            # If there's nothing in the BTIDES JSON, then we need to add the DualBDADDR entry as the first thing
+            DualBDADDR_entry = ff_DualBDADDR_base(connect_ind_obj)
+            BTIDES_JSON = [ DualBDADDR_entry ]
+            return True
+        else:
+            # If there's already stuff in the BTIDES JSON, append this new DualBDADDR entry to the end
+            DualBDADDR_entry = ff_DualBDADDR_base(connect_ind_obj)
+            BTIDES_JSON.append( [ DualBDADDR_entry ] )
+            return True
+    else:
+        #print("CONNECT_IND already exists in the BTIDES JSON. Nothing to do.")
+        return True
+
+    return False # Shouldn't be able to get here
+
+def generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, target_tier1_array_name):
+    global BTIDES_JSON
+    bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
+    if (bdaddr_pair_specific_entry == None):
+        # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
+        base = ff_DualBDADDR_base(connect_ind_obj)
+        base[target_tier1_array_name] = [ tier1_data ] 
+        BTIDES_JSON.append(base)
+        return True
+    else:
+        if(target_tier1_array_name not in bdaddr_pair_specific_entry.keys()):
+            # There is an bdaddr_specific_entry for this BDADDR but not yet any target_tier1_array_name entries, so just insert ours as the baseline array
+            bdaddr_pair_specific_entry[target_tier1_array_name] = [ tier1_data ]
+            return True
+        else:
+            # There is an bdaddr_specific_entry for this BDADDR, and GATTArray entries, so check if ours already exists, and if so, we're done
+            for obj in bdaddr_pair_specific_entry[target_tier1_array_name]:
+                if(obj == tier1_data):
+                    return True
+            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_specific_entry onto GATTArray
+            bdaddr_pair_specific_entry[target_tier1_array_name].append(tier1_data)
+            return True
+
+    return False # Shouldn't be able to get here
+
 
 # I want to check for equality between objects, while ignoring embedded dictionaries (otherwise there could never be equality in some cases)
 def non_recursive_primitive_equality_check(dict1, dict2):
@@ -120,17 +197,17 @@ def non_recursive_primitive_equality_check(dict1, dict2):
 
     return True
 
-# Return True if it's done, else False if there's more checks left to do
+
 # This is for inserting things into not the top level array, but a sub-array
 # e.g. "AdvDataArray" (tier2) under "AdvChanArray" (tier1), or "characteristics" (tier1), under "GATTArray" (tier1)
 # This function requires you to already have the tier1_data so that it can be matched before descending into tier2
 # The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
-def generic_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
+def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
     global BTIDES_JSON
-    bdaddr_specific_entry = lookup_base_entry(bdaddr, random)
+    bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
-        base = ff_base(bdaddr, random)
+        base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ] 
         BTIDES_JSON.append(base)
         return True
@@ -164,6 +241,48 @@ def generic_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data,
 
     return False # Shouldn't be able to get here
 
+# This is for inserting things into not the top level array, but a sub-array
+# e.g. "AdvDataArray" (tier2) under "AdvChanArray" (tier1), or "characteristics" (tier1), under "GATTArray" (tier1)
+# This function requires you to already have the tier1_data so that it can be matched before descending into tier2
+# The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
+def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
+    global BTIDES_JSON
+    bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
+    if (bdaddr_pair_specific_entry == None):
+        # There is no bdaddr_pair_specific_entry yet for this BDADDR pair. Insert a brand new one with our tier1_data within the given target_tier1_array_name
+        base = ff_DualBDADDR_base(connect_ind_obj)
+        base[target_tier1_array_name] = [ tier1_data ] 
+        BTIDES_JSON.append(base)
+        return True
+    else:
+        if(target_tier1_array_name not in bdaddr_pair_specific_entry.keys()):
+            # There is an bdaddr_pair_specific_entry for this BDADDR pair but not yet any target_tier1_array_name entries, so just insert ours as the baseline array
+            bdaddr_pair_specific_entry[target_tier1_array_name] = [ tier1_data ]
+            return True
+        else:
+            # There is an bdaddr_pair_specific_entry for this BDADDR pair, and GATTArray entries, so check if ours already exists, and if so, we're done
+            for t1_obj in bdaddr_pair_specific_entry[target_tier1_array_name]:
+                # Do a shallow check of whether the found object matches the target tier1 data, while not recursing into embedded objects
+                if(non_recursive_primitive_equality_check(t1_obj, tier1_data)):
+                    # Descend into the second level
+                    if(target_tier2_array_name not in t1_obj.keys()):
+                        # Key is missing, so just insert new tier2_array with tier2_data
+                        t1_obj[target_tier2_array_name] = [ tier2_data ]
+                        return True
+                    else:
+                        # Check for an exact match of the tier2_data, and if so, we're done
+                        for t2_obj in t1_obj[target_tier2_array_name]:
+                            if(t2_obj == tier2_data):
+                                return True
+
+                        # If we got here, nothing matched, so append the tier2_data
+                        t1_obj[target_tier2_array_name].append(tier2_data)
+                        return True
+            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_pair_specific_entry onto GATTArray
+            bdaddr_pair_specific_entry[target_tier1_array_name].append(tier1_data)
+            return True
+
+    return False # Shouldn't be able to get here
 
 def convert_UUID128_to_UUID16_if_possible(UUID128):
     UUID128_tmp = UUID128.strip().lower()
@@ -174,12 +293,3 @@ def convert_UUID128_to_UUID16_if_possible(UUID128):
         return UUID128_tmp[4:8]
     else:
         return UUID128
-
-############################
-# Helper "factory functions"
-############################  
-def ff_base(bdaddr, random):
-    base = {}
-    base["bdaddr"] = bdaddr
-    base["bdaddr_rand"] = random
-    return base

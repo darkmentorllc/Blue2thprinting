@@ -4,10 +4,13 @@
   "description" : "BlueTooth Information Data Exchange Schema (BTIDES!)",
   "type" : "array",
   "items" : {
-    "$ref" : "#/definitions/RootType"
+    "anyOf" : [ 
+        {"$ref" : "#/definitions/SingleBDADDR"},
+        {"$ref" : "#/definitions/DualBDADDR"}
+    ]
   },
   "definitions" : {
-    "RootType" : {
+    "SingleBDADDR" : {
       "description" : "The core information which must be in every element of the base array",
       "type" : "object",
       "required" : [ "bdaddr", "bdaddr_rand" ],
@@ -18,8 +21,129 @@
         "bdaddr_rand" : {
           "$ref" : "#/definitions/bdaddr_random"
         },
-        "bdaddr_rand_subtype" : {
-          "$ref" : "#/definitions/bdaddr_random_subtype"
+        "AdvChanArray" : {
+          "$ref" : "BTIDES_AdvData.json#/properties/AdvChanArray"
+        },
+        "LLArray" : {
+          "$ref" : "BTIDES_LL.json#/properties/LLArray"
+        },
+        "HCIArray" : {
+          "$ref" : "BTIDES_HCI.json#/properties/HCIArray"
+        },
+        "L2CAPArray" : {
+          "$ref" : "BTIDES_L2CAP.json#/properties/L2CAPArray"
+        },
+        "SMPArray" : {
+          "$ref" : "BTIDES_SMP.json#/properties/SMPArray"
+        },
+        "ATTArray" : {
+          "$ref" : "BTIDES_ATT.json#/properties/ATTArray"
+        },
+        "GATTArray" : {
+          "$ref" : "BTIDES_GATT.json#/properties/GATTArray"
+        },
+        "EIRArray" : {
+          "$ref" : "BTIDES_EIR.json#/properties/EIRArray"
+        },
+        "LMPArray" : {
+          "$ref" : "BTIDES_LMP.json#/properties/LMPArray"
+        },
+        "SDPArray" : {
+          "$ref" : "BTIDES_SDP.json#/properties/SDPArray"
+        },
+        "GPSArray" : {
+          "$ref" : "BTIDES_GPS.json#/properties/GPSArray"
+        }
+      }
+    },
+    "CONNECT_IND" : {
+      "description" : "The data within a BLE CONNECT_IND packet.",
+      "type" : "object",
+      "required" : [ "central_bdaddr", "central_bdaddr_rand", "peripheral_bdaddr", "peripheral_bdaddr_rand", "access_address", "crc_init_hex_str", "win_size", "win_offset", "interval", "latency", "timeout", "channel_map_hex_str", "hop", "SCA" ],
+      "properties" : {
+        "central_bdaddr" : {
+          "$ref" : "#/definitions/bdaddr",
+          "description" : "The Central device's Bluetooth Device Address."
+        },
+        "central_bdaddr_rand" : {
+          "$ref" : "#/definitions/bdaddr_random",
+          "description" : "Whether the Central device's BDADDR is public (0) or random (1)."
+        },
+        "peripheral_bdaddr" : {
+          "$ref" : "#/definitions/bdaddr",
+          "description" : "The Peripheral device's Bluetooth Device Address."
+        },
+        "peripheral_bdaddr_rand" : {
+          "$ref" : "#/definitions/bdaddr_random",
+          "description" : "Whether the Peripheral device's BDADDR is public (0) or random (1)."
+        },
+        "access_address" : {
+          "$ref" : "#/definitions/access_address",
+          "description" : "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection."
+        },
+        "crc_init_hex_str" : {
+          "description" : "The 3-byte CRC initialization value used in the CONNECT_IND packet, as a hex string.",
+          "type" : "string",
+          "minLength" : 6,
+          "maxLength" : 6
+        },
+        "win_size" : {
+          "description" : "The transmit window size used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 1 and 255, but put in whatever was actually used (i.e. accept 0).",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "win_offset" : {
+          "description" : "The transmit window offset used in the CONNECT_IND packet. (Multiplied by 1.25ms). \"The transmitWindowOffset shall be a multiple of 1.25 ms in the range 0 ms to connInterval.\" according to the spec.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "interval" : {
+          "description" : "The connection interval used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 7.5ms to 4.0s (6-3200) according to the spec, but put in whatever was actually used.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "latency" : {
+          "description" : "The slave latency used in the CONNECT_IND packet. \"The value of connSubrateFactor shall be in the range 1 to 500 and shall be set to 1 for a new connection\" to be valid according to the spec, but put whatever value was actually found in the packet.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "timeout" : {
+          "description" : "The connection timeout used in the CONNECT_IND packet. (Multiplied by 10ms). \"The connSupervisionTimeout shall be a multiple of 10 ms in the range 100 ms to 32.0s and it shall be larger than (1 + connPeripheralLatency) × connSubrateFactor × connInterval × 2.\" (so 1-3200)according to the spec, but put in whatever was actually used.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "channel_map_hex_str" : {
+          "description" : "The (5-byte) channel map used in the CONNECT_IND packet, as a hex string.",
+          "type" : "string",
+          "minLength" : 10,
+          "maxLength" : 10
+        },
+        "hop" : {
+          "description" : "The (5-bit) hop increment used in the CONNECT_IND packet. This should technically be only between 5-16 according to the spec, but put in whatever was actually used.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 31
+        },
+        "SCA" : {
+          "description" : "The (3-bit) sleep clock accuracy used in the CONNECT_IND packet.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 7
+        }
+      }
+    },
+    "DualBDADDR" : {
+      "description" : "The core information which must be in every element of the base array",
+      "type" : "object",
+      "required" : [ "CONNECT_IND" ],
+      "properties" : {
+        "CONNECT_IND" : {
+          "$ref" : "#/definitions/CONNECT_IND"
         },
         "AdvChanArray" : {
           "$ref" : "BTIDES_AdvData.json#/properties/AdvChanArray"
@@ -65,10 +189,11 @@
       "type" : "integer",
       "enum" : [ 0, 1 ]
     },
-    "bdaddr_random_subtype" : {
-      "description" : "Optional helper data so you don't need to parse the sub-type out of the most-significant 2 bits of the BDADDR.\n 0 = \"Static\"\n 1 = \"Private Resolvable\"\n 2 = \"Private Non-Resolvable\"",
+    "access_address" : {
+      "description" : "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection.",
       "type" : "integer",
-      "enum" : [ 0, 1, 2 ]
+      "minimum": 0,
+      "maximum": 4294967295
     },
     "std_optional_fields" : {
       "description" : "Common optional fields that can be included in a record if desired.",

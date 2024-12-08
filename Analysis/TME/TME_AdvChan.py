@@ -12,6 +12,47 @@ from TME.TME_UUID16 import *
 from TME.TME_UUID32 import *
 from TME.TME_UUID128 import *
 
+#####################################################
+# CONNECT_IND (which is in the Advertisement Channel)
+#####################################################
+
+def ff_CONNECT_IND(central_bdaddr="00:00:00:00:00:00", central_bdaddr_rand=0, peripheral_bdaddr="00:00:00:00:00:00", peripheral_bdaddr_rand=0, access_address=0, crc_init_hex_str="112233", win_size=0, win_offset=0, interval=0, latency=0, timeout=0, channel_map_hex_str="FFFFFFFF1F", hop=0, SCA=0):
+    connect_ind_obj = {
+        "central_bdaddr": central_bdaddr,
+        "central_bdaddr_rand": central_bdaddr_rand,
+        "peripheral_bdaddr": peripheral_bdaddr,
+        "peripheral_bdaddr_rand": peripheral_bdaddr_rand,
+        "access_address": access_address,
+        "crc_init_hex_str": crc_init_hex_str,
+        "win_size": win_size,
+        "win_offset": win_offset,
+        "interval": interval,
+        "latency": latency,
+        "timeout": timeout,
+        "channel_map_hex_str": channel_map_hex_str,
+        "hop": hop,
+        "SCA": SCA
+    }
+    return connect_ind_obj
+
+def ff_CONNECT_IND_placeholder():
+    return ff_CONNECT_IND(
+        central_bdaddr="00:00:00:00:00:00",
+        central_bdaddr_rand=0,
+        peripheral_bdaddr="00:00:00:00:00:00",
+        peripheral_bdaddr_rand=0,
+        access_address=0,
+        crc_init_hex_str="112233",
+        win_size=0,
+        win_offset=0,
+        interval=0,
+        latency=0,
+        timeout=0,
+        channel_map_hex_str="FFFFFFFF1F",
+        hop=0,
+        SCA=0
+    )
+
 ########################################
 # Transmit Power
 ########################################

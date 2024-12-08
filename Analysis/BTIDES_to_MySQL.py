@@ -798,10 +798,10 @@ def main():
     total = len(BTIDES_JSON)
     count = 0;
     for entry in BTIDES_JSON:
-        # Sanity check every entry against the Schema's RootType (this way we don't have to validate all up front)
+        # Sanity check every entry against the Schema's RootTypeSingleBDADDR (this way we don't have to validate all up front)
         try:
             Draft202012Validator(
-                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/RootType"},
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/RootTypeSingleBDADDR"},
                 registry=registry,
             ).validate(instance=entry)
             #print("JSON is valid according to BTIDES Schema")

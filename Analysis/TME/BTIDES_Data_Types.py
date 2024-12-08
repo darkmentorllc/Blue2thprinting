@@ -17,7 +17,8 @@ type_BTIDES_ADV_NONCONN_IND   = 2
 type_BTIDES_ADV_SCAN_IND      = 3
 type_BTIDES_AUX_ADV_IND       = 10
 type_BTIDES_SCAN_RSP          = 20
-type_BTIDES_AUX_SCAN_RSP      = 10
+type_BTIDES_AUX_SCAN_RSP      = 21
+type_BTIDES_CONNECT_IND       = 40
 type_BTIDES_EIR               = 50
 
 adv_chan_types_to_strings = {
@@ -28,6 +29,7 @@ adv_chan_types_to_strings = {
     type_BTIDES_AUX_ADV_IND: "AUX_ADV_IND",
     type_BTIDES_SCAN_RSP: "SCAN_RSP",
     type_BTIDES_AUX_SCAN_RSP: "AUX_SCAN_RSP",
+    type_BTIDES_CONNECT_IND: "CONNECT_IND",
     type_BTIDES_EIR: "EIR"
 }
 

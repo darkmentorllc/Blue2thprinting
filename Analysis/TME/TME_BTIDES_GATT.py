@@ -9,7 +9,7 @@
 
 import re
 from TME.BTIDES_Data_Types import *
-from TME.TME_BTIDES_base import generic_insertion_into_BTIDES_first_level_array, generic_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_base_entry, ff_base
+from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 ############################
@@ -91,10 +91,10 @@ def find_exact_service_match(GATTArray, data):
 
 def BTIDES_export_GATT_Service(bdaddr, random, data):
     global BTIDES_JSON
-    generic_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
 
 def find_service_with_target_handle_in_range(bdaddr, random, target_handle):
-    base = lookup_base_entry(bdaddr, random)
+    base = lookup_SingleBDADDR_base_entry(bdaddr, random)
     for service_entry in base["GATTArray"]:
         # Check if the begin and end service handles enclose this characteristic value
         if(service_entry != None and "begin_handle" in service_entry.keys() and service_entry["begin_handle"] < target_handle and
@@ -108,7 +108,7 @@ def BTIDES_export_GATT_Characteristic(bdaddr, random, data):
     if(service_entry == None):
         service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
 
-    generic_insertion_into_BTIDES_second_level_array(bdaddr, random, service_entry, "GATTArray", data, "characteristics")
+    generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, service_entry, "GATTArray", data, "characteristics")
 
 def find_matching_characteristic(characteristics, target_handle):
     for char in characteristics:
@@ -130,7 +130,7 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, random)
+        base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
         #print(json.dumps(base, indent=2))
         BTIDES_JSON.append(base)
@@ -179,7 +179,7 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
 
 def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     global BTIDES_JSON
-    entry = lookup_base_entry(bdaddr, random)
+    entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
     # For the placeholder, first run it through the factory function to add any nice-to-haves for verbosity
     data = ff_GATT_Characteristic_Value(data)
     # Next for the embed the char_value data into the placeholder characteristic right from the start
@@ -189,7 +189,7 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, random)
+        base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
         #print(json.dumps(base, indent=2))
         BTIDES_JSON.append(base)

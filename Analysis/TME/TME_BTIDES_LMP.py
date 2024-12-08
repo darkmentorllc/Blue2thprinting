@@ -46,11 +46,11 @@ def ff_LMP_FEATURES_RSP(features):
 def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_base_entry(bdaddr, 0)
+    entry = lookup_SingleBDADDR_base_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, 0)
+        base = ff_SingleBDADDR_base(bdaddr, 0)
         ###print(json.dumps(acd, indent=2))
         base["LMPArray"] = [ ff_LMP_VERSION_RSP(version, company_id, subversion) ]
         BTIDES_JSON.append(base)
@@ -79,11 +79,11 @@ def BTIDES_export_LMP_VERSION_RSP(bdaddr, version, company_id, subversion):
 def BTIDES_export_LMP_FEATURES_RSP(bdaddr, features):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
-    entry = lookup_base_entry(bdaddr, 0)
+    entry = lookup_SingleBDADDR_base_entry(bdaddr, 0)
     ###print(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
-        base = ff_base(bdaddr, 0)
+        base = ff_SingleBDADDR_base(bdaddr, 0)
         ###print(json.dumps(acd, indent=2))
         base["LMPArray"] = [ ff_LMP_FEATURES_RSP(features) ]
         BTIDES_JSON.append(base)
