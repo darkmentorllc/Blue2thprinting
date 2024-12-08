@@ -59,7 +59,7 @@
     "ATT_EXCHANGE_MTU_REQ" : {
       "type" : "object",
       "description" : "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet.",
-      "required" : [ "opcode", "client_rx_mtu" ],
+      "required" : [ "opcode", "direction", "client_rx_mtu" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -72,6 +72,11 @@
         "opcode" : {
           "description" : "ATT packet opcode.",
           "const" : 2
+        },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
         },
         "client_rx_mtu" : {
           "description" : "2-byte \"Client Rx MTU\" from spec. Maximum number of bytes the ATT Client can receive via ATT.",
@@ -84,7 +89,7 @@
     "ATT_EXCHANGE_MTU_REQ2" : {
       "type" : "object",
       "description" : "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "opcode", "direction", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -98,6 +103,11 @@
           "description" : "ATT packet opcode.",
           "const" : 2
         },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
+        },
         "full_pkt_hex_str" : {
           "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
         }
@@ -106,7 +116,7 @@
     "ATT_EXCHANGE_MTU_RSP" : {
       "type" : "object",
       "description" : "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet.",
-      "required" : [ "opcode", "server_rx_mtu" ],
+      "required" : [ "opcode", "direction", "server_rx_mtu" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -120,6 +130,11 @@
           "description" : "ATT packet opcode.",
           "const" : 3
         },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
+        },
         "server_rx_mtu" : {
           "description" : "2-byte \"Server Rx MTU\" from spec. Maximum number of bytes the ATT Server can receive via ATT.",
           "type" : "integer",
@@ -131,7 +146,7 @@
     "ATT_EXCHANGE_MTU_RSP2" : {
       "type" : "object",
       "description" : "Structure for ATT\\_EXCHANGE\\_MTU\\_RSP packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "opcode", "direction", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -145,6 +160,11 @@
           "description" : "Optional field just if you don't want to look up the opcode for this packet type.",
           "const" : 3
         },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
+        },
         "full_pkt_hex_str" : {
           "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
         }
@@ -153,7 +173,7 @@
     "ATT_READ_REQ" : {
       "type" : "object",
       "description" : "Structure for ATT\\_READ\\_REQ packet.",
-      "required" : [ "opcode", "handle" ],
+      "required" : [ "opcode", "direction", "handle" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -162,6 +182,11 @@
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
           "type" : "string",
           "const" : "ATT_READ_REQ"
+        },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
         },
         "opcode" : {
           "description" : "ATT packet opcode.",
@@ -178,7 +203,7 @@
     "ATT_READ_RSP" : {
       "type" : "object",
       "description" : "Structure for ATT\\_READ\\_RSP packet.",
-      "required" : [ "opcode", "handle" ],
+      "required" : [ "opcode", "direction", "handle" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
@@ -187,6 +212,11 @@
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
           "type" : "string",
           "const" : "ATT_READ_RSP"
+        },
+        "direction": {
+          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+          "type": "integer",
+          "enum": [0, 1]
         },
         "opcode" : {
           "description" : "ATT packet opcode.",

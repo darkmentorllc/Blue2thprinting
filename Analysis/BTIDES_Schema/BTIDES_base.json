@@ -61,6 +61,9 @@
       "type" : "object",
       "required" : [ "central_bdaddr", "central_bdaddr_rand", "peripheral_bdaddr", "peripheral_bdaddr_rand", "access_address", "crc_init_hex_str", "win_size", "win_offset", "interval", "latency", "timeout", "channel_map_hex_str", "hop", "SCA" ],
       "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
         "central_bdaddr" : {
           "$ref" : "#/definitions/bdaddr",
           "description" : "The Central device's Bluetooth Device Address."

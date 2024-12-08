@@ -33,6 +33,10 @@ adv_chan_types_to_strings = {
     type_BTIDES_EIR: "EIR"
 }
 
+# Directions for post-connection packet communication
+type_direction_C2P =                    0 # Central to Peripheral
+type_direction_P2C =                    1 # Peripheral to Central
+
 # ATT IO types
 type_BTIDES_ATT_Read =                  0
 type_BTIDES_ATT_WriteWithResponse =     1

@@ -28,14 +28,14 @@ def ff_ATT_handle_entry(handle, UUID):
     obj = {"handle": handle, "UUID": UUID}
     return obj
 
-def ff_ATT_READ_REQ(handle):
-    obj = {"opcode": type_ATT_READ_REQ, "handle": handle}
+def ff_ATT_READ_REQ(handle, direction):
+    obj = {"opcode": type_ATT_READ_REQ, "direction": direction, "handle": handle}
     if(verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_REQ]
     return obj
 
-def ff_ATT_READ_RSP(value_hex_str):
-    obj = {"opcode": type_ATT_READ_RSP, "value_hex_str": value_hex_str}
+def ff_ATT_READ_RSP(value_hex_str, direction):
+    obj = {"opcode": type_ATT_READ_RSP, "direction": direction, "value_hex_str": value_hex_str}
     if(verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_RSP]
     return obj

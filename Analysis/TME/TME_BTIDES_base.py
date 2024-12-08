@@ -99,6 +99,14 @@ def ff_DualBDADDR_base(connect_ind_obj):
     base["CONNECT_IND"] = connect_ind_obj
     return base
 
+# The "**optional_fields" syntax allows for a variable number of optional fields to be passed in
+# e.g. "RSSI=value", "time=value", etc.
+# This way we can set any of the std_optional_fields values which we have available at any given time
+def insert_std_optional_fields(obj, **optional_fields):
+    for field, value in optional_fields.items():
+        if field not in obj:
+            obj[field] = value
+    return obj
 
 def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
     global BTIDES_JSON

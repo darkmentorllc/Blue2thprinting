@@ -26,7 +26,7 @@ from jsonschema import Draft202012Validator
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
-from TME.TME_BTIDES_base import write_BTIDES, lookup_DualBDADDR_base_entry
+from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
@@ -71,6 +71,24 @@ def scapy_flags_to_hex_str(entry):
     #print(f"flags_hex_str = {flags_hex_str}")
     return flags_hex_str
 
+# This is just a simple wrapper around insert_std_optional_fields to insert any
+# additional information that we may be able to glean from the packet
+def if_verbose_insert_std_optional_fields(obj, packet):
+    if(not verbose_BTIDES):
+        return
+
+    if(packet.haslayer(BTLE_RF)):
+        rf_fields = packet.getlayer(BTLE_RF)
+        channel_freq = rf_fields.rf_channel * 2 + 2402 # Channel in MHz
+        RSSI = rf_fields.signal
+        insert_std_optional_fields(obj, channel_freq=channel_freq, RSSI=RSSI)
+
+def get_packet_direction(packet):
+    rf_fields = packet.getlayer(BTLE_RF)
+    if(rf_fields.type == 2): # Scapy calls 2 = "DATA_M_TO_S" and 3 = "DATA_S_TO_M"
+        return type_direction_C2P
+    else:
+        return type_direction_P2C
 
 # This is the main function which converts from Scapy data format to BTIDES
 def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
@@ -344,43 +362,45 @@ def export_SCAN_RSP(packet):
 
     return False
 
-
-def export_ATT_Read_Request(connect_ind_obj, packet):
+# It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
+# But just doing it out of an abundance of caution
+def get_ATT_data(packet, scapy_type, packet_type):
     att_hdr = packet.getlayer(ATT_Hdr)
     if(att_hdr == None):
-        return False
-    att_data = packet.getlayer(ATT_Read_Request)
-    if(att_data == None):
-        return False
-    if(att_hdr.opcode == type_ATT_READ_REQ):
-        handle = f"{att_data.gatt_handle:04x}"
-        #BTIDES_export_ATT_READ_REQ(connect_ind_obj, handle)
-        data = ff_ATT_READ_REQ(handle)
-        BTIDES_export_ATT_packet(connect_ind_obj, type_ATT_READ_RSP, data)
+        return None
+    if(att_hdr.opcode != packet_type):
+        return None
+    if(packet.haslayer(scapy_type) == False):
+        return None
+    else:
+        return packet.getlayer(scapy_type)
 
-    return True
+def export_ATT_Read_Request(connect_ind_obj, packet):
+    att_data = get_ATT_data(packet, ATT_Read_Request, type_ATT_READ_REQ)
+    if(att_data != None):
+        direction = get_packet_direction(packet)
+        handle = f"{att_data.gatt_handle:04x}"
+        data = ff_ATT_READ_REQ(handle, direction)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, type_ATT_READ_RSP, data)
+        return True
+    return False
 
 
 def export_ATT_Read_Response(connect_ind_obj, packet):
     #packet.show()
-    att_hdr = packet.getlayer(ATT_Hdr)
-    if(att_hdr == None):
-        return False
-    att_data = packet.getlayer(ATT_Read_Response)
-    if(att_data == None):
-        return False
-    if(att_hdr.opcode == type_ATT_READ_RSP):
+    att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
+    if(att_data != None):
+        direction = get_packet_direction(packet)
         value_hex_str = ''.join(format(byte, '02x') for byte in att_data.value)
-        data = ff_ATT_READ_RSP(value_hex_str)
+        data = ff_ATT_READ_RSP(value_hex_str, direction)
+        if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj, type_ATT_READ_RSP, data)
-
-    return True
+        return True
+    return False
 
 
 def export_ATTArray(packet):
-    rf_fields = packet.getlayer(BTLE_RF)
-    channel_freq = rf_fields.rf_channel * 2 + 2402 # Channel in MHz
-
     ble_fields = packet.getlayer(BTLE)
     access_address = ble_fields.access_addr
 
@@ -404,19 +424,14 @@ def export_CONNECT_IND(packet):
     global g_access_address_to_connect_ind_obj
     
     #packet.show()
-    ''' In the future we may want to store these, once we add a place to store CONNECT_IND specifically...
-    rf_fields = packet.getlayer(BTLE_RF)
-    channel_freq = rf_fields.rf_channel * 2 + 2402 # Channel in MHz
-    rssi = rf_fields.signal
-    '''
 
     # Store the BDADDRs involved in the connection into a dictionary, queryable by access address
     # This dictionary will need to be used by all subsequent packets within the connection to figure out
     # which bdaddr to associate their data with
     ble_fields = packet.getlayer(BTLE)
     ble_adv_fields = packet.getlayer(BTLE_ADV)
-    central_bdaddr_random = ble_adv_fields.TxAdd
-    peripheral_bdaddr_random = ble_adv_fields.RxAdd
+    central_bdaddr_rand = ble_adv_fields.TxAdd
+    peripheral_bdaddr_rand = ble_adv_fields.RxAdd
     connect_fields = packet.getlayer(BTLE_CONNECT_REQ)
     central_bdaddr = connect_fields.InitA
     peripheral_bdaddr = connect_fields.AdvA
@@ -426,9 +441,9 @@ def export_CONNECT_IND(packet):
     crc_init_hex_str = ''.join(f'{byte:02x}' for byte in connect_fields.crc_init.to_bytes(3, byteorder='little'))
     connect_ind_obj = ff_CONNECT_IND(
         central_bdaddr=central_bdaddr,
-        central_bdaddr_rand=central_bdaddr_random,
+        central_bdaddr_rand=central_bdaddr_rand,
         peripheral_bdaddr=peripheral_bdaddr,
-        peripheral_bdaddr_rand=peripheral_bdaddr_random,
+        peripheral_bdaddr_rand=peripheral_bdaddr_rand,
         access_address=access_address,
         crc_init_hex_str=crc_init_hex_str,
         win_size=connect_fields.win_size,
@@ -440,6 +455,7 @@ def export_CONNECT_IND(packet):
         hop=connect_fields.hop,
         SCA=connect_fields.SCA
     )
+    if_verbose_insert_std_optional_fields(connect_ind_obj, packet)
     # Store the CONNECT_IND obj into g_access_address_to_bdaddrs for later use in lookups
     g_access_address_to_connect_ind_obj[access_address] = connect_ind_obj
 
