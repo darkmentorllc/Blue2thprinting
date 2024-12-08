@@ -80,3 +80,10 @@ verbose_BTIDES = False
 # Verbose printing
 #########################################
 verbose_print = False
+
+###############################################
+# Use alternate test database (for development)
+###############################################
+use_test_db = False
+insert_count = 0
+duplicate_count = 0

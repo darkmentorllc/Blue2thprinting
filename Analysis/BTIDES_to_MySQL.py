@@ -26,6 +26,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 import TME.TME_glob
+from TME.TME_helpers import execute_query, execute_insert
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 
@@ -33,64 +34,9 @@ from TME.TME_BTIDES_AdvData import *
 # Globals
 ###################################
 
-insert_count = 0
-duplicate_count = 0
-
-#verbose_print = False
-
 ###################################
 # Helper functions
 ###################################
-
-# Function to execute a MySQL query and fetch results
-def execute_query(query):
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database='bt',
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
-
-    cursor = connection.cursor()
-    cursor.execute(query)
-    result = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-    return result
-
-# Function to execute a MySQL query and fetch results
-def execute_insert(query, values):
-    global insert_count, duplicate_count
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database='bt',
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
-
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query, values)
-        connection.commit()
-
-        if cursor._warning_count > 0:
-            duplicate_count += 1
-        else:
-            insert_count += 1  # Increment insert_count only if no duplicates
-
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        connection.rollback()
-    finally:
-        cursor.close()
-        connection.close()
 
 ###################################
 # BTIDES_AdvData.json information
@@ -469,8 +415,6 @@ def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
     values = (random, bdaddr, unknown_opcode)
     insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES ( {random}, '{bdaddr}', {unknown_opcode});"
-    #print(insert2)
     execute_insert(insert, values)
 
 def import_LL_VERSION_IND(bdaddr, random, ll_entry):
@@ -479,8 +423,6 @@ def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     ll_sub_version = ll_entry["subversion"]
     values = (random, bdaddr, ll_version, device_BT_CID, ll_sub_version)
     insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES ( {random}, '{bdaddr}', {ll_version}, {device_BT_CID}, {ll_sub_version});"
-    #print(insert2)
     execute_insert(insert, values)
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
@@ -489,8 +431,6 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     features = int(ll_entry["le_features_hex_str"], 16)
     values = (random, bdaddr, opcode, features)
     insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES ( {random}, '{bdaddr}', {opcode}, {features});"
-    #print(insert2)
     execute_insert(insert, values)
 
 # This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
@@ -499,8 +439,6 @@ def import_LL_PING_RSP(bdaddr, random, ll_entry):
     #opcode = ll_entry["opcode"]
     values = (random, bdaddr, 1)
     insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES ( {random}, '{bdaddr}', 1);"
-    #print(insert2)
     execute_insert(insert, values)
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
@@ -512,8 +450,6 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     max_tx_time = ll_entry["max_tx_time"]
     values = (random, bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
     insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES ( {random}, '{bdaddr}', {opcode}, {max_rx_octets}, {max_rx_time}, {max_tx_octets}, {max_tx_time});"
-    #print(insert2)
     execute_insert(insert, values)
 
 # This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
@@ -524,8 +460,6 @@ def import_LL_PHYs(bdaddr, random, ll_entry):
     rx_phys = ll_entry["RX_PHYS"]
     values = (random, bdaddr, tx_phys, rx_phys)
     insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES ( {random}, '{bdaddr}', {tx_phys}, {rx_phys});"
-    #print(insert2)
     execute_insert(insert, values)
 
 def has_known_LL_packet(opcode, ll_entry):
@@ -565,8 +499,6 @@ def import_LMP_VERSION_RSP(bdaddr, lmp_entry):
     lmp_sub_version = lmp_entry["subversion"]
     values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
     insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES ('{bdaddr}', {lmp_version}, {device_BT_CID}, {lmp_sub_version});"
-    #print(insert2)
     execute_insert(insert, values)
 
 def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
@@ -574,8 +506,6 @@ def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
     features = int(lmp_entry["lmp_features_hex_str"], 16)
     values = (bdaddr, 0, features)
     insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES (%s, %s, %s);"
-    #insert2 = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES ('{bdaddr}', 0, {features});"
-    #print(insert2)
     execute_insert(insert, values)
 
 opcode_LMP_VERSION_RSP          = 38
@@ -605,8 +535,6 @@ def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     device_name = hci_entry["remote_name"]
     values = (bdaddr, device_name)
     insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES (%s, %s);"
-    #insert2 = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES ('{bdaddr}', '{device_name}');"
-    #print(insert2)
     execute_insert(insert, values)
 
 event_code_HCI_Remote_Name_Request_Complete = 7
@@ -747,16 +675,18 @@ def progress_update(total, count):
 # OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
 
 def main():
-    global verbose_print
+    global verbose_print, use_test_db, duplicate_count, insert_count
 
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
     parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
-    parser.add_argument('--verbose-print', action='store_true',required=False, help='Print verbose output.')
+    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
+    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
     args = parser.parse_args()
 
     in_filename = args.input
     TME.TME_glob.verbose_print = args.verbose_print
+    TME.TME_glob.use_test_db = args.use_test_db
     skip_invalid = args.skipinvalid
 
     with open(in_filename, 'r') as f:
@@ -781,8 +711,10 @@ def main():
         # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
         try:
             Draft202012Validator(
-                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
-                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"},
+                {"anyOf": [
+                    {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
+                    {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
+                ]},
                 registry=registry,
             ).validate(instance=entry)
             #print("JSON is valid according to BTIDES Schema")
@@ -817,8 +749,8 @@ def main():
         count += 1
         progress_update(total, count)
 
-    print(f"New db records inserted:\t\t{insert_count}")
-    print(f"Duplicate db records ignored:\t{duplicate_count}")
+    print(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
+    print(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
 
 if __name__ == "__main__":
     main()

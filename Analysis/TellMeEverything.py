@@ -25,11 +25,12 @@ from TME.TME_glob import verbose_print, verbose_BTIDES
 
 # Main function to handle command line arguments
 def main():
-    global verbose_print, verbose_BTIDES
+    global verbose_print, verbose_BTIDES, use_test_db
     parser = argparse.ArgumentParser(description='Query device names from MySQL tables.')
     parser.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     parser.add_argument('--verbose-print', action='store_true',required=False, help='Show explicit data-not-found output.')
     parser.add_argument('--verbose-BTIDES', action='store_true',required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
     parser.add_argument('--bdaddr', type=str, required=False, help='Device bdaddr value.')
     parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     parser.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
@@ -51,6 +52,7 @@ def main():
     out_filename = args.output
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
+    TME.TME_glob.use_test_db = args.use_test_db
     bdaddr = args.bdaddr
     bdaddrregex = args.bdaddrregex
     nametype = 0 # Default to non-random

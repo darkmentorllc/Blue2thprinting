@@ -15,11 +15,17 @@ from TME.TME_BTIDES_HCI import *
 
 # Function to execute a MySQL query and fetch results
 def execute_query(query):
+    global use_test_db
+    if(TME.TME_glob.use_test_db):
+        database = 'bttest'
+    else:
+        database = 'bt'
+
     connection = mysql.connector.connect(
         host='localhost',
         user='user',
         password='a',
-        database='bt',
+        database=database,
         charset='utf8mb4',
         collation='utf8mb4_unicode_ci',
         auth_plugin='mysql_native_password'
@@ -32,6 +38,41 @@ def execute_query(query):
     cursor.close()
     connection.close()
     return result
+
+# Function to execute a MySQL query and fetch results
+def execute_insert(query, values):
+    global insert_count, duplicate_count, use_test_db
+    if(TME.TME_glob.use_test_db):
+        database = 'bttest'
+    else:
+        database = 'bt'
+
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='user',
+        password='a',
+        database=database,
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
+        auth_plugin='mysql_native_password'
+    )
+
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query, values)
+        connection.commit()
+
+        if cursor._warning_count > 0:
+            TME.TME_glob.duplicate_count += 1
+        else:
+            TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        connection.rollback()
+    finally:
+        cursor.close()
+        connection.close()
 
 ########################################
 # Helpers
