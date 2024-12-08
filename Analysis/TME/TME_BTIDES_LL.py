@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 from TME.TME_BTIDES_base import *
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 
 opcode_LL_UNKNOWN_RSP               = 7
 opcode_LL_FEATURE_REQ               = 8
@@ -28,70 +28,70 @@ opcode_LL_PHY_RSP                   = 23
 
 def ff_LL_VERSION_IND(version, company_id, subversion):
     obj = {"opcode": opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_VERSION_IND"
     return obj
 
 def ff_LL_UNKNOWN_RSP(unknown_type):
     obj = {"opcode": opcode_LL_UNKNOWN_RSP, "unknown_type": unknown_type}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_UNKNOWN_RSP"
     return obj
 
 def ff_LL_FEATURE_REQ(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_FEATURE_REQ"
     return obj
 
 def ff_LL_FEATURE_RSP(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_FEATURE_RSP, "le_features_hex_str": le_features_hex_str}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_FEATURE_RSP"
     return obj
 
 def ff_LL_PERIPHERAL_FEATURE_REQ(features):
     le_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LL_PERIPHERAL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_PERIPHERAL_FEATURE_REQ"
     return obj
 
 def ff_LL_PING_REQ():
     obj = {"opcode": opcode_LL_PING_REQ}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_PING_REQ"
     return obj
 
 def ff_LL_PING_RSP():
     obj = {"opcode": opcode_LL_PING_RSP}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_PING_RSP"
     return obj
 
 def ff_LL_LENGTH_REQ(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     obj = {"opcode": opcode_LL_LENGTH_REQ, "max_rx_octets": max_rx_octets, "max_rx_time": max_rx_time, "max_tx_octets": max_tx_octets, "max_tx_time": max_tx_time}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_LENGTH_REQ"
     return obj
 
 def ff_LL_LENGTH_RSP(max_rx_octets, max_rx_time, max_tx_octets, max_tx_time):
     obj = {"opcode": opcode_LL_LENGTH_RSP, "max_rx_octets": max_rx_octets, "max_rx_time": max_rx_time, "max_tx_octets": max_tx_octets, "max_tx_time": max_tx_time}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_LENGTH_RSP"
     return obj
 
 def ff_LL_PHY_REQ(tx_phys, rx_phys):
     obj = {"opcode": opcode_LL_PHY_REQ, "TX_PHYS": tx_phys, "RX_PHYS": rx_phys}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_PHY_REQ"
     return obj
 
 def ff_LL_PHY_RSP(tx_phys, rx_phys):
     obj = {"opcode": opcode_LL_PHY_RSP, "TX_PHYS": tx_phys, "RX_PHYS": rx_phys}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = "LL_PHY_RSP"
     return obj
 

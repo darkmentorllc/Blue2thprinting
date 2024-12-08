@@ -25,38 +25,18 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 
 ###################################
 # Globals
 ###################################
-'''
-# Same order as in BTIDES_base.json
-BTIDES_files = ["BTIDES_base.json",
-                "BTIDES_AdvData.json",
-                "BTIDES_LL.json",
-                "BTIDES_HCI.json",
-                "BTIDES_L2CAP.json",
-                "BTIDES_SMP.json",
-                "BTIDES_ATT.json",
-                "BTIDES_GATT.json",
-                "BTIDES_EIR.json",
-                "BTIDES_LMP.json",
-                "BTIDES_SDP.json",
-                "BTIDES_GPS.json"
-                ]
-
-
-# Global is only accessible within this file
-BTIDES_JSON = []
-'''
 
 insert_count = 0
 duplicate_count = 0
 
-verbose_print = False
+#verbose_print = False
 
 ###################################
 # Helper functions
@@ -771,12 +751,12 @@ def main():
 
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
-    parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema.')
-    parser.add_argument('--verbose', action='store_true',required=False, help='Print verbose output.')
+    parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
+    parser.add_argument('--verbose-print', action='store_true',required=False, help='Print verbose output.')
     args = parser.parse_args()
 
     in_filename = args.input
-    verbose_print = args.verbose
+    TME.TME_glob.verbose_print = args.verbose_print
     skip_invalid = args.skipinvalid
 
     with open(in_filename, 'r') as f:
@@ -798,10 +778,11 @@ def main():
     total = len(BTIDES_JSON)
     count = 0;
     for entry in BTIDES_JSON:
-        # Sanity check every entry against the Schema's RootTypeSingleBDADDR (this way we don't have to validate all up front)
+        # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
         try:
             Draft202012Validator(
-                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/RootTypeSingleBDADDR"},
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"},
                 registry=registry,
             ).validate(instance=entry)
             #print("JSON is valid according to BTIDES Schema")

@@ -34,8 +34,8 @@ adv_chan_types_to_strings = {
 }
 
 # Directions for post-connection packet communication
-type_direction_C2P =                    0 # Central to Peripheral
-type_direction_P2C =                    1 # Peripheral to Central
+type_BTIDES_direction_C2P =                    0 # Central to Peripheral
+type_BTIDES_direction_P2C =                    1 # Peripheral to Central
 
 # ATT IO types
 type_BTIDES_ATT_Read =                  0

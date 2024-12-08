@@ -10,7 +10,7 @@
 import re
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
-from TME.TME_glob import BTIDES_JSON, verbose_BTIDES
+import TME.TME_glob
 
 ############################
 # Helper "factory functions"
@@ -30,13 +30,13 @@ def ff_ATT_handle_entry(handle, UUID):
 
 def ff_ATT_READ_REQ(handle, direction):
     obj = {"opcode": type_ATT_READ_REQ, "direction": direction, "handle": handle}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_REQ]
     return obj
 
 def ff_ATT_READ_RSP(value_hex_str, direction):
     obj = {"opcode": type_ATT_READ_RSP, "direction": direction, "value_hex_str": value_hex_str}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_RSP]
     return obj
 
@@ -45,18 +45,18 @@ def ff_ATT_READ_RSP(value_hex_str, direction):
 ############################
 
 def BTIDES_export_ATT_handle(bdaddr, random, data):
-    handle_enumeration = ff_ATT_handle_enumeration(data)
-    generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, handle_enumeration, "ATTArray", data, "ATT_handle_enumeration")
+    tier1_data = ff_ATT_handle_enumeration(data)
+    generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
-def BTIDES_export_ATT_READ_REQ(connect_ind_obj, handle):
-    # Insert entries directly in the ATTArray
-    tier1_data = ff_ATT_READ_REQ(handle)
-    generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
+# def BTIDES_export_ATT_READ_REQ(connect_ind_obj, handle):
+#     # Insert entries directly in the ATTArray
+#     tier1_data = ff_ATT_READ_REQ(handle)
+#     generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
 
-def BTIDES_export_ATT_READ_RSP(connect_ind_obj, UUID):
-    # Insert entries directly in the ATTArray
-    tier1_data = ff_ATT_READ_RSP(UUID)
-    generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
+# def BTIDES_export_ATT_READ_RSP(connect_ind_obj, UUID):
+#     # Insert entries directly in the ATTArray
+#     tier1_data = ff_ATT_READ_RSP(UUID)
+#     generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
 
 def BTIDES_export_ATT_packet(connect_ind_obj, type, data):
     if type == type_ATT_READ_REQ:

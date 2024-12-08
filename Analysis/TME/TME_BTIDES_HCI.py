@@ -9,7 +9,7 @@
 
 #import TME.TME_glob
 from TME.TME_BTIDES_base import *
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 
 ############################
 # Helper "factory functions"
@@ -22,7 +22,7 @@ status_SUCCESS = 0
 # TODO: we need to update database to keep track of status
 def ff_HCI_Remote_Name_Request_Complete(name):    
     obj = {"event_code": event_code_HCI_Remote_Name_Request_Complete, "status": status_SUCCESS, "remote_name": name}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["event_code_str"] = "HCI_Remote_Name_Request_Complete"
     return obj
 

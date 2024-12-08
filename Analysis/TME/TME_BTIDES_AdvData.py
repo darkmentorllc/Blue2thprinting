@@ -10,7 +10,7 @@
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
@@ -24,7 +24,7 @@ def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, Ad
     if (AdvDataArray != None):
         AdvChanData["AdvDataArray"] = AdvDataArray
 
-    if(verbose_BTIDES and type_str != None and (type_str in adv_chan_types_to_strings.values())):
+    if(TME.TME_glob.BTIDES_JSON and type_str != None and (type_str in adv_chan_types_to_strings.values())):
         AdvChanData["type_str"] = type_str
 
     if(AdvChanData):
@@ -51,14 +51,14 @@ def get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode
 def ff_Flags(data):
 ###    flags_hex_str = get_flags_hex_str(data["le_limited_discoverable_mode"], data["le_general_discoverable_mode"], data["bredr_not_supported"], data["le_bredr_support_controller"], data["le_bredr_support_host"])
     obj = {"type": type_AdvData_Flags, "length": data["length"], "flags_hex_str": data["flags_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "Flags"
     return obj
 
 # type 2 & 3
 def ff_UUID16Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID16List": data["UUID16List"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         if(list_type == type_AdvData_UUID16ListIncomplete):
             obj["type_str"] = "UUID16ListIncomplete"
         elif(list_type == type_AdvData_UUID16ListComplete):
@@ -68,7 +68,7 @@ def ff_UUID16Lists(list_type, data):
 # type 4 & 5
 def ff_UUID32Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID32List": data["UUID32List"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         if(list_type == type_AdvData_UUID32ListIncomplete):
             obj["type_str"] = "UUID32ListIncomplete"
         elif(list_type == type_AdvData_UUID32ListComplete):
@@ -78,7 +78,7 @@ def ff_UUID32Lists(list_type, data):
 # type 6 & 7
 def ff_UUID128Lists(list_type, data):
     obj = {"type": list_type, "length": data["length"], "UUID128List": data["UUID128List"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         if(list_type == type_AdvData_UUID128ListIncomplete):
             obj["type_str"] = "UUID128ListIncomplete"
         elif(list_type == type_AdvData_UUID128ListComplete):
@@ -88,7 +88,7 @@ def ff_UUID128Lists(list_type, data):
 # type 8 & 9
 def ff_Names(name_type, data):
     obj = {"type": name_type, "length":  data["length"], "name_hex_str": data["name_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         if(name_type == type_AdvData_IncompleteName):
             obj["type_str"] = "IncompleteName"
         elif(name_type == type_AdvData_CompleteName):
@@ -102,63 +102,63 @@ def ff_Names(name_type, data):
 # type 0x0A
 def ff_TxPower(data):
     obj = {"type": type_AdvData_TxPower, "length": data["length"], "tx_power": data["tx_power"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "TxPower"
     return obj
 
 # type 0x0D
 def ff_ClassOfDevice(data):
     obj = {"type": type_AdvData_ClassOfDevice, "length": data["length"], "CoD_hex_str": data["CoD_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "ClassOfDevice"
     return obj
 
 # type 0x10
 def ff_DeviceID(data):
     obj = {"type": type_AdvData_DeviceID, "length": data["length"], "vendor_id_source": data["vendor_id_source"], "vendor_id": data["vendor_id"], "product_id": data["product_id"], "version": data["version"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "DeviceID"
     return obj
 
 # type 0x12
 def ff_PeripheralConnectionIntervalRange(data):
     obj = {"type": type_AdvData_PeripheralConnectionIntervalRange, "length": data["length"], "conn_interval_min": data["conn_interval_min"], "conn_interval_max": data["conn_interval_max"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "PeripheralConnectionIntervalRange"
     return obj
 
 # type 0x16
 def ff_UUID16ServiceData(data):
     obj = {"type": type_AdvData_UUID16ServiceData, "length": data["length"], "UUID16": data["UUID16"], "service_data_hex_str": data["service_data_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "UUID16ServiceData"
     return obj
 
 # type 0x19
 def ff_Appearance(data):
     obj = {"type": type_AdvData_Appearance, "length": data["length"], "appearance_hex_str": data["appearance_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "Appearance"
     return obj
 
 # type 0x20
 def ff_UUID32ServiceData(data):
     obj = {"type": type_AdvData_UUID32ServiceData, "length": data["length"], "UUID32": data["UUID32"], "service_data_hex_str": data["service_data_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "UUID32ServiceData"
     return obj
 
 # type 0x21
 def ff_UUID128ServiceData(data):
     obj = {"type": type_AdvData_UUID128ServiceData, "length": data["length"], "UUID128": data["UUID128"], "service_data_hex_str": data["service_data_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "UUID128ServiceData"
     return obj
 
 # type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         obj["type_str"] = "ManufacturerSpecificData"
     return obj
 
@@ -400,7 +400,7 @@ def pdu_type_to_BTIDES_type_str(type):
 def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
     btype = pdu_type_to_BTIDES_type(adv_type)
     btype_str = None
-    if(verbose_BTIDES):
+    if(TME.TME_glob.BTIDES_JSON):
         btype_str = pdu_type_to_BTIDES_type_str(adv_type)
     adv_chan_array_entry = ff_AdvChanData(type=btype, type_str=btype_str)
     adv_data = ff_adv_data_type_specific_obj(adv_data_type, data)

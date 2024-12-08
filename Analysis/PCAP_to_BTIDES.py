@@ -25,16 +25,14 @@ from jsonschema import Draft202012Validator
 
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
 
-verbose_print = False
-
 def vprint(fmt):
-    if(verbose_print): print(fmt)
+    if(TME.TME_glob.verbose_print): print(fmt)
 
 g_access_address_to_connect_ind_obj = {}
 
@@ -74,7 +72,7 @@ def scapy_flags_to_hex_str(entry):
 # This is just a simple wrapper around insert_std_optional_fields to insert any
 # additional information that we may be able to glean from the packet
 def if_verbose_insert_std_optional_fields(obj, packet):
-    if(not verbose_BTIDES):
+    if(not TME.TME_glob.verbose_BTIDES):
         return
 
     if(packet.haslayer(BTLE_RF)):
@@ -86,9 +84,9 @@ def if_verbose_insert_std_optional_fields(obj, packet):
 def get_packet_direction(packet):
     rf_fields = packet.getlayer(BTLE_RF)
     if(rf_fields.type == 2): # Scapy calls 2 = "DATA_M_TO_S" and 3 = "DATA_S_TO_M"
-        return type_direction_C2P
+        return type_BTIDES_direction_C2P
     else:
-        return type_direction_P2C
+        return type_BTIDES_direction_P2C
 
 # This is the main function which converts from Scapy data format to BTIDES
 def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
@@ -477,7 +475,7 @@ def read_pcap(file_path):
                     # If a packet matches on any export function, move on to the next packet
                     
                     # Connection requests
-                    if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_IND
+                    if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
                         if(export_CONNECT_IND(packet)): continue
 
                     # Advertisement channel packets
@@ -501,16 +499,18 @@ def read_pcap(file_path):
 
 
 def main():
-    global verbose_print
+    global verbose_print, verbose_BTIDES
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for pcap file.')
     parser.add_argument('--output', type=str, required=True, help='Output file name for BTIDES JSON file.')
-    parser.add_argument('--verbose', action='store_true',required=False, help='Print output about the found fields as each packet is parsed.')
+    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
+    parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
     args = parser.parse_args()
 
     in_pcap_filename = args.input
     out_BTIDES_filename = args.output
-    verbose_print = args.verbose
+    TME.TME_glob.verbose_print = args.verbose_print
+    TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
     print("Reading pcap.")
     read_pcap(in_pcap_filename)

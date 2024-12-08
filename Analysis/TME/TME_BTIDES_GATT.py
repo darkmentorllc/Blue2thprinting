@@ -10,7 +10,7 @@
 import re
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+import TME.TME_glob
 
 ############################
 # Helper "factory functions"
@@ -23,7 +23,7 @@ status_SUCCESS = 0
 
 def ff_GATT_Service(obj):
     obj["UUID"] = convert_UUID128_to_UUID16_if_possible(obj["UUID"]) # Save space on exported data if possible
-    if(verbose_BTIDES):
+    if(TME.TME_glob.verbose_BTIDES):
         if(obj["utype"] == "2800"):
             obj["type_str"] = "Primary Service"
         elif(obj["utype"] == "2801"):
@@ -32,13 +32,13 @@ def ff_GATT_Service(obj):
 
 def ff_GATT_Characteristic(obj):
     obj["value_uuid"] = convert_UUID128_to_UUID16_if_possible(obj["value_uuid"]) # Save space on exported data if possible
-    if(verbose_BTIDES):
+    if(TME.TME_glob.verbose_BTIDES):
         obj["type_str"] = "Characteristic"
         obj["utype"] = "2803"
     return obj
 
 def ff_GATT_IO(io_array):
-    if(verbose_BTIDES):
+    if(TME.TME_glob.verbose_BTIDES):
         for obj in io_array:
             if("io_type_str" not in obj.keys()):
                 if(obj["io_type"] == type_BTIDES_ATT_Read):
