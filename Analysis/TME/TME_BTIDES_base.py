@@ -110,6 +110,8 @@ def insert_std_optional_fields(obj, **optional_fields):
 
 def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
     global BTIDES_JSON
+    if(tier1_data == None):
+        return False
     bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
@@ -159,6 +161,8 @@ def generic_DualBDADDR_insertion_into_BTIDES_zeroth_level(connect_ind_obj):
 
 def generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, target_tier1_array_name):
     global BTIDES_JSON
+    if(tier1_data == None):
+        return False
     bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
     if (bdaddr_pair_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
@@ -212,6 +216,8 @@ def non_recursive_primitive_equality_check(dict1, dict2):
 # The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
 def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
     global BTIDES_JSON
+    if(tier1_data == None):
+        return False
     bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
@@ -255,6 +261,8 @@ def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random
 # The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
 def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
     global BTIDES_JSON
+    if(tier1_data == None):
+        return False
     bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
     if (bdaddr_pair_specific_entry == None):
         # There is no bdaddr_pair_specific_entry yet for this BDADDR pair. Insert a brand new one with our tier1_data within the given target_tier1_array_name
@@ -286,7 +294,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj,
                         # If we got here, nothing matched, so append the tier2_data
                         t1_obj[target_tier2_array_name].append(tier2_data)
                         return True
-            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_pair_specific_entry onto GATTArray
+            # If we get here, we exhaused all target_tier1_array_name entries without a match. So append our new bdaddr_pair_specific_entry onto the target_tier1_array
             bdaddr_pair_specific_entry[target_tier1_array_name].append(tier1_data)
             return True
 

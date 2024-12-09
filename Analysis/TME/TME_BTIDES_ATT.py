@@ -51,6 +51,24 @@ def ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_err
     return obj
 
 
+def ff_ATT_FIND_INFORMATION_REQ(direction, start_handle, end_handle):
+    obj = {"direction": direction, "opcode": type_ATT_FIND_INFORMATION_REQ, "start_handle": start_handle, "end_handle": end_handle}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_FIND_INFORMATION_REQ]
+    return obj
+
+
+def ff_ATT_FIND_INFORMATION_RSP_information_data(handle=None, UUID=None):
+    list_obj = {"handle": handle, "UUID": UUID}
+    return list_obj
+
+def ff_ATT_FIND_INFORMATION_RSP(direction, format, information_data):
+    obj = {"direction": direction, "opcode": type_ATT_FIND_INFORMATION_RSP, "format": format, "information_data": information_data}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_FIND_INFORMATION_RSP]
+    return obj
+
+
 def ff_ATT_EXCHANGE_MTU_REQ(direction, client_rx_mtu):
     obj = {"direction": direction, "opcode": type_ATT_EXCHANGE_MTU_REQ, "client_rx_mtu": client_rx_mtu}
     if(TME.TME_glob.verbose_BTIDES):
@@ -101,11 +119,17 @@ def ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, length, attribute_data_list):
 # JSON insertion functions
 ############################
 
-def BTIDES_export_ATT_handle(bdaddr, random, data):
-    tier1_data = ff_ATT_handle_enumeration(data)
-    generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
+def BTIDES_export_ATT_handle(connect_ind_obj=None, bdaddr=None, random=None, data=None):
+    tier1_data = ff_ATT_handle_enumeration(data)  # The ATT_handle_enumeration list will be merged into the existing data if any exists
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
 # TODO: For now since we only are importing from PCAP only export to DualBDADDR
 # TODO: may need to update this in the future to handle export from database to SingleBDADDR data types
-def BTIDES_export_ATT_packet(connect_ind_obj, data):
-    generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")
+def BTIDES_export_ATT_packet(connect_ind_obj=None, bdaddr=None, random=None, data=None):
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "ATTArray")

@@ -193,7 +193,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         UUID128 = add_dashes_to_UUID128(UUID128)
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID128})
-        BTIDES_export_GATT_Service(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_GATT_Service(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     query = f"SELECT device_bdaddr_type, attribute_handle, UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
@@ -202,7 +202,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         UUID128 = add_dashes_to_UUID128(UUID128)
         attribute_handles_dict[attribute_handle] = UUID128
         data = ff_ATT_handle_entry(attribute_handle, UUID128)
-        BTIDES_export_ATT_handle(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_ATT_handle(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)

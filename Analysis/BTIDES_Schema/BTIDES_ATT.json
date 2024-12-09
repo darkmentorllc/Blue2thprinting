@@ -206,6 +206,88 @@
         }
       }
     },
+    "ATT_FIND_INFORMATION_REQ" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_FIND\\_INFORMATION\\_REQ packet.",
+      "required" : [ "opcode", "direction", "start_handle", "end_handle" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_FIND_INFORMATION_REQ"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 4
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "start_handle" : {
+          "description" : "First requested handle number.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "end_handle" : {
+          "description" : "Last requested handle number.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        }
+      }
+    },
+    "ATT_FIND_INFORMATION_RSP" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_FIND\\_INFORMATION\\_RSP packet.",
+      "required" : [ "opcode", "direction", "format", "information_data" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_FIND_INFORMATION_RSP"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 5
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "format" : {
+          "description" : "Format of the information data (1 = handles and 16-bit UUIDs, 2 = handles and 128-bit UUIDs).",
+          "type" : "integer",
+          "enum" : [ 1, 2 ]
+        },
+        "information_data" : {
+          "$comment" : "I know this name is sort of generic, but that's the name used in the spec.",
+          "description" : "List of handle and UUID (16 or 128) pairs.",
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "handle", "UUID" ],
+            "properties" : {
+              "handle" : {
+                "description" : "Handle number.",
+                "type" : "integer",
+                "minimum" : 0,
+                "maximum" : 65535
+              },
+              "UUID" : {
+                "description" : "UUID associated with the handle.",
+                "$ref" : "BTIDES_base.json#/definitions/UUID"
+              }
+            }
+          }
+        }
+      }
+    },
     "ATT_READ_REQ" : {
       "type" : "object",
       "description" : "Structure for ATT\\_READ\\_REQ packet.",

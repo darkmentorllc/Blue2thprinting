@@ -9,7 +9,9 @@
 
 import re
 from TME.BTIDES_Data_Types import *
-from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
+#from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
+#from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
+from TME.TME_BTIDES_base import *
 import TME.TME_glob
 
 ############################
@@ -89,9 +91,12 @@ def find_exact_service_match(GATTArray, data):
 
     return None
 
-def BTIDES_export_GATT_Service(bdaddr, random, data):
+def BTIDES_export_GATT_Service(connect_ind_obj=None, bdaddr=None, random=None, data=None):
     global BTIDES_JSON
-    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
+    if connect_ind_obj != None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "GATTArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
 
 def find_service_with_target_handle_in_range(bdaddr, random, target_handle):
     base = lookup_SingleBDADDR_base_entry(bdaddr, random)

@@ -546,7 +546,7 @@ def export_ATT_Error_Response(connect_ind_obj, packet):
         error_code = att_data.ecode
         data = ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_error, error_code)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 
@@ -556,7 +556,7 @@ def export_ATT_Exchange_MTU_Request(connect_ind_obj, packet):
         direction = get_packet_direction(packet)
         data = ff_ATT_EXCHANGE_MTU_REQ(direction, att_data.mtu)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 
@@ -568,7 +568,7 @@ def export_ATT_Exchange_MTU_Response(connect_ind_obj, packet):
         direction = get_packet_direction(packet)
         data = ff_ATT_EXCHANGE_MTU_RSP(direction, att_data.mtu)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 
@@ -580,7 +580,7 @@ def export_ATT_Read_Request(connect_ind_obj, packet):
         handle = f"{att_data.gatt_handle:04x}"
         data = ff_ATT_READ_REQ(direction, handle)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 
@@ -592,8 +592,63 @@ def export_ATT_Read_Response(connect_ind_obj, packet):
         value_hex_str = ''.join(format(byte, '02x') for byte in att_data.value)
         data = ff_ATT_READ_RSP(direction, value_hex_str)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
+    return False
+
+
+def export_ATT_Find_Information_Request(connect_ind_obj, packet):
+    att_data = get_ATT_data(packet, ATT_Find_Information_Request, type_ATT_FIND_INFORMATION_REQ)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        start_handle = att_data.start
+        end_handle = att_data.end
+        data = ff_ATT_FIND_INFORMATION_REQ(direction, start_handle, end_handle)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_ATT_Find_Information_Response(connect_ind_obj, packet):
+    packet.show()
+    att_data = get_ATT_data(packet, ATT_Find_Information_Response, type_ATT_FIND_INFORMATION_RSP)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        format = att_data.format
+        info_data_list = []
+        
+        if format == 1:
+            # 2 byte handle, 2 byte UUID16
+            for handle_obj in att_data.handles:
+                list_obj = ff_ATT_FIND_INFORMATION_RSP_information_data(
+                    handle=handle_obj.handle,
+                    UUID=f"{handle_obj.value:04x}"
+                )
+                info_data_list.append(list_obj)
+        elif format == 2:
+            # 2 byte handle, 16 byte UUID128
+            for handle_obj in att_data.handles:
+                list_obj = ff_ATT_FIND_INFORMATION_RSP_information_data(
+                    handle=handle_obj.handle,
+                    UUID=str(handle_obj.value)
+                )
+                info_data_list.append(list_obj)
+        else:
+            print("Unexpected format in Find Information Response. Can't parse further.")
+            return False
+        
+        data = ff_ATT_FIND_INFORMATION_RSP(direction, format, info_data_list)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+    
+        # Then also insert this information into the ATT_handle_enumeration
+        for entry in info_data_list:
+            data = ff_ATT_handle_entry(entry["handle"], entry["UUID"])
+            BTIDES_export_ATT_handle(connect_ind_obj=connect_ind_obj, data=data)
+
+        return True
+
     return False
 
 
@@ -608,7 +663,7 @@ def export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet):
         g_last_ATT_group_type_requested = group_type
         data = ff_ATT_READ_BY_GROUP_TYPE_REQ(direction, start_handle, end_handle, group_type)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 
@@ -651,7 +706,7 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
         #attribute_data_list = ''.join(format(byte, '02x') for byte in att_data.data)
         data = ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, att_data.length, attribute_data_list)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
 
         # Insert this information as GATTArray information as well
         for entry in attribute_data_list:
@@ -659,7 +714,8 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
                                     "begin_handle": entry["attribute_handle"], 
                                     "end_handle": entry["end_group_handle"], 
                                     "UUID": entry["UUID"]})
-            BTIDES_export_GATT_Service(connect_ind_obj["peripheral_bdaddr"], connect_ind_obj["peripheral_bdaddr_rand"], data)
+#            BTIDES_export_GATT_Service(connect_ind_obj["peripheral_bdaddr"], connect_ind_obj["peripheral_bdaddr_rand"], data)
+            BTIDES_export_GATT_Service(connect_ind_obj=connect_ind_obj, data=data)
 
         return True
     return False
@@ -678,13 +734,17 @@ def export_to_ATTArray(packet):
     # remember information between packets (i.e. which UUID corresponds to which handle)     
     if(export_ATT_Error_Response(connect_ind_obj, packet)):
         return True
+    if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Exchange_MTU_Response(connect_ind_obj, packet)):
+        return True
     if(export_ATT_Read_Request(connect_ind_obj, packet)):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet)):
         return True
-    if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet)):
+    if(export_ATT_Find_Information_Request(connect_ind_obj, packet)):
         return True
-    if(export_ATT_Exchange_MTU_Response(connect_ind_obj, packet)):
+    if(export_ATT_Find_Information_Response(connect_ind_obj, packet)):
         return True
     if(export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet)):
         return True
