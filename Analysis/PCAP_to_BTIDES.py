@@ -38,6 +38,7 @@ from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PER
 from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTIDES_export_LL_LENGTH_RSP, ff_LL_LENGTH_RSP
 from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
 from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_UNKNOWN_RSP, ff_LL_UNKNOWN_RSP
 
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): print(fmt)
@@ -390,6 +391,14 @@ def export_BTLE_CTRL(packet):
         )
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
+        data = ff_LL_UNKNOWN_RSP(
+            direction=get_packet_direction(packet),
+            unknown_type=ll_ctrl.opcode
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_UNKNOWN_RSP(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_FEATURE_REQ:
         data = ff_LL_FEATURE_REQ(
