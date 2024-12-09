@@ -23,11 +23,13 @@ def ff_ATT_handle_enumeration(handle_entry_obj):
     obj = {"ATT_handle_enumeration": [ handle_entry_obj ]}
     return obj
 
+
 # TODO: we need to update database to keep track of status
 def ff_ATT_handle_entry(handle, UUID):
     UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Save space on exported data if possible
     obj = {"handle": handle, "UUID": UUID}
     return obj
+
 
 def ff_ATT_READ_REQ(handle, direction):
     obj = {"opcode": type_ATT_READ_REQ, "direction": direction, "handle": handle}
@@ -35,11 +37,13 @@ def ff_ATT_READ_REQ(handle, direction):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_REQ]
     return obj
 
+
 def ff_ATT_READ_RSP(value_hex_str, direction):
     obj = {"opcode": type_ATT_READ_RSP, "direction": direction, "value_hex_str": value_hex_str}
     if(TME.TME_glob.BTIDES_JSON):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_RSP]
     return obj
+
 
 ############################
 # JSON insertion functions

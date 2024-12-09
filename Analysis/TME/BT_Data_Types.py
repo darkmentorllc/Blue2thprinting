@@ -53,6 +53,9 @@ type_opcode_LL_LENGTH_RSP                = 21
 type_opcode_LL_PHY_REQ                   = 22
 type_opcode_LL_PHY_RSP                   = 23
 
+# HCI Event codes defined in BT spec
+event_code_HCI_Remote_Name_Request_Complete     = 7
+
 # ATT PDU types defined in BT spec
 type_ATT_EXCHANGE_MTU_REQ  = 0x02
 type_ATT_EXCHANGE_MTU_RSP  = 0x03

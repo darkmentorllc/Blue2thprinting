@@ -37,6 +37,9 @@ adv_chan_types_to_strings = {
 type_BTIDES_direction_C2P =                    0 # Central to Peripheral
 type_BTIDES_direction_P2C =                    1 # Peripheral to Central
 
+# HCI Statuses
+type_BTIDES_status_SUCCESS = 0
+
 # ATT IO types
 type_BTIDES_ATT_Read =                  0
 type_BTIDES_ATT_WriteWithResponse =     1
