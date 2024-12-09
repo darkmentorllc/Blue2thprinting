@@ -32,7 +32,7 @@ from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND
+from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
 
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): print(fmt)
@@ -363,7 +363,7 @@ def export_SCAN_RSP(packet):
 
     return False
 
-'''
+
 def export_BTLE_CTRL(packet):
     packet.show()
     btle_hdr = packet.getlayer(BTLE)
@@ -377,20 +377,28 @@ def export_BTLE_CTRL(packet):
     # Handle different LL Control packet types here
     # For example, LL_VERSION_IND
     ll_ctrl = packet.getlayer(BTLE_CTRL)
-    if ll_ctrl.opcode == 0x0C:  # LL_VERSION_IND
+    if ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
         data = ff_LL_VERSION_IND(
-            version=version,
-            company_id=company_id,
-            sub_version=sub_version,
+            direction=get_packet_direction(packet),
+            version=ll_ctrl.version,
+            company_id=ll_ctrl.company,
+            subversion=ll_ctrl.subversion
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_VERSION_IND(connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
+        data = ff_LL_FEATURE_RSP(
+            features=ll_ctrl.features,
             direction=get_packet_direction(packet)
         )
-        BTIDES_export_LL_VERSION_IND(connect_ind_obj, packet)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_CTRL_packet(connect_ind_obj, type_LL_CTRL_VERSION_IND, data)
+        BTIDES_export_LL_VERSION_IND(connect_ind_obj, data=data)
         return True
 
+
     return False
-'''
+
 
 # It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
 # But just doing it out of an abundance of caution
@@ -519,8 +527,8 @@ def read_pcap(file_path):
                         if(export_SCAN_RSP(packet)): continue
 
                     # LL Control packets
-                    #if packet.haslayer(BTLE_CTRL):
-                    #    if(export_BTLE_CTRL(packet)): continue
+                    if packet.haslayer(BTLE_CTRL):
+                        if(export_BTLE_CTRL(packet)): continue
 
                     # ATT packets
                     if packet.haslayer(ATT_Hdr):

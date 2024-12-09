@@ -312,7 +312,9 @@ def print_ChipMakerPrint(bdaddr):
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
             print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
-            BTIDES_export_LL_VERSION_IND(bdaddr, device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version)
+            # FIXME: For now all the data in the database is P2C, but we need to update the DB to capture this in the future
+            data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, ll_version, device_BT_CID, ll_sub_version)
+            BTIDES_export_LL_VERSION_IND(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     if(time_profile): print(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#

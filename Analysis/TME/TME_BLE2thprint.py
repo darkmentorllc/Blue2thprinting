@@ -99,6 +99,8 @@ def print_BLE_2thprint(bdaddr):
 
     ll_ctrl_pdu_opcodes = {9: "LL_FEATURE_RSP", 14: "LL_PERIPHERAL_FEATURE_REQ", 18: "LL_PING_REQ", 20: "LL_LENGTH_REQ", 21: "LL_LENGTH_RSP", 22: "LL_PHY_REQ", 23: "LL_PHY_RSP"}
 
+    # FIXME: for now the direction in all my DB data is P2C, so I'm hardcoding it here, but this needs to be fixed in the future once the DB is updated
+    direction = type_BTIDES_direction_P2C
     for ll_version, ll_sub_version, device_BT_CID in version_result:
         print(f"\t\tBT Version ({ll_version}): {get_bt_spec_version_numbers_to_names(ll_version)}")
         print("\t\tLL Sub-version: 0x%04x" % ll_sub_version)
@@ -108,17 +110,19 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
         print("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
+        data = ff_LL_FEATURE_RSP(direction, features)
         if(opcode == type_opcode_LL_FEATURE_REQ):
-            BTIDES_export_LL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
+            BTIDES_export_LL_FEATURE_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
         elif(opcode == type_opcode_LL_FEATURE_RSP):
-            BTIDES_export_LL_FEATURE_RSP(bdaddr, device_bdaddr_type, features)
+            BTIDES_export_LL_FEATURE_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
         elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
-            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
+            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, tx_phys, rx_phys in phys_result:
         print(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
         print(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
-        BTIDES_export_LL_PHY_RSP(bdaddr, device_bdaddr_type, tx_phys, rx_phys)
+        data = ff_LL_FEATURE_RSP(direction, tx_phys, rx_phys)
+        BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         print(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
@@ -127,17 +131,21 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\t\tMax TX octets: {max_tx_octets}")
         print(f"\t\t\tMax TX time: {max_tx_time} microseconds")
         if(opcode == type_opcode_LL_LENGTH_REQ):
-            BTIDES_export_LL_LENGTH_REQ(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+            data = ff_LL_LENGTH_REQ(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+            BTIDES_export_LL_LENGTH_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
         elif(opcode == type_opcode_LL_LENGTH_RSP):
-            BTIDES_export_LL_LENGTH_RSP(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+            data = ff_LL_LENGTH_RSP(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+            BTIDES_export_LL_LENGTH_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, unknown_opcode in unknown_result:
         print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes[unknown_opcode]})")
-        BTIDES_export_LL_UNKNOWN_RSP(bdaddr, device_bdaddr_type, unknown_opcode)
+        data = ff_LL_UNKNOWN_RSP(direction, unknown_opcode)
+        BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, in ping_result:
         print(f"\t\tLL Ping Response Received")
-        BTIDES_export_LL_PING_RSP(bdaddr, device_bdaddr_type)
+        data = ff_LL_PING_RSP(direction)
+        BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         print("\tRaw BLE 2thprint:")

@@ -53,10 +53,13 @@
     "LL_UNKNOWN_RSP" : {
       "type" : "object",
       "description" : "Structure for LL\\_UNKNOWN\\_RSP packet.",
-      "required" : [ "opcode", "unknown_type" ],
+      "required" : [ "direction", "opcode", "unknown_type" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -78,10 +81,13 @@
     "LL_UNKNOWN_RSP2" : {
       "type" : "object",
       "description" : "Structure for LL\\_UNKNOWN\\_RSP packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -106,10 +112,13 @@
     "LL_FEATURE_REQ" : {
       "type" : "object",
       "description" : "Structure for LL\\_FEATURE\\_REQ packet.",
-      "required" : [ "opcode", "le_features_hex_str" ],
+      "required" : [ "direction", "opcode", "le_features_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -128,10 +137,13 @@
     "LL_FEATURE_REQ2" : {
       "type" : "object",
       "description" : "Structure for LL\\_FEATURE\\_REQ packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -150,10 +162,13 @@
     "LL_FEATURE_RSP" : {
       "type" : "object",
       "description" : "Structure for LL\\_FEATURE\\_RSP packet.",
-      "required" : [ "opcode", "le_features_hex_str" ],
+      "required" : [ "direction", "opcode", "le_features_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -172,10 +187,13 @@
     "LL_FEATURE_RSP2" : {
       "type" : "object",
       "description" : "Structure for LL\\_FEATURE\\_RSP packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -194,7 +212,7 @@
     "LL_VERSION_IND" : {
       "type" : "object",
       "description" : "Structure for LL\\_VERSION\\_IND packet.",
-      "required" : [ "opcode", "version", "company_id", "subversion" ],
+      "required" : [ "direction", "opcode", "version", "company_id", "subversion" ],
       "$comment" : "I'm only putting these version/company_id/subversion up to the top level definitions so I can reference them from LMP as well, since they're the same meaning/values.",
       "properties" : {
         "std_optional_fields" : {
@@ -204,6 +222,9 @@
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
           "type" : "string",
           "const" : "LL_VERSION_IND"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode" : {
           "description" : "This should always be 12. This is required to differentiate from other data types in an array.",
@@ -223,10 +244,13 @@
     "LL_PERIPHERAL_FEATURE_REQ" : {
       "type" : "object",
       "description" : "Structure for LL\\_PERIPHERAL\\_FEATURE\\_REQ packet.",
-      "required" : [ "opcode", "le_features_hex_str" ],
+      "required" : [ "direction", "opcode", "le_features_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -234,7 +258,7 @@
           "const" : "LL_PERIPHERAL_FEATURE_REQ"
         },
         "opcode" : {
-          "description" : "This should always be 8. This is required to differentiate from other data types in an array.",
+          "description" : "This should always be 14. This is required to differentiate from other data types in an array.",
           "const" : 14
         },
         "le_features_hex_str" : {
@@ -245,10 +269,13 @@
     "LL_PERIPHERAL_FEATURE_REQ2" : {
       "type" : "object",
       "description" : "Structure for LL\\_PERIPHERAL\\_FEATURE\\_REQ packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -285,10 +312,13 @@
     "LL_VERSION_IND2" : {
       "type" : "object",
       "description" : "Structure for LL\\_VERSION\\_IND packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode" : {
           "description" : "This should always be 12. This is required to differentiate from other data types in an array.",
@@ -302,10 +332,13 @@
     "LL_PING_REQ" : {
       "type" : "object",
       "description" : "Structure for LL\\_PING\\_REQ packet.",
-      "required" : [ "opcode" ],
+      "required" : [ "direction", "opcode" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -321,10 +354,13 @@
     "LL_PING_RSP" : {
       "type" : "object",
       "description" : "Structure for LL\\_PING\\_RSP packet.",
-      "required" : [ "opcode" ],
+      "required" : [ "direction", "opcode" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -340,10 +376,13 @@
     "LL_LENGTH_REQ" : {
       "type" : "object",
       "description" : "Structure for LL\\_LENGTH\\_REQ packet.",
-      "required" : [ "opcode", "max_rx_octets", "max_rx_time", "max_tx_octets", "max_tx_time" ],
+      "required" : [ "direction", "opcode", "max_rx_octets", "max_rx_time", "max_tx_octets", "max_tx_time" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -383,10 +422,13 @@
     "LL_LENGTH_REQ2" : {
       "type" : "object",
       "description" : "Structure for LL\\_LENGTH\\_REQ packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -405,10 +447,13 @@
     "LL_LENGTH_RSP" : {
       "type" : "object",
       "description" : "Structure for LL\\_LENGTH\\_RSP packet.",
-      "required" : [ "opcode", "max_rx_octets", "max_rx_time", "max_tx_octets", "max_tx_time" ],
+      "required" : [ "direction", "opcode", "max_rx_octets", "max_rx_time", "max_tx_octets", "max_tx_time" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -448,10 +493,13 @@
     "LL_LENGTH_RSP2" : {
       "type" : "object",
       "description" : "Structure for LL\\_LENGTH\\_RSP packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -470,10 +518,13 @@
     "LL_PHY_REQ" : {
       "type" : "object",
       "description" : "Structure for LL\\_PHY\\_REQ packet.",
-      "required" : [ "opcode", "TX_PHYS", "RX_PHYS" ],
+      "required" : [ "direction", "opcode", "TX_PHYS", "RX_PHYS" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -501,10 +552,13 @@
     "LL_PHY_REQ2" : {
       "type" : "object",
       "description" : "Structure for LL\\_PHY\\_REQ packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -523,10 +577,13 @@
     "LL_PHY_RSP" : {
       "type" : "object",
       "description" : "Structure for LL\\_PHY\\_RSP packet.",
-      "required" : [ "opcode", "TX_PHYS", "RX_PHYS" ],
+      "required" : [ "direction", "opcode", "TX_PHYS", "RX_PHYS" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
@@ -554,10 +611,13 @@
     "LL_PHY_RSP2" : {
       "type" : "object",
       "description" : "Structure for LL\\_PHY\\_RSP packet, as single raw hex string.",
-      "required" : [ "opcode", "full_pkt_hex_str" ],
+      "required" : [ "direction", "opcode", "full_pkt_hex_str" ],
       "properties" : {
         "std_optional_fields" : {
           "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode_str" : {
           "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",

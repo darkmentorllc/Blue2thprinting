@@ -276,6 +276,11 @@
     "full_pkt_hex_str" : {
       "description" : "This is the original full packet data (starting from the {LL/LMP} header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",
       "type" : "string"
+    },
+    "direction": {
+      "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
+      "type": "integer",
+      "enum": [0, 1]
     }
   }
 }

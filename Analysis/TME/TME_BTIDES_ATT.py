@@ -17,8 +17,6 @@ from TME.TME_UUID128 import add_dashes_to_UUID128
 # Helper "factory functions"
 ############################
 
-status_SUCCESS = 0
-
 def ff_ATT_handle_enumeration(handle_entry_obj):
     obj = {"ATT_handle_enumeration": [ handle_entry_obj ]}
     return obj
