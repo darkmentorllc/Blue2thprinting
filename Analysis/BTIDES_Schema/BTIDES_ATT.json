@@ -74,9 +74,7 @@
           "const" : 2
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "client_rx_mtu" : {
           "description" : "2-byte \"Client Rx MTU\" from spec. Maximum number of bytes the ATT Client can receive via ATT.",
@@ -104,9 +102,7 @@
           "const" : 2
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "full_pkt_hex_str" : {
           "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
@@ -131,9 +127,7 @@
           "const" : 3
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "server_rx_mtu" : {
           "description" : "2-byte \"Server Rx MTU\" from spec. Maximum number of bytes the ATT Server can receive via ATT.",
@@ -161,9 +155,7 @@
           "const" : 3
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "full_pkt_hex_str" : {
           "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
@@ -184,9 +176,7 @@
           "const" : "ATT_READ_REQ"
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode" : {
           "description" : "ATT packet opcode.",
@@ -214,9 +204,7 @@
           "const" : "ATT_READ_RSP"
         },
         "direction": {
-          "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
-          "type": "integer",
-          "enum": [0, 1]
+          "$ref": "BTIDES_base.json#/definitions/direction"
         },
         "opcode" : {
           "description" : "ATT packet opcode.",
@@ -225,6 +213,92 @@
         "value_hex_str" : {
           "description" : "Value read from a handle, as a hex string.",
           "type" : "string"
+        }
+      }
+    },
+    "ATT_READ_BY_GROUP_TYPE_REQ" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_READ\\_BY\\_GROUP\\_TYPE\\_REQ packet.",
+      "required" : [ "direction", "opcode", "start_handle", "end_handle", "group_type" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_READ_BY_GROUP_TYPE_REQ"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 10
+        },
+        "start_handle" : {
+          "description" : "First requested handle number.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "end_handle" : {
+          "description" : "Last requested handle number.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "group_type" : {
+          "description" : "2-byte or 16-byte UUID to find.",
+          "$ref" : "BTIDES_base.json#/definitions/UUID"
+        }
+      }
+    },
+    "ATT_READ_BY_GROUP_TYPE_RSP" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_READ\\_BY\\_GROUP\\_TYPE\\_RSP packet.",
+      "required" : [ "direction", "opcode", "attribute_data_list" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_READ_BY_GROUP_TYPE_RSP"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 11
+        },
+        "attribute_data_list" : {
+          "description" : "List of attribute data.",
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "required" : [ "attribute_handle", "end_group_handle", "UUID" ],
+            "properties" : {
+              "attribute_handle" : {
+                "description" : "Attribute handle (effectively the handle representing the start of the group.)",
+                "type" : "integer",
+                "minimum" : 0,
+                "maximum" : 65535
+              },
+              "end_group_handle" : {
+                "description" : "End group handle number.",
+                "type" : "integer",
+                "minimum" : 0,
+                "maximum" : 65535
+                },
+              "UUID" : {
+                "description" : "\"Value for the attribute\" according to the spec, but in practice because ATT_READ_BY_GROUP_TYPE_RSP can only be called on group types 0x2800 (primary service) and 0x2801 (secondary service), this is the UUID of the service, and it's just incidental to the larger point of finding the beginning and end handles that bound the service.)",
+                "$ref" : "BTIDES_base.json#/definitions/UUID"
+              }
+            }
+          }
         }
       }
     }

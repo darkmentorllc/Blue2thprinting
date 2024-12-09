@@ -29,19 +29,51 @@ def ff_ATT_handle_entry(handle, UUID):
     return obj
 
 
-def ff_ATT_READ_REQ(handle, direction):
-    obj = {"opcode": type_ATT_READ_REQ, "direction": direction, "handle": handle}
-    if(TME.TME_glob.BTIDES_JSON):
+def ff_ATT_EXCHANGE_MTU_REQ(direction, client_rx_mtu):
+    obj = {"direction": direction, "opcode": type_ATT_EXCHANGE_MTU_REQ, "client_rx_mtu": client_rx_mtu}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_EXCHANGE_MTU_REQ]
+    return obj
+
+
+def ff_ATT_EXCHANGE_MTU_RSP(direction, server_rx_mtu):
+    obj = {"direction": direction, "opcode": type_ATT_EXCHANGE_MTU_RSP, "server_rx_mtu": server_rx_mtu}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_EXCHANGE_MTU_RSP]
+    return obj
+
+
+def ff_ATT_READ_REQ(direction, handle):
+    obj = {"direction": direction, "opcode": type_ATT_READ_REQ, "handle": handle}
+    if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_REQ]
     return obj
 
 
-def ff_ATT_READ_RSP(value_hex_str, direction):
-    obj = {"opcode": type_ATT_READ_RSP, "direction": direction, "value_hex_str": value_hex_str}
-    if(TME.TME_glob.BTIDES_JSON):
+def ff_ATT_READ_RSP(direction, value_hex_str):
+    obj = {"direction": direction, "opcode": type_ATT_READ_RSP, "value_hex_str": value_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_RSP]
     return obj
 
+
+def ff_ATT_READ_BY_GROUP_TYPE_REQ(direction, start_handle, end_handle, group_type):
+    obj = {"direction": direction, "opcode": type_ATT_READ_BY_GROUP_TYPE_REQ, "start_handle": start_handle, "end_handle": end_handle, "group_type": group_type}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_GROUP_TYPE_REQ]
+    return obj
+
+
+def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(attribute_handle=None, end_group_handle=None, UUID=None):
+    list_obj = {"attribute_handle": attribute_handle, "end_group_handle": end_group_handle, "UUID": UUID}
+    return list_obj
+
+# 3rd parameter should be created with def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list() above
+def ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, length, attribute_data_list):
+    obj = {"direction": direction, "opcode": type_ATT_READ_BY_GROUP_TYPE_RSP, "length": length, "attribute_data_list": attribute_data_list}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_GROUP_TYPE_RSP]
+    return obj
 
 ############################
 # JSON insertion functions
@@ -51,21 +83,7 @@ def BTIDES_export_ATT_handle(bdaddr, random, data):
     tier1_data = ff_ATT_handle_enumeration(data)
     generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
-# def BTIDES_export_ATT_READ_REQ(connect_ind_obj, handle):
-#     # Insert entries directly in the ATTArray
-#     tier1_data = ff_ATT_READ_REQ(handle)
-#     generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
-
-# def BTIDES_export_ATT_READ_RSP(connect_ind_obj, UUID):
-#     # Insert entries directly in the ATTArray
-#     tier1_data = ff_ATT_READ_RSP(UUID)
-#     generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
-
-def BTIDES_export_ATT_packet(connect_ind_obj, type, data):
-    if type == type_ATT_READ_REQ:
-        tier1_data = data
-    elif type == type_ATT_READ_RSP:
-        tier1_data = data
-    else:
-        raise ValueError("Unsupported ATT packet type")
-    generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, tier1_data, "ATTArray")
+# For now since we only 
+# TODO: may need to update this in the future to handle export from database to SingleBDADDR data types
+def BTIDES_export_ATT_packet(connect_ind_obj, data):
+    generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")

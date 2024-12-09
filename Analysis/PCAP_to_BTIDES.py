@@ -19,7 +19,8 @@ from scapy.all import BTLE_CTRL
 # L2CAP types
 from scapy.all import L2CAP_Hdr, ATT_Hdr
 # ATT types
-from scapy.all import ATT_Read_Request, ATT_Read_Response
+from scapy.all import ATT_Read_Request, ATT_Read_Response, ATT_Exchange_MTU_Request, ATT_Exchange_MTU_Response
+from scapy.all import ATT_Read_By_Group_Type_Request, ATT_Read_By_Group_Type_Response
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
@@ -29,9 +30,10 @@ from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 import TME.TME_glob
 from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
+# Advertisement Channel
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
-from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
+# LL Control
 from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND
 from TME.TME_BTIDES_LL import BTIDES_export_LL_FEATURE_REQ, ff_LL_FEATURE_REQ, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
 from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PERIPHERAL_FEATURE_REQ
@@ -39,11 +41,20 @@ from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTI
 from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
 from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
 from TME.TME_BTIDES_LL import BTIDES_export_LL_UNKNOWN_RSP, ff_LL_UNKNOWN_RSP
+# ATT
+#from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
+from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to just work.
+# GATT
+from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
 
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): print(fmt)
 
 g_access_address_to_connect_ind_obj = {}
+
+# We need to keep state between ATT_READ_BY_GROUP_TYPE_REQ and ATT_READ_BY_GROUP_TYPE_RSP
+# in order to insert GATT service information into the BTIDES JSON
+g_last_ATT_group_type_requested = 0
 
 # Saved text for printing fields
 #    for field in btle_adv.fields_desc:
@@ -326,8 +337,8 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
 
 
 def export_ADV_IND(packet):
-    btle_hdr = packet.getlayer(BTLE)
-    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+    ble_adv_fields = packet.getlayer(BTLE_ADV)
+    bdaddr_random = ble_adv_fields.TxAdd
 
     # Access the BTLE_ADV layer
     btle_adv = packet.getlayer(BTLE_ADV_IND)
@@ -341,8 +352,8 @@ def export_ADV_IND(packet):
 
 
 def export_ADV_NONCONN_IND(packet):
-    btle_hdr = packet.getlayer(BTLE)
-    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+    ble_adv_fields = packet.getlayer(BTLE_ADV)
+    bdaddr_random = ble_adv_fields.TxAdd
 
     # Access the BTLE_ADV layer
     btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
@@ -356,8 +367,8 @@ def export_ADV_NONCONN_IND(packet):
 
 
 def export_SCAN_RSP(packet):
-    btle_hdr = packet.getlayer(BTLE)
-    bdaddr_random = 1 if (btle_hdr.TxAdd == "random") else 0
+    ble_adv_fields = packet.getlayer(BTLE_ADV)
+    bdaddr_random = ble_adv_fields.TxAdd
 
     # Access the SCAN_RSP layer
     btle_adv = packet.getlayer(BTLE_SCAN_RSP)
@@ -497,32 +508,122 @@ def get_ATT_data(packet, scapy_type, packet_type):
     else:
         return packet.getlayer(scapy_type)
 
+
+def export_ATT_Exchange_MTU_Request(connect_ind_obj, packet):
+    att_data = get_ATT_data(packet, ATT_Exchange_MTU_Request, type_ATT_EXCHANGE_MTU_REQ)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        data = ff_ATT_EXCHANGE_MTU_REQ(direction, att_data.mtu)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        return True
+    return False
+
+
+def export_ATT_Exchange_MTU_Response(connect_ind_obj, packet):
+    packet.show()
+    att_data = get_ATT_data(packet, ATT_Exchange_MTU_Response, type_ATT_EXCHANGE_MTU_RSP)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        data = ff_ATT_EXCHANGE_MTU_RSP(direction, att_data.mtu)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        return True
+    return False
+
+
 def export_ATT_Read_Request(connect_ind_obj, packet):
     att_data = get_ATT_data(packet, ATT_Read_Request, type_ATT_READ_REQ)
     if(att_data != None):
         direction = get_packet_direction(packet)
         handle = f"{att_data.gatt_handle:04x}"
-        data = ff_ATT_READ_REQ(handle, direction)
+        data = ff_ATT_READ_REQ(direction, handle)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, type_ATT_READ_RSP, data)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
         return True
     return False
 
 
 def export_ATT_Read_Response(connect_ind_obj, packet):
-    #packet.show()
     att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
     if(att_data != None):
         direction = get_packet_direction(packet)
         value_hex_str = ''.join(format(byte, '02x') for byte in att_data.value)
-        data = ff_ATT_READ_RSP(value_hex_str, direction)
+        data = ff_ATT_READ_RSP(direction, value_hex_str)
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_ATT_packet(connect_ind_obj, type_ATT_READ_RSP, data)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
         return True
     return False
 
 
-def export_ATTArray(packet):
+def export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet):
+    global g_last_ATT_group_type_requested
+    att_data = get_ATT_data(packet, ATT_Read_By_Group_Type_Request, type_ATT_READ_BY_GROUP_TYPE_REQ)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        start_handle = att_data.start
+        end_handle = att_data.end
+        group_type = f"{att_data.uuid:04x}"
+        g_last_ATT_group_type_requested = group_type
+        data = ff_ATT_READ_BY_GROUP_TYPE_REQ(direction, start_handle, end_handle, group_type)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        return True
+    return False
+
+
+def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
+    packet.show()
+    att_data = get_ATT_data(packet, ATT_Read_By_Group_Type_Response, type_ATT_READ_BY_GROUP_TYPE_RSP)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        attribute_data_list = []
+        if(att_data.length == 6):
+            # 2 byte start handle, 2 byte end handle, 2 byte UUID16
+            data_len = len(att_data.data)
+            for i in range(0, data_len, 6):
+                if i + 6 > data_len:
+                    print("Not enough data left to process a 6-byte attribute data entry.")
+                    break
+                list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
+                    attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
+                    end_group_handle=int.from_bytes(att_data.data[i+2:i+4], byteorder='little'),
+                    UUID=f"{int.from_bytes(att_data.data[i+4:i+6], byteorder='little'):04x}"
+                )
+                attribute_data_list.append(list_obj)
+        elif(att_data.length == 20):
+            # 2 byte start handle, 2 byte end handle, 16 byte UUID128
+            data_len = len(att_data.data)
+            for i in range(0, data_len, 20):
+                if i + 20 > data_len:
+                    print("Not enough data left to process a 20-byte attribute data entry.")
+                    break
+                list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
+                    attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
+                    end_group_handle=int.from_bytes(att_data.data[i+2:i+4], byteorder='little'),
+                    UUID=f"{int.from_bytes(att_data.data[i+4:i+20], byteorder='little'):032x}"
+                )
+                attribute_data_list.append(list_obj)
+        else:
+            print("Unexpected length in Read By Group Type Response. Can't parse further.")
+            return False
+        #attribute_data_list = ''.join(format(byte, '02x') for byte in att_data.data)
+        data = ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, att_data.length, attribute_data_list)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
+
+        # Insert this information as GATTArray information as well
+        for entry in attribute_data_list:
+            data = ff_GATT_Service({"utype": g_last_ATT_group_type_requested, 
+                                    "begin_handle": entry["attribute_handle"], 
+                                    "end_handle": entry["end_group_handle"], 
+                                    "UUID": entry["UUID"]})
+            BTIDES_export_GATT_Service(connect_ind_obj["peripheral_bdaddr"], connect_ind_obj["peripheral_bdaddr_rand"], data)
+
+        return True
+    return False
+
+def export_to_ATTArray(packet):
     ble_fields = packet.getlayer(BTLE)
     access_address = ble_fields.access_addr
 
@@ -537,6 +638,14 @@ def export_ATTArray(packet):
     if(export_ATT_Read_Request(connect_ind_obj, packet)):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Exchange_MTU_Response(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet)):
         return True
     # TODO: handle ALL opcodes
 
@@ -616,7 +725,7 @@ def read_pcap(file_path):
 
                     # ATT packets
                     if packet.haslayer(ATT_Hdr):
-                        if(export_ATTArray(packet)): continue
+                        if(export_to_ATTArray(packet)): continue
                     # TODO: export other packet types like LL or L2CAP or ATT
                     else:
                         packet.show()

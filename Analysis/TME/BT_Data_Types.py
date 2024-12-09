@@ -57,14 +57,18 @@ type_opcode_LL_PHY_RSP                   = 23
 event_code_HCI_Remote_Name_Request_Complete     = 7
 
 # ATT PDU types defined in BT spec
-type_ATT_EXCHANGE_MTU_REQ  = 0x02
-type_ATT_EXCHANGE_MTU_RSP  = 0x03
-type_ATT_READ_REQ          = 0x0A
-type_ATT_READ_RSP          = 0x0B
+type_ATT_EXCHANGE_MTU_REQ           = 0x02
+type_ATT_EXCHANGE_MTU_RSP           = 0x03
+type_ATT_READ_REQ                   = 0x0A
+type_ATT_READ_RSP                   = 0x0B
+type_ATT_READ_BY_GROUP_TYPE_REQ     = 0x10
+type_ATT_READ_BY_GROUP_TYPE_RSP     = 0x11
 
 att_opcode_strings = {
     type_ATT_EXCHANGE_MTU_REQ: "ATT_EXCHANGE_MTU_REQ",
     type_ATT_EXCHANGE_MTU_RSP: "ATT_EXCHANGE_MTU_RSP",
     type_ATT_READ_REQ: "ATT_READ_REQ",
-    type_ATT_READ_RSP: "ATT_READ_RSP"
+    type_ATT_READ_RSP: "ATT_READ_RSP",
+    type_ATT_READ_BY_GROUP_TYPE_REQ: "ATT_READ_BY_GROUP_TYPE_REQ",
+    type_ATT_READ_BY_GROUP_TYPE_RSP: "ATT_READ_BY_GROUP_TYPE_RSP"
 }
