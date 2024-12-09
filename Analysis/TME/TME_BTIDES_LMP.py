@@ -20,7 +20,7 @@ opcode_LMP_FEATURES_RSP         = 40
 # TODO: we need to update database to keep track of opcode so we know whether something is a REQ or RSP
 def ff_LMP_VERSION_RSP(version, company_id, subversion):
     obj = {"opcode": opcode_LMP_VERSION_RSP, "version": version, "company_id": company_id, "subversion": subversion}
-    if(TME.TME_glob.BTIDES_JSON):
+    if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_VERSION_RSP"
     return obj
 
@@ -29,7 +29,7 @@ def ff_LMP_VERSION_RSP(version, company_id, subversion):
 def ff_LMP_FEATURES_RSP(features):
     lmp_features_hex_str = f"{features:016x}"
     obj = {"opcode": opcode_LMP_FEATURES_RSP, "lmp_features_hex_str": lmp_features_hex_str}
-    if(TME.TME_glob.BTIDES_JSON):
+    if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_FEATURES_RSP"
     return obj
 

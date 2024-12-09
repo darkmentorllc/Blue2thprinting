@@ -387,12 +387,15 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
     btle_adv = packet.getlayer(scapy_type)
     device_bdaddr = btle_adv.AdvA
 
+    data_exported = False
     for entry in btle_adv.data:
-        if isinstance(entry, EIR_Hdr):
-            if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
-                return True
+        if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
+            data_exported = True
 
-    return False
+    if(data_exported):
+        return True
+    else:
+        return False
 
 
 def export_BTLE_CTRL(packet):
