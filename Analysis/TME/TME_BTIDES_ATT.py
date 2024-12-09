@@ -29,6 +29,28 @@ def ff_ATT_handle_entry(handle, UUID):
     return obj
 
 
+def ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_error, error_code):
+    obj = {
+        "direction": direction,
+        "opcode": type_ATT_ERROR_RSP,
+        "request_opcode_in_error": request_opcode_in_error,
+        "attribute_handle_in_error": attribute_handle_in_error,
+        "error_code": error_code
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_ERROR_RSP]
+        if(error_code in att_error_strings):
+            obj["error_str"] = att_error_strings[error_code]
+        else:
+            if(error_code >= 0x80 and error_code <= 0x9F):
+                obj["error_str"] = "Application Error Code"
+            elif(error_code >= 0xE0 and error_code <= 0xFF):
+                obj["error_str"] = "Common Profile and Service Error Code"
+            else:
+                obj["error_str"] = "Unknown Error Code"
+    return obj
+
+
 def ff_ATT_EXCHANGE_MTU_REQ(direction, client_rx_mtu):
     obj = {"direction": direction, "opcode": type_ATT_EXCHANGE_MTU_REQ, "client_rx_mtu": client_rx_mtu}
     if(TME.TME_glob.verbose_BTIDES):
@@ -83,7 +105,7 @@ def BTIDES_export_ATT_handle(bdaddr, random, data):
     tier1_data = ff_ATT_handle_enumeration(data)
     generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
-# For now since we only 
+# TODO: For now since we only are importing from PCAP only export to DualBDADDR
 # TODO: may need to update this in the future to handle export from database to SingleBDADDR data types
 def BTIDES_export_ATT_packet(connect_ind_obj, data):
     generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")

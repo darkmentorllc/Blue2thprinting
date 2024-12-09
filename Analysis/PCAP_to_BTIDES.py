@@ -1,26 +1,28 @@
 import sys, re, json, argparse
-# All the advertisement channel types
-from scapy.all import PcapReader
-# Import Layers:
-from scapy.all import BTLE, BTLE_RF
-from scapy.all import BTLE_CONNECT_REQ
-from scapy.all import BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN_IND, BTLE_SCAN_RSP
-# All the AdvData types
-from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
-from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
-from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
-from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
-from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
-from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
-from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
-from scapy.all import EIR_Manufacturer_Specific_Data
-# LL Control types
-from scapy.all import BTLE_CTRL
-# L2CAP types
-from scapy.all import L2CAP_Hdr, ATT_Hdr
-# ATT types
-from scapy.all import ATT_Read_Request, ATT_Read_Response, ATT_Exchange_MTU_Request, ATT_Exchange_MTU_Response
-from scapy.all import ATT_Read_By_Group_Type_Request, ATT_Read_By_Group_Type_Response
+
+from scapy.all import *
+# # All the advertisement channel types
+# from scapy.all import PcapReader
+# # Import Layers:
+# from scapy.all import BTLE, BTLE_RF
+# from scapy.all import BTLE_CONNECT_REQ
+# from scapy.all import BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN_IND, BTLE_SCAN_RSP
+# # All the AdvData types
+# from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
+# from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
+# from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
+# from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
+# from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
+# from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
+# from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
+# from scapy.all import EIR_Manufacturer_Specific_Data
+# # LL Control types
+# from scapy.all import BTLE_CTRL
+# # L2CAP types
+# from scapy.all import L2CAP_Hdr, ATT_Hdr
+# # ATT types
+# from scapy.all import ATT_Read_Request, ATT_Read_Response, ATT_Exchange_MTU_Request, ATT_Exchange_MTU_Response
+# from scapy.all import ATT_Read_By_Group_Type_Request, ATT_Read_By_Group_Type_Response
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
@@ -32,15 +34,17 @@ import TME.TME_glob
 from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 # Advertisement Channel
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
-from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
+# from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
+from TME.TME_AdvChan import *
 # LL Control
-from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND
-from TME.TME_BTIDES_LL import BTIDES_export_LL_FEATURE_REQ, ff_LL_FEATURE_REQ, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PERIPHERAL_FEATURE_REQ
-from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTIDES_export_LL_LENGTH_RSP, ff_LL_LENGTH_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_UNKNOWN_RSP, ff_LL_UNKNOWN_RSP
+from TME.TME_BTIDES_LL import *
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_FEATURE_REQ, ff_LL_FEATURE_REQ, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PERIPHERAL_FEATURE_REQ
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTIDES_export_LL_LENGTH_RSP, ff_LL_LENGTH_RSP
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
+# from TME.TME_BTIDES_LL import BTIDES_export_LL_UNKNOWN_RSP, ff_LL_UNKNOWN_RSP
 # ATT
 #from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
 from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to just work.
@@ -410,15 +414,13 @@ def export_BTLE_CTRL(packet):
     # Handle different LL Control packet types here
     # For example, LL_VERSION_IND
     ll_ctrl = packet.getlayer(BTLE_CTRL)
-    if ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
-        data = ff_LL_VERSION_IND(
+    if ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
+        data = ff_LL_TERMINATE_IND(
             direction=get_packet_direction(packet),
-            version=ll_ctrl.version,
-            company_id=ll_ctrl.company,
-            subversion=ll_ctrl.subversion
+            error_code=ll_ctrl.code
         )
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LL_TERMINATE_IND(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
         data = ff_LL_UNKNOWN_RSP(
@@ -435,6 +437,16 @@ def export_BTLE_CTRL(packet):
         )
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
+        data = ff_LL_VERSION_IND(
+            direction=get_packet_direction(packet),
+            version=ll_ctrl.version,
+            company_id=ll_ctrl.company,
+            subversion=ll_ctrl.subversion
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
         data = ff_LL_PERIPHERAL_FEATURE_REQ(
@@ -525,6 +537,18 @@ def get_ATT_data(packet, scapy_type, packet_type):
     else:
         return packet.getlayer(scapy_type)
 
+def export_ATT_Error_Response(connect_ind_obj, packet):
+    att_data = get_ATT_data(packet, ATT_Error_Response, type_ATT_ERROR_RSP)
+    if att_data is not None:
+        direction = get_packet_direction(packet)
+        request_opcode_in_error = att_data.request
+        attribute_handle_in_error = att_data.handle
+        error_code = att_data.ecode
+        data = ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_error, error_code)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj, data)
+        return True
+    return False
 
 def export_ATT_Exchange_MTU_Request(connect_ind_obj, packet):
     att_data = get_ATT_data(packet, ATT_Exchange_MTU_Request, type_ATT_EXCHANGE_MTU_REQ)
@@ -652,6 +676,8 @@ def export_to_ATTArray(packet):
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)     
+    if(export_ATT_Error_Response(connect_ind_obj, packet)):
+        return True
     if(export_ATT_Read_Request(connect_ind_obj, packet)):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet)):
@@ -664,6 +690,7 @@ def export_to_ATTArray(packet):
         return True
     if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet)):
         return True
+    
     # TODO: handle ALL opcodes
 
 

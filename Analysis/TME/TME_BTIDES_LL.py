@@ -95,9 +95,26 @@ def ff_LL_PHY_RSP(direction, tx_phys, rx_phys):
     return obj
 
 
+def ff_LL_TERMINATE_IND(direction, error_code):
+    obj = {"direction": direction, "opcode": type_opcode_LL_TERMINATE_IND, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_TERMINATE_IND"
+        if error_code in controller_error_strings:
+            obj["error_str"] = controller_error_strings[error_code]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################
+
+def BTIDES_export_LL_TERMINATE_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
+    global BTIDES_JSON
+    ###print(BTIDES_JSON)
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
+
 
 def BTIDES_export_LL_UNKNOWN_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
     global BTIDES_JSON

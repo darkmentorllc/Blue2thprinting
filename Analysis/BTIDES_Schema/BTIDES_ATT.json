@@ -56,6 +56,50 @@
         }
       }
     },
+    "ATT_ERROR_RSP" : {
+      "type" : "object",
+      "description" : "Structure for ATT\\_ERROR\\_RSP packet.",
+      "required" : [ "opcode", "direction", "request_opcode_in_error", "attribute_handle_in_error", "error_code" ],
+      "properties" : {
+        "std_optional_fields" : {
+          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "error_str" : {
+          "description" : "Optional field for a human-readable error string.",
+          "type" : "string"
+        },
+        "opcode_str" : {
+          "description" : "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type" : "string",
+          "const" : "ATT_ERROR_RSP"
+        },
+        "opcode" : {
+          "description" : "ATT packet opcode.",
+          "const" : 1
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "request_opcode_in_error" : {
+          "description" : "Opcode of the request that generated this error response.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        },
+        "attribute_handle_in_error" : {
+          "description" : "Handle of the attribute that generated this error response.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 65535
+        },
+        "error_code" : {
+          "description" : "Error code indicating the nature of the error.",
+          "type" : "integer",
+          "minimum" : 0,
+          "maximum" : 255
+        }
+      }
+    },
     "ATT_EXCHANGE_MTU_REQ" : {
       "type" : "object",
       "description" : "Structure for ATT\\_EXCHANGE\\_MTU\\_REQ packet.",

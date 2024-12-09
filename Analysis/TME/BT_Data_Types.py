@@ -41,6 +41,7 @@ type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
 ## LL Control PDU types defined in BT spec
+type_opcode_LL_TERMINATE_IND             = 2
 type_opcode_LL_UNKNOWN_RSP               = 7
 type_opcode_LL_FEATURE_REQ               = 8
 type_opcode_LL_FEATURE_RSP               = 9
@@ -56,7 +57,82 @@ type_opcode_LL_PHY_RSP                   = 23
 # HCI Event codes defined in BT spec
 event_code_HCI_Remote_Name_Request_Complete     = 7
 
+# Controller error codes defined in BT spec (also reused by LL_TERMINATE_IND)
+controller_error_strings = {
+    0: "Success",
+    1: "Unknown HCI Command",
+    2: "Unknown Connection Identifier",
+    3: "Hardware Failure",
+    4: "Page Timeout",
+    5: "Authentication Failure",
+    6: "PIN or Key Missing",
+    7: "Memory Capacity Exceeded",
+    8: "Connection Timeout",
+    9: "Connection Limit Exceeded",
+    10: "Synchronous Connection Limit To A Device Exceeded",
+    11: "ACL Connection Already Exists",
+    12: "Command Disallowed",
+    13: "Connection Rejected due to Limited Resources",
+    14: "Connection Rejected Due To Security Reasons",
+    15: "Connection Rejected due to Unacceptable BD_ADDR",
+    16: "Connection Accept Timeout Exceeded",
+    17: "Unsupported Feature or Parameter Value",
+    18: "Invalid HCI Command Parameters",
+    19: "Remote User Terminated Connection",
+    20: "Remote Device Terminated Connection due to Low Resources",
+    21: "Remote Device Terminated Connection due to Power Off",
+    22: "Connection Terminated By Local Host",
+    23: "Repeated Attempts",
+    24: "Pairing Not Allowed",
+    25: "Unknown LMP PDU",
+    26: "Unsupported Remote Feature / Unsupported LMP Feature",
+    27: "SCO Offset Rejected",
+    28: "SCO Interval Rejected",
+    29: "SCO Air Mode Rejected",
+    30: "Invalid LMP Parameters / Invalid LL Parameters",
+    31: "Unspecified Error",
+    32: "Unsupported LMP Parameter Value / Unsupported LL Parameter Value",
+    33: "Role Change Not Allowed",
+    34: "LMP Response Timeout / LL Response Timeout",
+    35: "LMP Error Transaction Collision",
+    36: "LMP PDU Not Allowed",
+    37: "Encryption Mode Not Acceptable",
+    38: "Link Key cannot be Changed",
+    39: "Requested QoS Not Supported",
+    40: "Instant Passed",
+    41: "Pairing With Unit Key Not Supported",
+    42: "Different Transaction Collision",
+    43: "Reserved for future use",
+    44: "QoS Unacceptable Parameter",
+    45: "QoS Rejected",
+    46: "Channel Classification Not Supported",
+    47: "Insufficient Security",
+    48: "Parameter Out Of Mandatory Range",
+    49: "Reserved for future use",
+    50: "Role Switch Pending",
+    51: "Reserved for future use",
+    52: "Reserved Slot Violation",
+    53: "Role Switch Failed",
+    54: "Extended Inquiry Response Too Large",
+    55: "Secure Simple Pairing Not Supported By Host",
+    56: "Host Busy - Pairing",
+    57: "Connection Rejected due to No Suitable Channel Found",
+    58: "Controller Busy",
+    59: "Unacceptable Connection Parameters",
+    60: "Directed Advertising Timeout",
+    61: "Connection Terminated due to MIC Failure",
+    62: "Connection Failed to be Established / Synchronization Timeout",
+    63: "MAC Connection Failed",
+    64: "Coarse Clock Adjustment Rejected but Will Try to Adjust Using Clock Dragging",
+    65: "Type0 Submap Not Defined",
+    66: "Unknown Advertising Identifier",
+    67: "Limit Reached",
+    68: "Operation Cancelled by Host",
+    69: "Packet Too Long"
+}
+
 # ATT PDU types defined in BT spec
+type_ATT_ERROR_RSP                  = 0x01
 type_ATT_EXCHANGE_MTU_REQ           = 0x02
 type_ATT_EXCHANGE_MTU_RSP           = 0x03
 type_ATT_READ_REQ                   = 0x0A
@@ -65,10 +141,33 @@ type_ATT_READ_BY_GROUP_TYPE_REQ     = 0x10
 type_ATT_READ_BY_GROUP_TYPE_RSP     = 0x11
 
 att_opcode_strings = {
+    type_ATT_ERROR_RSP: "ATT_ERROR_RSP",
     type_ATT_EXCHANGE_MTU_REQ: "ATT_EXCHANGE_MTU_REQ",
     type_ATT_EXCHANGE_MTU_RSP: "ATT_EXCHANGE_MTU_RSP",
     type_ATT_READ_REQ: "ATT_READ_REQ",
     type_ATT_READ_RSP: "ATT_READ_RSP",
     type_ATT_READ_BY_GROUP_TYPE_REQ: "ATT_READ_BY_GROUP_TYPE_REQ",
     type_ATT_READ_BY_GROUP_TYPE_RSP: "ATT_READ_BY_GROUP_TYPE_RSP"
+}
+
+att_error_strings = {
+    1: "Invalid Handle",
+    2: "Read Not Permitted",
+    3: "Write Not Permitted",
+    4: "Invalid PDU",
+    5: "Insufficient Authentication",
+    6: "Request Not Supported",
+    7: "Invalid Offset",
+    8: "Insufficient Authorization",
+    9: "Prepare Queue Full",
+    10: "Attribute Not Found",
+    11: "Attribute Not Long",
+    12: "Encryption Key Size Too Short",
+    13: "Invalid Attribute Value Length",
+    14: "Unlikely Error",
+    15: "Insufficient Encryption",
+    16: "Unsupported Group Type",
+    17: "Insufficient Resources",
+    18: "Database Out of Sync",
+    19: "Value Not Allowed"
 }
