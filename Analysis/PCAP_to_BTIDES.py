@@ -335,48 +335,62 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
 
     return False
 
+# def export_ADV_IND(packet):
+#     ble_adv_fields = packet.getlayer(BTLE_ADV)
+#     bdaddr_random = ble_adv_fields.TxAdd
 
-def export_ADV_IND(packet):
+#     # Access the BTLE_ADV layer
+#     btle_adv = packet.getlayer(BTLE_ADV_IND)
+#     device_bdaddr = btle_adv.AdvA
+
+#     for entry in btle_adv.data:
+#         if isinstance(entry, EIR_Hdr):
+#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)): return True
+
+#     return False
+
+
+# def export_ADV_NONCONN_IND(packet):
+#     ble_adv_fields = packet.getlayer(BTLE_ADV)
+#     bdaddr_random = ble_adv_fields.TxAdd
+
+#     # Access the BTLE_ADV layer
+#     btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
+#     device_bdaddr = btle_adv.AdvA
+
+#     for entry in btle_adv.data:
+#         if isinstance(entry, EIR_Hdr):
+#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)): return True
+
+#     return False
+
+
+# def export_SCAN_RSP(packet):
+#     ble_adv_fields = packet.getlayer(BTLE_ADV)
+#     bdaddr_random = ble_adv_fields.TxAdd
+
+#     # Access the SCAN_RSP layer
+#     btle_adv = packet.getlayer(BTLE_SCAN_RSP)
+#     device_bdaddr = btle_adv.AdvA
+
+#     for entry in btle_adv.data:
+#         if isinstance(entry, EIR_Hdr):
+#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)): return True
+
+#     return False
+
+def export_AdvChannelData(packet, scapy_type, adv_type):
     ble_adv_fields = packet.getlayer(BTLE_ADV)
     bdaddr_random = ble_adv_fields.TxAdd
 
     # Access the BTLE_ADV layer
-    btle_adv = packet.getlayer(BTLE_ADV_IND)
+    btle_adv = packet.getlayer(scapy_type)
     device_bdaddr = btle_adv.AdvA
 
     for entry in btle_adv.data:
         if isinstance(entry, EIR_Hdr):
-            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)): return True
-
-    return False
-
-
-def export_ADV_NONCONN_IND(packet):
-    ble_adv_fields = packet.getlayer(BTLE_ADV)
-    bdaddr_random = ble_adv_fields.TxAdd
-
-    # Access the BTLE_ADV layer
-    btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
-    device_bdaddr = btle_adv.AdvA
-
-    for entry in btle_adv.data:
-        if isinstance(entry, EIR_Hdr):
-            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)): return True
-
-    return False
-
-
-def export_SCAN_RSP(packet):
-    ble_adv_fields = packet.getlayer(BTLE_ADV)
-    bdaddr_random = ble_adv_fields.TxAdd
-
-    # Access the SCAN_RSP layer
-    btle_adv = packet.getlayer(BTLE_SCAN_RSP)
-    device_bdaddr = btle_adv.AdvA
-
-    for entry in btle_adv.data:
-        if isinstance(entry, EIR_Hdr):
-            if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)): return True
+            if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
+                return True
 
     return False
 
@@ -521,7 +535,7 @@ def export_ATT_Exchange_MTU_Request(connect_ind_obj, packet):
 
 
 def export_ATT_Exchange_MTU_Response(connect_ind_obj, packet):
-    packet.show()
+    #packet.show()
     att_data = get_ATT_data(packet, ATT_Exchange_MTU_Response, type_ATT_EXCHANGE_MTU_RSP)
     if att_data is not None:
         direction = get_packet_direction(packet)
@@ -573,7 +587,7 @@ def export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet):
 
 
 def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
-    packet.show()
+    # packet.show()
     att_data = get_ATT_data(packet, ATT_Read_By_Group_Type_Response, type_ATT_READ_BY_GROUP_TYPE_RSP)
     if att_data is not None:
         direction = get_packet_direction(packet)
@@ -713,11 +727,11 @@ def read_pcap(file_path):
 
                     # Advertisement channel packets
                     if packet.haslayer(BTLE_ADV_IND):
-                        if(export_ADV_IND(packet)): continue
+                        if(export_AdvChannelData(packet, BTLE_ADV_IND, type_AdvChanPDU_ADV_IND)): continue
                     if packet.haslayer(BTLE_ADV_NONCONN_IND):
-                        if(export_ADV_NONCONN_IND(packet)): continue
+                        if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
                     if packet.haslayer(BTLE_SCAN_RSP):
-                        if(export_SCAN_RSP(packet)): continue
+                        if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
 
                     # LL Control packets
                     if packet.haslayer(BTLE_CTRL):
