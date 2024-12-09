@@ -32,7 +32,12 @@ from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
-from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND
+from TME.TME_BTIDES_LL import BTIDES_export_LL_FEATURE_REQ, ff_LL_FEATURE_REQ, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PERIPHERAL_FEATURE_REQ
+from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTIDES_export_LL_LENGTH_RSP, ff_LL_LENGTH_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
 
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): print(fmt)
@@ -365,7 +370,6 @@ def export_SCAN_RSP(packet):
 
 
 def export_BTLE_CTRL(packet):
-    packet.show()
     btle_hdr = packet.getlayer(BTLE)
     access_address = btle_hdr.access_addr
 
@@ -385,17 +389,88 @@ def export_BTLE_CTRL(packet):
             subversion=ll_ctrl.subversion
         )
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_VERSION_IND(connect_ind_obj, data=data)
+        BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_REQ:
+        data = ff_LL_FEATURE_REQ(
+            direction=get_packet_direction(packet),
+            features=ll_ctrl.feature_set.value
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
+        data = ff_LL_PERIPHERAL_FEATURE_REQ(
+            direction=get_packet_direction(packet),
+            features=ll_ctrl.feature_set.value
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
         data = ff_LL_FEATURE_RSP(
-            features=ll_ctrl.features,
+            direction=get_packet_direction(packet),
+            features=ll_ctrl.feature_set.value
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_FEATURE_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_LENGTH_REQ:
+        data = ff_LL_LENGTH_REQ(
+            direction=get_packet_direction(packet),
+            max_rx_octets=ll_ctrl.max_rx_bytes,
+            max_rx_time=ll_ctrl.max_rx_time,
+            max_tx_octets=ll_ctrl.max_tx_bytes,
+            max_tx_time=ll_ctrl.max_tx_time
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_LENGTH_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_LENGTH_RSP:
+        data = ff_LL_LENGTH_RSP(
+            direction=get_packet_direction(packet),
+            max_rx_octets=ll_ctrl.max_rx_bytes,
+            max_rx_time=ll_ctrl.max_rx_time,
+            max_tx_octets=ll_ctrl.max_tx_bytes,
+            max_tx_time=ll_ctrl.max_tx_time
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_LENGTH_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_PHY_REQ:
+        data = ff_LL_PHY_REQ(
+            direction=get_packet_direction(packet),
+            tx_phys=ll_ctrl.tx_phys.value,
+            rx_phys=ll_ctrl.rx_phys.value
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_PHY_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_PHY_RSP:
+        data = ff_LL_PHY_RSP(
+            direction=get_packet_direction(packet),
+            tx_phys=ll_ctrl.tx_phys.value,
+            rx_phys=ll_ctrl.rx_phys.value
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_PHY_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
+        data = ff_LL_PING_REQ(
             direction=get_packet_direction(packet)
         )
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_VERSION_IND(connect_ind_obj, data=data)
+        BTIDES_export_LL_PING_REQ(connect_ind_obj=connect_ind_obj, data=data)
         return True
-
+    elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
+        data = ff_LL_PING_RSP(
+            direction=get_packet_direction(packet)
+        )
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_PING_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    else:
+        packet.show()
 
     return False
 

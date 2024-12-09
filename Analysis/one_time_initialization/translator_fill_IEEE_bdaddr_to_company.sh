@@ -10,3 +10,4 @@ sed -E 's/^([0-9A-Fa-f]+)-([0-9A-Fa-f]+)-([0-9A-Fa-f]+)[[:space:]]+\(hex\)[[:spa
 sed 's///g' /tmp/fixme.txt > /tmp/d1.txt
 echo "Importing IEEE OUIs into IEEE_bdaddr_to_company"
 mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/d1.txt'  IGNORE INTO TABLE IEEE_bdaddr_to_company FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, company_name);"
+mysql -u user -pa --database='bttest' --execute="LOAD DATA INFILE '/tmp/d1.txt'  IGNORE INTO TABLE IEEE_bdaddr_to_company FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, company_name);"

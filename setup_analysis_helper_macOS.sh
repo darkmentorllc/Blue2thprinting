@@ -92,6 +92,7 @@ echo "==================================="
 #### It will then create all the database tables where imported data will be stored
 #### It will give an error message (that can be ignored) if the user or tables are already created
 ./initialize_database.sh
+./initialize_test_database.sh
 
 echo ""
 echo "===================================="

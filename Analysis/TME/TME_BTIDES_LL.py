@@ -152,6 +152,14 @@ def BTIDES_export_LL_PING_RSP(bdaddr=None, random=None, connect_ind_obj=None, da
     else:
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
 
+def BTIDES_export_LL_PING_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
+    global BTIDES_JSON
+    ###print(BTIDES_JSON)
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
+
 
 def BTIDES_export_LL_LENGTH_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
     global BTIDES_JSON
