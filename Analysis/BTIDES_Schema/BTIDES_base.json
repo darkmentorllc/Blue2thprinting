@@ -266,10 +266,12 @@
       "maxLength" : 8
     },
     "UUID128_hex_str" : {
-      "description" : "UUID128 as big-endian hex_str. Should be encoded *containing* dashes (because it's quicker to strip them out if needed than add them in). E.g. 6e400001-b5a3-f393-e0a9-e50e24dcca9e.",
+      "description" : "UUID128 as big-endian hex_str. Can be encoded with dashes or without, but it must be exactly 32 (without dashes) or 36 (with dashes) hexadecimal characters long.",
       "type" : "string",
-      "minLength" : 36,
-      "maxLength" : 36
+      "anyOf": [
+      { "minLength": 32, "maxLength": 32 },
+      { "minLength": 36, "maxLength": 36 }
+      ]
     },
     "full_pkt_hex_str" : {
       "description" : "This is the original full packet data (starting from the {LL/LMP} header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",

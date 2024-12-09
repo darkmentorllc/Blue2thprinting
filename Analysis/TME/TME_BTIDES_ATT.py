@@ -11,6 +11,7 @@ import re
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
 import TME.TME_glob
+from TME.TME_UUID128 import add_dashes_to_UUID128
 
 ############################
 # Helper "factory functions"
@@ -18,7 +19,7 @@ import TME.TME_glob
 
 status_SUCCESS = 0
 
-def ff_ATT_handle_enumeration(handle_entry_obj):    
+def ff_ATT_handle_enumeration(handle_entry_obj):
     obj = {"ATT_handle_enumeration": [ handle_entry_obj ]}
     return obj
 
