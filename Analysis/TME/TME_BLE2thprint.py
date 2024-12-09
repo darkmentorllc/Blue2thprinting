@@ -108,11 +108,11 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
         print("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
-        if(opcode == opcode_LL_FEATURE_REQ):
+        if(opcode == type_opcode_LL_FEATURE_REQ):
             BTIDES_export_LL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
-        elif(opcode == opcode_LL_FEATURE_RSP):
+        elif(opcode == type_opcode_LL_FEATURE_RSP):
             BTIDES_export_LL_FEATURE_RSP(bdaddr, device_bdaddr_type, features)
-        elif(opcode == opcode_LL_PERIPHERAL_FEATURE_REQ):
+        elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
             BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr, device_bdaddr_type, features)
 
     for device_bdaddr_type, tx_phys, rx_phys in phys_result:
@@ -126,9 +126,9 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\t\tMax RX time: {max_rx_time} microseconds")
         print(f"\t\t\tMax TX octets: {max_tx_octets}")
         print(f"\t\t\tMax TX time: {max_tx_time} microseconds")
-        if(opcode == opcode_LL_LENGTH_REQ):
+        if(opcode == type_opcode_LL_LENGTH_REQ):
             BTIDES_export_LL_LENGTH_REQ(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-        elif(opcode == opcode_LL_LENGTH_RSP):
+        elif(opcode == type_opcode_LL_LENGTH_RSP):
             BTIDES_export_LL_LENGTH_RSP(bdaddr, device_bdaddr_type, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
 
     for device_bdaddr_type, unknown_opcode in unknown_result:

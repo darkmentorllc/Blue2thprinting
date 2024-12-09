@@ -14,6 +14,8 @@ from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
 from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
 from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
 from scapy.all import EIR_Manufacturer_Specific_Data
+# LL Control types
+from scapy.all import BTLE_CTRL
 # L2CAP types
 from scapy.all import L2CAP_Hdr, ATT_Hdr
 # ATT types
@@ -30,6 +32,7 @@ from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
+from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND
 
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): print(fmt)
@@ -360,6 +363,35 @@ def export_SCAN_RSP(packet):
 
     return False
 
+'''
+def export_BTLE_CTRL(packet):
+    packet.show()
+    btle_hdr = packet.getlayer(BTLE)
+    access_address = btle_hdr.access_addr
+
+    if access_address in g_access_address_to_connect_ind_obj:
+        connect_ind_obj = g_access_address_to_connect_ind_obj[access_address]
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    # Handle different LL Control packet types here
+    # For example, LL_VERSION_IND
+    ll_ctrl = packet.getlayer(BTLE_CTRL)
+    if ll_ctrl.opcode == 0x0C:  # LL_VERSION_IND
+        data = ff_LL_VERSION_IND(
+            version=version,
+            company_id=company_id,
+            sub_version=sub_version,
+            direction=get_packet_direction(packet)
+        )
+        BTIDES_export_LL_VERSION_IND(connect_ind_obj, packet)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LL_CTRL_packet(connect_ind_obj, type_LL_CTRL_VERSION_IND, data)
+        return True
+
+    return False
+'''
+
 # It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
 # But just doing it out of an abundance of caution
 def get_ATT_data(packet, scapy_type, packet_type):
@@ -486,12 +518,16 @@ def read_pcap(file_path):
                     if packet.haslayer(BTLE_SCAN_RSP):
                         if(export_SCAN_RSP(packet)): continue
 
+                    # LL Control packets
+                    #if packet.haslayer(BTLE_CTRL):
+                    #    if(export_BTLE_CTRL(packet)): continue
+
                     # ATT packets
                     if packet.haslayer(ATT_Hdr):
                         if(export_ATTArray(packet)): continue
                     # TODO: export other packet types like LL or L2CAP or ATT
-#                else:
-#                    packet.show()
+                    else:
+                        packet.show()
 
         return
     except Exception as e:

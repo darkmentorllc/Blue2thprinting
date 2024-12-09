@@ -40,6 +40,19 @@ type_AdvChanPDU_ADV_SCAN_IND      = 6
 type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
+## LL Control PDU types defined in BT spec
+type_opcode_LL_UNKNOWN_RSP               = 7
+type_opcode_LL_FEATURE_REQ               = 8
+type_opcode_LL_FEATURE_RSP               = 9
+type_opcode_LL_VERSION_IND               = 12
+type_opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
+type_opcode_LL_PING_REQ                  = 18
+type_opcode_LL_PING_RSP                  = 19
+type_opcode_LL_LENGTH_REQ                = 20
+type_opcode_LL_LENGTH_RSP                = 21
+type_opcode_LL_PHY_REQ                   = 22
+type_opcode_LL_PHY_RSP                   = 23
+
 # ATT PDU types defined in BT spec
 type_ATT_EXCHANGE_MTU_REQ  = 0x02
 type_ATT_EXCHANGE_MTU_RSP  = 0x03

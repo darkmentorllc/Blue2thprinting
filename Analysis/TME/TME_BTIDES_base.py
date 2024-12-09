@@ -149,7 +149,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_zeroth_level(connect_ind_obj):
         else:
             # If there's already stuff in the BTIDES JSON, append this new DualBDADDR entry to the end
             DualBDADDR_entry = ff_DualBDADDR_base(connect_ind_obj)
-            BTIDES_JSON.append( [ DualBDADDR_entry ] )
+            BTIDES_JSON.append(DualBDADDR_entry)
             return True
     else:
         #print("CONNECT_IND already exists in the BTIDES JSON. Nothing to do.")
