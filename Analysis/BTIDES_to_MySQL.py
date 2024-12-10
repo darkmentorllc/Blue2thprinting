@@ -498,7 +498,6 @@ def parse_LLArray(entry):
         return # Entry not valid for this type
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
-
     for ll_entry in entry["LLArray"]:
         if(has_known_LL_packet(opcode_LL_UNKNOWN_RSP, ll_entry)):
             import_LL_UNKNOWN_RSP(bdaddr, bdaddr_rand, ll_entry)
@@ -547,7 +546,6 @@ def parse_LMPArray(entry):
         return # Entry not valid for this type
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
-
     for lmp_entry in entry["LMPArray"]:
         if(has_known_LL_packet(opcode_LMP_VERSION_RSP, lmp_entry)):
             import_LMP_VERSION_RSP(bdaddr, lmp_entry)
@@ -576,7 +574,6 @@ def parse_HCIArray(entry):
         return # Entry not valid for this type
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
-
     for hci_entry in entry["HCIArray"]:
         if(has_known_HCI_entry(event_code_HCI_Remote_Name_Request_Complete, hci_entry)):
             import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry)
@@ -587,11 +584,7 @@ def parse_HCIArray(entry):
 
 def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
     attribute_handle = att_handle_entry["handle"]
-    UUID = att_handle_entry["UUID"].replace('-','')
-    UUID = convert_UUID128_to_UUID16_if_possible(UUID)
-#    # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
-#    if(len(UUID128) == 4):
-#        UUID128 = f"0000{UUID128}00001000800000805f9b34fb" # Convert it to a full UUID128 based on base UUID
+    UUID = convert_UUID128_to_UUID16_if_possible(att_handle_entry["UUID"])
     values = (device_bdaddr_type, bdaddr, attribute_handle, UUID)
     insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
@@ -600,23 +593,31 @@ def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
     for att_handle_entry in att_entry["ATT_handle_enumeration"]:
         import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry)
 
-def has_known_att_entry(opcode, att_entry):
-    if("ATT_handle_enumeration" in att_entry.keys() or 
-       ("opcode" in att_entry.keys() and att_entry["opcode"] == opcode)):
-        return True
-    else:
-        return False
+# We have to be stateful with ATT_READ_REQ/RSP because the RSP doesn't contain the handle that was read from
+g_last_read_req_handle = 0
+
+def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
+    global g_last_read_req_handle
+
+    if(att_entry["opcode"] == type_ATT_READ_REQ):
+        g_last_read_req_handle = att_entry["handle"]
+    elif(att_entry["opcode"] == type_ATT_READ_RSP):
+        handle = g_last_read_req_handle
+        byte_values = bytes.fromhex(att_entry["value_hex_str"])
+        values = (device_bdaddr_type, bdaddr, handle, byte_values)
+        insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
+        execute_insert(insert, values)
 
 def parse_ATTArray(entry):
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
         return # Entry not valid for this type
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
-
-    ###print(json.dumps(entry, indent=2))
     for att_entry in entry["ATTArray"]:
-        if(has_known_att_entry(None, att_entry)):
+        if("ATT_handle_enumeration" in att_entry.keys() and att_entry["ATT_handle_enumeration"] != None):
             import_ATT_handle_enumeration(bdaddr, bdaddr_rand, att_entry)
+        if("opcode" in att_entry.keys() and att_entry["opcode"] in att_opcode_strings.keys()):
+            import_ATT_packet(bdaddr, bdaddr_rand, att_entry)
 
 
 ###################################
@@ -635,13 +636,7 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
             exit(-1)
         begin_handle = gatt_service_entry["begin_handle"]
         end_handle = gatt_service_entry["end_handle"]
-        UUID = gatt_service_entry["UUID"]
-        UUID = convert_UUID128_to_UUID16_if_possible(UUID)
-        # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
-        # if(len(UUID128) == 4):
-        #     UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-        # elif(len(UUID128) == 32):
-        #     UUID128 = add_dashes_to_UUID128(UUID128)
+        UUID = convert_UUID128_to_UUID16_if_possible(gatt_service_entry["UUID"])
         values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID)
         insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(insert, values)
@@ -655,11 +650,7 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                 declaration_handle = char["handle"]
                 char_properties = char["properties"]
                 char_value_handle = char["value_handle"]
-                UUID = char["value_uuid"]
-                UUID = convert_UUID128_to_UUID16_if_possible(UUID)
-                # if(UUID128 == 4):
-                #     #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
-                #     UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
+                UUID = convert_UUID128_to_UUID16_if_possible(char["value_uuid"])
                 values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID)
                 insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
                 execute_insert(insert, values)
@@ -682,14 +673,6 @@ def parse_GATTArray(entry):
 
     for gatt_service_entry in entry["GATTArray"]:
         import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
-
-
-# def has_GATTArray(entry):
-#     #print(json.dumps(entry, indent=2))
-#     if("GATTArray" in entry.keys() and entry["GATTArray"] != None):
-#         return True
-#     else:
-#         return False
 
 ###################################
 # MAIN

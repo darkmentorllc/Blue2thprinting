@@ -19,8 +19,8 @@ def expand_UUID16_or_UUID32_to_UUID128(UUID):
     return UUID
 
 def add_dashes_to_UUID128(UUID128):
-    # Don't add them if it already has them
-    if(UUID128[8] == '-'):
+    # Don't add them if it not needed
+    if(len(UUID128) < 32 or UUID128[8] == '-'):
         return UUID128
     return f"{UUID128[:8]}-{UUID128[8:12]}-{UUID128[12:16]}-{UUID128[16:20]}-{UUID128[20:32]}"
 

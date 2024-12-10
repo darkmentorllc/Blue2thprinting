@@ -577,7 +577,8 @@ def export_ATT_Read_Request(connect_ind_obj, packet):
     att_data = get_ATT_data(packet, ATT_Read_Request, type_ATT_READ_REQ)
     if(att_data != None):
         direction = get_packet_direction(packet)
-        handle = f"{att_data.gatt_handle:04x}"
+        handle = att_data.gatt_handle
+        #handle = f"{att_data.gatt_handle:04x}" # FIXME: I'm not sure why this was accepted as valid output and the Schema validation says its fine...possible implicit conversion happening?
         data = ff_ATT_READ_REQ(direction, handle)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
