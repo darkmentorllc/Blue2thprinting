@@ -421,7 +421,7 @@ def print_ChipMakerPrint(bdaddr):
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
                     no_results_found = False
-                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
+                    print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Low Energy Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
                     if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
                         print(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
