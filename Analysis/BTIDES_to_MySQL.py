@@ -29,6 +29,7 @@ import TME.TME_glob
 from TME.TME_helpers import execute_query, execute_insert
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_UUID128 import add_dashes_to_UUID128
 
 ###################################
 # Globals
@@ -37,6 +38,30 @@ from TME.TME_BTIDES_AdvData import *
 ###################################
 # Helper functions
 ###################################
+
+# FIXME: temporary situation to allow me to visualize the imported data w/ TellMeEverything.py
+# FIXME: Will probably need to make a new DB schema for dealing with CONNECT_IND-indexed stuff
+# FIXME: At which point I should probably update to start using foreign keys...
+def get_bdaddr_peripheral(entry):
+    if("CONNECT_IND" in entry.keys()):
+        bdaddr = entry["CONNECT_IND"]["peripheral_bdaddr"].lower()
+        bdaddr_rand = entry["CONNECT_IND"]["peripheral_bdaddr_rand"]
+    else:
+        bdaddr = entry["bdaddr"].lower()
+        bdaddr_rand = entry["bdaddr_rand"]
+
+    return bdaddr, bdaddr_rand
+
+def get_bdaddr_central(entry):
+    if("CONNECT_IND" in entry.keys()):
+        bdaddr = entry["CONNECT_IND"]["central_bdaddr"].lower()
+        bdaddr_rand = entry["CONNECT_IND"]["central_bdaddr_rand"]
+    else:
+        bdaddr = entry["bdaddr"].lower()
+        bdaddr_rand = entry["bdaddr_rand"]
+
+    return bdaddr, bdaddr_rand
+
 
 ###################################
 # BTIDES_AdvData.json information
@@ -334,66 +359,66 @@ def parse_AdvChanArray(entry):
     if("AdvChanArray" not in entry.keys() or entry["AdvChanArray"] == None):
         return # Entry not valid for this type
 
-    ###print(json.dumps(entry, indent=2))
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
     for AdvChanEntry in entry["AdvChanArray"]:
         if(has_AdvDataArray(AdvChanEntry)):
             for AdvData in AdvChanEntry["AdvDataArray"]:
-
                 # Flags
                 if(has_known_AdvData_type(type_AdvData_Flags, AdvData)):
-                    import_AdvData_Flags(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_Flags(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID16ListIncomplete & UUID16ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID16ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID16ListComplete, AdvData)):
-                    import_AdvData_UUID16s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID16s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID32ListIncomplete & UUID32ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID32ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID32ListComplete, AdvData)):
-                    import_AdvData_UUID32s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID32s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID128ListIncomplete & UUID128ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID128ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID128ListComplete, AdvData)):
-                    import_AdvData_UUID128s(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID128s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # IncompleteName & CompleteName
                 if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData)):
-                    import_AdvData_Names(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_Names(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # TxPower
                 if(has_known_AdvData_type(type_AdvData_TxPower, AdvData)):
-                    import_AdvData_TxPower(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_TxPower(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # ClassOfDevice
                 if(has_known_AdvData_type(type_AdvData_ClassOfDevice, AdvData)):
-                    import_AdvData_ClassOfDevice(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_ClassOfDevice(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # DeviceID
                 if(has_known_AdvData_type(type_AdvData_DeviceID, AdvData)):
-                    import_AdvData_DeviceID(entry["bdaddr"].lower(), BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_DeviceID(bdaddr, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # PeripheralConnectionIntervalRange
                 if(has_known_AdvData_type(type_AdvData_PeripheralConnectionIntervalRange, AdvData)):
-                    import_AdvData_PeripheralConnectionIntervalRange(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_PeripheralConnectionIntervalRange(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # Appearance
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
-                    import_AdvData_Appearance(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_Appearance(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID16ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID16ServiceData, AdvData)):
-                    import_AdvData_UUID16ServiceData(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID16ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID32ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID32ServiceData, AdvData)):
-                    import_AdvData_UUID32ServiceData(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID32ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID128ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID128ServiceData, AdvData)):
-                    import_AdvData_UUID128ServiceData(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_UUID128ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # Manufacturer-Specific Data
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
-                    import_AdvData_MSD(entry["bdaddr"].lower(), entry["bdaddr_rand"], BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    import_AdvData_MSD(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
 ###################################
 # BTIDES_LL.json information
@@ -472,22 +497,23 @@ def parse_LLArray(entry):
     if("LLArray" not in entry.keys() or entry["LLArray"] == None):
         return # Entry not valid for this type
 
-    ###print(json.dumps(entry, indent=2))
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
     for ll_entry in entry["LLArray"]:
         if(has_known_LL_packet(opcode_LL_UNKNOWN_RSP, ll_entry)):
-            import_LL_UNKNOWN_RSP(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+            import_LL_UNKNOWN_RSP(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(opcode_LL_VERSION_IND, ll_entry)):
-            import_LL_VERSION_IND(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+            import_LL_VERSION_IND(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(opcode_LL_FEATURE_REQ, ll_entry) or 
-           has_known_LL_packet(opcode_LL_FEATURE_RSP, ll_entry) or 
-           has_known_LL_packet(opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
-            import_LL_FEATUREs(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+        has_known_LL_packet(opcode_LL_FEATURE_RSP, ll_entry) or 
+        has_known_LL_packet(opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
+            import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(opcode_LL_PING_REQ, ll_entry)):
-            import_LL_PING_RSP(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+            import_LL_PING_RSP(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(opcode_LL_LENGTH_RSP, ll_entry)):
-            import_LL_LENGTHs(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+            import_LL_LENGTHs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(opcode_LL_PHY_RSP, ll_entry)):
-            import_LL_PHYs(entry["bdaddr"].lower(), entry["bdaddr_rand"], ll_entry)
+            import_LL_PHYs(bdaddr, bdaddr_rand, ll_entry)
 
 ###################################
 # BTIDES_LMP.json information
@@ -520,12 +546,13 @@ def parse_LMPArray(entry):
     if("LMPArray" not in entry.keys() or entry["LMPArray"] == None or entry["bdaddr_rand"] != 0):
         return # Entry not valid for this type
 
-    ###print(json.dumps(entry, indent=2))
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
     for lmp_entry in entry["LMPArray"]:
         if(has_known_LL_packet(opcode_LMP_VERSION_RSP, lmp_entry)):
-            import_LMP_VERSION_RSP(entry["bdaddr"].lower(), lmp_entry)
+            import_LMP_VERSION_RSP(bdaddr, lmp_entry)
         if(has_known_LL_packet(opcode_LMP_FEATURES_RSP, lmp_entry)):
-            import_LMP_FEATURES_RSP(entry["bdaddr"].lower(), lmp_entry)
+            import_LMP_FEATURES_RSP(bdaddr, lmp_entry)
 
 ###################################
 # BTIDES_HCI.json information
@@ -548,10 +575,11 @@ def parse_HCIArray(entry):
     if("HCIArray" not in entry.keys() or entry["HCIArray"] == None):
         return # Entry not valid for this type
 
-    ###print(json.dumps(entry, indent=2))
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
     for hci_entry in entry["HCIArray"]:
         if(has_known_HCI_entry(event_code_HCI_Remote_Name_Request_Complete, hci_entry)):
-            import_HCI_Remote_Name_Request_Complete(entry["bdaddr"].lower(), hci_entry)
+            import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry)
 
 ###################################
 # BTIDES_ATT.json information
@@ -560,6 +588,7 @@ def parse_HCIArray(entry):
 def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
     attribute_handle = att_handle_entry["handle"]
     UUID128 = att_handle_entry["UUID"].replace('-','')
+    # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
     if(len(UUID128) == 4):
         UUID128 = f"0000{UUID128}00001000800000805f9b34fb" # Convert it to a full UUID128 based on base UUID
     values = (device_bdaddr_type, bdaddr, attribute_handle, UUID128)
@@ -570,8 +599,6 @@ def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
     for att_handle_entry in att_entry["ATT_handle_enumeration"]:
         import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry)
 
-opcode_ATT_EXCHANGE_MTU_REQ          = 2
-opcode_ATT_EXCHANGE_MTU_RSP          = 3
 def has_known_att_entry(opcode, att_entry):
     if("ATT_handle_enumeration" in att_entry.keys() or 
        ("opcode" in att_entry.keys() and att_entry["opcode"] == opcode)):
@@ -583,10 +610,13 @@ def parse_ATTArray(entry):
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
         return # Entry not valid for this type
 
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
     ###print(json.dumps(entry, indent=2))
     for att_entry in entry["ATTArray"]:
         if(has_known_att_entry(None, att_entry)):
-            import_ATT_handle_enumeration(entry["bdaddr"].lower(), entry["bdaddr_rand"], att_entry)
+            import_ATT_handle_enumeration(bdaddr, bdaddr_rand, att_entry)
+
 
 ###################################
 # BTIDES_ATT.json information
@@ -605,8 +635,11 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
         begin_handle = gatt_service_entry["begin_handle"]
         end_handle = gatt_service_entry["end_handle"]
         UUID128 = gatt_service_entry["UUID"]
+        # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
         if(len(UUID128) == 4):
             UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
+        elif(len(UUID128) == 32):
+            UUID128 = add_dashes_to_UUID128(UUID128)
         values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
         insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(insert, values)
@@ -642,16 +675,18 @@ def parse_GATTArray(entry):
     if("GATTArray" not in entry.keys() or entry["GATTArray"] == None):
         return # Entry not valid for this type
 
-    ###print(json.dumps(entry, indent=2))
-    for gatt_service_entry in entry["GATTArray"]:
-        import_GATT_service_entry(entry["bdaddr"].lower(), entry["bdaddr_rand"], gatt_service_entry)
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
 
-def has_GATTArray(entry):
-    #print(json.dumps(entry, indent=2))
-    if("GATTArray" in entry.keys() and entry["GATTArray"] != None):
-        return True
-    else:
-        return False
+    for gatt_service_entry in entry["GATTArray"]:
+        import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
+
+
+# def has_GATTArray(entry):
+#     #print(json.dumps(entry, indent=2))
+#     if("GATTArray" in entry.keys() and entry["GATTArray"] != None):
+#         return True
+#     else:
+#         return False
 
 ###################################
 # MAIN
@@ -720,14 +755,6 @@ def main():
             #print("JSON is valid according to BTIDES Schema")
         except ValidationError as e:
             print("JSON data is invalid per BTIDES Schema:", e.message)
-            if(skip_invalid):
-                continue
-            else:
-                print(json.dumps(entry, indent=2))
-                exit(-1)
-
-        if(entry["bdaddr"] == None or entry["bdaddr_rand"] == None):
-            print("It shouldn't be possible to get here, due to schema validation. Code needs to be debugged. Exiting.")
             if(skip_invalid):
                 continue
             else:

@@ -120,7 +120,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_flags
+    FROM EIR_bdaddr_to_flags2
     WHERE device_bdaddr = '{bdaddr}'
     UNION
     SELECT 1
@@ -211,7 +211,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_flags
+    FROM LE_bdaddr_to_flags2
     WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
     UNION
     SELECT 1
@@ -295,7 +295,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM GATT_services
+    FROM GATT_services2
     WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1;
     """
 
@@ -344,10 +344,6 @@ def BT_CID_to_company_name(device_BT_CID):
     s = "No Match"
     if(device_BT_CID in TME.TME_glob.bt_CID_to_names):
         s = TME.TME_glob.bt_CID_to_names[device_BT_CID]
-##    query = f"SELECT device_BT_CID, company_name FROM BT_CID_to_company WHERE device_BT_CID = '{device_BT_CID}'"
-##    result = execute_query(query)
-##    for device_BT_CID, company_name in result:
-##        s = f"{company_name}"
 
     return s
 
@@ -460,6 +456,11 @@ def print_appearance(bdaddr, nametype):
     #le_query = f"SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype} "
     le_query = f"SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query)
+
+    if (len(le_result) == 0):
+        print("\tNo Appearance data found.")
+        return
+
     for appearance, random, le_evt_type in le_result:
         # Export BTIDES data first
         appearance_hex_str = f"{appearance:04x}"
@@ -471,9 +472,6 @@ def print_appearance(bdaddr, nametype):
         print(f"\tAppearance: {appearance_uint16_to_string(appearance)}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-    if (len(le_result) == 0):
-        print("\tNo Appearance data found.")
 
     print("")
     
@@ -548,9 +546,9 @@ def print_CoD_to_names(number):
 def print_class_of_device(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = '{bdaddr}'"
+#    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = '{bdaddr}'"
     # FIXME: change to this in the future after reprocessing all data
-    #eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
+    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
     eir_result = execute_query(eir_query)
 
     le_query = f"SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'" 

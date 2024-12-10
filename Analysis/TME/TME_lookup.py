@@ -91,7 +91,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0"
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 "
+        f"    SELECT device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         f"    UNION ALL "
@@ -115,7 +115,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_DevID "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_flags "
+        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_flags2 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
         f"    UNION ALL "
@@ -320,7 +320,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0 
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 
                 UNION ALL
@@ -344,7 +344,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_DevID 
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_flags 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_flags2 
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_MSD 
                 UNION ALL
