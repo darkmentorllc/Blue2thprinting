@@ -850,60 +850,69 @@ def export_CONNECT_IND(packet):
 
 def read_pcap(file_path):
     try:
+        # Read all the packets in to memory, so that we know how many total there are, and then can give progress updates
         with PcapReader(file_path) as pcap_reader:
-            for packet in pcap_reader:
-                # Confirm packet is BTLE
-                if packet.haslayer(BTLE):
-                    btle_hdr = packet.getlayer(BTLE)
-                    if(btle_hdr.access_addr != 0x8e89bed6 and btle_hdr.len == 0):
-                        #print("Found empty non-advertisement packet, continuing") 
-                        continue
-                    # If a packet matches on any export function, move on to the next packet
-                    
-                    # Connection requests
-                    if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
-                        if(export_CONNECT_IND(packet)): continue
+            packets = [packet for packet in pcap_reader]
 
-                    # Advertisement channel packets
-                    if packet.haslayer(BTLE_ADV_IND):
-                        # It's rare, but some things advertise but then don't include any AdvData...
-                        btle_adv = packet.getlayer(BTLE_ADV_IND)
-                        if(len(btle_adv.data) == 0):
-                            continue
-                        if(export_AdvChannelData(packet, BTLE_ADV_IND, type_AdvChanPDU_ADV_IND)): continue
-                    if packet.haslayer(BTLE_ADV_NONCONN_IND):
-                        if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
-                    if packet.haslayer(BTLE_SCAN_RSP):
-                        # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it, 
-                        # which causes it to return false and then continue to be processed above
-                        btle_adv = packet.getlayer(BTLE_SCAN_RSP)
-                        if(len(btle_adv.data) == 0): continue
-                        if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
-                    if packet.haslayer(BTLE_ADV_SCAN_IND):
-                        if(export_AdvChannelData(packet, BTLE_ADV_SCAN_IND, type_AdvChanPDU_ADV_SCAN_IND)): continue
-                    if packet.haslayer(BTLE_SCAN_REQ) or packet.haslayer(BTLE_ADV_DIRECT_IND):
+        total_packets = len(packets)
+
+        for i, packet in enumerate(packets, start=0):
+            # Print progress every 10%
+            if total_packets > 0 and i % max(1, total_packets // 100) == 0:
+                print(f"Processed {i} out of {total_packets} packets ({(i / total_packets) * 100:.0f}%)")
+
+            # Confirm packet is BTLE
+            if packet.haslayer(BTLE):
+                btle_hdr = packet.getlayer(BTLE)
+                if(btle_hdr.access_addr != 0x8e89bed6 and btle_hdr.len == 0):
+                    #print("Found empty non-advertisement packet, continuing") 
+                    continue
+                # If a packet matches on any export function, move on to the next packet
+                
+                # Connection requests
+                if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
+                    if(export_CONNECT_IND(packet)): continue
+
+                # Advertisement channel packets
+                if packet.haslayer(BTLE_ADV_IND):
+                    # It's rare, but some things advertise but then don't include any AdvData...
+                    btle_adv = packet.getlayer(BTLE_ADV_IND)
+                    if(len(btle_adv.data) == 0):
+                        continue
+                    if(export_AdvChannelData(packet, BTLE_ADV_IND, type_AdvChanPDU_ADV_IND)): continue
+                if packet.haslayer(BTLE_ADV_NONCONN_IND):
+                    if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
+                if packet.haslayer(BTLE_SCAN_RSP):
+                    # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it, 
+                    # which causes it to return false and then continue to be processed above
+                    btle_adv = packet.getlayer(BTLE_SCAN_RSP)
+                    if(len(btle_adv.data) == 0): continue
+                    if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
+                if packet.haslayer(BTLE_ADV_SCAN_IND):
+                    if(export_AdvChannelData(packet, BTLE_ADV_SCAN_IND, type_AdvChanPDU_ADV_SCAN_IND)): continue
+                if packet.haslayer(BTLE_SCAN_REQ) or packet.haslayer(BTLE_ADV_DIRECT_IND):
+                    # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
+                    continue
+                if packet.haslayer(BTLE_ADV):
+                    btle_adv = packet.getlayer(BTLE_ADV)
+                    if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...
                         # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
                         continue
-                    if packet.haslayer(BTLE_ADV):
-                        btle_adv = packet.getlayer(BTLE_ADV)
-                        if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...
-                            # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
-                            continue
-                            print("Found a scan request")
-                        print(packet.layers())
-                        print("")
+                        print("Found a scan request")
+                    print(packet.layers())
+                    print("")
 
-                    # LL Control packets
-                    if packet.haslayer(BTLE_CTRL):
-                        if(export_BTLE_CTRL(packet)): continue
+                # LL Control packets
+                if packet.haslayer(BTLE_CTRL):
+                    if(export_BTLE_CTRL(packet)): continue
 
-                    # ATT packets
-                    if packet.haslayer(ATT_Hdr):
-                        if(export_to_ATTArray(packet)): continue
-                    # TODO: export other packet types like LL or L2CAP or ATT
-                    else:
-                        print("Unknown or unparsable packet type. Skipped")
-                        packet.show()
+                # ATT packets
+                if packet.haslayer(ATT_Hdr):
+                    if(export_to_ATTArray(packet)): continue
+                # TODO: export other packet types like LL or L2CAP or ATT
+                else:
+                    print("Unknown or unparsable packet type. Skipped")
+                    packet.show()
 
         return
     except Exception as e:
@@ -924,7 +933,7 @@ def main():
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
-    print("Reading pcap.")
+    print("Reading all packets from pcap into memory. (This can take a while for large pcaps.)")
     read_pcap(in_pcap_filename)
 
     print("Writing BTIDES data to file.")

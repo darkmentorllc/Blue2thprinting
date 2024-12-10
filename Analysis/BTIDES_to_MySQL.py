@@ -424,18 +424,6 @@ def parse_AdvChanArray(entry):
 # BTIDES_LL.json information
 ###################################
 
-opcode_LL_UNKNOWN_RSP               = 7
-opcode_LL_FEATURE_REQ               = 8
-opcode_LL_FEATURE_RSP               = 9
-opcode_LL_VERSION_IND               = 12
-opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
-opcode_LL_PING_REQ                  = 18
-opcode_LL_PING_RSP                  = 19
-opcode_LL_LENGTH_REQ                = 20
-opcode_LL_LENGTH_RSP                = 21
-opcode_LL_PHY_REQ                   = 22
-opcode_LL_PHY_RSP                   = 23
-
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
     values = (random, bdaddr, unknown_opcode)
@@ -497,21 +485,26 @@ def parse_LLArray(entry):
     if("LLArray" not in entry.keys() or entry["LLArray"] == None):
         return # Entry not valid for this type
 
-    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for ll_entry in entry["LLArray"]:
-        if(has_known_LL_packet(opcode_LL_UNKNOWN_RSP, ll_entry)):
+        # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
+        if("direction" in ll_entry.keys() and ll_entry["direction"] == type_BTIDES_direction_C2P):
+            bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+        else:
+            bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
+        if(has_known_LL_packet(type_opcode_LL_UNKNOWN_RSP, ll_entry)):
             import_LL_UNKNOWN_RSP(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(opcode_LL_VERSION_IND, ll_entry)):
+        if(has_known_LL_packet(type_opcode_LL_VERSION_IND, ll_entry)):
             import_LL_VERSION_IND(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(opcode_LL_FEATURE_REQ, ll_entry) or 
-        has_known_LL_packet(opcode_LL_FEATURE_RSP, ll_entry) or 
-        has_known_LL_packet(opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
-            import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(opcode_LL_PING_REQ, ll_entry)):
+        if(has_known_LL_packet(type_opcode_LL_FEATURE_REQ, ll_entry) or 
+            has_known_LL_packet(type_opcode_LL_FEATURE_RSP, ll_entry) or 
+            has_known_LL_packet(type_opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
+                import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
+        if(has_known_LL_packet(type_opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(type_opcode_LL_PING_REQ, ll_entry)):
             import_LL_PING_RSP(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(opcode_LL_LENGTH_RSP, ll_entry)):
+        if(has_known_LL_packet(type_opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_LENGTH_RSP, ll_entry)):
             import_LL_LENGTHs(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(opcode_LL_PHY_RSP, ll_entry)):
+        if(has_known_LL_packet(type_opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_PHY_RSP, ll_entry)):
             import_LL_PHYs(bdaddr, bdaddr_rand, ll_entry)
 
 ###################################
@@ -631,8 +624,13 @@ def parse_ATTArray(entry):
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
         return # Entry not valid for this type
 
-    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for att_entry in entry["ATTArray"]:
+        # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
+        if("direction" in att_entry.keys() and att_entry["direction"] == type_BTIDES_direction_C2P):
+            bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+        else:
+            bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
         if("ATT_handle_enumeration" in att_entry.keys() and att_entry["ATT_handle_enumeration"] != None):
             import_ATT_handle_enumeration(bdaddr, bdaddr_rand, att_entry)
         if("opcode" in att_entry.keys() and att_entry["opcode"] in att_opcode_strings.keys()):
