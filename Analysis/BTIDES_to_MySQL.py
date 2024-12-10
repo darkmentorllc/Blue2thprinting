@@ -607,7 +607,7 @@ def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
         execute_insert(insert, values)
 
         # Now check if the handle in question was a characteristic UUID (0x2800), and if so, interpret the raw data and insert into db
-        if(g_handle_to_UUID_map[handle] == "2803"):
+        if(handle in g_handle_to_UUID_map.keys() and g_handle_to_UUID_map[handle] == "2803"):
             declaration_handle = handle
             char_properties = int(byte_values[0])
             char_value_handle = int.from_bytes(byte_values[1:3], byteorder='little')

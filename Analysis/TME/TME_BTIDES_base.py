@@ -34,11 +34,19 @@ def write_BTIDES(out_filename):
     # Sanity check the BTIDES data against the schema before export, to not write garbage
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
     all_schemas = []
+    required_version = "0.1.0"
+
+    def version_tuple(v):
+        return tuple(map(int, (v.split("."))))
+
     for file in BTIDES_files:
         with open(f"./BTIDES_Schema/{file}", 'r') as f:
             #BTIDES_Schema
             s = json.load(f)
-            #print(s["$id"])
+            if file == "BTIDES_base.json":
+                schema_version = s.get("version", "0.0.0")
+                if version_tuple(schema_version) < version_tuple(required_version):
+                    raise ValueError(f"Schema version {schema_version} is less than the required version {required_version}")
             schema = Resource.from_contents(s)
             all_schemas.append((s["$id"], schema))
 
@@ -52,7 +60,7 @@ def write_BTIDES(out_filename):
         ).validate(instance=BTIDES_JSON)
         #print("JSON is valid according to BTIDES Schema")
     except ValidationError as e:
-        print("JSON data is invalid per BTIDES Schema. Check any changes to schema or code. Error:", e.message)
+        print(f"JSON data is invalid per BTIDES Schema version {required_version}. Check any changes to schema or code. Error:", e.message)
         print(json.dumps(BTIDES_JSON, indent=2))
         exit(-1)
 

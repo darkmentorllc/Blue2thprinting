@@ -2,6 +2,7 @@
   "$id" : "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "description" : "BlueTooth Information Data Exchange Schema (BTIDES!)",
+  "version": "0.1.0",
   "type" : "array",
   "items" : {
     "anyOf" : [ 

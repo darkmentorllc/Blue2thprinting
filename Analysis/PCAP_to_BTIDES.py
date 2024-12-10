@@ -969,7 +969,7 @@ def main():
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
-    print("Reading all packets from pcap into memory. (This can take a while for large pcaps.)")
+    print("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
     read_pcap(in_pcap_filename)
 
     print("Writing BTIDES data to file.")
