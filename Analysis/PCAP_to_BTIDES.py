@@ -396,7 +396,7 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
         if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
             data_exported = True
 
-    if(data_exported):
+    if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(btle_adv.data) == 0)):
         return True
     else:
         return False
@@ -415,106 +415,154 @@ def export_BTLE_CTRL(packet):
     # For example, LL_VERSION_IND
     ll_ctrl = packet.getlayer(BTLE_CTRL)
     if ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
-        data = ff_LL_TERMINATE_IND(
-            direction=get_packet_direction(packet),
-            error_code=ll_ctrl.code
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_TERMINATE_IND(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_TERMINATE_IND(
+                direction=get_packet_direction(packet),
+                error_code=ll_ctrl.code
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_TERMINATE_IND(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_TERMINATE_IND: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
-        data = ff_LL_UNKNOWN_RSP(
-            direction=get_packet_direction(packet),
-            unknown_type=ll_ctrl.opcode
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_UNKNOWN_RSP(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_UNKNOWN_RSP(
+                direction=get_packet_direction(packet),
+                unknown_type=ll_ctrl.opcode
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_UNKNOWN_RSP(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_UNKNOWN_RSP: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_FEATURE_REQ:
-        data = ff_LL_FEATURE_REQ(
-            direction=get_packet_direction(packet),
-            features=ll_ctrl.feature_set.value
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_FEATURE_REQ(
+                direction=get_packet_direction(packet),
+                features=ll_ctrl.feature_set.value
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_FEATURE_REQ: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
-        data = ff_LL_VERSION_IND(
-            direction=get_packet_direction(packet),
-            version=ll_ctrl.version,
-            company_id=ll_ctrl.company,
-            subversion=ll_ctrl.subversion
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_VERSION_IND(
+                direction=get_packet_direction(packet),
+                version=ll_ctrl.version,
+                company_id=ll_ctrl.company,
+                subversion=ll_ctrl.subversion
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_VERSION_IND: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
-        data = ff_LL_PERIPHERAL_FEATURE_REQ(
-            direction=get_packet_direction(packet),
-            features=ll_ctrl.feature_set.value
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_PERIPHERAL_FEATURE_REQ(
+                direction=get_packet_direction(packet),
+                features=ll_ctrl.feature_set.value
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
-        data = ff_LL_FEATURE_RSP(
-            direction=get_packet_direction(packet),
-            features=ll_ctrl.feature_set.value
-        )
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_FEATURE_RSP(connect_ind_obj=connect_ind_obj, data=data)
-        return True
+        try:
+            data = ff_LL_FEATURE_RSP(
+                direction=get_packet_direction(packet),
+                features=ll_ctrl.feature_set.value
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_FEATURE_RSP(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_FEATURE_RSP: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_LENGTH_REQ:
-        data = ff_LL_LENGTH_REQ(
-            direction=get_packet_direction(packet),
-            max_rx_octets=ll_ctrl.max_rx_bytes,
-            max_rx_time=ll_ctrl.max_rx_time,
-            max_tx_octets=ll_ctrl.max_tx_bytes,
-            max_tx_time=ll_ctrl.max_tx_time
-        )
+        try:
+            data = ff_LL_LENGTH_REQ(
+                direction=get_packet_direction(packet),
+                max_rx_octets=ll_ctrl.max_rx_bytes,
+                max_rx_time=ll_ctrl.max_rx_time,
+                max_tx_octets=ll_ctrl.max_tx_bytes,
+                max_tx_time=ll_ctrl.max_tx_time
+            )
+        except Exception as e:
+            print(f"Error processing LL_LENGTH_REQ: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_LENGTH_REQ(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_LENGTH_RSP:
-        data = ff_LL_LENGTH_RSP(
-            direction=get_packet_direction(packet),
-            max_rx_octets=ll_ctrl.max_rx_bytes,
-            max_rx_time=ll_ctrl.max_rx_time,
-            max_tx_octets=ll_ctrl.max_tx_bytes,
-            max_tx_time=ll_ctrl.max_tx_time
-        )
+        try:
+            data = ff_LL_LENGTH_RSP(
+                direction=get_packet_direction(packet),
+                max_rx_octets=ll_ctrl.max_rx_bytes,
+                max_rx_time=ll_ctrl.max_rx_time,
+                max_tx_octets=ll_ctrl.max_tx_bytes,
+                max_tx_time=ll_ctrl.max_tx_time
+            )
+        except Exception as e:
+            print(f"Error processing LL_LENGTH_RSP: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_LENGTH_RSP(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PHY_REQ:
-        data = ff_LL_PHY_REQ(
-            direction=get_packet_direction(packet),
-            tx_phys=ll_ctrl.tx_phys.value,
-            rx_phys=ll_ctrl.rx_phys.value
-        )
+        try:
+            data = ff_LL_PHY_REQ(
+                direction=get_packet_direction(packet),
+                tx_phys=ll_ctrl.tx_phys.value,
+                rx_phys=ll_ctrl.rx_phys.value
+            )
+        except Exception as e:
+            print(f"Error processing LL_PHY_REQ: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_PHY_REQ(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PHY_RSP:
-        data = ff_LL_PHY_RSP(
-            direction=get_packet_direction(packet),
-            tx_phys=ll_ctrl.tx_phys.value,
-            rx_phys=ll_ctrl.rx_phys.value
-        )
+        try:
+            data = ff_LL_PHY_RSP(
+                direction=get_packet_direction(packet),
+                tx_phys=ll_ctrl.tx_phys.value,
+                rx_phys=ll_ctrl.rx_phys.value
+            )
+        except Exception as e:
+            print(f"Error processing LL_PHY_RSP: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_PHY_RSP(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
-        data = ff_LL_PING_REQ(
-            direction=get_packet_direction(packet)
-        )
+        try:
+            data = ff_LL_PING_REQ(
+                direction=get_packet_direction(packet)
+            )
+        except Exception as e:
+            print(f"Error processing LL_PING_REQ: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_PING_REQ(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
-        data = ff_LL_PING_RSP(
-            direction=get_packet_direction(packet)
-        )
+        try:
+            data = ff_LL_PING_RSP(
+                direction=get_packet_direction(packet)
+            )
+        except Exception as e:
+            print(f"Error processing LL_PING_RSP: {e}")
+            return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LL_PING_RSP(connect_ind_obj=connect_ind_obj, data=data)
         return True
@@ -818,14 +866,32 @@ def read_pcap(file_path):
 
                     # Advertisement channel packets
                     if packet.haslayer(BTLE_ADV_IND):
+                        # It's rare, but some things advertise but then don't include any AdvData...
+                        btle_adv = packet.getlayer(BTLE_ADV_IND)
+                        if(len(btle_adv.data) == 0):
+                            continue
                         if(export_AdvChannelData(packet, BTLE_ADV_IND, type_AdvChanPDU_ADV_IND)): continue
                     if packet.haslayer(BTLE_ADV_NONCONN_IND):
                         if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
                     if packet.haslayer(BTLE_SCAN_RSP):
+                        # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it, 
+                        # which causes it to return false and then continue to be processed above
+                        btle_adv = packet.getlayer(BTLE_SCAN_RSP)
+                        if(len(btle_adv.data) == 0): continue
                         if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
-                    if packet.haslayer(BTLE_SCAN_REQ):
+                    if packet.haslayer(BTLE_ADV_SCAN_IND):
+                        if(export_AdvChannelData(packet, BTLE_ADV_SCAN_IND, type_AdvChanPDU_ADV_SCAN_IND)): continue
+                    if packet.haslayer(BTLE_SCAN_REQ) or packet.haslayer(BTLE_ADV_DIRECT_IND):
                         # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
                         continue
+                    if packet.haslayer(BTLE_ADV):
+                        btle_adv = packet.getlayer(BTLE_ADV)
+                        if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...
+                            # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
+                            continue
+                            print("Found a scan request")
+                        print(packet.layers())
+                        print("")
 
                     # LL Control packets
                     if packet.haslayer(BTLE_CTRL):
@@ -836,6 +902,7 @@ def read_pcap(file_path):
                         if(export_to_ATTArray(packet)): continue
                     # TODO: export other packet types like LL or L2CAP or ATT
                     else:
+                        print("Unknown or unparsable packet type. Skipped")
                         packet.show()
 
         return
