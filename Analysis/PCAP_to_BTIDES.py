@@ -1,29 +1,6 @@
 import sys, re, json, argparse
 
 from scapy.all import *
-# # All the advertisement channel types
-# from scapy.all import PcapReader
-# # Import Layers:
-# from scapy.all import BTLE, BTLE_RF
-# from scapy.all import BTLE_CONNECT_REQ
-# from scapy.all import BTLE_ADV, BTLE_ADV_IND, BTLE_ADV_NONCONN_IND, BTLE_SCAN_RSP
-# # All the AdvData types
-# from scapy.all import EIR_Hdr, EIR_Flags, EIR_ShortenedLocalName, EIR_CompleteLocalName
-# from scapy.all import EIR_IncompleteList16BitServiceUUIDs, EIR_CompleteList16BitServiceUUIDs
-# from scapy.all import EIR_IncompleteList32BitServiceUUIDs, EIR_CompleteList32BitServiceUUIDs
-# from scapy.all import EIR_IncompleteList128BitServiceUUIDs, EIR_CompleteList128BitServiceUUIDs
-# from scapy.all import EIR_TX_Power_Level, EIR_Device_ID
-# from scapy.all import EIR_ClassOfDevice, EIR_PeripheralConnectionIntervalRange
-# from scapy.all import EIR_ServiceData16BitUUID, EIR_ServiceData32BitUUID, EIR_ServiceData128BitUUID
-# from scapy.all import EIR_Manufacturer_Specific_Data
-# # LL Control types
-# from scapy.all import BTLE_CTRL
-# # L2CAP types
-# from scapy.all import L2CAP_Hdr, ATT_Hdr
-# # ATT types
-# from scapy.all import ATT_Read_Request, ATT_Read_Response, ATT_Exchange_MTU_Request, ATT_Exchange_MTU_Response
-# from scapy.all import ATT_Read_By_Group_Type_Request, ATT_Read_By_Group_Type_Response
-
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
@@ -38,15 +15,7 @@ from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
 # LL Control
 from TME.TME_BTIDES_LL import *
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_VERSION_IND, ff_LL_VERSION_IND
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_FEATURE_REQ, ff_LL_FEATURE_REQ, BTIDES_export_LL_FEATURE_RSP, ff_LL_FEATURE_RSP
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_PERIPHERAL_FEATURE_REQ, ff_LL_PERIPHERAL_FEATURE_REQ
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_LENGTH_REQ, ff_LL_LENGTH_REQ, BTIDES_export_LL_LENGTH_RSP, ff_LL_LENGTH_RSP
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_PING_REQ, ff_LL_PING_REQ, BTIDES_export_LL_PING_RSP, ff_LL_PING_RSP
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_PHY_REQ, ff_LL_PHY_REQ, BTIDES_export_LL_PHY_RSP, ff_LL_PHY_RSP
-# from TME.TME_BTIDES_LL import BTIDES_export_LL_UNKNOWN_RSP, ff_LL_UNKNOWN_RSP
 # ATT
-#from TME.TME_BTIDES_ATT import BTIDES_export_ATT_packet, ff_ATT_READ_REQ, ff_ATT_READ_RSP
 from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to just work.
 # GATT
 from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
@@ -401,10 +370,21 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
     else:
         return False
 
+# A global map of access addresses for which we have seen a LL_START_ENC_REQ
+# and for which therefore all subsequent packets will be encrypted garbage
+# which we shouldn't export, even if they look valid.
+# TODO: In the future handle LL_PAUSE_ENC_REQ to remove from this, 
+# TODO: but I don't know if I've ever seen that packet in any of my pcaps.
+g_stop_exporting_encrypted_packets_by_AA = {}
 
 def export_BTLE_CTRL(packet):
+    global g_stop_exporting_encrypted_packets_by_AA
+
     btle_hdr = packet.getlayer(BTLE)
     access_address = btle_hdr.access_addr
+    # Don't bother processing the packet if we've seen an LL_START_ENC_REQ in this connection already
+    if(access_address in g_stop_exporting_encrypted_packets_by_AA.keys()):
+        return True
 
     if access_address in g_access_address_to_connect_ind_obj:
         connect_ind_obj = g_access_address_to_connect_ind_obj[access_address]
@@ -426,6 +406,10 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_TERMINATE_IND: {e}")
             return False
+    if ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
+            # TODO: in the future add this to the DB for completeness
+            g_stop_exporting_encrypted_packets_by_AA[access_address] = True
+            return True
     elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
         try:
             data = ff_LL_UNKNOWN_RSP(
@@ -903,6 +887,11 @@ def read_pcap(file_path):
                 if(btle_hdr.access_addr != 0x8e89bed6 and btle_hdr.len == 0):
                     #print("Found empty non-advertisement packet, continuing") 
                     continue
+
+                if(btle_hdr.access_addr in g_stop_exporting_encrypted_packets_by_AA.keys()):
+                    # Don't bother processing the packet if we've seen an LL_START_ENC_REQ in this connection already
+                    continue
+
                 # If a packet matches on any export function, move on to the next packet
                 
                 # Connection requests
