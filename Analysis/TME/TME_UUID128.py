@@ -12,9 +12,9 @@ from TME.TME_BTIDES_AdvData import *
 
 def expand_UUID16_or_UUID32_to_UUID128(UUID):
     if(len(UUID) == 4): # UUID16
-        return "0000" + UUID16_or_UUID32 + "-0000-1000-8000-00805f9b34fb"
+        return "0000" + UUID + "-0000-1000-8000-00805f9b34fb"
     if(len(UUID) == 8): # UUID32
-        return UUID16_or_UUID32 + "-0000-1000-8000-00805f9b34fb"
+        return UUID + "-0000-1000-8000-00805f9b34fb"
 
     return UUID
 

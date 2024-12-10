@@ -26,14 +26,22 @@ def get_uuid16_gatt_characteristic_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT characteristic
     return TME.TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
-def match_known_GATT_UUID_or_custom_UUID(uuid128):
-    uuid128.strip().lower()
-    uuid128_no_dash = uuid128.replace('-','')
-    pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb' 
-    match = re.match(pattern, uuid128)
+# UUID can now be a UUID16 or UUID32 or UUID128
+def match_known_GATT_UUID_or_custom_UUID(UUID):
+    UUID.strip().lower()
+    if(len(UUID) == 4): # UUID16
+        uuid16 = UUID
+        UUID_no_dash = ""
+        match = True
+    else:
+        UUID_no_dash = UUID.replace('-','')
+        pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb' 
+        match = re.match(pattern, UUID)
+        if match:
+            common_part = match.group()  # Extract the matched part
+            uuid16 = common_part[4:8]
+
     if match:
-        common_part = match.group()  # Extract the matched part
-        uuid16 = common_part[4:8]
         # Try to see if it's a known Service
         str_name = get_uuid16_gatt_service_string(uuid16)
         if(str_name != "Unknown"):
@@ -54,13 +62,14 @@ def match_known_GATT_UUID_or_custom_UUID(uuid128):
                     if(str_name != "Unknown"):
                         return f"Descriptor: {str_name}"
                     else:
-                        str = get_custom_uuid128_string(uuid128_no_dash)
-                        if(str == "Unknown UUID128"):
-                            return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
-                        else:
-                            return str
+                        if(UUID_no_dash != ""):
+                            str = get_custom_uuid128_string(UUID_no_dash)
+                            if(str == "Unknown UUID128"):
+                                return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
+                            else:
+                                return str
     else:
-        return get_custom_uuid128_string(uuid128_no_dash)
+        return get_custom_uuid128_string(UUID_no_dash)
 #    elif(uuid128_no_dash in custom_uuid128_hash):
 #        return custom_uuid128_hash[uuid128_no_dash]
 #    else:

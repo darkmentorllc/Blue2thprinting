@@ -595,11 +595,16 @@ def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
 
 # We have to be stateful with ATT_READ_REQ/RSP because the RSP doesn't contain the handle that was read from
 g_last_read_req_handle = 0
+g_handle_to_UUID_map = {}
 
 def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
     global g_last_read_req_handle
 
-    if(att_entry["opcode"] == type_ATT_READ_REQ):
+    if(att_entry["opcode"] == type_ATT_FIND_INFORMATION_RSP):
+        # Fill in all the UUIDs for the handles we've seen so far
+        for info_entry in att_entry["information_data"]:
+            g_handle_to_UUID_map[info_entry["handle"]] = info_entry["UUID"]
+    elif(att_entry["opcode"] == type_ATT_READ_REQ):
         g_last_read_req_handle = att_entry["handle"]
     elif(att_entry["opcode"] == type_ATT_READ_RSP):
         handle = g_last_read_req_handle
@@ -607,6 +612,20 @@ def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
         values = (device_bdaddr_type, bdaddr, handle, byte_values)
         insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
         execute_insert(insert, values)
+
+        # Now check if the handle in question was a characteristic UUID (0x2800), and if so, interpret the raw data and insert into db
+        if(g_handle_to_UUID_map[handle] == "2803"):
+            declaration_handle = handle
+            char_properties = int(byte_values[0])
+            char_value_handle = int.from_bytes(byte_values[1:3], byteorder='little')
+            if(len(byte_values[3:]) == 2):
+                UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):04x}"
+            else:
+                UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):032x}"
+                UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Just in case they sent us a 16 bit UUID as a 128 bit UUID for some dumb reason...
+            values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID)
+            insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
+            execute_insert(insert, values)
 
 def parse_ATTArray(entry):
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
