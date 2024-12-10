@@ -587,12 +587,13 @@ def parse_HCIArray(entry):
 
 def import_ATT_handle_entry(bdaddr, device_bdaddr_type, att_handle_entry):
     attribute_handle = att_handle_entry["handle"]
-    UUID128 = att_handle_entry["UUID"].replace('-','')
-    # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
-    if(len(UUID128) == 4):
-        UUID128 = f"0000{UUID128}00001000800000805f9b34fb" # Convert it to a full UUID128 based on base UUID
-    values = (device_bdaddr_type, bdaddr, attribute_handle, UUID128)
-    insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s);"
+    UUID = att_handle_entry["UUID"].replace('-','')
+    UUID = convert_UUID128_to_UUID16_if_possible(UUID)
+#    # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
+#    if(len(UUID128) == 4):
+#        UUID128 = f"0000{UUID128}00001000800000805f9b34fb" # Convert it to a full UUID128 based on base UUID
+    values = (device_bdaddr_type, bdaddr, attribute_handle, UUID)
+    insert = f"INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 def import_ATT_handle_enumeration(bdaddr, device_bdaddr_type, att_entry):
@@ -634,14 +635,15 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
             exit(-1)
         begin_handle = gatt_service_entry["begin_handle"]
         end_handle = gatt_service_entry["end_handle"]
-        UUID128 = gatt_service_entry["UUID"]
+        UUID = gatt_service_entry["UUID"]
+        UUID = convert_UUID128_to_UUID16_if_possible(UUID)
         # FIXME: ideally this shouldn't expand the size to a UUID128, it should leave it at a len of 4 or 32 as applicable
-        if(len(UUID128) == 4):
-            UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
-        elif(len(UUID128) == 32):
-            UUID128 = add_dashes_to_UUID128(UUID128)
-        values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID128)
-        insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+        # if(len(UUID128) == 4):
+        #     UUID128 = f"0000{UUID128}-0000-1000-8000-00805f9b34fb" # Convert it to a full UUID128 based on base UUID
+        # elif(len(UUID128) == 32):
+        #     UUID128 = add_dashes_to_UUID128(UUID128)
+        values = (device_bdaddr_type, bdaddr, service_type, begin_handle, end_handle, UUID)
+        insert = f"INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(insert, values)
 
     # Now insert any characteristics
@@ -653,12 +655,13 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                 declaration_handle = char["handle"]
                 char_properties = char["properties"]
                 char_value_handle = char["value_handle"]
-                UUID128 = char["value_uuid"].replace('-','')
-                if(UUID128 == 4):
-                    #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
-                    UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
-                values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
-                insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s);"
+                UUID = char["value_uuid"]
+                UUID = convert_UUID128_to_UUID16_if_possible(UUID)
+                # if(UUID128 == 4):
+                #     #TODO: I should update the db to not require this to be expanded out to a UUID128 (thus wasting space)
+                #     UUID128 = f"0000{UUID128}00001000800000805f9b34fb"
+                values = (device_bdaddr_type, bdaddr, declaration_handle, char_properties, char_value_handle, UUID)
+                insert = f"INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
                 execute_insert(insert, values)
 
             # Now insert any characteristic values

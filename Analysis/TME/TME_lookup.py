@@ -59,7 +59,7 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb';"
+    chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00';"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0):
         for (bdaddr, byte_values) in chars_result:
@@ -421,6 +421,7 @@ def get_bdaddrs_by_msd_regex(msdregex):
 
     return bdaddr_hash.keys()
 
+# FIXME: need to get rid of the 128/16 distinction...
 def get_bdaddrs_by_uuid128_regex(uuid128regex):
 
     # To make my life easier when searching for things I've already removed the - from
@@ -474,21 +475,21 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     if(try_with_dashes and len(uuid128regex) == 32):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
 
-        gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
         gatt_service_result = execute_query(gatt_service_query)
         for (bdaddr,) in gatt_service_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services2 by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
         gatt_char_result = execute_query(gatt_char_query)
         for (bdaddr,) in gatt_char_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID128 REGEXP '{uuid128regex_with_dashes}'"
+        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
         gatt_desc_result = execute_query(gatt_desc_query)
         for (bdaddr,) in gatt_desc_result:
             bdaddr_hash[bdaddr] = 1

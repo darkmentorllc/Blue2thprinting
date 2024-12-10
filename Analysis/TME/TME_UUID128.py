@@ -10,11 +10,39 @@ from TME.TME_BTIDES_AdvData import *
 # UUID128s
 ########################################
 
+def expand_UUID16_or_UUID32_to_UUID128(UUID):
+    if(len(UUID) == 4): # UUID16
+        return "0000" + UUID16_or_UUID32 + "-0000-1000-8000-00805f9b34fb"
+    if(len(UUID) == 8): # UUID32
+        return UUID16_or_UUID32 + "-0000-1000-8000-00805f9b34fb"
+
+    return UUID
+
 def add_dashes_to_UUID128(UUID128):
     # Don't add them if it already has them
     if(UUID128[8] == '-'):
         return UUID128
     return f"{UUID128[:8]}-{UUID128[8:12]}-{UUID128[12:16]}-{UUID128[16:20]}-{UUID128[20:32]}"
+
+# assumes UUID1 is the variable and UUID2 is a possible UUID16 or UUID128 without dashes
+# This ensures matches even if a UUID16 or UUID32 is expanded out into a UUID128 with the BT Base UUID
+def check_if_UUIDs_match(UUID1, UUID2):
+    UUID1 = UUID1.lower()
+    UUID2 = UUID2.lower()
+    if(UUID1 == UUID2):
+        return True
+    if(len(UUID2) == 4 or len(UUID2) == 8): # UUID16 or UUID32
+        UUID1 = expand_UUID16_or_UUID32_to_UUID128(UUID1)
+        UUID2 = expand_UUID16_or_UUID32_to_UUID128(UUID2)
+    if(UUID1 == UUID2):
+        return True
+    if(len(UUID2) == 32):
+        UUID2 = add_dashes_to_UUID128(UUID2)
+    if(UUID1 == UUID2):
+        return True
+
+    return False
+
 
 # Function to print UUID128s for a given device_bdaddr
 def print_uuid128s(device_bdaddr):

@@ -44,20 +44,20 @@ def print_UniqueIDReport(bdaddr):
     # To be clear, we don't necessarily need to have successfully read the value for this. The mere presence of a definition for it is suggestive enough of the presence of a DUID to report on it
 
     we_have_GATT = False
-    chars_query = f"SELECT UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_query = f"SELECT UUID FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_GATT = True
 
     if(we_have_GATT):
-        # If we have GATT data, check if we have successfully read a "Model Number String" (00002a24-0000-1000-8000-00805f9b34fb) value or a "Hardware Revision String" (00002a27-0000-1000-8000-00805f9b34fb)
+        # If we have GATT data, check if we have successfully read a "Serial Number" (00002a25-0000-1000-8000-00805f9b34fb) value or a "UID for Medical Devices" (00002bff-0000-1000-8000-00805f9b34fb)
         # Iterate through every UUID128 from the GATT_Characteristics database query
-        for (UUID128_db,) in chars_result:
+        for (UUID_db,) in chars_result:
             # Remove dashes and make lowercase
-            UUID128_db_ = UUID128_db.replace('-','').lower()
-            if(UUID128_db_ == "00002a2500001000800000805f9b34fb"):
+#            UUID_db_ = UUID_db.replace('-','').lower()
+            if(check_if_UUIDs_match(UUID_db, "2a25")):
                 print(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 no_results_found = False
-            if(UUID128_db_ == "00002bff00001000800000805f9b34fb"):
+            if(check_if_UUIDs_match(UUID_db, "2bff")):
                 print(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 no_results_found = False
 
@@ -104,7 +104,7 @@ def print_UniqueIDReport(bdaddr):
             print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb' and cv.device_bdaddr = '{bdaddr}';"
+        chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00' and cv.device_bdaddr = '{bdaddr}';"
         chars_result = execute_query(chars_query)
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:

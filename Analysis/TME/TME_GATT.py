@@ -149,13 +149,13 @@ def characteristic_value_decoding(indent, UUID128, bytes):
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
 def device_has_GATT_info(bdaddr):
     # Query the database for all GATT services
-    query = f"SELECT begin_handle,end_handle,UUID128 FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT begin_handle,end_handle,UUID FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
 
-    query = f"SELECT attribute_handle,UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
 
     query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
@@ -187,29 +187,29 @@ def print_associated_android_package_names(type, indent, UUID128):
 
 def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
-    query = f"SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID128 FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
     GATT_services_result = execute_query(query)
-    for device_bdaddr_type, service_type, begin_handle, end_handle, UUID128 in GATT_services_result:
-        UUID128 = add_dashes_to_UUID128(UUID128)
+    for device_bdaddr_type, service_type, begin_handle, end_handle, UUID in GATT_services_result:
+        UUID = add_dashes_to_UUID128(UUID)
         utype = db_service_type_to_BTIDES_utype(service_type)
-        data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID128})
+        data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
         BTIDES_export_GATT_Service(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
-    query = f"SELECT device_bdaddr_type, attribute_handle, UUID128 FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT device_bdaddr_type, attribute_handle, UUID FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
     GATT_attribute_handles_result = execute_query(query)
     attribute_handles_dict = {}
-    for device_bdaddr_type, attribute_handle, UUID128 in GATT_attribute_handles_result:
-        UUID128 = add_dashes_to_UUID128(UUID128)
-        attribute_handles_dict[attribute_handle] = UUID128
-        data = ff_ATT_handle_entry(attribute_handle, UUID128)
+    for device_bdaddr_type, attribute_handle, UUID in GATT_attribute_handles_result:
+        UUID = add_dashes_to_UUID128(UUID)
+        attribute_handles_dict[attribute_handle] = UUID
+        data = ff_ATT_handle_entry(attribute_handle, UUID)
         BTIDES_export_ATT_handle(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID128 FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
+    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
     GATT_characteristics_result = execute_query(query)
-    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID128) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
-    for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-        UUID128 = add_dashes_to_UUID128(UUID128)
-        data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID128}
+    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
+    for declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+        UUID = add_dashes_to_UUID128(UUID)
+        data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr, device_bdaddr_type, data)
 
         # Now do another pass and insert any Chacteristic Descriptors under the Characteristics
@@ -265,14 +265,14 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     unknown_UUID128_hash = {}
     # Print semantically-meaningful information
-    for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID128 in GATT_services_result:
-        UUID128 = add_dashes_to_UUID128(UUID128)
+    for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+        UUID = add_dashes_to_UUID128(UUID)
         service_match_dict[svc_begin_handle] = 1
-        UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-        print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128} ({UUID128_description})")
+        UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
+        print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({UUID128_description})")
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-            unknown_UUID128_hash[UUID128] = ("Service","\t\t\t")
+            unknown_UUID128_hash[UUID] = ("Service","\t\t\t")
 
         # Iterate through all known handles, so nothing gets missed
         for handle, in GATT_all_known_handles_result:
@@ -290,12 +290,12 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 declaration_handle = handle
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
                     service_match_dict[handle] = 1
-                    (char_properties, char_value_handle, UUID128) = declaration_handles_dict[handle]
-                    UUID128 = add_dashes_to_UUID128(UUID128)
-                    UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                    print(f"\t\t\t\tGATT Characteristic declaration:\tCharacteristic Value UUID: {UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                    (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
+                    UUID = add_dashes_to_UUID128(UUID)
+                    UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
+                    print(f"\t\t\t\tGATT Characteristic declaration:\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                     if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-                        unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
+                        unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
                     if(handle not in char_value_handles_dict.keys() and (char_properties & 0x2 == 0x02)):
                         print(f"\t\t\t\tGATT Characteristic Value not successfully read, despite having readable permissions.")
 
@@ -306,7 +306,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     if(handle <= svc_end_handle and handle >= svc_begin_handle):
                         service_match_dict[handle] = 1
                         print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                        characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                        characteristic_value_decoding("\t\t\t\t\t", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Second pass:
     # Iterate through all known handles, printing only information about handles which never matched any service
@@ -331,12 +331,12 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
             if(handle in declaration_handles_dict.keys()):
                 declaration_handle = handle
-                (char_properties, char_value_handle, UUID128) = declaration_handles_dict[handle]
-                UUID128 = add_dashes_to_UUID128(UUID128)
-                UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID128)
-                print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID128} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
+                UUID = add_dashes_to_UUID128(UUID)
+                UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
+                print(f"\t\t\t\tGATT Characteristic declaration:\t{UUID} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                 if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-                    unknown_UUID128_hash[UUID128] = ("Characteristic","\t\t\t")
+                    unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
 
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
             if(handle in char_value_handles_dict.keys()):
@@ -344,32 +344,32 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 for byte_values in char_value_handles_dict[handle]:
                     #byte_values = char_value_handles_dict[handle]
                     print(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                    characteristic_value_decoding("\t\t\t\t\t", UUID128, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                    characteristic_value_decoding("\t\t\t\t\t", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         print(f"\n\t\tGATTPrint:")
         with open(f"./GATTprints/{bdaddr}.gattprint", 'w') as file:
-            for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID128 in GATT_services_result:
-                UUID128 = add_dashes_to_UUID128(UUID128)
-                print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128} ({match_known_GATT_UUID_or_custom_UUID(UUID128)})")
-                file.write(f"Svc: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID128}\n")
+            for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+                UUID = add_dashes_to_UUID128(UUID)
+                print(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
+                file.write(f"Svc: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID}\n")
             for device_bdaddr_type, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
                 UUID128_2 = add_dashes_to_UUID128(UUID128_2)
                 print(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
                 file.write(f"Descriptor Handle: {attribute_handle:03}, {UUID128_2}\n")
-            for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result:
-                UUID128 = add_dashes_to_UUID128(UUID128)
-                print(f"\t\tGATT Characteristic Declaration: {UUID128}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
-                file.write(f"Char: {UUID128}, Properties: {char_properties}, Declaration Handle: {declaration_handle:03}, Characteristic Handle: {char_value_handle:03}\n")
+            for declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+                UUID = add_dashes_to_UUID128(UUID)
+                print(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
+                file.write(f"Char: {UUID}, Properties: {char_properties}, Declaration Handle: {declaration_handle:03}, Characteristic Handle: {char_value_handle:03}\n")
         print("")
 
         if(not hideBLEScopedata):
             match_found = False
             print("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
-            for UUID128 in unknown_UUID128_hash.keys():
-                (type, indent) = unknown_UUID128_hash[UUID128]
-                match_found = print_associated_android_package_names(type, indent, UUID128)
+            for UUID in unknown_UUID128_hash.keys():
+                (type, indent) = unknown_UUID128_hash[UUID]
+                match_found = print_associated_android_package_names(type, indent, UUID)
             if(not match_found):
                 print("\t\t\tNo matches found\n")
             else:

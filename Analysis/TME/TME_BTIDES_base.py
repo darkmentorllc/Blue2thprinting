@@ -300,7 +300,10 @@ def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj,
 
     return False # Shouldn't be able to get here
 
+# At a minimum though this will remove dashes from a UUID128 to save space
 def convert_UUID128_to_UUID16_if_possible(UUID128):
+    if(len(UUID128) < 32):
+        return UUID128
     UUID128_tmp = UUID128.strip().lower()
     UUID128_tmp = UUID128_tmp.replace('-','')
     pattern = r'0000[a-f0-9]{4}00001000800000805f9b34fb'
@@ -308,4 +311,4 @@ def convert_UUID128_to_UUID16_if_possible(UUID128):
     if match:
         return UUID128_tmp[4:8]
     else:
-        return UUID128
+        return UUID128_tmp

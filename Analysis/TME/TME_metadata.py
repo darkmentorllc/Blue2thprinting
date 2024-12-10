@@ -46,7 +46,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     if(len(le_result) > 0): we_have_a_name = True
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = f"SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID128 = '00002a00-0000-1000-8000-00805f9b34fb' AND cv.device_bdaddr = '{bdaddr}';"
+    chars_query = f"SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00' AND cv.device_bdaddr = '{bdaddr}';"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_a_name = True
 
@@ -124,7 +124,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
     model_name_match = 0
     s = ""
 
-    chars_query = f"SELECT UUID128,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_query = f"SELECT UUID,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_GATT = True
 
@@ -134,7 +134,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
         for (UUID128_db,char_value_handle) in chars_result:
             # Remove dashes and make lowercase
             UUID128_db_ = UUID128_db.replace('-','').lower()
-            if((UUID128_db_ == "00002a2400001000800000805f9b34fb" or UUID128_db_ == "00002a2700001000800000805f9b34fb") and model_name_match == 0):
+            if( (check_if_UUIDs_match(UUID128_db_, "2a24") or check_if_UUIDs_match(UUID128_db_, "2a27")) and model_name_match == 0):
                 # If so, go lookup the actual data behind it, so we can see if the "Model Number String" is a Chip
                 char_value_query = f"SELECT byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}' and read_handle = {char_value_handle:03}"
                 char_value_result = execute_query(char_value_query)
@@ -169,11 +169,11 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     # First see if we have GATT data for this device
     we_have_GATT = False
 
-    services_query = f"SELECT UUID128 FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'"
+    services_query = f"SELECT UUID FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'"
     services_result = execute_query(services_query)
     if(len(services_result) > 0): we_have_GATT = True
 
-    chars_query = f"SELECT UUID128,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
+    chars_query = f"SELECT UUID,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'"
     chars_result = execute_query(chars_query)
     if(len(chars_result) > 0): we_have_GATT = True
 
