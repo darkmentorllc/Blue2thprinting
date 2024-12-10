@@ -100,6 +100,8 @@ def BTIDES_export_GATT_Service(connect_ind_obj=None, bdaddr=None, random=None, d
 
 def find_service_with_target_handle_in_range(bdaddr, random, target_handle):
     base = lookup_SingleBDADDR_base_entry(bdaddr, random)
+    if("GATTArray" not in base.keys()):
+        return None
     for service_entry in base["GATTArray"]:
         # Check if the begin and end service handles enclose this characteristic value
         if(service_entry != None and "begin_handle" in service_entry.keys() and service_entry["begin_handle"] < target_handle and

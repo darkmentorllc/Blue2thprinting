@@ -54,6 +54,21 @@ type_opcode_LL_LENGTH_RSP                = 21
 type_opcode_LL_PHY_REQ                   = 22
 type_opcode_LL_PHY_RSP                   = 23
 
+ll_ctrl_pdu_opcodes_to_strings = {
+    2: "LL_TERMINATE_IND",
+    7: "LL_UNKNOWN_RSP",
+    8: "LL_FEATURE_REQ",
+    9: "LL_FEATURE_RSP",
+    12: "LL_VERSION_IND",
+    14: "LL_PERIPHERAL_FEATURE_REQ",
+    18: "LL_PING_REQ",
+    19: "LL_PING_RSP",
+    20: "LL_LENGTH_REQ",
+    21: "LL_LENGTH_RSP",
+    22: "LL_PHY_REQ",
+    23: "LL_PHY_RSP"
+}
+
 # HCI Event codes defined in BT spec
 event_code_HCI_Remote_Name_Request_Complete     = 7
 

@@ -612,7 +612,7 @@ def export_ATT_Find_Information_Request(connect_ind_obj, packet):
 
 
 def export_ATT_Find_Information_Response(connect_ind_obj, packet):
-    packet.show()
+    #packet.show()
     att_data = get_ATT_data(packet, ATT_Find_Information_Response, type_ATT_FIND_INFORMATION_RSP)
     if att_data is not None:
         direction = get_packet_direction(packet)
@@ -823,6 +823,9 @@ def read_pcap(file_path):
                         if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
                     if packet.haslayer(BTLE_SCAN_RSP):
                         if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
+                    if packet.haslayer(BTLE_SCAN_REQ):
+                        # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
+                        continue
 
                     # LL Control packets
                     if packet.haslayer(BTLE_CTRL):

@@ -97,8 +97,6 @@ def print_BLE_2thprint(bdaddr):
     else:
         print("\tBLE 2thprint Info:")
 
-    ll_ctrl_pdu_opcodes = {9: "LL_FEATURE_RSP", 14: "LL_PERIPHERAL_FEATURE_REQ", 18: "LL_PING_REQ", 20: "LL_LENGTH_REQ", 21: "LL_LENGTH_RSP", 22: "LL_PHY_REQ", 23: "LL_PHY_RSP"}
-
     # FIXME: for now the direction in all my DB data is P2C, so I'm hardcoding it here, but this needs to be fixed in the future once the DB is updated
     direction = type_BTIDES_direction_P2C
     for ll_version, ll_sub_version, device_BT_CID in version_result:
@@ -107,7 +105,7 @@ def print_BLE_2thprint(bdaddr):
         print(f"\t\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
     for device_bdaddr_type, opcode, features in features_result:
-        print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
+        print(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
         print("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
         data = ff_LL_FEATURE_RSP(direction, features)
@@ -125,7 +123,7 @@ def print_BLE_2thprint(bdaddr):
         BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
-        print(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes[opcode]})")
+        print(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
         print(f"\t\t\tMax RX octets: {max_rx_octets}")
         print(f"\t\t\tMax RX time: {max_rx_time} microseconds")
         print(f"\t\t\tMax TX octets: {max_tx_octets}")
@@ -138,7 +136,7 @@ def print_BLE_2thprint(bdaddr):
             BTIDES_export_LL_LENGTH_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, unknown_opcode in unknown_result:
-        print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes[unknown_opcode]})")
+        print(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes_to_strings[unknown_opcode]})")
         data = ff_LL_UNKNOWN_RSP(direction, unknown_opcode)
         BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
