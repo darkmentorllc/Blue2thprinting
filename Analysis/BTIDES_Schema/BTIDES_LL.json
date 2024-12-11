@@ -12,7 +12,13 @@
             "$ref": "#/definitions/LL_TERMINATE_IND"
           },
           {
+            "$ref": "#/definitions/LL_TERMINATE_IND2"
+          },
+          {
             "$ref": "#/definitions/LL_UNKNOWN_RSP"
+          },
+          {
+            "$ref": "#/definitions/LL_UNKNOWN_RSP2"
           },
           {
             "$ref": "#/definitions/LL_FEATURE_REQ"
@@ -106,6 +112,35 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 255
+        }
+      }
+    },
+    "LL_TERMINATE_IND2": {
+      "type": "object",
+      "description": "Structure for LL\\_TERMINATE\\_IND packet, as single raw hex string.",
+      "required": [
+        "direction",
+        "opcode",
+        "full_pkt_hex_str"
+      ],
+      "properties": {
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
+        },
+        "direction": {
+          "$ref": "BTIDES_base.json#/definitions/direction"
+        },
+        "opcode_str": {
+          "description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
+          "type": "string",
+          "const": "LL_TERMINATE_IND"
+        },
+        "opcode": {
+          "description": "This should always be 2. This is required to differentiate from other data types in an array.",
+          "const": 2
+        },
+        "full_pkt_hex_str": {
+          "$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"
         }
       }
     },
