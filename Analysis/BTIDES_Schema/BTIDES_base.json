@@ -1,287 +1,331 @@
 {
-  "$id" : "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json",
-  "$schema" : "https://json-schema.org/draft/2020-12/schema",
-  "description" : "BlueTooth Information Data Exchange Schema (BTIDES!)",
+  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "BlueTooth Information Data Exchange Schema (BTIDES!)",
   "version": "0.1.0",
-  "type" : "array",
-  "items" : {
-    "anyOf" : [ 
-        {"$ref" : "#/definitions/SingleBDADDR"},
-        {"$ref" : "#/definitions/DualBDADDR"}
+  "type": "array",
+  "items": {
+    "anyOf": [
+      {
+        "$ref": "#/definitions/SingleBDADDR"
+      },
+      {
+        "$ref": "#/definitions/DualBDADDR"
+      }
     ]
   },
-  "definitions" : {
-    "SingleBDADDR" : {
-      "description" : "The core information which must be in every element of the base array",
-      "type" : "object",
-      "required" : [ "bdaddr", "bdaddr_rand" ],
-      "properties" : {
-        "bdaddr" : {
-          "$ref" : "#/definitions/bdaddr"
+  "definitions": {
+    "SingleBDADDR": {
+      "description": "The core information which must be in every element of the base array",
+      "type": "object",
+      "required": [
+        "bdaddr",
+        "bdaddr_rand"
+      ],
+      "properties": {
+        "bdaddr": {
+          "$ref": "#/definitions/bdaddr"
         },
-        "bdaddr_rand" : {
-          "$ref" : "#/definitions/bdaddr_random"
+        "bdaddr_rand": {
+          "$ref": "#/definitions/bdaddr_random"
         },
-        "AdvChanArray" : {
-          "$ref" : "BTIDES_AdvData.json#/properties/AdvChanArray"
+        "AdvChanArray": {
+          "$ref": "BTIDES_AdvData.json#/properties/AdvChanArray"
         },
-        "LLArray" : {
-          "$ref" : "BTIDES_LL.json#/properties/LLArray"
+        "LLArray": {
+          "$ref": "BTIDES_LL.json#/properties/LLArray"
         },
-        "HCIArray" : {
-          "$ref" : "BTIDES_HCI.json#/properties/HCIArray"
+        "HCIArray": {
+          "$ref": "BTIDES_HCI.json#/properties/HCIArray"
         },
-        "L2CAPArray" : {
-          "$ref" : "BTIDES_L2CAP.json#/properties/L2CAPArray"
+        "L2CAPArray": {
+          "$ref": "BTIDES_L2CAP.json#/properties/L2CAPArray"
         },
-        "SMPArray" : {
-          "$ref" : "BTIDES_SMP.json#/properties/SMPArray"
+        "SMPArray": {
+          "$ref": "BTIDES_SMP.json#/properties/SMPArray"
         },
-        "ATTArray" : {
-          "$ref" : "BTIDES_ATT.json#/properties/ATTArray"
+        "ATTArray": {
+          "$ref": "BTIDES_ATT.json#/properties/ATTArray"
         },
-        "GATTArray" : {
-          "$ref" : "BTIDES_GATT.json#/properties/GATTArray"
+        "GATTArray": {
+          "$ref": "BTIDES_GATT.json#/properties/GATTArray"
         },
-        "EIRArray" : {
-          "$ref" : "BTIDES_EIR.json#/properties/EIRArray"
+        "EIRArray": {
+          "$ref": "BTIDES_EIR.json#/properties/EIRArray"
         },
-        "LMPArray" : {
-          "$ref" : "BTIDES_LMP.json#/properties/LMPArray"
+        "LMPArray": {
+          "$ref": "BTIDES_LMP.json#/properties/LMPArray"
         },
-        "SDPArray" : {
-          "$ref" : "BTIDES_SDP.json#/properties/SDPArray"
+        "SDPArray": {
+          "$ref": "BTIDES_SDP.json#/properties/SDPArray"
         },
-        "GPSArray" : {
-          "$ref" : "BTIDES_GPS.json#/properties/GPSArray"
+        "GPSArray": {
+          "$ref": "BTIDES_GPS.json#/properties/GPSArray"
         }
       }
     },
-    "CONNECT_IND" : {
-      "description" : "The data within a BLE CONNECT_IND packet.",
-      "type" : "object",
-      "required" : [ "central_bdaddr", "central_bdaddr_rand", "peripheral_bdaddr", "peripheral_bdaddr_rand", "access_address", "crc_init_hex_str", "win_size", "win_offset", "interval", "latency", "timeout", "channel_map_hex_str", "hop", "SCA" ],
-      "properties" : {
-        "std_optional_fields" : {
-          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+    "CONNECT_IND": {
+      "description": "The data within a BLE CONNECT_IND packet.",
+      "type": "object",
+      "required": [
+        "central_bdaddr",
+        "central_bdaddr_rand",
+        "peripheral_bdaddr",
+        "peripheral_bdaddr_rand",
+        "access_address",
+        "crc_init_hex_str",
+        "win_size",
+        "win_offset",
+        "interval",
+        "latency",
+        "timeout",
+        "channel_map_hex_str",
+        "hop",
+        "SCA"
+      ],
+      "properties": {
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
         },
-        "central_bdaddr" : {
-          "$ref" : "#/definitions/bdaddr",
-          "description" : "The Central device's Bluetooth Device Address."
+        "central_bdaddr": {
+          "$ref": "#/definitions/bdaddr",
+          "description": "The Central device's Bluetooth Device Address."
         },
-        "central_bdaddr_rand" : {
-          "$ref" : "#/definitions/bdaddr_random",
-          "description" : "Whether the Central device's BDADDR is public (0) or random (1)."
+        "central_bdaddr_rand": {
+          "$ref": "#/definitions/bdaddr_random",
+          "description": "Whether the Central device's BDADDR is public (0) or random (1)."
         },
-        "peripheral_bdaddr" : {
-          "$ref" : "#/definitions/bdaddr",
-          "description" : "The Peripheral device's Bluetooth Device Address."
+        "peripheral_bdaddr": {
+          "$ref": "#/definitions/bdaddr",
+          "description": "The Peripheral device's Bluetooth Device Address."
         },
-        "peripheral_bdaddr_rand" : {
-          "$ref" : "#/definitions/bdaddr_random",
-          "description" : "Whether the Peripheral device's BDADDR is public (0) or random (1)."
+        "peripheral_bdaddr_rand": {
+          "$ref": "#/definitions/bdaddr_random",
+          "description": "Whether the Peripheral device's BDADDR is public (0) or random (1)."
         },
-        "access_address" : {
-          "$ref" : "#/definitions/access_address",
-          "description" : "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection."
+        "access_address": {
+          "$ref": "#/definitions/access_address",
+          "description": "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection."
         },
-        "crc_init_hex_str" : {
-          "description" : "The 3-byte CRC initialization value used in the CONNECT_IND packet, as a hex string.",
-          "type" : "string",
-          "minLength" : 6,
-          "maxLength" : 6
+        "crc_init_hex_str": {
+          "description": "The 3-byte CRC initialization value used in the CONNECT_IND packet, as a hex string.",
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 6
         },
-        "win_size" : {
-          "description" : "The transmit window size used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 1 and 255, but put in whatever was actually used (i.e. accept 0).",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 255
+        "win_size": {
+          "description": "The transmit window size used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 1 and 255, but put in whatever was actually used (i.e. accept 0).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
-        "win_offset" : {
-          "description" : "The transmit window offset used in the CONNECT_IND packet. (Multiplied by 1.25ms). \"The transmitWindowOffset shall be a multiple of 1.25 ms in the range 0 ms to connInterval.\" according to the spec.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 65535
+        "win_offset": {
+          "description": "The transmit window offset used in the CONNECT_IND packet. (Multiplied by 1.25ms). \"The transmitWindowOffset shall be a multiple of 1.25 ms in the range 0 ms to connInterval.\" according to the spec.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
-        "interval" : {
-          "description" : "The connection interval used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 7.5ms to 4.0s (6-3200) according to the spec, but put in whatever was actually used.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 65535
+        "interval": {
+          "description": "The connection interval used in the CONNECT_IND packet. (Multiplied by 1.25ms). This should technically be only between 7.5ms to 4.0s (6-3200) according to the spec, but put in whatever was actually used.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
-        "latency" : {
-          "description" : "The slave latency used in the CONNECT_IND packet. \"The value of connSubrateFactor shall be in the range 1 to 500 and shall be set to 1 for a new connection\" to be valid according to the spec, but put whatever value was actually found in the packet.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 65535
+        "latency": {
+          "description": "The slave latency used in the CONNECT_IND packet. \"The value of connSubrateFactor shall be in the range 1 to 500 and shall be set to 1 for a new connection\" to be valid according to the spec, but put whatever value was actually found in the packet.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
-        "timeout" : {
-          "description" : "The connection timeout used in the CONNECT_IND packet. (Multiplied by 10ms). \"The connSupervisionTimeout shall be a multiple of 10 ms in the range 100 ms to 32.0s and it shall be larger than (1 + connPeripheralLatency) × connSubrateFactor × connInterval × 2.\" (so 1-3200)according to the spec, but put in whatever was actually used.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 65535
+        "timeout": {
+          "description": "The connection timeout used in the CONNECT_IND packet. (Multiplied by 10ms). \"The connSupervisionTimeout shall be a multiple of 10 ms in the range 100 ms to 32.0s and it shall be larger than (1 + connPeripheralLatency) × connSubrateFactor × connInterval × 2.\" (so 1-3200)according to the spec, but put in whatever was actually used.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
         },
-        "channel_map_hex_str" : {
-          "description" : "The (5-byte) channel map used in the CONNECT_IND packet, as a hex string.",
-          "type" : "string",
-          "minLength" : 10,
-          "maxLength" : 10
+        "channel_map_hex_str": {
+          "description": "The (5-byte) channel map used in the CONNECT_IND packet, as a hex string.",
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10
         },
-        "hop" : {
-          "description" : "The (5-bit) hop increment used in the CONNECT_IND packet. This should technically be only between 5-16 according to the spec, but put in whatever was actually used.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 31
+        "hop": {
+          "description": "The (5-bit) hop increment used in the CONNECT_IND packet. This should technically be only between 5-16 according to the spec, but put in whatever was actually used.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
         },
-        "SCA" : {
-          "description" : "The (3-bit) sleep clock accuracy used in the CONNECT_IND packet.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 7
+        "SCA": {
+          "description": "The (3-bit) sleep clock accuracy used in the CONNECT_IND packet.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
         }
       }
     },
-    "DualBDADDR" : {
-      "description" : "The core information which must be in every element of the base array",
-      "type" : "object",
-      "required" : [ "CONNECT_IND" ],
-      "properties" : {
-        "CONNECT_IND" : {
-          "$ref" : "#/definitions/CONNECT_IND"
+    "DualBDADDR": {
+      "description": "The core information which must be in every element of the base array",
+      "type": "object",
+      "required": [
+        "CONNECT_IND"
+      ],
+      "properties": {
+        "CONNECT_IND": {
+          "$ref": "#/definitions/CONNECT_IND"
         },
-        "AdvChanArray" : {
-          "$ref" : "BTIDES_AdvData.json#/properties/AdvChanArray"
+        "AdvChanArray": {
+          "$ref": "BTIDES_AdvData.json#/properties/AdvChanArray"
         },
-        "LLArray" : {
-          "$ref" : "BTIDES_LL.json#/properties/LLArray"
+        "LLArray": {
+          "$ref": "BTIDES_LL.json#/properties/LLArray"
         },
-        "HCIArray" : {
-          "$ref" : "BTIDES_HCI.json#/properties/HCIArray"
+        "HCIArray": {
+          "$ref": "BTIDES_HCI.json#/properties/HCIArray"
         },
-        "L2CAPArray" : {
-          "$ref" : "BTIDES_L2CAP.json#/properties/L2CAPArray"
+        "L2CAPArray": {
+          "$ref": "BTIDES_L2CAP.json#/properties/L2CAPArray"
         },
-        "SMPArray" : {
-          "$ref" : "BTIDES_SMP.json#/properties/SMPArray"
+        "SMPArray": {
+          "$ref": "BTIDES_SMP.json#/properties/SMPArray"
         },
-        "ATTArray" : {
-          "$ref" : "BTIDES_ATT.json#/properties/ATTArray"
+        "ATTArray": {
+          "$ref": "BTIDES_ATT.json#/properties/ATTArray"
         },
-        "GATTArray" : {
-          "$ref" : "BTIDES_GATT.json#/properties/GATTArray"
+        "GATTArray": {
+          "$ref": "BTIDES_GATT.json#/properties/GATTArray"
         },
-        "EIRArray" : {
-          "$ref" : "BTIDES_EIR.json#/properties/EIRArray"
+        "EIRArray": {
+          "$ref": "BTIDES_EIR.json#/properties/EIRArray"
         },
-        "LMPArray" : {
-          "$ref" : "BTIDES_LMP.json#/properties/LMPArray"
+        "LMPArray": {
+          "$ref": "BTIDES_LMP.json#/properties/LMPArray"
         },
-        "SDPArray" : {
-          "$ref" : "BTIDES_SDP.json#/properties/SDPArray"
+        "SDPArray": {
+          "$ref": "BTIDES_SDP.json#/properties/SDPArray"
         },
-        "GPSArray" : {
-          "$ref" : "BTIDES_GPS.json#/properties/GPSArray"
+        "GPSArray": {
+          "$ref": "BTIDES_GPS.json#/properties/GPSArray"
         }
       }
     },
-    "bdaddr" : {
-      "description" : "Bluetooth Device Address (BDADDR) in typical colon-deliminated-hexidecimal format. E.g. \"AA:BB:CC:DD:EE:FF\", where AA is the most significant byte",
-      "type" : "string"
+    "bdaddr": {
+      "description": "Bluetooth Device Address (BDADDR) in typical colon-deliminated-hexidecimal format. E.g. \"AA:BB:CC:DD:EE:FF\", where AA is the most significant byte",
+      "type": "string"
     },
-    "bdaddr_random" : {
-      "description" : "Set to 1 if the BDADDR is a random address, and 0 if it's a public address. For BT Classic (BR/EDR) BDADDRs it should always be set to 0.",
-      "type" : "integer",
-      "enum" : [ 0, 1 ]
+    "bdaddr_random": {
+      "description": "Set to 1 if the BDADDR is a random address, and 0 if it's a public address. For BT Classic (BR/EDR) BDADDRs it should always be set to 0.",
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
     },
-    "access_address" : {
-      "description" : "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection.",
-      "type" : "integer",
+    "access_address": {
+      "description": "The Access Address sent as part of a CONNECT_IND, and used after two devices make a successful connection.",
+      "type": "integer",
       "minimum": 0,
       "maximum": 4294967295
     },
-    "std_optional_fields" : {
-      "description" : "Common optional fields that can be included in a record if desired.",
-      "anyOf" : [ {
-        "$ref" : "#/definitions/time"
-      }, {
-        "$ref" : "#/definitions/src_file"
-      }, {
-        "$ref" : "#/definitions/channel_freq"
-      }, {
-        "$ref" : "#/definitions/RSSI"
-      } ]
-    },
-    "src_file" : {
-      "description" : "Optional source file where this data came from. Useful for backtracking data when debugging if something was parsed correctly or not.",
-      "type" : "string"
-    },
-    "channel_freq" : {
-      "description" : "Which channel frequency this data was observed on, in MHz. Using this instead of channel ID so that this field can be used equally for BLE and BREDR.",
-      "type" : "integer",
-      "minimum" : 2402,
-      "maximum" : 2480
-    },
-    "RSSI" : {
-      "description" : "Received Signal Strength Indicator in dBm (deciBel-milliwatts) at the time this record was collected.\n Optional because it may not be available.\n But in general if you want to attempt trilateration, you'll need this.",
-      "type" : "integer",
-      "minimum" : -128,
-      "maximum" : 0
-    },
-    "time" : {
-      "description" : "Optional field to hold timestamps in multiple possible formats.",
-      "type" : "object",
-      "$comment" : "More formats can be added as they become needed",
-      "properties" : {
-        "unix_time" : {
-          "description" : "Unix seconds-since-epoch (1970-01-01 00:00:00 UTC) timestamp, as a 32-bit integer.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 4294967295
+    "std_optional_fields": {
+      "description": "Common optional fields that can be included in a record if desired.",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/time"
         },
-        "time_str1" : {
-          "description" : "Time formatted like YYYY-MM-DD-HH-mm-ss. E.g. 2024-01-02-03-14-15 for January 2nd 2024 at 3:14AM.",
-          "type" : "string",
-          "minLength" : 19,
-          "maxLength" : 19
+        {
+          "$ref": "#/definitions/src_file"
+        },
+        {
+          "$ref": "#/definitions/channel_freq"
+        },
+        {
+          "$ref": "#/definitions/RSSI"
+        }
+      ]
+    },
+    "src_file": {
+      "description": "Optional source file where this data came from. Useful for backtracking data when debugging if something was parsed correctly or not.",
+      "type": "string"
+    },
+    "channel_freq": {
+      "description": "Which channel frequency this data was observed on, in MHz. Using this instead of channel ID so that this field can be used equally for BLE and BREDR.",
+      "type": "integer",
+      "minimum": 2402,
+      "maximum": 2480
+    },
+    "RSSI": {
+      "description": "Received Signal Strength Indicator in dBm (deciBel-milliwatts) at the time this record was collected.\n Optional because it may not be available.\n But in general if you want to attempt trilateration, you'll need this.",
+      "type": "integer",
+      "minimum": -128,
+      "maximum": 0
+    },
+    "time": {
+      "description": "Optional field to hold timestamps in multiple possible formats.",
+      "type": "object",
+      "$comment": "More formats can be added as they become needed",
+      "properties": {
+        "unix_time": {
+          "description": "Unix seconds-since-epoch (1970-01-01 00:00:00 UTC) timestamp, as a 32-bit integer.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "time_str1": {
+          "description": "Time formatted like YYYY-MM-DD-HH-mm-ss. E.g. 2024-01-02-03-14-15 for January 2nd 2024 at 3:14AM.",
+          "type": "string",
+          "minLength": 19,
+          "maxLength": 19
         }
       }
     },
-    "UUID" : {
-      "description" : "Must include UUID in either of the following formats",
-      "anyOf" : [ {
-        "$ref" : "#/definitions/UUID16_hex_str"
-      }, {
-        "$ref" : "#/definitions/UUID128_hex_str"
-      } ]
-    },
-    "UUID16_hex_str" : {
-      "description" : "UUID16 as hex_str.",
-      "type" : "string",
-      "minLength" : 4,
-      "maxLength" : 4
-    },
-    "UUID32_hex_str" : {
-      "description" : "UUID32 as hex_str.",
-      "type" : "string",
-      "minLength" : 8,
-      "maxLength" : 8
-    },
-    "UUID128_hex_str" : {
-      "description" : "UUID128 as big-endian hex_str. Can be encoded with dashes or without, but it must be exactly 32 (without dashes) or 36 (with dashes) hexadecimal characters long.",
-      "type" : "string",
+    "UUID": {
+      "description": "Must include UUID in either of the following formats",
       "anyOf": [
-      { "minLength": 32, "maxLength": 32 },
-      { "minLength": 36, "maxLength": 36 }
+        {
+          "$ref": "#/definitions/UUID16_hex_str"
+        },
+        {
+          "$ref": "#/definitions/UUID128_hex_str"
+        }
       ]
     },
-    "full_pkt_hex_str" : {
-      "description" : "This is the original full packet data (starting from the {LL/LMP} header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",
-      "type" : "string"
+    "UUID16_hex_str": {
+      "description": "UUID16 as hex_str.",
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 4
+    },
+    "UUID32_hex_str": {
+      "description": "UUID32 as hex_str.",
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 8
+    },
+    "UUID128_hex_str": {
+      "description": "UUID128 as big-endian hex_str. Can be encoded with dashes or without, but it must be exactly 32 (without dashes) or 36 (with dashes) hexadecimal characters long.",
+      "type": "string",
+      "anyOf": [
+        {
+          "minLength": 32,
+          "maxLength": 32
+        },
+        {
+          "minLength": 36,
+          "maxLength": 36
+        }
+      ]
+    },
+    "full_pkt_hex_str": {
+      "description": "This is the original full packet data (starting from the {LL/LMP} header / access address) as a hex string (i.e. bytes 0x12 0x34 0x56 represented as string \"123456\" where byte 0x12 has the lowest address in the packet). Formatted as in the order and endianness outlined in the spec.\n This is just for if you want to exhange the information in an un-parsed form (and slightly save space due to less JSON overhead. Note though that we're not trying to optimize for space yet.)",
+      "type": "string"
     },
     "direction": {
       "description": "Direction of the packet. 0 = Central to Peripheral (C2P), 1 = Peripheral to Central (P2C).",
       "type": "integer",
-      "enum": [0, 1]
+      "enum": [
+        0,
+        1
+      ]
     }
   }
 }

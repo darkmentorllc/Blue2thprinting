@@ -1,154 +1,186 @@
 {
-  "$id" : "https://darkmentor.com/BTIDES_Schema/BTIDES_SMP.json",
-  "$schema" : "https://json-schema.org/draft/2020-12/schema",
-  "description" : "BTIDES SMP packet information data types",
-  "type" : "object",
-  "properties" : {
-    "SMPArray" : {
-      "type" : "array",
-      "items" : {
-        "anyOf" : [ {
-          "$ref" : "#/definitions/Pairing_Request"
-        }, {
-          "$ref" : "#/definitions/Pairing_Request2"
-        }, {
-          "$ref" : "#/definitions/Pairing_Response"
-        }, {
-          "$ref" : "#/definitions/Pairing_Response2"
-        } ]
+  "$id": "https://darkmentor.com/BTIDES_Schema/BTIDES_SMP.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "BTIDES SMP packet information data types",
+  "type": "object",
+  "properties": {
+    "SMPArray": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/Pairing_Request"
+          },
+          {
+            "$ref": "#/definitions/Pairing_Request2"
+          },
+          {
+            "$ref": "#/definitions/Pairing_Response"
+          },
+          {
+            "$ref": "#/definitions/Pairing_Response2"
+          }
+        ]
       }
     }
   },
-  "definitions" : {
-    "io_cap" : {
-      "description" : "IO Capabilities. Used for determining pairing method (i.e. Just Works vs. Passkey Entry vs. Numeric Comparison). \n 0x00 = DisplayOnly\n 0x01 = DisplayYesNo\n 0x02 = KeyboardOnly\n 0x03 = NoInputNoOutput\n 0x04= KeyboardDisplay\n Other values RFU",
-      "type" : "integer",
-      "enum" : [ 0, 1, 2, 3, 4 ]
+  "definitions": {
+    "io_cap": {
+      "description": "IO Capabilities. Used for determining pairing method (i.e. Just Works vs. Passkey Entry vs. Numeric Comparison). \n 0x00 = DisplayOnly\n 0x01 = DisplayYesNo\n 0x02 = KeyboardOnly\n 0x03 = NoInputNoOutput\n 0x04= KeyboardDisplay\n Other values RFU",
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
     },
-    "oob_data" : {
-      "description" : "The \"Out of band (OOB) data flag\" field from the spec.\n 0x00 = \"OOB Authentication data not present\"\n 0x01 = \"OOB Authentication data from remote device present\"",
-      "type" : "integer",
-      "enum" : [ 0, 1 ]
+    "oob_data": {
+      "description": "The \"Out of band (OOB) data flag\" field from the spec.\n 0x00 = \"OOB Authentication data not present\"\n 0x01 = \"OOB Authentication data from remote device present\"",
+      "type": "integer",
+      "enum": [
+        0,
+        1
+      ]
     },
-    "auth_req" : {
-      "description" : "The \"AuthReq\" field from the spec. This has numerous bitfield sub-fields.",
-      "type" : "integer",
-      "minimum" : 0,
-      "maximum" : 255
+    "auth_req": {
+      "description": "The \"AuthReq\" field from the spec. This has numerous bitfield sub-fields.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
     },
-    "max_key_size" : {
-      "description" : "The \"Maximum Encryption Key Size\" field from the spec. To be *valid* this should technically always be > 7 and <= 16, but someone could be sending invalid data that you want to capture accurately, so just use whatever value was in the packet.",
-      "type" : "integer",
-      "minimum" : 0,
-      "maximum" : 255
+    "max_key_size": {
+      "description": "The \"Maximum Encryption Key Size\" field from the spec. To be *valid* this should technically always be > 7 and <= 16, but someone could be sending invalid data that you want to capture accurately, so just use whatever value was in the packet.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
     },
-    "Pairing_Request" : {
-      "type" : "object",
-      "description" : "Structure for SMP Pairing Request packet.",
-      "required" : [ "io_cap", "oob_data", "auth_req", "max_key_size", "initiator_key_dist", "responder_key_dist" ],
-      "properties" : {
-        "opcode" : {
-          "description" : "Optional field just if you don't want to look up the opcode for this packet type.",
-          "const" : 1
+    "Pairing_Request": {
+      "type": "object",
+      "description": "Structure for SMP Pairing Request packet.",
+      "required": [
+        "io_cap",
+        "oob_data",
+        "auth_req",
+        "max_key_size",
+        "initiator_key_dist",
+        "responder_key_dist"
+      ],
+      "properties": {
+        "opcode": {
+          "description": "Optional field just if you don't want to look up the opcode for this packet type.",
+          "const": 1
         },
-        "std_optional_fields" : {
-          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
         },
-        "io_cap" : {
-          "$ref" : "#/definitions/io_cap"
+        "io_cap": {
+          "$ref": "#/definitions/io_cap"
         },
-        "oob_data" : {
-          "$ref" : "#/definitions/oob_data"
+        "oob_data": {
+          "$ref": "#/definitions/oob_data"
         },
-        "auth_req" : {
-          "$ref" : "#/definitions/auth_req"
+        "auth_req": {
+          "$ref": "#/definitions/auth_req"
         },
-        "max_key_size" : {
-          "$ref" : "#/definitions/max_key_size"
+        "max_key_size": {
+          "$ref": "#/definitions/max_key_size"
         },
-        "initiator_key_dist" : {
-          "description" : "The \"Initiator Key Distribution\" field from the spec. An indication of which keys will be distributed by the initiator during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 255
+        "initiator_key_dist": {
+          "description": "The \"Initiator Key Distribution\" field from the spec. An indication of which keys will be distributed by the initiator during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
-        "responder_key_dist" : {
-          "description" : "The \"Responder Key Distribution\" field from the spec. An indication of which keys are requested by the initiator to be distributed by the responder during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 255
+        "responder_key_dist": {
+          "description": "The \"Responder Key Distribution\" field from the spec. An indication of which keys are requested by the initiator to be distributed by the responder during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         }
       }
     },
-    "Pairing_Request2" : {
-      "type" : "object",
-      "description" : "Structure for SMP Pairing Request packet, as single raw hex string.",
-      "required" : [ "full_pkt_hex_str" ],
-      "properties" : {
-        "std_optional_fields" : {
-          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+    "Pairing_Request2": {
+      "type": "object",
+      "description": "Structure for SMP Pairing Request packet, as single raw hex string.",
+      "required": [
+        "full_pkt_hex_str"
+      ],
+      "properties": {
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
         },
-        "opcode" : {
-          "description" : "Optional field just if you don't want to look up the opcode for this packet type.",
-          "const" : 1
+        "opcode": {
+          "description": "Optional field just if you don't want to look up the opcode for this packet type.",
+          "const": 1
         },
-        "full_pkt_hex_str" : {
-          "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
+        "full_pkt_hex_str": {
+          "$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"
         }
       }
     },
-    "Pairing_Response" : {
-      "type" : "object",
-      "description" : "Structure for SMP Pairing Response packet.",
-      "required" : [ "io_cap", "oob_data", "auth_req", "max_key_size", "initiator_key_dist", "responder_key_dist" ],
-      "properties" : {
-        "opcode" : {
-          "description" : "Optional field just if you don't want to look up the opcode for this packet type.",
-          "const" : 2
+    "Pairing_Response": {
+      "type": "object",
+      "description": "Structure for SMP Pairing Response packet.",
+      "required": [
+        "io_cap",
+        "oob_data",
+        "auth_req",
+        "max_key_size",
+        "initiator_key_dist",
+        "responder_key_dist"
+      ],
+      "properties": {
+        "opcode": {
+          "description": "Optional field just if you don't want to look up the opcode for this packet type.",
+          "const": 2
         },
-        "std_optional_fields" : {
-          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
         },
-        "io_cap" : {
-          "$ref" : "#/definitions/io_cap"
+        "io_cap": {
+          "$ref": "#/definitions/io_cap"
         },
-        "oob_data" : {
-          "$ref" : "#/definitions/oob_data"
+        "oob_data": {
+          "$ref": "#/definitions/oob_data"
         },
-        "auth_req" : {
-          "$ref" : "#/definitions/auth_req"
+        "auth_req": {
+          "$ref": "#/definitions/auth_req"
         },
-        "max_key_size" : {
-          "$ref" : "#/definitions/max_key_size"
+        "max_key_size": {
+          "$ref": "#/definitions/max_key_size"
         },
-        "initiator_key_dist" : {
-          "description" : "The \"Initiator Key Distribution\" field from the spec. An indication of which keys are requested by the responder to be distributed by the initiator during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 255
+        "initiator_key_dist": {
+          "description": "The \"Initiator Key Distribution\" field from the spec. An indication of which keys are requested by the responder to be distributed by the initiator during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
-        "responder_key_dist" : {
-          "description" : "The \"Responder Key Distribution\" field from the spec. An indication of which keys will be distributed by the responder during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
-          "type" : "integer",
-          "minimum" : 0,
-          "maximum" : 255
+        "responder_key_dist": {
+          "description": "The \"Responder Key Distribution\" field from the spec. An indication of which keys will be distributed by the responder during Transport-Specific Key Distribution phase of pairing. \n bit 0 = EncKey\n bit 1 = IdKey\n bit 2 = SignKey\n bit 3 = LinkKey\n other bits RFU.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         }
       }
     },
-    "Pairing_Response2" : {
-      "type" : "object",
-      "description" : "Structure for SMP Pairing Response packet, as single raw hex string.",
-      "required" : [ "full_pkt_hex_str" ],
-      "properties" : {
-        "std_optional_fields" : {
-          "$ref" : "BTIDES_base.json#/definitions/std_optional_fields"
+    "Pairing_Response2": {
+      "type": "object",
+      "description": "Structure for SMP Pairing Response packet, as single raw hex string.",
+      "required": [
+        "full_pkt_hex_str"
+      ],
+      "properties": {
+        "std_optional_fields": {
+          "$ref": "BTIDES_base.json#/definitions/std_optional_fields"
         },
-        "opcode" : {
-          "description" : "Optional field just if you don't want to look up the opcode for this packet type.",
-          "const" : 2
+        "opcode": {
+          "description": "Optional field just if you don't want to look up the opcode for this packet type.",
+          "const": 2
         },
-        "full_pkt_hex_str" : {
-          "$ref" : "BTIDES_base.json#/definitions/full_pkt_hex_str"
+        "full_pkt_hex_str": {
+          "$ref": "BTIDES_base.json#/definitions/full_pkt_hex_str"
         }
       }
     }
