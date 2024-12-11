@@ -46,11 +46,12 @@ def check_if_UUIDs_match(UUID1, UUID2):
 
 # Function to print UUID128s for a given device_bdaddr
 def print_uuid128s(device_bdaddr):
-    eir_UUID128s_query = f"SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE device_bdaddr = '{device_bdaddr}'"
-    eir_UUID128s_result = execute_query(eir_UUID128s_query)
+    values = (device_bdaddr,)
+    eir_UUID128s_query = "SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+    eir_UUID128s_result = execute_query(eir_UUID128s_query, values)
     
-    le_UUID128s_query = f"SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE device_bdaddr = '{device_bdaddr}'"
-    le_UUID128s_result = execute_query(le_UUID128s_query)
+    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+    le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(eir_UUID128s_result) == 0 and len(le_UUID128s_result) == 0):
         vprint("\tNo UUID128s found.")
@@ -111,8 +112,9 @@ def print_uuid128s(device_bdaddr):
 
 # Function to print UUID128s for a given device_bdaddr
 def print_uuid128s_service_solicit(device_bdaddr):
-    le_UUID128s_query = f"SELECT bdaddr_random, le_evt_type, str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE device_bdaddr = '{device_bdaddr}'"
-    le_UUID128s_result = execute_query(le_UUID128s_query)
+    values = (device_bdaddr,)
+    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE device_bdaddr = %s"
+    le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(le_UUID128s_result) == 0):
         vprint("\tNo Service Solicit UUID128s found.")
@@ -143,8 +145,9 @@ def print_service_data_interpretation(UUID128, service_data_hex_str, indent):
 
 # Function to print UUID128s service data for a given device_bdaddr
 def print_uuid128_service_data(device_bdaddr):
-    le_uuid128_service_data_query = f"SELECT bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID128_service_data WHERE device_bdaddr = '{device_bdaddr}'"
-    le_uuid128_service_data_result = execute_query(le_uuid128_service_data_query)
+    values = (device_bdaddr,)
+    le_uuid128_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID128_service_data WHERE device_bdaddr = %s"
+    le_uuid128_service_data_result = execute_query(le_uuid128_service_data_query, values)
 
     if(len(le_uuid128_service_data_result) == 0):
         vprint("\tNo UUID128 service data found.")

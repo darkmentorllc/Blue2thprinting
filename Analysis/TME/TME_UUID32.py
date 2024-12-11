@@ -13,13 +13,14 @@ from TME.TME_BTIDES_AdvData import *
 
 # Function to print UUID32s for a given device_bdaddr
 def print_uuid32s(device_bdaddr):
+    values = (device_bdaddr,)
     # Query for EIR_bdaddr_to_UUID32s table
-    eir_uuid32s_query = f"SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE device_bdaddr = '{device_bdaddr}'"
-    eir_uuid32s_result = execute_query(eir_uuid32s_query)
+    eir_uuid32s_query = "SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE device_bdaddr = %s"
+    eir_uuid32s_result = execute_query(eir_uuid32s_query, values)
     
     # Query for LE_bdaddr_to_UUID32s table
-    le_uuid32s_query = f"SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE device_bdaddr = '{device_bdaddr}'"
-    le_uuid32s_result = execute_query(le_uuid32s_query)
+    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE device_bdaddr = %s"
+    le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
         vprint("\tNo UUID32s found.")
@@ -113,8 +114,9 @@ def print_uuid32s(device_bdaddr):
 
 # Function to print UUID32s for a given device_bdaddr
 def print_service_solicit_uuid32s(device_bdaddr):
-    le_uuid32s_query = f"SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE device_bdaddr = '{device_bdaddr}'"
-    le_uuid32s_result = execute_query(le_uuid32s_query)
+    values = (device_bdaddr,)
+    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE device_bdaddr = %s"
+    le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(le_uuid32s_result) == 0):
         vprint("\tNo Service Solicit UUID32s found.")
@@ -156,8 +158,9 @@ def print_service_solicit_uuid32s(device_bdaddr):
 
 # Function to print UUID32s service data for a given device_bdaddr
 def print_uuid32_service_data(device_bdaddr):
-    le_uuid32_service_data_query = f"SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE device_bdaddr = '{device_bdaddr}'"
-    le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query)
+    values = (device_bdaddr,)
+    le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE device_bdaddr = %s"
+    le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query, values)
 
     if(len(le_uuid32_service_data_result) == 0):
         vprint("\tNo UUID32 service data found.")

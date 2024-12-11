@@ -12,8 +12,10 @@ from TME.TME_BTIDES_AdvData import *
 ########################################
 
 def print_classic_EIR_CID_info(bdaddr):
-    eir_query = f"SELECT vendor_id_source, vendor_id, product_id, product_version FROM EIR_bdaddr_to_DevID WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
+
+    values = (bdaddr,)
+    eir_query = "SELECT vendor_id_source, vendor_id, product_id, product_version FROM EIR_bdaddr_to_DevID WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
 
     if (len(eir_result) == 0):
         vprint("\tNo BTC Extended Inquiry Result Device info.")

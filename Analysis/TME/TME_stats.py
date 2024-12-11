@@ -15,8 +15,8 @@ def get_uuid16_stats(arg):
     # Get the data for BTC devices from the database
     ################################################
 
-    eir_uuid16_query = f"SELECT str_UUID16s FROM EIR_bdaddr_to_UUID16s"
-    eir_uuid16_result = execute_query(eir_uuid16_query)
+    eir_uuid16_query = "SELECT str_UUID16s FROM EIR_bdaddr_to_UUID16s"
+    eir_uuid16_result = execute_query(eir_uuid16_query, ())
     if(len(eir_uuid16_result) != 0):
         for (str_UUID16s,) in eir_uuid16_result:
             uuid16s = str_UUID16s.split(',')
@@ -53,8 +53,8 @@ def get_uuid16_stats(arg):
         # Get the data for LE devices from the database
         ################################################
 
-        le_uuid16_query = f"SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s"
-        le_uuid16_result = execute_query(le_uuid16_query)
+        le_uuid16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s"
+        le_uuid16_result = execute_query(le_uuid16_query, ())
         if(len(le_uuid16_result) != 0):
             for (str_UUID16s,) in le_uuid16_result:
                 if(isinstance(str_UUID16s, str)):
@@ -100,8 +100,8 @@ def get_uuid128_stats(arg):
     # Get the data for BTC devices from the database
     ################################################
 
-    eir_uuid128_query = f"SELECT str_UUID128s FROM EIR_bdaddr_to_UUID128s"
-    eir_uuid128_result = execute_query(eir_uuid128_query)
+    eir_uuid128_query = "SELECT str_UUID128s FROM EIR_bdaddr_to_UUID128s"
+    eir_uuid128_result = execute_query(eir_uuid128_query, ())
     if(len(eir_uuid128_result) != 0):
         for (str_UUID128s,) in eir_uuid128_result:
             if(str_UUID128s == ''):
@@ -139,8 +139,8 @@ def get_uuid128_stats(arg):
         # Get the data for LE devices from the database
         ################################################
 
-        le_uuid128_query = f"SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s"
-        le_uuid128_result = execute_query(le_uuid128_query)
+        le_uuid128_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s"
+        le_uuid128_result = execute_query(le_uuid128_query, ())
         if(len(le_uuid128_result) != 0):
             for (str_UUID128s,) in le_uuid128_result:
                 if(str_UUID128s == ''):

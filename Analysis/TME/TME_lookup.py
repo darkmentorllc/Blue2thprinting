@@ -13,8 +13,9 @@ from TME.TME_helpers import *
 
 # Returns 0 if there is no LL_VERSION_IND info for this BDADDR, else returns 1
 def device_has_LL_VERSION_IND_info(bdaddr):
-    version_query = f"SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
+    values = (bdaddr,)
+    version_query = "SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
         return 1
     else:
@@ -22,8 +23,9 @@ def device_has_LL_VERSION_IND_info(bdaddr):
 
 # Returns 0 if there is no LMP_VERSION_RES info for this BDADDR, else returns 1
 def device_has_LMP_VERSION_RES_info(bdaddr):
-    version_query = f"SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
+    values = (bdaddr,)
+    version_query = "SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
         return 1
     else:
@@ -34,8 +36,9 @@ def get_bdaddrs_by_name_regex(nameregex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_name WHERE device_name REGEXP '{nameregex}'"
-    eir_result = execute_query(eir_query)
+    values = (nameregex,)
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name WHERE device_name REGEXP %s"
+    eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
@@ -43,24 +46,24 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for RSP_bdaddr_to_name table
-    rsp_query = f"SELECT device_bdaddr FROM RSP_bdaddr_to_name WHERE device_name REGEXP '{nameregex}'"
-    rsp_result = execute_query(rsp_query)
+    rsp_query = "SELECT device_bdaddr FROM RSP_bdaddr_to_name WHERE device_name REGEXP %s"
+    rsp_result = execute_query(rsp_query, values)
     for (bdaddr,) in rsp_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name2 table
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE device_name REGEXP '{nameregex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE device_name REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name2")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = f"SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00';"
-    chars_result = execute_query(chars_query)
+    chars_query = "SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00';"
+    chars_result = execute_query(chars_query, ())
     if(len(chars_result) > 0):
         for (bdaddr, byte_values) in chars_result:
             tmpstr = byte_values.decode('utf-8', 'ignore')
@@ -79,10 +82,11 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
+    values = (bdaddrregex,)
     bdaddr_query = (
-        f"SELECT DISTINCT t.device_bdaddr "
+        "SELECT DISTINCT t.device_bdaddr "
         f"FROM ( "
-        f"    SELECT '{bdaddrregex}' AS bdaddr_prefix "
+        f"    SELECT %s AS bdaddr_prefix "
         f") AS prefix "
         f"CROSS JOIN ( "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = 0" # TODO: It would be better if we added a parameter to allow the caller to specify if they want to consider random addresses or not
@@ -156,7 +160,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"WHERE t.device_bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');"
     )
 
-    bdaddr_result = execute_query(bdaddr_query)
+    bdaddr_result = execute_query(bdaddr_query, values)
     for (bdaddr,) in bdaddr_result:
         bdaddr_hash[bdaddr] = 1
 
@@ -205,22 +209,23 @@ def get_bdaddrs_by_company_regex(companyregex):
 
         for key in device_bt_cids_to_names.keys():
 
-            tooth_lmp_query = f"SELECT device_bdaddr FROM BTC2th_LMP_version_res WHERE device_BT_CID = '{key}'"
-            tooth_lmp_result = execute_query(tooth_lmp_query)
+            values = (key,)
+            tooth_lmp_query = "SELECT device_bdaddr FROM BTC2th_LMP_version_res WHERE device_BT_CID = %s"
+            tooth_lmp_result = execute_query(tooth_lmp_query, values)
             for (bdaddr,) in tooth_lmp_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(tooth_lmp_result)} results found in BTC2th_LMP_version_res for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            tooth_ll_query = f"SELECT device_bdaddr FROM BLE2th_LL_VERSION_IND WHERE device_BT_CID = '{key}'"
-            tooth_ll_result = execute_query(tooth_ll_query)
+            tooth_ll_query = "SELECT device_bdaddr FROM BLE2th_LL_VERSION_IND WHERE device_BT_CID = %s"
+            tooth_ll_result = execute_query(tooth_ll_query, values)
             for (bdaddr,) in tooth_ll_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(tooth_ll_result)} results found in BLE2th_LL_VERSION_IND for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = '{key}'"
-            le_msd_result = execute_query(le_msd_query)
+            le_msd_query = "SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
+            le_msd_result = execute_query(le_msd_query, values)
             for (bdaddr,) in le_msd_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for key 0x{key:04x}")
@@ -229,17 +234,18 @@ def get_bdaddrs_by_company_regex(companyregex):
             # NOTE: Manufacture-specific data is the location where the BT_CID is most likely to be byte-swapped
             # NOTE: Try the byte-swapped version too if there are no results from the above
 
+            values2 = (byte_swapped_key,)
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                le_msd_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = '{byte_swapped_key}'"
-                le_msd_result = execute_query(le_msd_query)
+                le_msd_query = "SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
+                le_msd_result = execute_query(le_msd_query, values2)
                 for (bdaddr,) in le_msd_result:
                     bdaddr_hash[bdaddr] = 1
                 print(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = '{key}'"
-            eir_msd_result = execute_query(eir_msd_query)
+            eir_msd_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = %s"
+            eir_msd_result = execute_query(eir_msd_query, values)
             for (bdaddr,) in eir_msd_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for key 0x{key:04x}")
@@ -247,8 +253,8 @@ def get_bdaddrs_by_company_regex(companyregex):
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                eir_msd_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = '{byte_swapped_key}'"
-                eir_msd_result = execute_query(eir_msd_query)
+                eir_msd_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = %s"
+                eir_msd_result = execute_query(eir_msd_query, values2)
                 for (bdaddr,) in eir_msd_result:
                     bdaddr_hash[bdaddr] = 1
                 print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
@@ -273,15 +279,16 @@ def get_bdaddrs_by_company_regex(companyregex):
 
         for key in device_uuid16s_to_names.keys():
 
-            eir_uuid16_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '0x{key:04x}'"
-            eir_uuid16_result = execute_query(eir_uuid16_query)
+            values = (f"0x{key:04x}",)
+            eir_uuid16_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+            eir_uuid16_result = execute_query(eir_uuid16_query, values)
             for (bdaddr,) in eir_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(eir_uuid16_result)} results found in EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
             #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_uuid16_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '0x{key:04x}'"
-            le_uuid16_result = execute_query(le_uuid16_query)
+            le_uuid16_query = "SELECT device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+            le_uuid16_result = execute_query(le_uuid16_query, values)
             for (bdaddr,) in le_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
             print(f"{len(le_uuid16_result)} results found in LE_bdaddr_to_UUID16s for key 0x{key:04x}")
@@ -292,8 +299,9 @@ def get_bdaddrs_by_company_regex(companyregex):
         # MATCH REGEX TO IEEE OUIS (BDADDR PREFIXES)
         ############################################
         # Query for IEEE_bdaddr_to_company table
-        oui_query = f"SELECT device_bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP '{companyregex}'"
-        oui_result = execute_query(oui_query)
+        values = (companyregex,)
+        oui_query = "SELECT device_bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP %s"
+        oui_result = execute_query(oui_query, values)
         for oui, company_name in oui_result:
             bdaddr_prefixes[oui] = company_name
             print(f"{companyregex} matched company name {company_name}, with OUI {oui}")
@@ -308,10 +316,11 @@ def get_bdaddrs_by_company_regex(companyregex):
         for prefix in bdaddr_prefixes.keys():
 
             print(f"BDADDR OUI: {prefix}")
+            values = (prefix,)
             oui_search_query = f"""
             SELECT DISTINCT t.device_bdaddr
             FROM (
-                SELECT '{prefix}' AS bdaddr_prefix
+                SELECT %s AS bdaddr_prefix
             ) AS prefix
             CROSS JOIN (
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = 0
@@ -386,7 +395,7 @@ def get_bdaddrs_by_company_regex(companyregex):
             """
             #print(oui_search_query)
 
-            oui_search_result = execute_query(oui_search_query)
+            oui_search_result = execute_query(oui_search_query, values)
             for (bdaddr,) in oui_search_result:
                 bdaddr_hash[bdaddr] = 1
 
@@ -404,16 +413,17 @@ def get_bdaddrs_by_msd_regex(msdregex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP '{msdregex}'"
-    eir_result = execute_query(eir_query)
+    values = (msdregex,)
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP %s"
+    eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in EIR_bdaddr_to_MSD")
     print(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP '{msdregex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_msd_regex: {len(le_result)} results found in LE_bdaddr_to_MSD")
@@ -430,43 +440,45 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     print(f"{uuid128regex} in get_bdaddrs_by_uuid128_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP '{uuid128regex}'"
-    eir_result = execute_query(eir_query)
+    values = (uuid128regex,)
+    
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
+    eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP '{uuid128regex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP '{uuid128regex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID128 REGEXP '{uuid128regex}'"
-    gatt_service_result = execute_query(gatt_service_query)
+    gatt_service_query = "SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP %s"
+    gatt_service_result = execute_query(gatt_service_query, values)
     for (bdaddr,) in gatt_service_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID128 REGEXP '{uuid128regex}'"
-    gatt_char_result = execute_query(gatt_char_query)
+    gatt_char_query = "SELECT device_bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+    gatt_char_result = execute_query(gatt_char_query, values)
     for (bdaddr,) in gatt_char_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics")
     print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID128 REGEXP '{uuid128regex}'"
-    gatt_desc_result = execute_query(gatt_desc_query)
+    gatt_desc_query = "SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+    gatt_desc_result = execute_query(gatt_desc_query, values)
     for (bdaddr,) in gatt_desc_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
@@ -475,22 +487,24 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     if(try_with_dashes and len(uuid128regex) == 32):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
 
-        gatt_service_query = f"SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
-        gatt_service_result = execute_query(gatt_service_query)
+        values = (uuid128regex_with_dashes,)
+        
+        gatt_service_query = "SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP %s"
+        gatt_service_result = execute_query(gatt_service_query, values)
         for (bdaddr,) in gatt_service_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services2 by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_char_query = f"SELECT device_bdaddr FROM GATT_characteristics WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
-        gatt_char_result = execute_query(gatt_char_query)
+        gatt_char_query = "SELECT device_bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+        gatt_char_result = execute_query(gatt_char_query, values)
         for (bdaddr,) in gatt_char_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
         print(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_desc_query = f"SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP '{uuid128regex_with_dashes}'"
-        gatt_desc_result = execute_query(gatt_desc_query)
+        gatt_desc_query = "SELECT device_bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+        gatt_desc_result = execute_query(gatt_desc_query, values)
         for (bdaddr,) in gatt_desc_result:
             bdaddr_hash[bdaddr] = 1
         print(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles by adding dashes to regex")
@@ -507,22 +521,23 @@ def get_bdaddrs_by_uuid16_regex(uuid16regex):
     print(f"{uuid16regex} in get_bdaddrs_by_uuid16_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
 
-    eir_query = f"SELECT device_bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '{uuid16regex}'"
-    eir_result = execute_query(eir_query)
+    values = (uuid16regex,)
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+    eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid16_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
     print(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP '{uuid16regex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s")
     print(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = f"SELECT device_bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP '{uuid16regex}'"
-    le_result = execute_query(le_query)
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
+    le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     print(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")

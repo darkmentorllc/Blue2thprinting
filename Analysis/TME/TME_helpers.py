@@ -14,7 +14,7 @@ from TME.TME_BTIDES_HCI import *
 ########################################
 
 # Function to execute a MySQL query and fetch results
-def execute_query(query):
+def execute_query(query, values):
     global use_test_db
     if(TME.TME_glob.use_test_db):
         database = 'bttest'
@@ -32,7 +32,7 @@ def execute_query(query):
     )
 
     cursor = connection.cursor()
-    cursor.execute(query)
+    cursor.execute(query, values)
     result = cursor.fetchall()
 
     cursor.close()
@@ -114,64 +114,65 @@ def get_le_event_type_string(le_evt_type):
 
 # Look up if we have any refereces to this bdaddr in any of the db tables used to store BC info
 def is_bdaddr_classic(bdaddr):
-    query = f"""
+    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
+    query = """
     SELECT 1 AS bdaddr
     FROM EIR_bdaddr_to_DevID
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_flags2
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_MSD
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_name
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_PSRM
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_CoD
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_tx_power
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_UUID128s
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_UUID16s
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_UUID32s
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM EIR_bdaddr_to_UUID32s
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM BTC2th_LMP_features_res
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM BTC2th_LMP_name_res
-    WHERE device_bdaddr = '{bdaddr}'
+    WHERE device_bdaddr = %s
     UNION
     SELECT 1
     FROM BTC2th_LMP_version_res
-    WHERE device_bdaddr = '{bdaddr}';
+    WHERE device_bdaddr = %s;
     """
-    result = execute_query(query)
+    result = execute_query(query, values)
     #print(result)
     if(len(result) > 0):
         for (bdaddr_result,) in result:
@@ -182,8 +183,9 @@ def is_bdaddr_classic(bdaddr):
     # NOTE: Temporarily disabled, because this adds something like 5 seconds to this function and slows down the entire code. We need to find a better way to do this (since I had even noticed the slowdown after I added)
     # Check if this BDADDR appears in Microsoft Swift Pair MSD - https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/bluetooth-swift-pair
     bdaddr_little_endian_str = f"{bdaddr[15:17]}{bdaddr[12:14]}{bdaddr[9:11]}{bdaddr[6:8]}{bdaddr[3:5]}{bdaddr[0:2]}"
-    query = f"SELECT id FROM LE_bdaddr_to_MSD where device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030180{bdaddr_little_endian_str}';"
-    result = execute_query(query)
+    values = (bdaddr_little_endian_str,)
+    query = "SELECT id FROM LE_bdaddr_to_MSD where device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030180%s';"
+    result = execute_query(query, values)
     if(len(result) != 0):
         return True
     '''
@@ -197,109 +199,110 @@ def is_bdaddr_le_and_random(bdaddr):
 
     # Note: this is a suboptimal query, but it's the first one I could get working and I wanted to move on
     # It would be better if it returned an error on an empty set, implying we needed to update the tables list
-    query = f"""
+    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
+    query = """
     SELECT 1
     FROM LE_bdaddr_to_appearance
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_CoD
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_connect_interval
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_flags2
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_MSD
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_name2
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_other_le_bdaddr
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_public_target_bdaddr
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_tx_power
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_URI
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID128_service_solicit
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID128s
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID16_service_solicit
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID16s
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID32s
-    WHERE device_bdaddr = '{bdaddr}' and bdaddr_random = 1
+    WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_FEATUREs
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_LENGTHs
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_PHYs
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_PING_RSP
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_UNKNOWN_RSP
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM BLE2th_LL_VERSION_IND
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM GATT_characteristics
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM GATT_characteristics_values
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM GATT_attribute_handles
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
     FROM GATT_services2
-    WHERE device_bdaddr = '{bdaddr}' and device_bdaddr_type = 1;
+    WHERE device_bdaddr = %s and device_bdaddr_type = 1;
     """
 
-    result = execute_query(query)
+    result = execute_query(query, values)
     if(len(result) == 0):
         return False
 
@@ -335,8 +338,9 @@ def get_bdaddr_type(bdaddr, random):
 
 # Function to get the company name by UUID16 from UUID16_to_company table
 def get_company_by_uuid16(uuid16):
-    company_query = f"SELECT company_name FROM UUID16_to_company WHERE str_UUID16_CID = '0x{uuid16.strip()}'"
-    result = execute_query(company_query)
+    values = (f"0x{uuid16.strip()}",)
+    company_query = "SELECT company_name FROM UUID16_to_company WHERE str_UUID16_CID = %s"
+    result = execute_query(company_query, values)
     return result[0][0] if result else "Unknown"
 
 # Look up company name based on 16-bit BT Company ID (CID)
@@ -350,8 +354,9 @@ def BT_CID_to_company_name(device_BT_CID):
 # Look up company name based on 16-bit USB Company ID (CID) (Sometimes BT uses these IDs if a flag says to)
 def USB_CID_to_company_name(device_USB_CID):
     s = "No Match"
-    query = f"SELECT device_USB_CID, company_name FROM USB_CID_to_company WHERE device_USB_CID = '{device_USB_CID}'"
-    result = execute_query(query)
+    values = (device_USB_CID,)
+    query = "SELECT device_USB_CID, company_name FROM USB_CID_to_company WHERE device_USB_CID = %s"
+    result = execute_query(query, values)
     for device_USB_CID, company_name in result:
         s = f"{company_name}"
 
@@ -379,8 +384,9 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         print(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
     else:
         # Query the database for the company_name based on the first 3 octets
-        query = f"SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr LIKE '{first_three_octets}%'"
-        result = execute_query(query)
+        values = (first_three_octets,)
+        query = "SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr = %s"
+        result = execute_query(query, values)
 
         if result:
             print(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): {result[0][0]}")
@@ -453,9 +459,10 @@ def appearance_uint16_to_string(number):
 def print_appearance(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
-    #le_query = f"SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype} "
-    le_query = f"SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
-    le_result = execute_query(le_query)
+    values = (bdaddr,)
+    #le_query = "SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = %s AND bdaddr_random = {nametype} "
+    le_query = "SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
         print("\tNo Appearance data found.")
@@ -546,13 +553,14 @@ def print_CoD_to_names(number):
 def print_class_of_device(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-#    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = '{bdaddr}'"
+#    eir_query = "SELECT class_of_device FROM EIR_bdaddr_to_PSRM_CoD WHERE device_bdaddr = %s"
     # FIXME: change to this in the future after reprocessing all data
-    eir_query = f"SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
+    values = (bdaddr,)
+    eir_query = "SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
 
-    le_query = f"SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = '{bdaddr}'" 
-    le_result = execute_query(le_query)
+    le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = %s" 
+    le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
         vprint("\tNo Class of Device Data found.")
@@ -597,15 +605,16 @@ def print_class_of_device(bdaddr):
 def print_device_names(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
+    values = (bdaddr,)
     # Query for EIR_bdaddr_to_name table
-    eir_query = f"SELECT device_name_type, device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
+    eir_query = "SELECT device_name_type, device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
     # Query for RSP_bdaddr_to_name table
-    rsp_query = f"SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = '{bdaddr}'"
-    rsp_result = execute_query(rsp_query)
+    rsp_query = "SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
+    rsp_result = execute_query(rsp_query, values)
     # Query for LE_bdaddr_to_name2 table
-    le_query = f"SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
-    le_result = execute_query(le_query)
+    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    le_result = execute_query(le_query, values)
 
     if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
         vprint("\tNo Names found.")

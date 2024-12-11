@@ -14,23 +14,23 @@ vendor_specific_characteristics = {}
 
 ### BEGIN CODE BORROWED FROM TellMeEverything.py ###
 
-# Function to execute a MySQL query and fetch results
-def execute_query(query):
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database='bt',
-        auth_plugin='mysql_native_password'
-    )
+# # Function to execute a MySQL query and fetch results
+# def execute_query(query, values):
+#     connection = mysql.connector.connect(
+#         host='localhost',
+#         user='user',
+#         password='a',
+#         database='bt',
+#         auth_plugin='mysql_native_password'
+#     )
 
-    cursor = connection.cursor()
-    cursor.execute(query)
-    result = cursor.fetchall()
+#     cursor = connection.cursor()
+#     cursor.execute(query, values)
+#     result = cursor.fetchall()
 
-    cursor.close()
-    connection.close()
-    return result
+#     cursor.close()
+#     connection.close()
+#     return result
 
 # NOTE: The below code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
 # repository has been cloned one directory up from this file.

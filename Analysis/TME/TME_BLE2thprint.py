@@ -73,23 +73,25 @@ def decode_BLE_features(features):
 def print_BLE_2thprint(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    version_query = f"SELECT ll_version, ll_sub_version, device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
+    values = (bdaddr,)
 
-    features_query = f"SELECT device_bdaddr_type, opcode, features FROM BLE2th_LL_FEATUREs WHERE device_bdaddr = '{bdaddr}'"
-    features_result = execute_query(features_query)
+    version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_result = execute_query(version_query, values)
 
-    phys_query = f"SELECT device_bdaddr_type, tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = '{bdaddr}'"
-    phys_result = execute_query(phys_query)
+    features_query = "SELECT device_bdaddr_type, opcode, features FROM BLE2th_LL_FEATUREs WHERE device_bdaddr = %s"
+    features_result = execute_query(features_query, values)
 
-    lengths_query = f"SELECT device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = '{bdaddr}'"
-    lengths_result = execute_query(lengths_query)
+    phys_query = "SELECT device_bdaddr_type, tx_phys, rx_phys FROM BLE2th_LL_PHYs WHERE device_bdaddr = %s"
+    phys_result = execute_query(phys_query, values)
 
-    ping_query = f"SELECT device_bdaddr_type FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = '{bdaddr}'"
-    ping_result = execute_query(ping_query)
+    lengths_query = "SELECT device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM BLE2th_LL_LENGTHs WHERE device_bdaddr = %s"
+    lengths_result = execute_query(lengths_query, values)
 
-    unknown_query = f"SELECT device_bdaddr_type, unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = '{bdaddr}'"
-    unknown_result = execute_query(unknown_query)
+    ping_query = "SELECT device_bdaddr_type FROM BLE2th_LL_PING_RSP WHERE device_bdaddr = %s"
+    ping_result = execute_query(ping_query, values)
+
+    unknown_query = "SELECT device_bdaddr_type, unknown_opcode FROM BLE2th_LL_UNKNOWN_RSP WHERE device_bdaddr = %s"
+    unknown_result = execute_query(unknown_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
         vprint("\tNo BLE 2thprint Info found.")
@@ -119,7 +121,7 @@ def print_BLE_2thprint(bdaddr):
     for device_bdaddr_type, tx_phys, rx_phys in phys_result:
         print(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
         print(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
-        data = ff_LL_FEATURE_RSP(direction, tx_phys, rx_phys)
+        data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
         BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
     for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:

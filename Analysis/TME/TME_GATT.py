@@ -107,8 +107,9 @@ def is_characteristic_readable(number):
     return (number & 0b00000010) != 0
 
 def lookup_company_name_by_OUI(OUI):
-    query = f"SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr = '{OUI}'"
-    result = execute_query(query)
+    values = (OUI,)
+    query = "SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr = %s";
+    result = execute_query(query, values)
     if(len(result) >= 1):
         return result[0][0]
     else:
@@ -158,17 +159,18 @@ def characteristic_value_decoding(indent, UUID128, bytes):
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
 def device_has_GATT_info(bdaddr):
     # Query the database for all GATT services
-    query = f"SELECT begin_handle,end_handle,UUID FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
-    GATT_services_result = execute_query(query)
+    values = (bdaddr,)
+    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services2 WHERE device_bdaddr = %s";
+    GATT_services_result = execute_query(query, values)
 
-    query = f"SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
-    GATT_attribute_handles_result = execute_query(query)
+    query = "SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE device_bdaddr = %s";
+    GATT_attribute_handles_result = execute_query(query, values)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
-    GATT_characteristics_result = execute_query(query)
+    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
+    GATT_characteristics_result = execute_query(query, values)
 
-    query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
-    GATT_characteristics_values_result = execute_query(query)
+    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
+    GATT_characteristics_values_result = execute_query(query, values)
 
     if(len(GATT_services_result) != 0 or len(GATT_attribute_handles_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
         return 1;
@@ -177,13 +179,14 @@ def device_has_GATT_info(bdaddr):
     
 # Returns whether any matches were found
 def print_associated_android_package_names(type, indent, UUID128):
+    values = (UUID128,)
     if(type == "Service"):
-        query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 1";
+        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 1";
     if(type == "Characteristic"):
-        query = f"SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = '{UUID128}' and uuid_type = 2";
+        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 2";
 
     match_found = False
-    android_pkgs_result = execute_query(query)
+    android_pkgs_result = execute_query(query, values)
     if(len(android_pkgs_result) > 0):
         match_found = True
         print(f"{indent}{type} {UUID128}:")
@@ -196,16 +199,17 @@ def print_associated_android_package_names(type, indent, UUID128):
 
 def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
-    query = f"SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services2 WHERE device_bdaddr = '{bdaddr}'";
-    GATT_services_result = execute_query(query)
+    values = (bdaddr,)
+    query = "SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services2 WHERE device_bdaddr = %s";
+    GATT_services_result = execute_query(query, values)
     for device_bdaddr_type, service_type, begin_handle, end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
         BTIDES_export_GATT_Service(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
-    query = f"SELECT device_bdaddr_type, attribute_handle, UUID FROM GATT_attribute_handles WHERE device_bdaddr = '{bdaddr}'";
-    GATT_attribute_handles_result = execute_query(query)
+    query = "SELECT device_bdaddr_type, attribute_handle, UUID FROM GATT_attribute_handles WHERE device_bdaddr = %s";
+    GATT_attribute_handles_result = execute_query(query, values)
     attribute_handles_dict = {}
     for device_bdaddr_type, attribute_handle, UUID in GATT_attribute_handles_result:
         UUID = add_dashes_to_UUID128(UUID)
@@ -213,20 +217,16 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         data = ff_ATT_handle_entry(attribute_handle, UUID)
         BTIDES_export_ATT_handle(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
-    query = f"SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = '{bdaddr}'";
-    GATT_characteristics_result = execute_query(query)
+    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
+    GATT_characteristics_result = execute_query(query, values)
     declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
     for declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr, device_bdaddr_type, data)
 
-        # Now do another pass and insert any Chacteristic Descriptors under the Characteristics
-        #for device_bdaddr_type, attribute_handle, UUID128 in GATT_attribute_handles_result:
-        #    BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, device_bdaddr_type, attribute_handle, UUID128)
-
-    query = f"SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = '{bdaddr}'";
-    GATT_characteristics_values_result = execute_query(query)
+    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
+    GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
     for read_handle, byte_values in GATT_characteristics_values_result:
@@ -242,24 +242,25 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
-    query = f"""
+    values = (bdaddr,bdaddr,bdaddr)
+    query = """
     SELECT DISTINCT handle_value
     FROM (
         SELECT attribute_handle AS handle_value
         FROM GATT_attribute_handles
-        WHERE device_bdaddr = '{bdaddr}'
+        WHERE device_bdaddr = %s
         UNION
         SELECT declaration_handle AS handle_value
         FROM GATT_characteristics
-        WHERE device_bdaddr = '{bdaddr}'
+        WHERE device_bdaddr = %s
         UNION
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics
-        WHERE device_bdaddr = '{bdaddr}'
+        WHERE device_bdaddr = %s
     ) AS combined_handles
     ORDER BY handle_value ASC;
     """
-    GATT_all_known_handles_result = execute_query(query)
+    GATT_all_known_handles_result = execute_query(query, values)
 
     # Create a copy of the handle list to keep track of handles we see which never match any Service, to print them out after the fact
     service_match_dict = {}

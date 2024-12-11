@@ -82,14 +82,16 @@ def decode_BTC_features(page, features):
 def print_BTC_2thprint(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    version_query = f"SELECT lmp_version, lmp_sub_version, device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = '{bdaddr}'"
-    version_result = execute_query(version_query)
+    values = (bdaddr,)
+    
+    version_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    version_result = execute_query(version_query, values)
 
-    features_query = f"SELECT page, features FROM BTC2th_LMP_features_res WHERE device_bdaddr = '{bdaddr}'"
-    features_result = execute_query(features_query)
+    features_query = "SELECT page, features FROM BTC2th_LMP_features_res WHERE device_bdaddr = %s"
+    features_result = execute_query(features_query, values)
 
-    name_query = f"SELECT device_name FROM BTC2th_LMP_name_res WHERE device_bdaddr = '{bdaddr}'"
-    name_result = execute_query(name_query)
+    name_query = "SELECT device_name FROM BTC2th_LMP_name_res WHERE device_bdaddr = %s"
+    name_result = execute_query(name_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
         vprint("\tNo BTC 2thprint Info found.")

@@ -60,11 +60,12 @@ def ff_CONNECT_IND_placeholder():
 def print_transmit_power(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
-#    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}' AND bdaddr_random = {nametype}"
-    le_query = f"SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = '{bdaddr}'" # I think I prefer without the nametype, to always return more info
-    le_result = execute_query(le_query)
+    values = (bdaddr,)
+    eir_query = "SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
+#    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = %s AND bdaddr_random = {nametype}"
+    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
         vprint("\tNo transmit power found.")
@@ -94,10 +95,11 @@ def print_transmit_power(bdaddr, nametype):
 def print_flags(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
-    le_query = f"SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = '{bdaddr}'"
-    le_result = execute_query(le_query)
+    values = (bdaddr,)
+    eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags2 WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
+    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = %s"
+    le_result = execute_query(le_query, values)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
         vprint("\tNo flags found.")
@@ -137,6 +139,7 @@ def print_flags(bdaddr):
 
 # Data format from https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/bluetooth-swift-pair
 def extract_ms_msd_name(manufacturer_specific_data):
+    utf8_string = ""
     if(manufacturer_specific_data[0:6] == "030080" and len(manufacturer_specific_data) >= 8): # (need at least 8 hex digits for there to be 1 hex digit of ASCII chars)
         byte_data = bytes.fromhex(manufacturer_specific_data[6:])
         utf8_string = byte_data.decode('utf-8')
@@ -155,10 +158,11 @@ def extract_ms_msd_name(manufacturer_specific_data):
 def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
-    eir_query = f"SELECT device_BT_CID, manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
-    eir_result = execute_query(eir_query)
-    le_query = f"SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = '{bdaddr}'"
-    le_result = execute_query(le_query)
+    values = (bdaddr,)
+    eir_query = "SELECT device_BT_CID, manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
+    le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    le_result = execute_query(le_query, values)
 
     if (len(eir_result) != 0 or len(le_result) != 0):
         print("\tManufacturer-specific Data:")
