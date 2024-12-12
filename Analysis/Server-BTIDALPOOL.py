@@ -1,0 +1,159 @@
+import http.server
+import ssl
+import os
+import json
+import random
+import datetime
+import hashlib
+import threading
+import subprocess
+from jsonschema import validate, ValidationError
+from referencing import Registry, Resource
+from jsonschema import Draft202012Validator
+from socketserver import ThreadingMixIn
+
+# Global dictionary to store unique file hashes
+g_unique_files = {}
+
+def initialize_unique_files(directory):
+    """Initialize the g_unique_files dictionary with SHA1 hashes from existing files."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for filename in os.listdir(directory):
+        if filename.endswith(".json"):
+            sha1_hash = filename.split('-')[0]
+            g_unique_files[sha1_hash] = True
+
+def load_schemas():
+    """Load all the local BTIDES json schema files."""
+    BTIDES_files = [
+        "BTIDES_base.json",
+        "BTIDES_AdvData.json",
+        "BTIDES_LL.json",
+        "BTIDES_HCI.json",
+        "BTIDES_L2CAP.json",
+        "BTIDES_SMP.json",
+        "BTIDES_ATT.json",
+        "BTIDES_GATT.json",
+        "BTIDES_EIR.json",
+        "BTIDES_LMP.json",
+        "BTIDES_SDP.json",
+        "BTIDES_GPS.json"
+    ]
+    all_schemas = []
+    for file in BTIDES_files:
+        with open(f"./BTIDES_Schema/{file}", 'r') as f:
+            s = json.load(f)
+            schema = Resource.from_contents(s)
+            all_schemas.append((s["$id"], schema))
+    return Registry().with_resources(all_schemas)
+
+def validate_json_content(json_content, registry):
+    """Validate the json_content against the BTIDES_base.json schema."""
+    try:
+        Draft202012Validator(
+            {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
+            registry=registry,
+        ).validate(instance=json_content)
+        return True
+    except ValidationError as e:
+        print(f"JSON data is invalid per BTIDES Schema. Error: {e.message}")
+        return False
+
+def run_btides_to_mysql(filename):
+    """Run the BTIDES_to_MySQL.py script in a new thread."""
+    def target():
+        subprocess.run(["python3", "BTIDES_to_MySQL.py", "--input", filename, "--use-test-db"])
+    thread = threading.Thread(target=target)
+    thread.start()
+
+class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
+
+class CustomHandler(http.server.SimpleHTTPRequestHandler):
+    def do_POST(self):
+        # Get the content length
+        content_length = int(self.headers['Content-Length'])
+        
+        # Read the POST data
+        post_data = self.rfile.read(content_length)
+        
+        # Parse the JSON data
+        try:
+            data = json.loads(post_data)
+            username = data.get('username')
+            json_content = data.get('json_content')
+            
+            if not username or not json_content:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'Missing username or json_content')
+                return
+            
+            # Validate the JSON content
+            if not validate_json_content(json_content, registry):
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'Invalid JSON data according to schema')
+                return
+            
+            # Create the directory if it doesn't exist
+            os.makedirs('./pool_files', exist_ok=True)
+            
+            # Generate the SHA1 hash of the json_content
+            json_content_str = json.dumps(json_content, sort_keys=True)
+            sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
+            
+            # Check if the file already exists
+            if sha1_hash in g_unique_files:
+                self.send_response(409)
+                self.end_headers()
+                self.wfile.write(b'File with this content already exists')
+                return
+            
+            # Generate the filename
+            current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+            filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
+            
+            # Save the JSON content to the file
+            with open(filename, 'w') as f:
+                json.dump(json_content, f)
+            
+            # Update the global dictionary
+            g_unique_files[sha1_hash] = True
+            
+            # Spawn a new thread to run the BTIDES_to_MySQL.py script
+            run_btides_to_mysql(filename)
+            
+            # Send a success response
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'File saved successfully')
+        
+        except json.JSONDecodeError:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write(b'Invalid JSON data')
+
+# Initialize the unique files dictionary
+initialize_unique_files('./pool_files')
+
+# Load the schemas and create a registry
+registry = load_schemas()
+
+# Define the handler to use for the server
+handler = CustomHandler
+
+# Create the server
+#httpd = ThreadingHTTPServer(('localhost', 4443), handler)
+httpd = ThreadingHTTPServer(('0.0.0.0', 4443), handler)
+
+# Create an SSL context
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain(certfile="BTIDALPOOL-local-cert.pem", keyfile="BTIDALPOOL-local-key.pem")
+
+# Wrap the server socket with SSL
+httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+print("Serving on https://localhost:4443")
+httpd.serve_forever()
