@@ -15,6 +15,7 @@ from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
 # LL Control
 from TME.TME_BTIDES_LL import *
+import subprocess
 # ATT
 from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to just work.
 # GATT
@@ -308,49 +309,6 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
 
     return False
 
-# def export_ADV_IND(packet):
-#     ble_adv_fields = packet.getlayer(BTLE_ADV)
-#     bdaddr_random = ble_adv_fields.TxAdd
-
-#     # Access the BTLE_ADV layer
-#     btle_adv = packet.getlayer(BTLE_ADV_IND)
-#     device_bdaddr = btle_adv.AdvA
-
-#     for entry in btle_adv.data:
-#         if isinstance(entry, EIR_Hdr):
-#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_IND, entry)): return True
-
-#     return False
-
-
-# def export_ADV_NONCONN_IND(packet):
-#     ble_adv_fields = packet.getlayer(BTLE_ADV)
-#     bdaddr_random = ble_adv_fields.TxAdd
-
-#     # Access the BTLE_ADV layer
-#     btle_adv = packet.getlayer(BTLE_ADV_NONCONN_IND)
-#     device_bdaddr = btle_adv.AdvA
-
-#     for entry in btle_adv.data:
-#         if isinstance(entry, EIR_Hdr):
-#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_ADV_NONCONN_IND, entry)): return True
-
-#     return False
-
-
-# def export_SCAN_RSP(packet):
-#     ble_adv_fields = packet.getlayer(BTLE_ADV)
-#     bdaddr_random = ble_adv_fields.TxAdd
-
-#     # Access the SCAN_RSP layer
-#     btle_adv = packet.getlayer(BTLE_SCAN_RSP)
-#     device_bdaddr = btle_adv.AdvA
-
-#     for entry in btle_adv.data:
-#         if isinstance(entry, EIR_Hdr):
-#             if(export_AdvData(device_bdaddr, bdaddr_random, type_AdvChanPDU_SCAN_RSP, entry)): return True
-
-#     return False
 
 def export_AdvChannelData(packet, scapy_type, adv_type):
     ble_adv_fields = packet.getlayer(BTLE_ADV)
@@ -951,6 +909,8 @@ def main():
     parser.add_argument('--output', type=str, required=True, help='Output file name for BTIDES JSON file.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
     parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_MySQL.py on the output BTIDES file.')
+    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
     args = parser.parse_args()
 
     in_pcap_filename = args.input
@@ -964,6 +924,13 @@ def main():
     print("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
     print("Export completed with no errors.")
+
+    if args.to_MySQL:
+        print("Invoking BTIDES_to_MySQL.py on the output BTIDES file.")
+        cmd = ["python3", "./BTIDES_to_MySQL.py", "--input", out_BTIDES_filename]
+        if args.use_test_db:
+            cmd.append("--use-test-db")
+        subprocess.run(cmd)
 
 if __name__ == "__main__":
     main()
