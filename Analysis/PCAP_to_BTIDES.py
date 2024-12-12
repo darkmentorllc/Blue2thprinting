@@ -909,14 +909,17 @@ def main():
     parser.add_argument('--output', type=str, required=True, help='Output file name for BTIDES JSON file.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
     parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
-    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_MySQL.py on the output BTIDES file.')
+    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_MySQL.py on the output BTIDES file to import into your local MySQL database.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
+    parser.add_argument('--to-BTIDALPOOL', action='store_true', required=False, help='Immediately invoke Client-BTIDALPOOL.py on the output BTIDES file to send it to the BTIDALPOOL crowdsourcing MySQL database.')
+    parser.add_argument('--username', type=str, required=False, help='Username for use in Client-BTIDALPOOL.py.')
     args = parser.parse_args()
 
     in_pcap_filename = args.input
     out_BTIDES_filename = args.output
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
+    username = args.username
 
     print("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
     read_pcap(in_pcap_filename)
@@ -931,6 +934,12 @@ def main():
         if args.use_test_db:
             cmd.append("--use-test-db")
         subprocess.run(cmd)
+
+    if args.to_BTIDALPOOL:
+        print("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
+        cmd = ["python3", "./Client-BTIDALPOOL.py", username, out_BTIDES_filename]
+        subprocess.run(cmd)
+
 
 if __name__ == "__main__":
     main()
