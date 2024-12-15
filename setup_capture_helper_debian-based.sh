@@ -14,7 +14,7 @@ fi
 USERNAME="$SUDO_USER"
 echo "Username detected as '$USERNAME'."
 
-if [ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]; then
+if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
     echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
     echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
     exit -1
@@ -219,7 +219,7 @@ if [ $? != 0 ]; then
 fi
 
 ### Compilation ###
-if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl" ]; then
+if [[ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl" ]]; then
     echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     echo "  Beginning compilation (this will take a while!)"
     echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
