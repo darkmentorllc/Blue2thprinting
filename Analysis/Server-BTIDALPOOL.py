@@ -74,62 +74,62 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         # Get the content length
         content_length = int(self.headers['Content-Length'])
-        
+
         # Read the POST data
         post_data = self.rfile.read(content_length)
-        
+
         # Parse the JSON data
         try:
             data = json.loads(post_data)
             username = data.get('username')
             json_content = data.get('json_content')
-            
+
             if not username or not json_content:
                 self.send_response(400)
                 self.end_headers()
                 self.wfile.write(b'Missing username or json_content')
                 return
-            
+
             # Validate the JSON content
             if not validate_json_content(json_content, registry):
                 self.send_response(400)
                 self.end_headers()
                 self.wfile.write(b'Invalid JSON data according to schema')
                 return
-            
+
             # Create the directory if it doesn't exist
             os.makedirs('./pool_files', exist_ok=True)
-            
+
             # Generate the SHA1 hash of the json_content
             json_content_str = json.dumps(json_content, sort_keys=True)
             sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
-            
+
             # Check if the file already exists
             if sha1_hash in g_unique_files:
                 self.send_response(409)
                 self.end_headers()
                 self.wfile.write(b'File with this content already exists')
                 return
-            
+
             # Generate the filename
             current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
             filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
-            
+
             # Save the JSON content to the file
             with open(filename, 'w') as f:
                 json.dump(json_content, f)
-            
+
             # Update the global dictionary
             g_unique_files[sha1_hash] = True
-            
+
             # Spawn a new thread to run the BTIDES_to_MySQL.py script
             run_btides_to_mysql(filename)
-            
+
             # Send a success response
             self.send_response(200)
             self.end_headers()
             self.wfile.write(b'File saved successfully')
-        
+
         except json.JSONDecodeError:
             self.send_response(400)
             self.end_headers()
