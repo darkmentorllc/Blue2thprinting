@@ -207,3 +207,6 @@
 
 "9ec5d2b88f514dea9cd3f3dea220b5e0","ASSOCIATED WITH: ADV_IND: Taser/Axon UUID = ASCII string 'METROPOLISDEVICE')"
 "41584a414e5553425743444556494345","ASSOCIATED WITH: ADV_IND: Taser/Axon UUID = ASCII string 'AXJANUSBWCDEVICE' (Axon Janus Body-Worn-Camera)"
+
+# NOTE FOR LATER: 0xFEE4 = Nordic Mesh UUID - https://github.com/alxelax/nRF5-SDK-for-Mesh/blob/08c60f6d8766bdb83bb108ec3fbd24d758689235/mesh/bootloader/include/mesh_packet.h#L47
+# I need to add that to metadata once I have the ability to capture UUID16s
