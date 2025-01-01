@@ -30,9 +30,9 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # First see if we have a name for this device
     we_have_a_name = False
 
-    # Query for EIR_bdaddr_to_name table
+    # Query for EIR_bdaddr_to_name2 table
     values = (bdaddr,)
-    eir_query = "SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+    eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name2 WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
     if(len(eir_result) > 0): we_have_a_name = True
 
@@ -41,8 +41,8 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     rsp_result = execute_query(rsp_query, values)
     if(len(rsp_result) > 0): we_have_a_name = True
 
-    # Query for LE_bdaddr_to_name2 table
-    le_query = "SELECT device_name, le_evt_type FROM LE_bdaddr_to_name2 WHERE device_bdaddr = %s"
+    # Query for LE_bdaddr_to_name3 table
+    le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name3 WHERE device_bdaddr = %s"
     le_result = execute_query(le_query, values)
     if(len(le_result) > 0): we_have_a_name = True
 
@@ -69,7 +69,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     ms_msd_result2 = execute_query(ms_msd_query2, values2)
     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
         try:
-            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8')
+            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
         except:
             ms_msd_name2 = ""
         if(len(ms_msd_name2) > 0):
@@ -84,20 +84,22 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                 # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
                 regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
-                    for (name,) in eir_result:
+                    for (name_hex_str,) in eir_result:
+                        name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name2 table)"
                 if(len(rsp_result) > 0):
                     for (name,) in rsp_result:
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)"
                 if(len(le_result) > 0):
-                    for name, le_evt_type in le_result:
+                    for name_hex_str, le_evt_type in le_result:
+                        name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name2 table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name3 table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
-                        name = byte_values.decode('utf-8', 'ignore')
+                        name = byte_values.decode('utf-8', 'ignore',)
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (GATT_characteristics & GATT_characteristics_values tables)"
                 if(ms_msd_name_present):
@@ -109,7 +111,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                 if(ms_msd_name_present2):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
                         try:
-                            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8')
+                            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
                         except:
                             ms_msd_name2 = ""
                         if(len(ms_msd_name2) > 0):
@@ -144,7 +146,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
                 char_value_result = execute_query(char_value_query, values)
                 if(len(char_value_result) > 0):
                     for (byte_values,) in char_value_result:
-                        tmpstr = byte_values.decode('utf-8')
+                        tmpstr = byte_values.decode('utf-8', 'ignore')
                         #print(f"byte_values: {tmpstr}")
                         # Now consult with the metadata_v2 data, and see if any entries have a 2thprint_Chip_GATT_Model_Number which matches the value observed in the database
                         for heading, metadata in TME.TME_glob.metadata_v2.items():
@@ -232,7 +234,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                 char_value_result = execute_query(char_value_query, values)
                                 if(len(char_value_result) > 0):
                                     for (byte_values,) in char_value_result:
-                                        tmpstr = byte_values.decode('utf-8')
+                                        tmpstr = byte_values.decode('utf-8', 'ignore')
                                         #print(f"byte_values: {tmpstr}")
                                         match = match_str_to_ChipMaker(tmpstr)
                                         if(match != ""):
@@ -379,7 +381,7 @@ def print_ChipMakerPrint(bdaddr):
             print(s)
 
     # FIXME: TODO! Start with Quintic->NXP OTA = 0xfee8, can also do CSR/Qualcomm = 0x000a and also need to look up in PnP ID if present
-    #=============================# 
+    #=============================#
     # Known chip-maker UUID16s    #
     #=============================#
 
@@ -399,14 +401,14 @@ def print_ChipMakerPrint(bdaddr):
             length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
             data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
             BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_MSD, data)
-            
+
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
                     print(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (EIR_bdaddr_to_MSD table)")
                     no_results_found = False
-    
+
 
     if(time_profile): print(f"MSD BLE = {time.time()}")
     #========================================#
@@ -423,7 +425,7 @@ def print_ChipMakerPrint(bdaddr):
             length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
             data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
             BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_MSD, data)
-            
+
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
@@ -447,7 +449,7 @@ def print_ChipMakerPrint(bdaddr):
 # We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
 def chip_by_sub_version(sub_version, device_BT_CID):
     if(device_BT_CID == 15):
-        if(sub_version == 0x6308): 
+        if(sub_version == 0x6308):
             return "Broadcom BCM4387C2" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6308.py
         if(sub_version == 0x6206):
             return "Broadcom BCM4345C1" # from https://github.com/seemoo-lab/internalblue/blob/master/internalblue/fw/fw_0x6206.py

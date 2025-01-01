@@ -14,7 +14,7 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 import time
 
-g_max_connections_per_hour = 5
+g_max_connections_per_day = 100
 g_max_simultaneous_connections = 10
 
 # Global dictionary to store unique file hashes
@@ -80,12 +80,12 @@ def rate_limit_checks(client_ip):
     current_time = time.time()
     data = connection_data[client_ip]
 
-    # Remove timestamps older than one hour
-    while data["timestamps"] and current_time - data["timestamps"][0] > 3600:
+    # Remove timestamps older than one day
+    while data["timestamps"] and current_time - data["timestamps"][0] > 86400:
         data["timestamps"].popleft()
 
     # Check the number of connections in the last hour
-    if len(data["timestamps"]) >= g_max_connections_per_hour:
+    if len(data["timestamps"]) >= g_max_connections_per_day:
         return False
 
     # Check the number of simultaneous connections
@@ -132,6 +132,14 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b'Missing username or json_content.')
+                return
+
+            # Check the size of the JSON content
+            if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
+                self.send_response(400)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'File size too big.')
                 return
 
             # Validate the JSON content

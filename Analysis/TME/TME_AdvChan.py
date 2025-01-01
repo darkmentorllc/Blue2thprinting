@@ -142,13 +142,13 @@ def extract_ms_msd_name(manufacturer_specific_data):
     utf8_string = ""
     if(manufacturer_specific_data[0:6] == "030080" and len(manufacturer_specific_data) >= 8): # (need at least 8 hex digits for there to be 1 hex digit of ASCII chars)
         byte_data = bytes.fromhex(manufacturer_specific_data[6:])
-        utf8_string = byte_data.decode('utf-8')
+        utf8_string = byte_data.decode('utf-8', 'ignore')
     if(manufacturer_specific_data[0:6] == "030280" and len(manufacturer_specific_data) >= 14): # ditto ^^^ 14
         byte_data = bytes.fromhex(manufacturer_specific_data[12:])
-        utf8_string = byte_data.decode('utf-8')
+        utf8_string = byte_data.decode('utf-8', 'ignore')
     if(manufacturer_specific_data[0:6] == "030180" and len(manufacturer_specific_data) >= 26): # ditto ^^^ 26
         byte_data = bytes.fromhex(manufacturer_specific_data[24:])
-        utf8_string = byte_data.decode('utf-8')
+        utf8_string = byte_data.decode('utf-8', 'ignore')
 
     if(len(utf8_string) > 0):
         return utf8_string
@@ -274,7 +274,7 @@ def print_manufacturer_data(bdaddr):
                 # This seems to only occur if(ExtendedDeviceStatus & 0x8). Found some if(ExtendedDeviceStatus & 0x4), data and confirmed it doesn't occur then
                 if(ExtendedDeviceStatus & 0x8):
                     try:
-                        Device_Hash_as_utf8_str = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8')
+                        Device_Hash_as_utf8_str = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
                         print(f"\t\t\t\tNon-spec interpretation of 'Device Hash' as possible string: {Device_Hash_as_utf8_str}")
                         Device_Hash_unknown_bytes = bytes.fromhex(manufacturer_specific_data[16:20])
                         Device_Hash_unknown_bytes_little_endian_short = struct.unpack('<H', Device_Hash_unknown_bytes)[0]
@@ -297,7 +297,7 @@ def print_manufacturer_data(bdaddr):
 
 # Changing up the formatting to print all the AdvData underneath whatever advertisement/scan response it originally appeared in
 def print_all_advdata(bdaddr, nametype):
-    # TODO: Ideally I want to have information grouped by the source packet type it came in on 
+    # TODO: Ideally I want to have information grouped by the source packet type it came in on
     # TODO: But looping through and printing only the information for a single type at a time seem like it would be inefficeint in terms of db queries
     # TODO: Maybe build up data structure (effectively recreating BTIDES hierarchy?) and then print that?
     print_device_names(bdaddr, nametype)
