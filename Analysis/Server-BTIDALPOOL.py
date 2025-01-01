@@ -81,7 +81,7 @@ def rate_limit_checks(client_ip):
     data = connection_data[client_ip]
 
     # Remove timestamps older than one day
-    while data["timestamps"] and current_time - data["timestamps"][0] > 86400:
+    while data["timestamps"] and current_time - data["timestamps"][0] > 60 * 60 * 24:
         data["timestamps"].popleft()
 
     # Check the number of connections in the last hour
@@ -133,6 +133,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'Missing username or json_content.')
                 return
+
+            # Convert the data to a string to check the total data size
+            json_content_str = json.dumps(json_content, sort_keys=True)
 
             # Check the size of the JSON content
             if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
