@@ -13,7 +13,7 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 import time
 
-g_max_connections_per_day = 100
+g_max_connections_per_day = 10
 g_max_simultaneous_connections = 10
 
 # Global dictionary to store unique file hashes
@@ -122,7 +122,6 @@ def handle_btides_data(self, username, json_content):
         os.makedirs('./pool_files', exist_ok=True)
 
         # Generate the SHA1 hash of the json_content
-        json_content_str = json.dumps(json_content, sort_keys=True)
         sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
 
         # Check if the file already exists
@@ -158,6 +157,61 @@ def handle_btides_data(self, username, json_content):
         self.send_header('Content-Type', 'text/plain')
         self.end_headers()
         self.wfile.write(b'Invalid JSON data could not be decoded.')
+
+g_sample_BTIDES = [
+    {
+        "bdaddr": "00:03:ea:0c:18:cd",
+        "bdaddr_rand": 0,
+        "LLArray": [
+            {
+                "direction": 1,
+                "opcode": 12,
+                "version": 8,
+                "company_id": 96,
+                "subversion": 782,
+                "opcode_str": "LL_VERSION_IND"
+            },
+            {
+                "direction": 1,
+                "opcode": 9,
+                "le_features_hex_str": "00000000000000ff",
+                "opcode_str": "LL_FEATURE_RSP"
+            },
+            {
+                "direction": 1,
+                "opcode": 20,
+                "max_rx_octets": 251,
+                "max_rx_time": 2120,
+                "max_tx_octets": 251,
+                "max_tx_time": 2120,
+                "opcode_str": "LL_LENGTH_REQ"
+            },
+            {
+                "direction": 1,
+                "opcode": 21,
+                "max_rx_octets": 251,
+                "max_rx_time": 2120,
+                "max_tx_octets": 251,
+                "max_tx_time": 2120,
+                "opcode_str": "LL_LENGTH_RSP"
+            },
+            {
+                "direction": 1,
+                "opcode": 19,
+                "opcode_str": "LL_PING_RSP"
+            }
+        ]
+    }
+]
+
+def handle_query(self, username, query_object):
+    print(query_object)
+
+    # Send back the g_sample_BTIDES to the client
+    self.send_response(200)
+    self.send_header('Content-Type', 'application/json')
+    self.end_headers()
+    self.wfile.write(json.dumps(g_sample_BTIDES).encode('utf-8'))
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
@@ -199,7 +253,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             handle_btides_data(self, username, json_content)
         elif 'query' in data and 'btides_content' not in data:
             query_object = data.get('query')
-            # TODO: handle_query(username, query_object)
+            handle_query(self, username, query_object)
         else:
             self.send_response(400)
             self.send_header('Content-Type', 'text/plain')
@@ -220,8 +274,8 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-#hostname = 'localhost' # For local testing only
-hostname = '0.0.0.0'
+hostname = 'localhost' # For local testing only
+#hostname = '0.0.0.0'
 httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context
