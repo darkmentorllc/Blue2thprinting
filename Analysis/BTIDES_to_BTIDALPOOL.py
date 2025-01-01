@@ -30,7 +30,6 @@ class SSLAdapter(HTTPAdapter):
         kwargs['ssl_context'] = context
         return super().init_poolmanager(*args, **kwargs)
 
-
 def load_schemas():
     # Load all the local BTIDES json schema files.
     BTIDES_files = [
@@ -67,16 +66,11 @@ def validate_json_content(json_content, registry):
         print(f"JSON data is invalid per BTIDES Schema. Error: {e.message}")
         return False
 
-def main():
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(description='Send JSON data to the server.')
-    parser.add_argument('username', type=str, help='Username')
-    parser.add_argument('json_file', type=str, help='Path to the JSON file')
-    args = parser.parse_args()
-
+# Import this function to call from external code without invoking via the CLI
+def send_btides_to_btidalpool(input_file, username):
     # Load the JSON content from the file
     try:
-        with open(args.json_file, 'r') as f:
+        with open(input_file, 'r') as f:
             json_content = json.load(f)
     except Exception as e:
         print(f"Error reading JSON file: {e}")
@@ -103,8 +97,8 @@ def main():
 
     # Prepare the data to send
     data = {
-        "username": args.username,
-        "json_content": json_content
+        "username": username,
+        "btides_content": json_content
     }
 
     # Make a request to the server
@@ -132,6 +126,17 @@ def main():
     except requests.exceptions.RequestException as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
+
+def main():
+    parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
+    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--username', type=str, required=True, help='Username to attribute the upload to.')
+    args = parser.parse_args()
+
+    send_btides_to_btidalpool(
+        input_file=args.input,
+        username=args.username
+    )
 
 if __name__ == "__main__":
     main()
