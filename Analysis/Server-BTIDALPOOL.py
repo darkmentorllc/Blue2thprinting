@@ -104,12 +104,15 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         client_ip = self.client_address[0]
 
-        # Check rate limits
+        # Check rate limits before reading the request body
         if not rate_limit_checks(client_ip):
-            self.send_response(400)
+            self.send_response(429)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
             self.wfile.write(b'Too many requests')
+            self.wfile.flush()  # Ensure the response is sent
+            # Returning before the self.rfile.read() below will lead to the client perceiving it as a connection reset
+            # However this just saves the server from processing an unnecessary request that it knows it will reject
             return
 
         # Get the content length
@@ -128,7 +131,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(400)
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
-                self.wfile.write(b'Missing username or json_content')
+                self.wfile.write(b'Missing username or json_content.')
                 return
 
             # Validate the JSON content
@@ -136,7 +139,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(400)
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
-                self.wfile.write(b'Invalid JSON data according to schema')
+                self.wfile.write(b'Invalid JSON data according to schema. Rejected.')
                 return
 
             # Create the directory if it doesn't exist
@@ -148,10 +151,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             # Check if the file already exists
             if sha1_hash in g_unique_files:
-                self.send_response(409)
+                self.send_response(400)
                 self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
-                self.wfile.write(b'File with this content already exists')
+                self.wfile.write(b'A file with this exact content already exists on the server.')
                 return
 
             # Generate the filename
@@ -172,13 +175,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.write(b'File saved successfully')
+            self.wfile.write(b'File saved successfully.')
 
         except json.JSONDecodeError:
             self.send_response(400)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.write(b'Invalid JSON data')
+            self.wfile.write(b'Invalid JSON data could not be decoded.')
         finally:
             # Decrement the connection count
             connection_data[client_ip]["count"] -= 1
