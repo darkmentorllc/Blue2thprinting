@@ -101,7 +101,7 @@ def print_UniqueIDReport(bdaddr):
 
         le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name3 WHERE device_bdaddr = %s"
         le_result = execute_query(le_query, values)
-        for name, le_evt_type in le_result:
+        for name_hex_str, le_evt_type in le_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
             print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
