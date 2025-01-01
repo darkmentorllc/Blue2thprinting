@@ -13,7 +13,8 @@
 ##################### WARNING!!! #####################
 ##################### WARNING!!! #####################
 ######################################################
-# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY ACID!
+# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY
+# ACID (Attacker-Controlled Input Data)!
 # SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
 # OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
 
@@ -707,7 +708,8 @@ def progress_update(total, count):
 ##################### WARNING!!! #####################
 ##################### WARNING!!! #####################
 ######################################################
-# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY ACID!
+# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY
+# ACID (Attacker-Controlled Input Data)!
 # SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
 # OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
 
