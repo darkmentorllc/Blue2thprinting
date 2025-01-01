@@ -3,6 +3,9 @@ import urllib3
 from requests.adapters import HTTPAdapter
 from urllib3.poolmanager import PoolManager
 from urllib3.util.ssl_ import create_urllib3_context
+from jsonschema import validate, ValidationError
+from referencing import Registry, Resource
+from jsonschema import Draft202012Validator
 import ssl
 import argparse
 import json
@@ -27,6 +30,43 @@ class SSLAdapter(HTTPAdapter):
         kwargs['ssl_context'] = context
         return super().init_poolmanager(*args, **kwargs)
 
+
+def load_schemas():
+    # Load all the local BTIDES json schema files.
+    BTIDES_files = [
+        "BTIDES_base.json",
+        "BTIDES_AdvData.json",
+        "BTIDES_LL.json",
+        "BTIDES_HCI.json",
+        "BTIDES_L2CAP.json",
+        "BTIDES_SMP.json",
+        "BTIDES_ATT.json",
+        "BTIDES_GATT.json",
+        "BTIDES_EIR.json",
+        "BTIDES_LMP.json",
+        "BTIDES_SDP.json",
+        "BTIDES_GPS.json"
+    ]
+    all_schemas = []
+    for file in BTIDES_files:
+        with open(f"./BTIDES_Schema/{file}", 'r') as f:
+            s = json.load(f)
+            schema = Resource.from_contents(s)
+            all_schemas.append((s["$id"], schema))
+    return Registry().with_resources(all_schemas)
+
+def validate_json_content(json_content, registry):
+    # Validate the json_content against the BTIDES_base.json schema.
+    try:
+        Draft202012Validator(
+            {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
+            registry=registry,
+        ).validate(instance=json_content)
+        return True
+    except ValidationError as e:
+        print(f"JSON data is invalid per BTIDES Schema. Error: {e.message}")
+        return False
+
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Send JSON data to the server.')
@@ -40,6 +80,14 @@ def main():
             json_content = json.load(f)
     except Exception as e:
         print(f"Error reading JSON file: {e}")
+        sys.exit(1)
+
+    # Load the schemas and create a registry
+    registry = load_schemas()
+
+    # Validate the JSON content
+    if not validate_json_content(json_content, registry):
+        print("Invalid JSON data according to schema")
         sys.exit(1)
 
     # Load the self-signed certificate and key
@@ -60,10 +108,10 @@ def main():
     }
 
     # Make a request to the server
-#    response = session.post("https://localhost:4443", json=data, verify=False)
-    response = session.post("https://3.145.185.23:4443", json=data, verify=False)
 
-    # Print the response
+    # response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+    response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+    #response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
     print(response.text)
 
 if __name__ == "__main__":
