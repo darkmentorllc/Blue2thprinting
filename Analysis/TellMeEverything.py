@@ -18,6 +18,9 @@ from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
 from TME.TME_glob import verbose_print, verbose_BTIDES
+from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
+import subprocess
+# FIXME: refactor BTIDES_to_MySQL to allow just calling it as a function (and then delete subprocess)
 
 ########################################
 # MAIN #################################
@@ -32,32 +35,54 @@ def validate_bdaddr(value):
 def main():
     global verbose_print, verbose_BTIDES, use_test_db
     parser = argparse.ArgumentParser(description='Query device names from MySQL tables.')
-    parser.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
-    parser.add_argument('--verbose-print', action='store_true',required=False, help='Show explicit data-not-found output.')
-    parser.add_argument('--verbose-BTIDES', action='store_true',required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
-    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
-    parser.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
-    parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
-    parser.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
-    parser.add_argument('--nameregex', type=str, default='', help='Value for REGEXP match against device_name.')
-    parser.add_argument('--NOTnameregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --nameregex, and then remove them from the final results.')
-    parser.add_argument('--companyregex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
-    parser.add_argument('--NOTcompanyregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --companyregex, and then remove them from the final results.')
-    parser.add_argument('--UUID128regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
-    parser.add_argument('--UUID16regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
-    parser.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
-    parser.add_argument('--UUID128stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries')
-    parser.add_argument('--UUID16stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries')
-    parser.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
-    parser.add_argument('--require_LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
-    parser.add_argument('--require_LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
-    parser.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
+    # Output arguments
+    printout_group = parser.add_argument_group('Printout arguments')
+    printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
+    printout_group.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
+
+    # BTIDES arguments
+    btides_group = parser.add_argument_group('BTIDES file output arguments')
+    btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
+    btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+
+    # BTIDALPOOL arguments
+    btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
+    btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will query from the remote BTIDALPOOL croudsourced database.')
+
+    # Device arguments
+    device_group = parser.add_argument_group('Database search arguments')
+    device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    device_group.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
+    device_group.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
+    device_group.add_argument('--nameregex', type=str, default='', help='Value for REGEXP match against device_name.')
+    device_group.add_argument('--NOTnameregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --nameregex, and then remove them from the final results.')
+    device_group.add_argument('--companyregex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
+    device_group.add_argument('--NOTcompanyregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --companyregex, and then remove them from the final results.')
+    device_group.add_argument('--UUID128regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
+    device_group.add_argument('--UUID16regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
+    device_group.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
+
+    # Statistics arguments
+    stats_group = parser.add_argument_group('Database statistics arguments')
+    stats_group.add_argument('--UUID128stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
+    stats_group.add_argument('--UUID16stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
+
+    # Requirement arguments
+    requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
+    requirement_group.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
+    requirement_group.add_argument('--require_LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
+    requirement_group.add_argument('--require_LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
+
+    # Testing arguments
+    testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
+    testing_group.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
 
     args = parser.parse_args()
     out_filename = args.output
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
+    queryBTIDALPOOL = args.query_BTIDALPOOL
     bdaddr = args.bdaddr
     bdaddrregex = args.bdaddrregex
     nametype = 0 # Default to non-random
@@ -75,6 +100,22 @@ def main():
     require_LL_VERSION_IND = args.require_LL_VERSION_IND
     require_LMP_VERSION_RES = args.require_LMP_VERSION_RES
     hideBLEScopedata = args.hideBLEScopedata
+
+    #######################################################
+    # If querying the BTIDALPOOL, collect that information,
+    # import it into the local database, and then proceed
+    # with the rest of the code as normal.
+    #######################################################
+    if(queryBTIDALPOOL):
+        print("Querying BTIDALPOOL")
+        query_object = {}
+        if args.bdaddr:
+            query_object["bdaddr"] = args.bdaddr
+        if args.nameregex:
+            query_object["nameregex"] = args.nameregex
+        output_filename = retrieve_btides_from_btidalpool("xeno", query_object)
+        if output_filename:
+            subprocess.run(["python3", "BTIDES_to_MySQL.py", "--use-test-db", "--input", output_filename])
 
     # Import metadata v2
     import_metadata_v2()

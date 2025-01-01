@@ -179,52 +179,6 @@ def handle_btides_data(self, username, json_content):
     except json.JSONDecodeError:
         send_back_response(self, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
 
-g_sample_BTIDES = [
-    {
-        "bdaddr": "00:03:ea:0c:18:cd",
-        "bdaddr_rand": 0,
-        "LLArray": [
-            {
-                "direction": 1,
-                "opcode": 12,
-                "version": 8,
-                "company_id": 96,
-                "subversion": 782,
-                "opcode_str": "LL_VERSION_IND"
-            },
-            {
-                "direction": 1,
-                "opcode": 9,
-                "le_features_hex_str": "00000000000000ff",
-                "opcode_str": "LL_FEATURE_RSP"
-            },
-            {
-                "direction": 1,
-                "opcode": 20,
-                "max_rx_octets": 251,
-                "max_rx_time": 2120,
-                "max_tx_octets": 251,
-                "max_tx_time": 2120,
-                "opcode_str": "LL_LENGTH_REQ"
-            },
-            {
-                "direction": 1,
-                "opcode": 21,
-                "max_rx_octets": 251,
-                "max_rx_time": 2120,
-                "max_tx_octets": 251,
-                "max_tx_time": 2120,
-                "opcode_str": "LL_LENGTH_RSP"
-            },
-            {
-                "direction": 1,
-                "opcode": 19,
-                "opcode_str": "LL_PING_RSP"
-            }
-        ]
-    }
-]
-
 def handle_query(self, username, query_object):
     print(query_object)
 
@@ -235,6 +189,10 @@ def handle_query(self, username, query_object):
     if("bdaddr" in query_object):
         args_array.append(f"--bdaddr")
         args_array.append(f"{query_object['bdaddr']}")
+
+    if("nameregex" in query_object):
+        args_array.append(f"--nameregex")
+        args_array.append(f"{query_object['nameregex']}")
 
     output_filename = "/tmp/bla.json"
 
@@ -304,8 +262,8 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-hostname = 'localhost' # For local testing only
-#hostname = '0.0.0.0'
+#hostname = 'localhost' # For local testing only
+hostname = '0.0.0.0'
 httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context

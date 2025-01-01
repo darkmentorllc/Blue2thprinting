@@ -91,8 +91,8 @@ def retrieve_btides_from_btidalpool(username, query_object):
 
     # Make a request to the server
     try:
-        response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-        #response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        #response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+        response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
         if response.headers.get('Content-Type') == 'application/json':
             json_content = response.json()
             # Load the schemas and create a registry
