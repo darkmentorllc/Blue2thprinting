@@ -129,7 +129,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_name
+    FROM EIR_bdaddr_to_name2
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
@@ -222,7 +222,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_name2
+    FROM LE_bdaddr_to_name3
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -406,7 +406,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
 ###################################################################################
 # Ideally should be in TME_names, but I don't want to introduce cyclic dependancies
 ###################################################################################
-# !!!FIXME: For devices with () in their name, like "Galaxy Watch3 (0462)", 
+# !!!FIXME: For devices with () in their name, like "Galaxy Watch3 (0462)",
 # the nameprint to match in MySQL needs to be "^Galaxy Watch3 \\\([A-F0-9]{4}\\\)$
 # however, it only matches in Python regex if it's got 1 slash instead of 3. like "^Galaxy Watch3 \([A-F0-9]{4}\)$
 # that leads to failure to match on values from the NAMEPRINT_DB.csv, even when something could have been looked up by the nameregex
@@ -452,7 +452,7 @@ def appearance_uint16_to_string(number):
                     #print(subcategory)
                     if subcategory['value'] == subcategory_num:
                         subcat_name = subcategory['name']
-        
+
     return f"(0x{number:04x}) Category ({category_num}): {cat_name}, Sub-Category ({subcategory_num}): {subcat_name}"
 
 # Function to print appearance info
@@ -481,7 +481,7 @@ def print_appearance(bdaddr, nametype):
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     print("")
-    
+
 ##################################################################################
 # UUID128s  (This is in here because it comes up in both advertisements and GATT)
 ##################################################################################
@@ -559,7 +559,7 @@ def print_class_of_device(bdaddr):
     eir_query = "SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
 
-    le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = %s" 
+    le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE device_bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
@@ -578,7 +578,7 @@ def print_class_of_device(bdaddr):
         # Then human UI output
         print(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
-        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
+        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_CoD)")
 
     for bdaddr_random, le_evt_type, class_of_device in le_result:
         # Export BTIDES data first
@@ -595,7 +595,7 @@ def print_class_of_device(bdaddr):
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     print("")
-    
+
 ################################################################################
 # Device Name (This is in here because it comes up in both BLE and BTC)
 ################################################################################
@@ -606,28 +606,27 @@ def print_device_names(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    # Query for EIR_bdaddr_to_name table
-    eir_query = "SELECT device_name_type, device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+    # Query for EIR_bdaddr_to_name2 table
+    eir_query = "SELECT device_name_type, name_hex_str FROM EIR_bdaddr_to_name2 WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
     # Query for RSP_bdaddr_to_name table
     rsp_query = "SELECT device_name FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
     rsp_result = execute_query(rsp_query, values)
-    # Query for LE_bdaddr_to_name2 table
-    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, device_name FROM LE_bdaddr_to_name2 WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    # Query for LE_bdaddr_to_name3 table
+    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name3 WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 
     if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
         vprint("\tNo Names found.")
         return
 
-    for device_name_type, device_name in eir_result:
+    for device_name_type, name_hex_str in eir_result:
+        device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         print(f"\tDeviceName: {device_name}")
-        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
+        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name2)")
         find_nameprint_match(device_name)
 
-        length = int(1 + len(device_name)) # 1 bytes for opcode + length of the string
-        byte_data = device_name.encode('utf-8')
-        name_hex_str = ''.join(format(byte, '02x') for byte in byte_data)
+        length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, device_name_type, data)
 
@@ -637,15 +636,14 @@ def print_device_names(bdaddr, nametype):
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
-    for bdaddr_random, le_evt_type, device_name_type, device_name in le_result:
+    for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
+        device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         print(f"\tDeviceName: {device_name}")
-        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name2), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name3), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-        length = int(1 + len(device_name)) # 1 bytes for opcode + length of the string
-        byte_data = device_name.encode('utf-8')
-        name_hex_str = ''.join(format(byte, '02x') for byte in byte_data)
+        length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, device_name_type, data)
 

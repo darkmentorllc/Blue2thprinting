@@ -85,7 +85,7 @@ def BTIDES_types_to_le_evt_type(type):
 # type 0x01
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Flags!")
-    
+
     le_limited_discoverable_mode = 0
     le_general_discoverable_mode = 0
     bredr_not_supported = 0
@@ -103,7 +103,7 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
         le_bredr_support_controller = 1
     if(flags_int & (1 << 4)):
         le_bredr_support_host = 1
-    
+
     le_evt_type = db_type
     if(le_evt_type == 50):
         # EIR
@@ -173,18 +173,17 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #print("import_AdvData_Names!")
     device_name_type = leaf["type"]
-    device_name = leaf["utf8_name"]
-    # FIXME: Need to create new Table to use name_hex_str instead
+    name_hex_str = leaf["name_hex_str"]
 
     le_evt_type = db_type
     if(le_evt_type == 50):
         # EIR
-        values = (bdaddr, device_name_type, device_name)
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, device_name) VALUES (%s, %s, %s);"
+        values = (bdaddr, device_name_type, name_hex_str)
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name2 (device_bdaddr, device_name_type, name_hex_str) VALUES (%s, %s, %s);"
         execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name2 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, device_name) VALUES (%s, %s, %s, %s, %s);"
-        values = (bdaddr, random, le_evt_type, device_name_type, device_name)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name3 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, name_hex_str) VALUES (%s, %s, %s, %s, %s);"
+        values = (bdaddr, random, le_evt_type, device_name_type, name_hex_str)
         execute_insert(le_insert, values)
 
 # type 0x0A
@@ -496,8 +495,8 @@ def parse_LLArray(entry):
             import_LL_UNKNOWN_RSP(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(type_opcode_LL_VERSION_IND, ll_entry)):
             import_LL_VERSION_IND(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(type_opcode_LL_FEATURE_REQ, ll_entry) or 
-            has_known_LL_packet(type_opcode_LL_FEATURE_RSP, ll_entry) or 
+        if(has_known_LL_packet(type_opcode_LL_FEATURE_REQ, ll_entry) or
+            has_known_LL_packet(type_opcode_LL_FEATURE_RSP, ll_entry) or
             has_known_LL_packet(type_opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
                 import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(type_opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(type_opcode_LL_PING_REQ, ll_entry)):

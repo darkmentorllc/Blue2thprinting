@@ -36,7 +36,7 @@ g_last_ATT_group_type_requested = 0
 
 ############################
 # Helper "factory functions"
-############################  
+############################
 
 def exit_on_len_mismatch(length, entry):
     if(length != entry.len):
@@ -169,7 +169,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
     # type 8
     elif isinstance(entry.payload, EIR_ShortenedLocalName):
         local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8')
+        utf8_name = local_name.decode('utf-8', 'ignore')
         name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
         exit_on_len_mismatch(length, entry)
@@ -181,7 +181,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
     # type 9
     elif isinstance(entry.payload, EIR_CompleteLocalName):
         local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8')
+        utf8_name = local_name.decode('utf-8', 'ignore')
         name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
         exit_on_len_mismatch(length, entry)
@@ -331,7 +331,7 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
 # A global map of access addresses for which we have seen a LL_START_ENC_REQ
 # and for which therefore all subsequent packets will be encrypted garbage
 # which we shouldn't export, even if they look valid.
-# TODO: In the future handle LL_PAUSE_ENC_REQ to remove from this, 
+# TODO: In the future handle LL_PAUSE_ENC_REQ to remove from this,
 # TODO: but I don't know if I've ever seen that packet in any of my pcaps.
 g_stop_exporting_encrypted_packets_by_AA = {}
 
@@ -656,11 +656,11 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet):
         if (format != 1 and format != 2):
             print("Unexpected format in Find Information Response. Can't parse further.")
             return False
-        
+
         data = ff_ATT_FIND_INFORMATION_RSP(direction, format, info_data_list)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
-    
+
         # Then also insert this information into the ATT_handle_enumeration
         for entry in info_data_list:
             data = ff_ATT_handle_entry(entry["handle"], entry["UUID"])
@@ -737,9 +737,9 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
 
         # Insert this information as GATTArray information as well
         for entry in attribute_data_list:
-            data = ff_GATT_Service({"utype": g_last_ATT_group_type_requested, 
-                                    "begin_handle": entry["attribute_handle"], 
-                                    "end_handle": entry["end_group_handle"], 
+            data = ff_GATT_Service({"utype": g_last_ATT_group_type_requested,
+                                    "begin_handle": entry["attribute_handle"],
+                                    "end_handle": entry["end_group_handle"],
                                     "UUID": entry["UUID"]})
 #            BTIDES_export_GATT_Service(connect_ind_obj["peripheral_bdaddr"], connect_ind_obj["peripheral_bdaddr_rand"], data)
             BTIDES_export_GATT_Service(connect_ind_obj=connect_ind_obj, data=data)
@@ -758,7 +758,7 @@ def export_to_ATTArray(packet):
 
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
-    # remember information between packets (i.e. which UUID corresponds to which handle)     
+    # remember information between packets (i.e. which UUID corresponds to which handle)
     if(export_ATT_Error_Response(connect_ind_obj, packet)):
         return True
     if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet)):
@@ -777,14 +777,14 @@ def export_to_ATTArray(packet):
         return True
     if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet)):
         return True
-    
+
     # TODO: handle ALL opcodes
 
 
 def export_CONNECT_IND(packet):
     global BTIDES_JSON
     global g_access_address_to_connect_ind_obj
-    
+
     #packet.show()
 
     # Store the BDADDRs involved in the connection into a dictionary, queryable by access address
@@ -843,7 +843,7 @@ def read_pcap(file_path):
             if packet.haslayer(BTLE):
                 btle_hdr = packet.getlayer(BTLE)
                 if(btle_hdr.access_addr != 0x8e89bed6 and btle_hdr.len == 0):
-                    #print("Found empty non-advertisement packet, continuing") 
+                    #print("Found empty non-advertisement packet, continuing")
                     continue
 
                 if(btle_hdr.access_addr in g_stop_exporting_encrypted_packets_by_AA.keys()):
@@ -851,7 +851,7 @@ def read_pcap(file_path):
                     continue
 
                 # If a packet matches on any export function, move on to the next packet
-                
+
                 # Connection requests
                 if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
                     if(export_CONNECT_IND(packet)): continue
@@ -866,7 +866,7 @@ def read_pcap(file_path):
                 if packet.haslayer(BTLE_ADV_NONCONN_IND):
                     if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
                 if packet.haslayer(BTLE_SCAN_RSP):
-                    # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it, 
+                    # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it,
                     # which causes it to return false and then continue to be processed above
                     btle_adv = packet.getlayer(BTLE_SCAN_RSP)
                     if(len(btle_adv.data) == 0): continue

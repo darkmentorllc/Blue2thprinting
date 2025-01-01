@@ -84,9 +84,10 @@ def print_UniqueIDReport(bdaddr):
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
-        eir_query = "SELECT device_name FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+        eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name2 WHERE device_bdaddr = %s"
         eir_result = execute_query(eir_query, values)
-        for (name,) in eir_result:
+        for (name_hex_str,) in eir_result:
+            name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
             print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
@@ -98,9 +99,10 @@ def print_UniqueIDReport(bdaddr):
             print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        le_query = "SELECT device_name, le_evt_type FROM LE_bdaddr_to_name2 WHERE device_bdaddr = %s"
+        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name3 WHERE device_bdaddr = %s"
         le_result = execute_query(le_query, values)
         for name, le_evt_type in le_result:
+            name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
             print(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             print(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
@@ -129,7 +131,7 @@ def print_UniqueIDReport(bdaddr):
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
             try:
-                ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8')
+                ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
             except:
                 ms_msd_name2 = ""
             if(len(ms_msd_name2) > 0):

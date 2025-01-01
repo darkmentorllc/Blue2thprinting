@@ -37,12 +37,12 @@ def get_bdaddrs_by_name_regex(nameregex):
     bdaddrs = []
 
     values = (nameregex,)
-    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name WHERE device_name REGEXP %s"
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name2 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name")
+    print(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name2")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for RSP_bdaddr_to_name table
@@ -53,12 +53,12 @@ def get_bdaddrs_by_name_regex(nameregex):
     print(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for LE_bdaddr_to_name2 table
-    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE device_name REGEXP %s"
+    # Query for LE_bdaddr_to_name3 table
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name3 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name2")
+    print(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name3")
     print(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -99,7 +99,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM LE_bdaddr_to_name2 WHERE bdaddr_random = 0 "
+        f"    SELECT device_bdaddr FROM LE_bdaddr_to_name3 WHERE bdaddr_random = 0 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
         f"    UNION ALL "
@@ -123,7 +123,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
         f"    UNION ALL "
-        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_name "
+        f"    SELECT device_bdaddr FROM EIR_bdaddr_to_name2 "
         f"    UNION ALL "
         f"    SELECT device_bdaddr FROM EIR_bdaddr_to_PSRM "
         f"    UNION ALL "
@@ -259,7 +259,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                     bdaddr_hash[bdaddr] = 1
                 print(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #print(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
-   
+
     if(enable_UUID16_lookup):
         #########################################
         # MATCH REGEX TO BT COMPANY UUID16S
@@ -312,7 +312,7 @@ def get_bdaddrs_by_company_regex(companyregex):
         #############################################
         # LOOKUP BDADDRS BY OUIS (ACROSS ALL TABLES!)
         #############################################
- 
+
         for prefix in bdaddr_prefixes.keys():
 
             print(f"BDADDR OUI: {prefix}")
@@ -329,67 +329,67 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_name2 WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_name3 WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID128s WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID128s WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE bdaddr_random = 0 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM LE_bdaddr_to_UUID16s WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_DevID 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_DevID
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_flags2 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_flags2
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_MSD 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_MSD
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_name 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_name2
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_PSRM 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_PSRM
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_CoD 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_CoD
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_tx_power 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_tx_power
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID128s 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID128s
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID16s 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID16s
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID32s 
+                SELECT device_bdaddr COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID32s
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_FEATUREs 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_FEATUREs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_LENGTHs 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_LENGTHs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_PHYs 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_PHYs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_PING_RSP 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_PING_RSP
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_UNKNOWN_RSP 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_UNKNOWN_RSP
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_VERSION_IND 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BLE2th_LL_VERSION_IND
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_features_res 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_features_res
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_name_res 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_name_res
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_version_res 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM BTC2th_LMP_version_res
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM GATT_services2 
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS device_bdaddr FROM GATT_services2
             ) AS t
             WHERE t.device_bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');
             """
@@ -441,7 +441,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
 
     values = (uuid128regex,)
-    
+
     eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
@@ -488,7 +488,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
 
         values = (uuid128regex_with_dashes,)
-        
+
         gatt_service_query = "SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP %s"
         gatt_service_result = execute_query(gatt_service_query, values)
         for (bdaddr,) in gatt_service_result:
