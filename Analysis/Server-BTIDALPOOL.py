@@ -2,7 +2,6 @@ import http.server
 import ssl
 import os
 import json
-import random
 import datetime
 import hashlib
 import threading
@@ -97,6 +96,69 @@ def rate_limit_checks(client_ip):
     data["timestamps"].append(current_time)
     return True
 
+def handle_btides_data(self, username, json_content):
+    # Parse the JSON data
+    try:
+        # Convert the data to a string to check the total data size
+        json_content_str = json.dumps(json_content, sort_keys=True)
+
+        # Check the size of the JSON content
+        if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'File size too big.')
+            return
+
+        # Validate the JSON content
+        if not validate_json_content(json_content, registry):
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Invalid JSON data according to schema. Rejected.')
+            return
+
+        # Create the directory if it doesn't exist
+        os.makedirs('./pool_files', exist_ok=True)
+
+        # Generate the SHA1 hash of the json_content
+        json_content_str = json.dumps(json_content, sort_keys=True)
+        sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
+
+        # Check if the file already exists
+        if sha1_hash in g_unique_files:
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'A file with this exact content already exists on the server.')
+            return
+
+        # Generate the filename
+        current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
+
+        # Save the JSON content to the file
+        with open(filename, 'w') as f:
+            json.dump(json_content, f)
+
+        # Update the global dictionary
+        g_unique_files[sha1_hash] = True
+
+        # Spawn a new thread to run the BTIDES_to_MySQL.py script
+        run_btides_to_mysql(filename)
+
+        # Send a success response
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b'File saved successfully.')
+
+    except json.JSONDecodeError:
+        self.send_response(400)
+        self.send_header('Content-Type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b'Invalid JSON data could not be decoded.')
+
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
@@ -121,81 +183,32 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         # Read the POST data
         post_data = self.rfile.read(content_length)
 
-        # Parse the JSON data
-        try:
-            data = json.loads(post_data)
-            username = data.get('username')
-            json_content = data.get('json_content')
+        # Extract fields to determine whether this is a send of BTIDES data, or a query requesting BTIDES data
+        data = json.loads(post_data)
 
-            if not username or not json_content:
-                self.send_response(400)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write(b'Missing username or json_content.')
-                return
-
-            # Convert the data to a string to check the total data size
-            json_content_str = json.dumps(json_content, sort_keys=True)
-
-            # Check the size of the JSON content
-            if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
-                self.send_response(400)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write(b'File size too big.')
-                return
-
-            # Validate the JSON content
-            if not validate_json_content(json_content, registry):
-                self.send_response(400)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write(b'Invalid JSON data according to schema. Rejected.')
-                return
-
-            # Create the directory if it doesn't exist
-            os.makedirs('./pool_files', exist_ok=True)
-
-            # Generate the SHA1 hash of the json_content
-            json_content_str = json.dumps(json_content, sort_keys=True)
-            sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
-
-            # Check if the file already exists
-            if sha1_hash in g_unique_files:
-                self.send_response(400)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write(b'A file with this exact content already exists on the server.')
-                return
-
-            # Generate the filename
-            current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-            filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
-
-            # Save the JSON content to the file
-            with open(filename, 'w') as f:
-                json.dump(json_content, f)
-
-            # Update the global dictionary
-            g_unique_files[sha1_hash] = True
-
-            # Spawn a new thread to run the BTIDES_to_MySQL.py script
-            run_btides_to_mysql(filename)
-
-            # Send a success response
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'File saved successfully.')
-
-        except json.JSONDecodeError:
+        if 'username' not in data:
             self.send_response(400)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.write(b'Invalid JSON data could not be decoded.')
-        finally:
-            # Decrement the connection count
-            connection_data[client_ip]["count"] -= 1
+            self.wfile.write(b'Missing username.')
+            return
+        username = data.get('username')
+
+        if 'btides_content' in data and 'query' not in data:
+            json_content = data.get('btides_content')
+            handle_btides_data(self, username, json_content)
+        elif 'query' in data and 'btides_content' not in data:
+            query_object = data.get('query')
+            # TODO: handle_query(username, query_object)
+        else:
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Invalid input. Either both or neither of json_content and query_object are present.')
+            return
+
+        # Decrement the connection count
+        connection_data[client_ip]["count"] -= 1
 
 # Initialize the unique files dictionary
 initialize_unique_files('./pool_files')
@@ -207,7 +220,7 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-# hostname = 'localhost' # For local testing only
+#hostname = 'localhost' # For local testing only
 hostname = '0.0.0.0'
 httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
