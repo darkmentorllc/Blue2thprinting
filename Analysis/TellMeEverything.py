@@ -23,6 +23,11 @@ from TME.TME_glob import verbose_print, verbose_BTIDES
 # MAIN #################################
 ########################################
 
+def validate_bdaddr(value):
+    if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', value):
+        raise argparse.ArgumentTypeError("bdaddr must be in the form of a Bluetooth Device Address (e.g., AA:BB:CC:11:22:33).")
+    return value
+
 # Main function to handle command line arguments
 def main():
     global verbose_print, verbose_BTIDES, use_test_db
@@ -31,7 +36,7 @@ def main():
     parser.add_argument('--verbose-print', action='store_true',required=False, help='Show explicit data-not-found output.')
     parser.add_argument('--verbose-BTIDES', action='store_true',required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
-    parser.add_argument('--bdaddr', type=str, required=False, help='Device bdaddr value.')
+    parser.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
     parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     parser.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
     parser.add_argument('--nameregex', type=str, default='', help='Value for REGEXP match against device_name.')
@@ -74,7 +79,7 @@ def main():
     # Import metadata v2
     import_metadata_v2()
     import_private_metadata_v2()
-    
+
     # Import any data from CSV files as necessary
     import_nameprint_CSV_data()
     import_private_nameprint_CSV_data()
@@ -212,7 +217,7 @@ def main():
         print_UniqueIDReport(bdaddr)
 
         #BTIDES_insert_TxPower(bdaddr, "public", 1)
-    
+
     if(out_filename != None and out_filename != ""):
         write_BTIDES(out_filename)
 

@@ -31,6 +31,7 @@ def initialize_unique_files(directory):
             sha1_hash = filename.split('-')[0]
             g_unique_files[sha1_hash] = True
 
+
 def load_schemas():
     """Load all the local BTIDES json schema files."""
     BTIDES_files = [
@@ -55,6 +56,7 @@ def load_schemas():
             all_schemas.append((s["$id"], schema))
     return Registry().with_resources(all_schemas)
 
+
 def validate_json_content(json_content, registry):
     # Validate the json_content against the BTIDES_base.json schema.
     try:
@@ -67,12 +69,38 @@ def validate_json_content(json_content, registry):
         print(f"JSON data is invalid per BTIDES Schema. Error: {e.message}")
         return False
 
+
 def run_btides_to_mysql(filename):
     # Run the BTIDES_to_MySQL.py script in a new thread.
     def target():
         subprocess.run(["python3", "BTIDES_to_MySQL.py", "--input", filename, "--use-test-db"])
     thread = threading.Thread(target=target)
     thread.start()
+
+
+# args_array should be individual arguments to pass to the script
+def run_TellMeEverything(self, args_array, output_filename):
+    # Run the TellMeEverything.py script in a new thread.
+    def target():
+        args_list = ["python3", "TellMeEverything.py"] + args_array + ["--output", output_filename]
+        subprocess.run(args_list)
+    thread = threading.Thread(target=target)
+    thread.start()
+    thread.join()
+
+    with open(output_filename, 'r') as f:
+        json_content = json.load(f)
+
+        if(len(json_content) == 0): # Content is just []
+            send_back_response(self, 400, 'text/plain', b'Query yielded empty result.')
+            return 1
+
+        # Validate the JSON content
+        if not validate_json_content(json_content, registry):
+            send_back_response(self, 400, 'text/plain', b'Query yielded invalid JSON data according to schema. Rejected.')
+            return 1
+
+    return json_content
 
 def rate_limit_checks(client_ip):
     """Check rate limits for the given IP address."""
@@ -96,6 +124,14 @@ def rate_limit_checks(client_ip):
     data["timestamps"].append(current_time)
     return True
 
+def send_back_response(self, type, header, text):
+    self.send_response(type)
+    self.send_header('Content-Type', header)
+    self.end_headers()
+    self.wfile.write(text)
+    self.wfile.flush()  # Ensure the response is sent
+
+
 def handle_btides_data(self, username, json_content):
     # Parse the JSON data
     try:
@@ -104,18 +140,12 @@ def handle_btides_data(self, username, json_content):
 
         # Check the size of the JSON content
         if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
-            self.send_response(400)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'File size too big.')
+            send_back_response(self, 400, 'text/plain', b'File size too big.')
             return
 
         # Validate the JSON content
         if not validate_json_content(json_content, registry):
-            self.send_response(400)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'Invalid JSON data according to schema. Rejected.')
+            send_back_response(self, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
             return
 
         # Create the directory if it doesn't exist
@@ -126,10 +156,7 @@ def handle_btides_data(self, username, json_content):
 
         # Check if the file already exists
         if sha1_hash in g_unique_files:
-            self.send_response(400)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'A file with this exact content already exists on the server.')
+            send_back_response(self, 400, 'text/plain', b'A file with this exact content already exists on the server.')
             return
 
         # Generate the filename
@@ -147,16 +174,10 @@ def handle_btides_data(self, username, json_content):
         run_btides_to_mysql(filename)
 
         # Send a success response
-        self.send_response(200)
-        self.send_header('Content-Type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b'File saved successfully.')
+        send_back_response(self, 200, 'text/plain', b'File saved successfully.')
 
     except json.JSONDecodeError:
-        self.send_response(400)
-        self.send_header('Content-Type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b'Invalid JSON data could not be decoded.')
+        send_back_response(self, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
 
 g_sample_BTIDES = [
     {
@@ -207,11 +228,27 @@ g_sample_BTIDES = [
 def handle_query(self, username, query_object):
     print(query_object)
 
-    # Send back the g_sample_BTIDES to the client
-    self.send_response(200)
-    self.send_header('Content-Type', 'application/json')
-    self.end_headers()
-    self.wfile.write(json.dumps(g_sample_BTIDES).encode('utf-8'))
+    args_array = ["--use-test-db"]
+
+    # Can't just loop through and use everything we're handed in query_object,
+    # only use arguments which we are expecting, and ignore everything else
+    if("bdaddr" in query_object):
+        args_array.append(f"--bdaddr")
+        args_array.append(f"{query_object['bdaddr']}")
+
+    output_filename = "/tmp/bla.json"
+
+    json_content = run_TellMeEverything(self, args_array, output_filename)
+    if(json_content == 1): # Error
+        # Error message should have already been sent to the client in run_TellMeEverything
+        return
+    else:
+        send_back_response(self, 200, 'application/json', json.dumps(json_content).encode('utf-8'))
+
+
+#    # Send back the g_sample_BTIDES to the client
+#    send_back_response(self, 200, 'application/json', json.dumps(g_sample_BTIDES).encode('utf-8'))
+
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
@@ -222,11 +259,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         # Check rate limits before reading the request body
         if not rate_limit_checks(client_ip):
-            self.send_response(429)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'Too many requests')
-            self.wfile.flush()  # Ensure the response is sent
+            send_back_response(self, 429, 'text/plain', b'Too many requests')
             # Returning before the self.rfile.read() below will lead to the client perceiving it as a connection reset
             # However this just saves the server from processing an unnecessary request that it knows it will reject
             return
@@ -241,12 +274,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         data = json.loads(post_data)
 
         if 'username' not in data:
-            self.send_response(400)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'Missing username.')
+            send_back_response(self, 400, 'text/plain', b'Missing username.')
             return
         username = data.get('username')
+        if len(username) > 255:
+            send_back_response(self, 400, 'text/plain', b'Username too long.')
+            return
 
         if 'btides_content' in data and 'query' not in data:
             json_content = data.get('btides_content')
@@ -255,10 +288,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             query_object = data.get('query')
             handle_query(self, username, query_object)
         else:
-            self.send_response(400)
-            self.send_header('Content-Type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(b'Invalid input. Either both or neither of json_content and query_object are present.')
+            send_back_response(self, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
             return
 
         # Decrement the connection count

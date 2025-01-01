@@ -12,6 +12,7 @@ import json
 import sys
 import datetime
 import hashlib
+import re
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -101,7 +102,9 @@ def retrieve_btides_from_btidalpool(username, query_object):
             if not validate_json_content(json_content, registry):
                 print("Invalid JSON data according to schema")
                 sys.exit(1)
-
+        elif response.headers.get('Content-Type') == 'text/plain':
+            print(response.text)
+            sys.exit(1)
         else:
             print("Response content is not JSON.")
             sys.exit(1)
@@ -109,6 +112,7 @@ def retrieve_btides_from_btidalpool(username, query_object):
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400 or e.response.status_code == 429:
             #print("Expected HTTP error code received")
+            print(response.text)
             pass
         else:
             print(f"Unexpected HTTP error occurred: {e}")
@@ -142,13 +146,30 @@ def retrieve_btides_from_btidalpool(username, query_object):
 
     return output_filename
 
+def validate_username(value):
+    if len(value) > 255:
+        raise argparse.ArgumentTypeError("Username must be 255 characters or less.")
+    return value
+
+def validate_bdaddr(value):
+    if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', value):
+        raise argparse.ArgumentTypeError("bdaddr must be in the form of a Bluetooth Device Address (e.g., AA:BB:CC:11:22:33).")
+    return value
 
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
-    parser.add_argument('--username', type=str, required=True, help='Username to attribute the upload to.')
+
+    parser.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
+    parser.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    parser.add_argument('--nameregex', type=str, default='', required=False, help='Value for REGEXP match against device_name.')
+
     args = parser.parse_args()
 
-    query_object = {"query": "all"}
+    query_object = {}
+    if args.bdaddr:
+        query_object["bdaddr"] = args.bdaddr
+    if args.nameregex:
+        query_object["nameregex"] = args.nameregex
 
     output_filename = retrieve_btides_from_btidalpool(
         username=args.username,
