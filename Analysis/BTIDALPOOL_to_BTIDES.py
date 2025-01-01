@@ -10,6 +10,8 @@ import ssl
 import argparse
 import json
 import sys
+import datetime
+import hashlib
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -67,22 +69,7 @@ def validate_json_content(json_content, registry):
         return False
 
 # Import this function to call from external code without invoking via the CLI
-def send_btides_to_btidalpool(input_file, username):
-    # Load the JSON content from the file
-    try:
-        with open(input_file, 'r') as f:
-            json_content = json.load(f)
-    except Exception as e:
-        print(f"Error reading JSON file: {e}")
-        sys.exit(1)
-
-    # Load the schemas and create a registry
-    registry = load_schemas()
-
-    # Validate the JSON content
-    if not validate_json_content(json_content, registry):
-        print("Invalid JSON data according to schema")
-        sys.exit(1)
+def retrieve_btides_from_btidalpool(username, query_object):
 
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-local-cert.pem"
@@ -98,17 +85,26 @@ def send_btides_to_btidalpool(input_file, username):
     # Prepare the data to send
     data = {
         "username": username,
-        "btides_content": json_content
+        "query": query_object
     }
 
     # Make a request to the server
     try:
-        # response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-        response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
-        if response.headers.get('Content-Type') == 'text/plain':
-            print(response.text)
+        response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+        #response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        if response.headers.get('Content-Type') == 'application/json':
+            json_content = response.json()
+            # Load the schemas and create a registry
+            registry = load_schemas()
+
+            # Validate the JSON content
+            if not validate_json_content(json_content, registry):
+                print("Invalid JSON data according to schema")
+                sys.exit(1)
+
         else:
-            print("Response content is not plain text")
+            print("Response content is not JSON.")
+            sys.exit(1)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400 or e.response.status_code == 429:
@@ -130,16 +126,35 @@ def send_btides_to_btidalpool(input_file, username):
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
 
+    # Write the JSON content to a file
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    json_content_str = json.dumps(json_content, sort_keys=True)
+    sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
+    output_filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
+
+    try:
+        # Save the JSON content to the file
+        with open(output_filename, 'w') as f:
+            json.dump(json_content, f)
+    except Exception as e:
+        print(f"Error writing JSON file: {e}")
+        sys.exit(1)
+
+    return output_filename
+
+
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
-    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
     parser.add_argument('--username', type=str, required=True, help='Username to attribute the upload to.')
     args = parser.parse_args()
 
-    send_btides_to_btidalpool(
-        input_file=args.input,
-        username=args.username
+    query_object = {"query": "all"}
+
+    output_filename = retrieve_btides_from_btidalpool(
+        username=args.username,
+        query_object=query_object
     )
+    print(f"BTIDES data retrieved from BTIDALPOOL and saved to {output_filename}")
 
 if __name__ == "__main__":
     main()
