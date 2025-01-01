@@ -108,11 +108,30 @@ def main():
     }
 
     # Make a request to the server
-
-    # response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-    response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
-    #response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-    print(response.text)
+    try:
+        # response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+        response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        if response.headers.get('Content-Type') == 'text/plain':
+            print(response.text)
+        else:
+            print("Response content is not plain text")
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 400 or e.response.status_code == 429:
+            #print("Expected HTTP error code received")
+            pass
+        else:
+            print(f"Unexpected HTTP error occurred: {e}")
+    except requests.exceptions.ChunkedEncodingError as e:
+        print("The connection was most likely reset due to exceeding rate limits.")
+        # Due to optimization on the server side this is the exception case that will occur.
+        # Making it a nice mesaage for the user, rather than making the server do more work than necessary.
+        #print(f"Chunked encoding error occurred: {e}")
+    except requests.exceptions.ConnectionError as e:
+        print(f"Unexpected connection error occurred (Server may not be running?): {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
