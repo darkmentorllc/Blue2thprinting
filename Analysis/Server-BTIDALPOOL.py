@@ -11,9 +11,17 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from socketserver import ThreadingMixIn
+from collections import defaultdict, deque
+import time
+
+g_max_connections_per_hour = 5
+g_max_simultaneous_connections = 10
 
 # Global dictionary to store unique file hashes
 g_unique_files = {}
+
+# Global dictionary to store connection data for rate limiting
+connection_data = defaultdict(lambda: {"count": 0, "timestamps": deque()})
 
 def initialize_unique_files(directory):
     """Initialize the g_unique_files dictionary with SHA1 hashes from existing files."""
@@ -49,7 +57,7 @@ def load_schemas():
     return Registry().with_resources(all_schemas)
 
 def validate_json_content(json_content, registry):
-    """Validate the json_content against the BTIDES_base.json schema."""
+    # Validate the json_content against the BTIDES_base.json schema.
     try:
         Draft202012Validator(
             {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
@@ -61,17 +69,49 @@ def validate_json_content(json_content, registry):
         return False
 
 def run_btides_to_mysql(filename):
-    """Run the BTIDES_to_MySQL.py script in a new thread."""
+    # Run the BTIDES_to_MySQL.py script in a new thread.
     def target():
         subprocess.run(["python3", "BTIDES_to_MySQL.py", "--input", filename, "--use-test-db"])
     thread = threading.Thread(target=target)
     thread.start()
+
+def rate_limit_checks(client_ip):
+    """Check rate limits for the given IP address."""
+    current_time = time.time()
+    data = connection_data[client_ip]
+
+    # Remove timestamps older than one hour
+    while data["timestamps"] and current_time - data["timestamps"][0] > 3600:
+        data["timestamps"].popleft()
+
+    # Check the number of connections in the last hour
+    if len(data["timestamps"]) >= g_max_connections_per_hour:
+        return False
+
+    # Check the number of simultaneous connections
+    if data["count"] >= g_max_simultaneous_connections:
+        return False
+
+    # Update connection data
+    data["count"] += 1
+    data["timestamps"].append(current_time)
+    return True
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
+        client_ip = self.client_address[0]
+
+        # Check rate limits
+        if not rate_limit_checks(client_ip):
+            self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b'Too many requests')
+            return
+
         # Get the content length
         content_length = int(self.headers['Content-Length'])
 
@@ -86,6 +126,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             if not username or not json_content:
                 self.send_response(400)
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b'Missing username or json_content')
                 return
@@ -93,6 +134,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             # Validate the JSON content
             if not validate_json_content(json_content, registry):
                 self.send_response(400)
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b'Invalid JSON data according to schema')
                 return
@@ -107,6 +149,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             # Check if the file already exists
             if sha1_hash in g_unique_files:
                 self.send_response(409)
+                self.send_header('Content-Type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(b'File with this content already exists')
                 return
@@ -127,13 +170,18 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
             # Send a success response
             self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
             self.end_headers()
             self.wfile.write(b'File saved successfully')
 
         except json.JSONDecodeError:
             self.send_response(400)
+            self.send_header('Content-Type', 'text/plain')
             self.end_headers()
             self.wfile.write(b'Invalid JSON data')
+        finally:
+            # Decrement the connection count
+            connection_data[client_ip]["count"] -= 1
 
 # Initialize the unique files dictionary
 initialize_unique_files('./pool_files')
@@ -145,8 +193,9 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-#httpd = ThreadingHTTPServer(('localhost', 4443), handler)
-httpd = ThreadingHTTPServer(('0.0.0.0', 4443), handler)
+# hostname = 'localhost' # For local testing only
+hostname = '0.0.0.0'
+httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -155,5 +204,5 @@ context.load_cert_chain(certfile="BTIDALPOOL-local-cert.pem", keyfile="BTIDALPOO
 # Wrap the server socket with SSL
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
-print("Serving on https://localhost:4443")
+print(f"Serving on https://{hostname}:4443")
 httpd.serve_forever()
