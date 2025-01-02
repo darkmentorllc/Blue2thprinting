@@ -13,10 +13,12 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 import time
 
-g_max_connections_per_day = 10
+# Global variables used for rate limiting
+g_max_connections_per_day = 100
 g_max_simultaneous_connections = 10
+g_max_returned_records_per_query = 100
 
-# Global dictionary to store unique file hashes
+# Global dictionary to store unique file hashes for avoiding duplicate uploads
 g_unique_files = {}
 
 # Global dictionary to store connection data for rate limiting
@@ -73,6 +75,7 @@ def validate_json_content(json_content, registry):
 def run_btides_to_mysql(filename):
     # Run the BTIDES_to_MySQL.py script in a new thread.
     def target():
+        # FIXME: update to refactor to not require subprocess.run
         subprocess.run(["python3", "BTIDES_to_MySQL.py", "--input", filename, "--use-test-db"])
     thread = threading.Thread(target=target)
     thread.start()
@@ -82,25 +85,33 @@ def run_btides_to_mysql(filename):
 def run_TellMeEverything(self, args_array, output_filename):
     # Run the TellMeEverything.py script in a new thread.
     def target():
+        # FIXME: update to refactor to not require subprocess.run (or to use a separate script)
         args_list = ["python3", "TellMeEverything.py"] + args_array + ["--output", output_filename]
         subprocess.run(args_list)
     thread = threading.Thread(target=target)
     thread.start()
     thread.join()
 
-    with open(output_filename, 'r') as f:
-        json_content = json.load(f)
+    try:
+        with open(output_filename, 'r') as f:
+            json_content = json.load(f)
 
-        if(len(json_content) == 0): # Content is just []
-            send_back_response(self, 400, 'text/plain', b'Query yielded empty result.')
-            return 1
+            if len(json_content) == 0:  # Content is just []
+                send_back_response(self, 400, 'text/plain', b'Query yielded empty result.')
+                return 1
 
-        # Validate the JSON content
-        if not validate_json_content(json_content, registry):
-            send_back_response(self, 400, 'text/plain', b'Query yielded invalid JSON data according to schema. Rejected.')
-            return 1
+            # Validate the JSON content
+            if not validate_json_content(json_content, registry):
+                send_back_response(self, 400, 'text/plain', b'Query yielded invalid JSON data according to schema. Rejected.')
+                return 1
+
+    except FileNotFoundError:
+        # This will happen if there's a bug that causes TellMeEverything to not write the output file
+        send_back_response(self, 500, 'text/plain', b'Output file not found.')
+        return 1
 
     return json_content
+
 
 def rate_limit_checks(client_ip):
     """Check rate limits for the given IP address."""
@@ -123,6 +134,7 @@ def rate_limit_checks(client_ip):
     data["count"] += 1
     data["timestamps"].append(current_time)
     return True
+
 
 def send_back_response(self, type, header, text):
     self.send_response(type)
@@ -182,24 +194,48 @@ def handle_btides_data(self, username, json_content):
 def handle_query(self, username, query_object):
     print(query_object)
 
-    args_array = ["--use-test-db", "--quiet-print"]
-#    args_array = ["--use-test-db"]
+    # Arguments we always want to pass to TellMeEverything.py
+    args_array = ["--use-test-db", "--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
 
     # Can't just loop through and use everything we're handed in query_object,
     # only use arguments which we are expecting, and ignore everything else
     if("bdaddr" in query_object):
         args_array.append(f"--bdaddr")
         args_array.append(f"{query_object['bdaddr']}")
+    if("bdaddr_regex" in query_object):
+        args_array.append(f"--bdaddr-regex")
+        args_array.append(f"{query_object['bdaddr_regex']}")
+    if("name_regex" in query_object):
+        args_array.append(f"--name-regex")
+        args_array.append(f"{query_object['name_regex']}")
+    if("NOT_name_regex" in query_object):
+        args_array.append(f"--NOT-name-regex")
+        args_array.append(f"{query_object['NOT_name_regex']}")
+    if("company_regex" in query_object):
+        args_array.append(f"--company-regex")
+        args_array.append(f"{query_object['company_regex']}")
+    if("NOT_company_regex" in query_object):
+        args_array.append(f"--NOT-company-regex")
+        args_array.append(f"{query_object['NOT_company_regex']}")
+    if("UUID128_regex" in query_object):
+        args_array.append(f"--UUID128-regex")
+        args_array.append(f"{query_object['UUID128_regex']}")
+    if("UUID16_regex" in query_object):
+        args_array.append(f"--UUID16-regex")
+        args_array.append(f"{query_object['UUID16_regex']}")
+    if("MSD_regex" in query_object):
+        args_array.append(f"--MSD-regex")
+        args_array.append(f"{query_object['MSD_regex']}")
+    if("require_GATT" in query_object):
+        args_array.append(f"--require-GATT")
+    if("require_LL_VERSION_IND" in query_object):
+        args_array.append(f"--require-LL_VERSION_IND")
+    if("require_LMP_VERSION_RES" in query_object):
+        args_array.append(f"--require-LMP_VERSION_RES")
 
-    if("bdaddrregex" in query_object):
-        args_array.append(f"--bdaddrregex")
-        args_array.append(f"{query_object['bdaddrregex']}")
-
-    if("nameregex" in query_object):
-        args_array.append(f"--nameregex")
-        args_array.append(f"{query_object['nameregex']}")
-
-    output_filename = "/tmp/bla.json"
+    current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    random = os.urandom(4).hex()
+    output_filename = f"/tmp/{username}-{current_time}-{random}.json"
 
     json_content = run_TellMeEverything(self, args_array, output_filename)
     if(json_content == 1): # Error
@@ -208,9 +244,9 @@ def handle_query(self, username, query_object):
     else:
         send_back_response(self, 200, 'application/json', json.dumps(json_content).encode('utf-8'))
 
-
-#    # Send back the g_sample_BTIDES to the client
-#    send_back_response(self, 200, 'application/json', json.dumps(g_sample_BTIDES).encode('utf-8'))
+    # Delete the output file after sending the response
+    if os.path.exists(output_filename):
+        os.remove(output_filename)
 
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):

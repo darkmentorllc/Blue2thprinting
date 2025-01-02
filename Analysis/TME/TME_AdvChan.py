@@ -164,7 +164,10 @@ def print_manufacturer_data(bdaddr):
     le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s"
     le_result = execute_query(le_query, values)
 
-    if (len(eir_result) != 0 or len(le_result) != 0):
+    if (len(eir_result)== 0 and len(le_result) == 0):
+        vprint("\tNo Manufacturer-specific Data found.")
+        return
+    elif (len(eir_result) != 0 or len(le_result) != 0):
         qprint("\tManufacturer-specific Data:")
 
     for device_BT_CID, manufacturer_specific_data in eir_result:
@@ -288,10 +291,6 @@ def print_manufacturer_data(bdaddr):
 
         qprint(f"\t\t\tIn BT LE Data (LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
-
-
-    if (len(eir_result)== 0 and len(le_result) == 0):
-        qprint("\tNo Manufacturer-specific Data found.")
 
     qprint("")
 

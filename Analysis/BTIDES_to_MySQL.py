@@ -601,6 +601,10 @@ def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
         g_last_read_req_handle = att_entry["handle"]
     elif(att_entry["opcode"] == type_ATT_READ_RSP):
         handle = g_last_read_req_handle
+        # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
+        # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
+        if isinstance(handle, str):
+            handle = int(handle, 16)
         byte_values = bytes.fromhex(att_entry["value_hex_str"])
         values = (device_bdaddr_type, bdaddr, handle, byte_values)
         insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
@@ -677,8 +681,16 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                 char_value = char["char_value"]
                 for io_array_entry in char_value["io_array"]:
                     byte_values = bytes.fromhex(io_array_entry["value_hex_str"])
-                    values = (device_bdaddr_type, bdaddr, char_value["value_handle"], byte_values)
+                    # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
+                    # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
+                    handle = char_value["value_handle"]
+                    if isinstance(handle, str):
+                        handle = int(handle, 16)
+                    values = (device_bdaddr_type, bdaddr, handle, byte_values)
                     insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
+                    if(int(char_value["value_handle"], 16) == 0):
+                        print("Error: read_handle was 0. This is a bug. Exiting.")
+                        exit(-1)
                     execute_insert(insert, values)
 
 def parse_GATTArray(entry):

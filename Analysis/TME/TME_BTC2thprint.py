@@ -117,17 +117,12 @@ def print_BTC_2thprint(bdaddr):
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         qprint("\n\tRaw BTC 2thprint:")
-        with open(f"./BTC2thprints/{bdaddr}.btc2thprint", 'w') as file:
-            for lmp_version, lmp_sub_version, device_BT_CID in version_result:
-                qprint(f"\t\t\"lmp_version\",\"0x%02x\"" % lmp_version)
-                file.write(f"\"lmp_version\",\"0x%02x\"\n" % lmp_version)
-                qprint("\t\t\"lmp_sub_version\",\"0x%04x\"" % lmp_sub_version)
-                file.write("\"lmp_sub_version\",\"0x%04x\"\n" % lmp_sub_version)
-                qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
-                file.write(f"\"version_BT_CID\",\"0x%04x\"\n" % device_BT_CID)
+        for lmp_version, lmp_sub_version, device_BT_CID in version_result:
+            qprint(f"\t\t\"lmp_version\",\"0x%02x\"" % lmp_version)
+            qprint("\t\t\"lmp_sub_version\",\"0x%04x\"" % lmp_sub_version)
+            qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
 
-            for page, features in features_result:
-                qprint("\t\t\"features\",\"0x%016x\"" % features)
-                file.write("\"features\",\"0x%016x\"\n" % features)
+        for page, features in features_result:
+            qprint("\t\t\"features\",\"0x%016x\"" % features)
 
     qprint("")

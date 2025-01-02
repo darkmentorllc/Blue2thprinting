@@ -3,6 +3,7 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
+import os
 import re
 import struct
 import TME.TME_glob
@@ -217,19 +218,19 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         data = ff_ATT_handle_entry(attribute_handle, UUID)
         BTIDES_export_ATT_handle(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
 
-    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
+    query = "SELECT device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
-    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
-    for declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
+    for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr, device_bdaddr_type, data)
 
-    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
+    query = "SELECT device_bdaddr_type, read_handle, byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
-    for read_handle, byte_values in GATT_characteristics_values_result:
+    for device_bdaddr_type, read_handle, byte_values in GATT_characteristics_values_result:
         data = {"value_handle": read_handle, "io_array": [ {"io_type": 0, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr, device_bdaddr_type, data)
 
@@ -242,7 +243,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
-    values = (bdaddr,bdaddr,bdaddr)
+    values = (bdaddr,bdaddr,bdaddr,bdaddr)
     query = """
     SELECT DISTINCT handle_value
     FROM (
@@ -257,6 +258,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics
         WHERE device_bdaddr = %s
+        UNION
+        SELECT read_handle AS handle_value
+        FROM GATT_characteristics_values
+        WHERE device_bdaddr = %s
     ) AS combined_handles
     ORDER BY handle_value ASC;
     """
@@ -267,7 +272,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     for handle, in GATT_all_known_handles_result:
         service_match_dict[handle] = 0
 
-    if(len(GATT_services_result) == 0):
+    if(len(GATT_services_result) == 0 and len(service_match_dict) == 0):
         vprint("\tNo GATT Information found.")
         return
     else:
@@ -352,26 +357,22 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
             if(handle in char_value_handles_dict.keys()):
                 char_value_handle = handle
                 for byte_values in char_value_handles_dict[handle]:
-                    #byte_values = char_value_handles_dict[handle]
-                    qprint(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                    characteristic_value_decoding("\t\t\t\t\t", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                    qprint(f"\t\t\t\t(G)ATT handle {handle} read results: {byte_values}")
+                    # FIXME: do we have an enclosing characteristic? If so do the below...
+                    #characteristic_value_decoding("\t\t\t\t\t", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         qprint(f"\n\t\tGATTPrint:")
-        with open(f"./GATTprints/{bdaddr}.gattprint", 'w') as file:
-            for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
-                UUID = add_dashes_to_UUID128(UUID)
-                qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
-                file.write(f"Svc: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID}\n")
-            for device_bdaddr_type, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
-                UUID128_2 = add_dashes_to_UUID128(UUID128_2)
-                qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
-                file.write(f"Descriptor Handle: {attribute_handle:03}, {UUID128_2}\n")
-            for declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
-                UUID = add_dashes_to_UUID128(UUID)
-                qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
-                file.write(f"Char: {UUID}, Properties: {char_properties}, Declaration Handle: {declaration_handle:03}, Characteristic Handle: {char_value_handle:03}\n")
+        for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+            UUID = add_dashes_to_UUID128(UUID)
+            qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
+        for device_bdaddr_type, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+            UUID128_2 = add_dashes_to_UUID128(UUID128_2)
+            qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
+        for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+            UUID = add_dashes_to_UUID128(UUID)
+            qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
         qprint("")
 
         if(not hideBLEScopedata):

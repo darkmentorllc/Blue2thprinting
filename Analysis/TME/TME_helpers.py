@@ -470,7 +470,7 @@ def print_appearance(bdaddr, nametype):
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
-        qprint("\tNo Appearance data found.")
+        vprint("\tNo Appearance data found.")
         return
 
     for appearance, random, le_evt_type in le_result:
