@@ -741,6 +741,7 @@ def main():
 
     in_filename = args.input
     TME.TME_glob.verbose_print = args.verbose_print
+    TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.use_test_db = args.use_test_db
     skip_invalid = args.skipinvalid
 

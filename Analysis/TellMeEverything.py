@@ -121,7 +121,14 @@ def main():
         if(num_records):
             qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
         if output_filename:
-            subprocess.run(["python3", "BTIDES_to_MySQL.py", "--use-test-db", "--input", output_filename])
+            cmd = ["python3", "BTIDES_to_MySQL.py", "--input", output_filename]
+            if args.use_test_db:
+                cmd.append("--use-test-db")
+            if args.quiet_print:
+                cmd.append("--quiet-print")
+            if args.verbose_print:
+                cmd.append("--verbose-print")
+            subprocess.run(cmd)
 
     # Import metadata v2
     import_metadata_v2()
