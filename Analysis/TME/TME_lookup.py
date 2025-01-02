@@ -234,9 +234,9 @@ def get_bdaddrs_by_company_regex(companyregex):
             # NOTE: Manufacture-specific data is the location where the BT_CID is most likely to be byte-swapped
             # NOTE: Try the byte-swapped version too if there are no results from the above
 
-            values2 = (byte_swapped_key,)
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
+                values2 = (byte_swapped_key,)
                 le_msd_query = "SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
                 le_msd_result = execute_query(le_msd_query, values2)
                 for (bdaddr,) in le_msd_result:
@@ -253,6 +253,7 @@ def get_bdaddrs_by_company_regex(companyregex):
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
+                values2 = (byte_swapped_key,)
                 eir_msd_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = %s"
                 eir_msd_result = execute_query(eir_msd_query, values2)
                 for (bdaddr,) in eir_msd_result:
