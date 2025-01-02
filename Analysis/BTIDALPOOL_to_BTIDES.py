@@ -13,6 +13,7 @@ import sys
 import datetime
 import hashlib
 import re
+import os
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -134,6 +135,8 @@ def retrieve_btides_from_btidalpool(username, query_object):
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     json_content_str = json.dumps(json_content, sort_keys=True)
     sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
+    # Create the pool_files directory if it doesn't exist
+    os.makedirs('./pool_files', exist_ok=True)
     output_filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
 
     try:
