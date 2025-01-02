@@ -101,6 +101,22 @@ def main():
             query_object["bdaddr_regex"] = args.bdaddr_regex
         if args.name_regex:
             query_object["name_regex"] = args.name_regex
+        if args.company_regex:
+            query_object["company_regex"] = args.company_regex
+        if args.NOT_company_regex:
+            query_object["NOT_company_regex"] = args.NOT_company_regex
+        if args.UUID128_regex:
+            query_object["UUID128_regex"] = args.UUID128_regex
+        if args.UUID16_regex:
+            query_object["UUID16_regex"] = args.UUID16_regex
+        if args.MSD_regex:
+            query_object["MSD_regex"] = args.MSD_regex
+        if args.require_GATT:
+            query_object["require_GATT"] = True
+        if args.require_LL_VERSION_IND:
+            query_object["require_LL_VERSION_IND"] = True
+        if args.require_LMP_VERSION_RES:
+            query_object["require_LMP_VERSION_RES"] = True
         (num_records, output_filename) = retrieve_btides_from_btidalpool("xeno", query_object)
         if(num_records):
             qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")

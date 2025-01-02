@@ -605,6 +605,9 @@ def import_ATT_packet(bdaddr, device_bdaddr_type, att_entry):
         # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
         if isinstance(handle, str):
             handle = int(handle, 16)
+            if(handle == 0):
+                print("Error: read_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
+                exit(-1)
         byte_values = bytes.fromhex(att_entry["value_hex_str"])
         values = (device_bdaddr_type, bdaddr, handle, byte_values)
         insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
@@ -686,11 +689,11 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                     handle = char_value["value_handle"]
                     if isinstance(handle, str):
                         handle = int(handle, 16)
+                        if(handle == 0):
+                            print("Error: read_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
+                            exit(-1)
                     values = (device_bdaddr_type, bdaddr, handle, byte_values)
                     insert = f"INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
-                    if(int(char_value["value_handle"], 16) == 0):
-                        print("Error: read_handle was 0. This is a bug. Exiting.")
-                        exit(-1)
                     execute_insert(insert, values)
 
 def parse_GATTArray(entry):
