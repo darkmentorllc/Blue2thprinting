@@ -111,11 +111,14 @@ def main():
     if(queryBTIDALPOOL):
         qprint("Querying BTIDALPOOL")
         query_object = {}
-        if args.bdaddr:
-            query_object["bdaddr"] = args.bdaddr
-        if args.nameregex:
-            query_object["nameregex"] = args.nameregex
-        output_filename = retrieve_btides_from_btidalpool("xeno", query_object)
+        if bdaddr:
+            query_object["bdaddr"] = bdaddr
+        if bdaddrregex:
+            query_object["bdaddrregex"] = bdaddrregex
+        if nameregex:
+            query_object["nameregex"] = nameregex
+        (num_records, output_filename) = retrieve_btides_from_btidalpool("xeno", query_object)
+        qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
         if output_filename:
             subprocess.run(["python3", "BTIDES_to_MySQL.py", "--use-test-db", "--input", output_filename])
 
