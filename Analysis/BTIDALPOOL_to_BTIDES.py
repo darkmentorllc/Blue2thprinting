@@ -144,7 +144,7 @@ def retrieve_btides_from_btidalpool(username, query_object):
         print(f"Error writing JSON file: {e}")
         sys.exit(1)
 
-    return output_filename
+    return (len(json_content), output_filename)
 
 def validate_username(value):
     if len(value) > 255:
@@ -161,6 +161,7 @@ def main():
 
     parser.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
     parser.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     parser.add_argument('--nameregex', type=str, default='', required=False, help='Value for REGEXP match against device_name.')
 
     args = parser.parse_args()
@@ -168,15 +169,17 @@ def main():
     query_object = {}
     if args.bdaddr:
         query_object["bdaddr"] = args.bdaddr
+    if args.bdaddrregex:
+        query_object["bdaddrregex"] = args.bdaddrregex
     if args.nameregex:
         query_object["nameregex"] = args.nameregex
 
-    output_filename = retrieve_btides_from_btidalpool(
+    (num_records, output_filename) = retrieve_btides_from_btidalpool(
         username=args.username,
         query_object=query_object
     )
     if(output_filename):
-        print(f"BTIDES data retrieved from BTIDALPOOL and saved to {output_filename}")
+        print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")
     else:
         sys.exit(1)
 

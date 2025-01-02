@@ -183,12 +183,17 @@ def handle_query(self, username, query_object):
     print(query_object)
 
     args_array = ["--use-test-db", "--quiet-print"]
+#    args_array = ["--use-test-db"]
 
     # Can't just loop through and use everything we're handed in query_object,
     # only use arguments which we are expecting, and ignore everything else
     if("bdaddr" in query_object):
         args_array.append(f"--bdaddr")
         args_array.append(f"{query_object['bdaddr']}")
+
+    if("bdaddrregex" in query_object):
+        args_array.append(f"--bdaddrregex")
+        args_array.append(f"{query_object['bdaddrregex']}")
 
     if("nameregex" in query_object):
         args_array.append(f"--nameregex")
