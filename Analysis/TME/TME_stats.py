@@ -26,28 +26,28 @@ def get_uuid16_stats(arg):
                 else:
                     seen_btc_uuid16s_hash[uuid16] = 1
 
-        print("----= BLUETOOTH CLASSIC RESULTS =----")
-        print(f"{len(eir_uuid16_result)} rows of data found in EIR_bdaddr_to_UUID16s")
-        print(f"{len(seen_btc_uuid16s_hash)} unique UUID16s found")
-#            print(seen_btc_uuid16s_hash)
+        qprint("----= BLUETOOTH CLASSIC RESULTS =----")
+        qprint(f"{len(eir_uuid16_result)} rows of data found in EIR_bdaddr_to_UUID16s")
+        qprint(f"{len(seen_btc_uuid16s_hash)} unique UUID16s found")
+#            qprint(seen_btc_uuid16s_hash)
         sorted_items = sorted(seen_btc_uuid16s_hash.items(), key=lambda item: item[1], reverse=True)
-        print(f"count \t uuid16 \t company")
+        qprint(f"count \t uuid16 \t company")
         for item in sorted_items:
             (uuid16,count) = item
-#                print(TME.TME_glob.bt_member_UUID16s_to_names)
-#                print(item)
-#                print(uuid16)
-#                print(count)
+#                qprint(TME.TME_glob.bt_member_UUID16s_to_names)
+#                qprint(item)
+#                qprint(uuid16)
+#                qprint(count)
             try:
                 decimal_uuid16 = int(uuid16,16)
             except ValueError:
-                if(arg != "quiet"): print(f"Skipping '{uuid16}', it can't be converted to an integer")
+                if(arg != "quiet"): qprint(f"Skipping '{uuid16}', it can't be converted to an integer")
                 continue
 
             if(decimal_uuid16 in TME.TME_glob.bt_member_UUID16s_to_names.keys()):
-                print(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
+                qprint(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
                 company_uuid_count += 1
-        print(f"*** {company_uuid_count} UUID16s matched a company name ***")
+        qprint(f"*** {company_uuid_count} UUID16s matched a company name ***")
 
         ################################################
         # Get the data for LE devices from the database
@@ -66,29 +66,29 @@ def get_uuid16_stats(arg):
                             seen_le_uuid16s_hash[uuid16] = 1
 
         company_uuid_count = 0
-        print()
-        print("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        print(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s")
-        print(f"{len(seen_le_uuid16s_hash)} unique UUID16s found")
-#            print(seen_le_uuid16s_hash)
+        qprint()
+        qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
+        qprint(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s")
+        qprint(f"{len(seen_le_uuid16s_hash)} unique UUID16s found")
+#            qprint(seen_le_uuid16s_hash)
         sorted_items = sorted(seen_le_uuid16s_hash.items(), key=lambda item: item[1], reverse=True)
-        print(f"count \t uuid16 \t company")
+        qprint(f"count \t uuid16 \t company")
         for item in sorted_items:
             (uuid16,count) = item
-#                print(TME.TME_glob.bt_member_UUID16s_to_names)
-#                print(item)
-#                print(uuid16)
-#                print(count)
+#                qprint(TME.TME_glob.bt_member_UUID16s_to_names)
+#                qprint(item)
+#                qprint(uuid16)
+#                qprint(count)
             try:
                 decimal_uuid16 = int(uuid16,16)
             except ValueError:
-                if(arg != "quiet"): print(f"Skipping '{uuid16}', it can't be converted to an integer")
+                if(arg != "quiet"): qprint(f"Skipping '{uuid16}', it can't be converted to an integer")
                 continue
             if(decimal_uuid16 in TME.TME_glob.bt_member_UUID16s_to_names.keys()):
-                print(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
+                qprint(f"{count} \t {uuid16} \t {TME.TME_glob.bt_member_UUID16s_to_names[int(uuid16,16)]}")
                 company_uuid_count += 1
 
-        print(f"*** {company_uuid_count} UUID16s matched a company name ***")
+        qprint(f"*** {company_uuid_count} UUID16s matched a company name ***")
 
 
 def get_uuid128_stats(arg):
@@ -113,26 +113,26 @@ def get_uuid128_stats(arg):
                 else:
                     seen_btc_uuid128s_hash[uuid128] = 1
 
-        print("----= BLUETOOTH CLASSIC RESULTS =----")
-        print(f"{len(eir_uuid128_result)} rows of data found in EIR_bdaddr_to_UUID128s")
-        print(f"{len(seen_btc_uuid128s_hash)} unique UUID128s found")
-#            print(seen_btc_uuid128s_hash)
+        qprint("----= BLUETOOTH CLASSIC RESULTS =----")
+        qprint(f"{len(eir_uuid128_result)} rows of data found in EIR_bdaddr_to_UUID128s")
+        qprint(f"{len(seen_btc_uuid128s_hash)} unique UUID128s found")
+#            qprint(seen_btc_uuid128s_hash)
         sorted_items = sorted(seen_btc_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)
-        print(f"count \t uuid128 \t\t\t\t known info")
+        qprint(f"count \t uuid128 \t\t\t\t known info")
         for item in sorted_items:
             (uuid128,count) = item
-#                print(item)
-#                print(uuid128)
-#                print(count)
+#                qprint(item)
+#                qprint(uuid128)
+#                qprint(count)
             if(uuid128 in TME.TME_glob.custom_uuid128_hash):
                 known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
                 known_uuid_count += 1
             else:
                 known_info = ""
 
-            print(f"{count} \t {uuid128} \t {known_info}")
+            qprint(f"{count} \t {uuid128} \t {known_info}")
 
-        print(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")
+        qprint(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")
         known_uuid_count = 0
 
         ################################################
@@ -153,24 +153,24 @@ def get_uuid128_stats(arg):
                         else:
                            seen_le_uuid128s_hash[uuid128] = 1
 
-        print()
-        print("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        print(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s")
-        print(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
-#            print(seen_le_uuid128s_hash)
+        qprint()
+        qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
+        qprint(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s")
+        qprint(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
+#            qprint(seen_le_uuid128s_hash)
         sorted_items = sorted(seen_le_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)
-        print(f"count \t uuid128 \t\t\t\t known info")
+        qprint(f"count \t uuid128 \t\t\t\t known info")
         for item in sorted_items:
             (uuid128,count) = item
-#                print(item)
-#                print(uuid128)
-#                print(count)
+#                qprint(item)
+#                qprint(uuid128)
+#                qprint(count)
             if(uuid128 in TME.TME_glob.custom_uuid128_hash):
                 known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
                 known_uuid_count += 1
             else:
                 known_info = ""
 
-            print(f"{count} \t {uuid128} \t {known_info}")
+            qprint(f"{count} \t {uuid128} \t {known_info}")
 
-        print(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")
+        qprint(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")

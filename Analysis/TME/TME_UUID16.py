@@ -17,7 +17,7 @@ def print_uuid16s(device_bdaddr):
     values = (device_bdaddr,)
     eir_uuid16s_query = "SELECT list_type, str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE device_bdaddr = %s"
     eir_uuid16s_result = execute_query(eir_uuid16s_query, values)
-    
+
     # Query for LE_bdaddr_to_UUID16s table
     le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s WHERE device_bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
@@ -26,7 +26,7 @@ def print_uuid16s(device_bdaddr):
         vprint("\tNo UUID16s found.")
         return
     else:
-        print("\tUUID16s found:")
+        qprint("\tUUID16s found:")
 
     # Process EIR_bdaddr_to_UUID16s results
     for list_type, str_UUID16s in eir_uuid16s_result:
@@ -40,31 +40,31 @@ def print_uuid16s(device_bdaddr):
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
         data = {"length": length, "UUID16List": UUID16List}
         BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
-        
+
         # Then human UI output
         if(str_UUID16s == ""):
-            print("\t\tEmpty list present")
+            qprint("\t\tEmpty list present")
         else:
-            str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]        
+            str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
             for uuid16 in str_UUID16s_list:
                 uuid16 = uuid16.strip()
                 if(uuid16 == ''):
-                    print("\t\tEmpty entry present")
+                    qprint("\t\tEmpty entry present")
                     continue
                 service_by_uuid16 = get_uuid16_service_string(uuid16)
                 gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
                 protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
                 company_by_uuid16 = get_company_by_uuid16(uuid16)
                 if(service_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
                 elif(gatt_service_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
                 elif(protocol_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
                 elif(company_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
-                    print(f"\t\tUUID16 {uuid16} (No matches)")
+                    qprint(f"\t\tUUID16 {uuid16} (No matches)")
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID16s)")
 
     # Process LE_bdaddr_to_UUID16s results
@@ -82,13 +82,13 @@ def print_uuid16s(device_bdaddr):
 
         # Then human UI output
         if(str_UUID16s == ""):
-            print("\t\tEmpty list present")
+            qprint("\t\tEmpty list present")
         else:
             str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
             for uuid16 in str_UUID16s_list:
                 uuid16 = uuid16.strip()
                 if(uuid16 == ''):
-                    print("\t\tEmpty entry present")
+                    qprint("\t\tEmpty entry present")
                     continue
                 service_by_uuid16 = get_uuid16_service_string(uuid16)
                 gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
@@ -96,19 +96,19 @@ def print_uuid16s(device_bdaddr):
                 company_by_uuid16 = get_company_by_uuid16(uuid16)
                 # TODO: Create a function that looks up a more-specific name for a service given a company ID
                 if(service_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
                 elif(gatt_service_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
                 elif(protocol_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
                 elif(company_by_uuid16 != "Unknown"):
-                    print(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
+                    qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
-                    print(f"\t\tUUID16 {uuid16} (No matches)")
+                    qprint(f"\t\tUUID16 {uuid16} (No matches)")
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-    print("")
+    qprint("")
 
 # Function to print UUID16s service solicitation data for a given device_bdaddr
 def print_uuid16s_service_solicit(device_bdaddr):
@@ -120,7 +120,7 @@ def print_uuid16s_service_solicit(device_bdaddr):
         vprint("\tNo Service Solicit UUID16s found.")
         return
     else:
-        print("\tService solicit UUID16s found:")
+        qprint("\tService solicit UUID16s found:")
 
     # Process LE_bdaddr_to_UUID16s results
     for bdaddr_random, le_evt_type, str_UUID16s in le_uuid16s_result:
@@ -128,7 +128,7 @@ def print_uuid16s_service_solicit(device_bdaddr):
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             if(uuid16 == ''):
-                print("\t\tEmpty list present")
+                qprint("\t\tEmpty list present")
                 continue
             service_by_uuid16 = get_uuid16_service_string(uuid16)
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
@@ -136,19 +136,19 @@ def print_uuid16s_service_solicit(device_bdaddr):
             company_by_uuid16 = get_company_by_uuid16(uuid16)
             # TODO: Create a function that looks up a more-specific name for a service given a company ID
             if(service_by_uuid16 != "Unknown"):
-                print(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
+                qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
             elif(gatt_service_by_uuid16 != "Unknown"):
-                print(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
+                qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
             elif(protocol_by_uuid16 != "Unknown"):
-                print(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+                qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
             elif(company_by_uuid16 != "Unknown"):
-                print(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
+                qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
             else:
-                print(f"\t\tUUID16 {uuid16} (No matches)")
+                qprint(f"\t\tUUID16 {uuid16} (No matches)")
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-    print("")
+    qprint("")
 
 # Function to print UUID16s service data for a given device_bdaddr
 def print_uuid16_service_data(device_bdaddr):
@@ -160,7 +160,7 @@ def print_uuid16_service_data(device_bdaddr):
         vprint("\tNo UUID16 service data found.")
         return
     else:
-        print("\tUUID16 service data found:")
+        qprint("\tUUID16 service data found:")
 
     for bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str in le_uuid16_service_data_result:
         # Export BTIDES data first
@@ -176,18 +176,18 @@ def print_uuid16_service_data(device_bdaddr):
         company_by_uuid16 = get_company_by_uuid16(UUID16_hex_str)
         # TODO: Create a function that looks up a more-specific name for a service given a company ID
         if(service_by_uuid16 != "Unknown"):
-            print(f"\t\tUUID16 {UUID16_hex_str} (Service ID: {service_by_uuid16})")
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (Service ID: {service_by_uuid16})")
         elif(gatt_service_by_uuid16 != "Unknown"):
-            print(f"\t\tUUID16 {UUID16_hex_str} (GATT Service ID: {gatt_service_by_uuid16})")
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (GATT Service ID: {gatt_service_by_uuid16})")
         elif(protocol_by_uuid16 != "Unknown"):
-            print(f"\t\tUUID16 {UUID16_hex_str} (Protocol ID: {protocol_by_uuid16})")
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (Protocol ID: {protocol_by_uuid16})")
         elif(company_by_uuid16 != "Unknown"):
-            print(f"\t\tUUID16 {UUID16_hex_str} (Company ID: {company_by_uuid16})")
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (Company ID: {company_by_uuid16})")
         else:
-            print(f"\t\tUUID16 {UUID16_hex_str} (No matches)")
-        print(f"\t\tRaw service data: {service_data_hex_str}")
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (No matches)")
+        qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-    print("")
+    qprint("")

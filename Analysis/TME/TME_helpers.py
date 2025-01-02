@@ -78,8 +78,13 @@ def execute_insert(query, values):
 # Helpers
 ########################################
 
+# Quiet print overrides verbose print if present
+def qprint(fmt):
+    if(not TME.TME_glob.quiet_print): print(fmt)
+
+# Verbose print
 def vprint(fmt):
-    if(TME.TME_glob.verbose_print): print(fmt)
+    if(TME.TME_glob.verbose_print): qprint(fmt)
 
 # Use the UUID16 names mapping to get the protocol ID
 def get_uuid16_protocol_string(uuid16):
@@ -173,7 +178,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = %s;
     """
     result = execute_query(query, values)
-    #print(result)
+    #qprint(result)
     if(len(result) > 0):
         for (bdaddr_result,) in result:
             if(bdaddr_result):
@@ -320,7 +325,7 @@ def get_bdaddr_type(bdaddr, random):
 
         random = is_bdaddr_le_and_random(bdaddr)
         if(random == -1):
-            print("Error encounter in get_bdaddr_type for {bdaddr}. Debug.")
+            qprint("Error encounter in get_bdaddr_type for {bdaddr}. Debug.")
             exit()
 
     if(random == 0):
@@ -381,7 +386,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         random = is_bdaddr_le_and_random(bdaddr)
 
     if(random):
-        print(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
+        qprint(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
     else:
         # Query the database for the company_name based on the first 3 octets
         values = (first_three_octets,)
@@ -389,19 +394,19 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         result = execute_query(query, values)
 
         if result:
-            print(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): {result[0][0]}")
+            qprint(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): {result[0][0]}")
             if(first_three_octets == "00:00:00"):
-                print(f"{indent}\tNOTE: Most BDADDR that begin with 00:00:00 are erroneous, not actual XEROX devices!")
+                qprint(f"{indent}\tNOTE: Most BDADDR that begin with 00:00:00 are erroneous, not actual XEROX devices!")
         else:
-            print(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): No Match")
+            qprint(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): No Match")
 
         if(print_type):
             if(is_classic):
-                print(f"{indent}\tBDADDR is Bluetooth Classic")
+                qprint(f"{indent}\tBDADDR is Bluetooth Classic")
             else:
-                print(f"{indent}\tBDADDR is Bluetooth Low Energy Public")
+                qprint(f"{indent}\tBDADDR is Bluetooth Low Energy Public")
 
-    print("")
+    qprint("")
 
 ###################################################################################
 # Ideally should be in TME_names, but I don't want to introduce cyclic dependancies
@@ -416,9 +421,9 @@ def find_nameprint_match(name_string):
         #regex_pattern = key
         # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
         regex_pattern = key.replace('\\\\\\', '\\')
-        #print(f"regex_pattern = {regex_pattern}")
+        #qprint(f"regex_pattern = {regex_pattern}")
         if re.search(regex_pattern, name_string):
-            print(f"\t\t\tNamePrint: match found for {key}: {value}")
+            qprint(f"\t\t\tNamePrint: match found for {key}: {value}")
 
 ##################################################################################
 # Appearance (This is in here because it comes up in both advertisements and GATT)
@@ -428,9 +433,9 @@ def appearance_uint16_to_string(number):
     #s = ""
     subcategory_num = number & 0b111111
     category_num = number >> 6
-    #print(f"Raw Value: 0x{number:04x}")
-    #print(f"Category: {category_num}")
-    #print(f"Subcategory: {subcategory_num}")
+    #qprint(f"Raw Value: 0x{number:04x}")
+    #qprint(f"Category: {category_num}")
+    #qprint(f"Subcategory: {subcategory_num}")
 
     # Initialize to defaults in case there's no match
     if(category_num == 0):
@@ -445,11 +450,11 @@ def appearance_uint16_to_string(number):
 
     for category in TME.TME_glob.appearance_yaml_data['appearance_values']:
         if category['category'] == category_num:
-            #print(category)
+            #qprint(category)
             cat_name = category['name']
             if("subcategory" in category):
                 for subcategory in category['subcategory']:
-                    #print(subcategory)
+                    #qprint(subcategory)
                     if subcategory['value'] == subcategory_num:
                         subcat_name = subcategory['name']
 
@@ -465,7 +470,7 @@ def print_appearance(bdaddr, nametype):
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
-        print("\tNo Appearance data found.")
+        qprint("\tNo Appearance data found.")
         return
 
     for appearance, random, le_evt_type in le_result:
@@ -476,11 +481,11 @@ def print_appearance(bdaddr, nametype):
         BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_Appearance, data)
 
         # Then human UI output
-        print(f"\tAppearance: {appearance_uint16_to_string(appearance)}")
+        qprint(f"\tAppearance: {appearance_uint16_to_string(appearance)}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-    print("")
+    qprint("")
 
 ##################################################################################
 # UUID128s  (This is in here because it comes up in both advertisements and GATT)
@@ -510,16 +515,16 @@ def print_CoD_to_names(number):
         if(number & (1 << i)):
             for entry in TME.TME_glob.CoD_yaml_data['cod_services']:
                 if (entry['bit'] == i):
-                    print(f"\t\t\tCoD Major Service (bit {i}): {entry['name']}")
+                    qprint(f"\t\t\tCoD Major Service (bit {i}): {entry['name']}")
 
     major_device_class = ((number >> 8) & 0x1F)
-    #print(major_device_class)
+    #qprint(major_device_class)
     minor_device_class = ((number >> 2) & 0x3F)
-    #print(minor_device_class)
+    #qprint(minor_device_class)
 
     for entry in TME.TME_glob.CoD_yaml_data['cod_device_class']:
         if(entry['major'] == major_device_class):
-            print(f"\t\t\tCoD Major Device Class ({major_device_class}): {entry['name']}")
+            qprint(f"\t\t\tCoD Major Device Class ({major_device_class}): {entry['name']}")
             if 'minor' in entry:
                 # Apparently, though it's not spelled out well in the Assigned Numbers document,
                 # If there's a "subsplit" entry in the yaml, it means to take that many upper bits
@@ -527,27 +532,27 @@ def print_CoD_to_names(number):
                 # and the lower bits as the 'subminor' number
                 if 'subsplit' in entry:
                     upper_bits = entry['subsplit']
-                    #print(upper_bits)
+                    #qprint(upper_bits)
                     lower_bits = 6 - upper_bits
                     subminor_num = minor_device_class & ((2**lower_bits)-1)
-                    #print(subminor_num)
+                    #qprint(subminor_num)
                     minor_num = (minor_device_class >> lower_bits) & ((2**upper_bits)-1)
-                    #print(minor_num)
+                    #qprint(minor_num)
                     for minor_entry in entry['minor']:
                         if(minor_entry['value'] == minor_num):
-                            print(f"\t\t\tCoD Minor Device Class ({minor_num}): {minor_entry['name']}")
+                            qprint(f"\t\t\tCoD Minor Device Class ({minor_num}): {minor_entry['name']}")
                     for subminor_entry in entry['subminor']:
                         if(subminor_entry['value'] == subminor_num):
-                            print(f"\t\t\tCoD SubMinor Device Class ({subminor_num}): {subminor_entry['name']}")
+                            qprint(f"\t\t\tCoD SubMinor Device Class ({subminor_num}): {subminor_entry['name']}")
                 else:
                     for minor_entry in entry['minor']:
                         if(minor_entry['value'] == minor_device_class):
-                            print(f"\t\t\tCoD Minor Device Class ({minor_device_class}): {minor_entry['name']}")
+                            qprint(f"\t\t\tCoD Minor Device Class ({minor_device_class}): {minor_entry['name']}")
             # Sigh, and imaging, and only imaging, needs to be handled differently...
             if 'minor_bits' in entry:
                 for bitsentry in entry['minor_bits']:
                     if(minor_device_class & (1 << (bitsentry['value']-2))): # -2 because I already shifted minor_device_class by 2
-                            print(f"\t\t\tCoD Minor Device Class (bit {bitsentry['value']} set): {bitsentry['name']}")
+                            qprint(f"\t\t\tCoD Minor Device Class (bit {bitsentry['value']} set): {bitsentry['name']}")
 
 
 def print_class_of_device(bdaddr):
@@ -566,7 +571,7 @@ def print_class_of_device(bdaddr):
         vprint("\tNo Class of Device Data found.")
         return
     else:
-        print("\tClass of Device Data:")
+        qprint("\tClass of Device Data:")
 
     for (class_of_device,) in eir_result:
         # Export BTIDES data first
@@ -576,9 +581,9 @@ def print_class_of_device(bdaddr):
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_ClassOfDevice, data)
 
         # Then human UI output
-        print(f"\t\tClass of Device: 0x{class_of_device:04x}")
+        qprint(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
-        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_CoD)")
+        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_CoD)")
 
     for bdaddr_random, le_evt_type, class_of_device in le_result:
         # Export BTIDES data first
@@ -588,13 +593,13 @@ def print_class_of_device(bdaddr):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_ClassOfDevice, data)
 
         # Then human UI output
-        print(f"\t\tClass of Device: 0x{class_of_device:04x}")
+        qprint(f"\t\tClass of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         #DELETEME? Copy/paste error? - find_nameprint_match(name)
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
-    print("")
+    qprint("")
 
 ################################################################################
 # Device Name (This is in here because it comes up in both BLE and BTC)
@@ -622,8 +627,8 @@ def print_device_names(bdaddr, nametype):
 
     for device_name_type, name_hex_str in eir_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
-        print(f"\tDeviceName: {device_name}")
-        print(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name2)")
+        qprint(f"\tDeviceName: {device_name}")
+        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name2)")
         find_nameprint_match(device_name)
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
@@ -631,20 +636,20 @@ def print_device_names(bdaddr, nametype):
         BTIDES_export_AdvData(bdaddr, 0, 50, device_name_type, data)
 
     for device_name, in rsp_result:
-        print(f"\tDeviceName: {device_name}")
-        print("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
+        qprint(f"\tDeviceName: {device_name}")
+        qprint("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
-        print(f"\tDeviceName: {device_name}")
+        qprint(f"\tDeviceName: {device_name}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name3), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
-        print(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, device_name_type, data)
 
-    print("")
+    qprint("")

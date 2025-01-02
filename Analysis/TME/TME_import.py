@@ -72,7 +72,7 @@ def import_custom_uuid128_CSV_data():
                 key = row[0].strip().lower()
                 value = row[1].strip()
                 TME.TME_glob.custom_uuid128_hash[key] = value
-#                print(f"key = {key}, value = {value}")
+#                qprint(f"key = {key}, value = {value}")
 
 
 ########################################
@@ -100,8 +100,8 @@ def import_bt_CID_to_names():
     TME.TME_glob.bt_CID_to_names[0x7500] = "Samsung (wrong-endian)"
     TME.TME_glob.bt_CID_to_names[0xff19] = "Samsung (buggy)"
 
-#    print(TME.TME_glob.bt_CID_to_names)
-#    print(len(TME.TME_glob.bt_CID_to_names))
+#    qprint(TME.TME_glob.bt_CID_to_names)
+#    qprint(len(TME.TME_glob.bt_CID_to_names))
 
 #########################################
 # Get data from member_uuids.yaml
@@ -122,9 +122,9 @@ def import_bt_member_UUID16s_to_names():
         uuid128_value = f"0000{value:04x}00001000800000805f9b34fb".lower()
         TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_value] = name
 
-#    print(TME.TME_glob.bt_member_UUID16s_to_names)
-#    print(TME.TME_glob.bt_member_UUID16_as_UUID128_to_names)
-#    print(len(TME.TME_glob.bt_member_UUID16s_to_names))
+#    qprint(TME.TME_glob.bt_member_UUID16s_to_names)
+#    qprint(TME.TME_glob.bt_member_UUID16_as_UUID128_to_names)
+#    qprint(len(TME.TME_glob.bt_member_UUID16s_to_names))
 
 
 #########################################
@@ -137,7 +137,7 @@ def import_CoD_to_names():
     global CoD_yaml_data
     with open('./public/assigned_numbers/core/class_of_device.yaml', 'r') as file:
         TME.TME_glob.CoD_yaml_data = yaml.safe_load(file)
-        
+
 #########################################
 # Get data from core_version.yaml
 #########################################
@@ -154,7 +154,7 @@ def import_bt_spec_version_numbers_to_names():
         name = entry['name']
         TME.TME_glob.bt_spec_version_numbers_to_names[value] = name
 
-    #print(TME.TME_glob.bt_spec_version_numbers_to_names)
+    #qprint(TME.TME_glob.bt_spec_version_numbers_to_names)
 
 #########################################
 # Get data from appearance_values.yaml
@@ -183,7 +183,7 @@ def import_gatt_services_uuid16_names():
         name = entry['name']
         TME.TME_glob.gatt_services_uuid16_names[uuid] = name
 
-    #print(TME.TME_glob.gatt_services_uuid16_names)
+    #qprint(TME.TME_glob.gatt_services_uuid16_names)
 
 #########################################
 # Get data from declarations.yaml
@@ -201,7 +201,7 @@ def import_gatt_declarations_uuid16_names():
         name = entry['name']
         TME.TME_glob.gatt_declarations_uuid16_names[uuid] = name
 
-    #print(TME.TME_glob.gatt_declarations_uuid16_names)
+    #qprint(TME.TME_glob.gatt_declarations_uuid16_names)
 
 #########################################
 # Get data from descriptors.yaml
@@ -219,7 +219,7 @@ def import_gatt_descriptors_uuid16_names():
         name = entry['name']
         TME.TME_glob.gatt_descriptors_uuid16_names[uuid] = name
 
-    #print(TME.TME_glob.gatt_descriptors_uuid16_names)
+    #qprint(TME.TME_glob.gatt_descriptors_uuid16_names)
 
 #########################################
 # Get data from characteristic_uuids.yaml
@@ -237,7 +237,7 @@ def import_gatt_characteristic_uuid16_names():
         name = entry['name']
         TME.TME_glob.gatt_characteristic_uuid16_names[uuid] = name
 
-    #print(TME.TME_glob.gatt_characteristic_uuid16_names)
+    #qprint(TME.TME_glob.gatt_characteristic_uuid16_names)
 
 #########################################
 # Get data from protocol_identifiers.yaml
@@ -255,7 +255,7 @@ def import_uuid16_protocol_names():
         name = entry['name']
         TME.TME_glob.uuid16_protocol_names[uuid] = name
 
-    #print(TME.TME_glob.uuid16_protocol_names)
+    #qprint(TME.TME_glob.uuid16_protocol_names)
 
 #########################################
 # Get data from service_class.yaml
@@ -273,4 +273,4 @@ def import_uuid16_service_names():
         name = entry['name']
         TME.TME_glob.uuid16_service_names[uuid] = name
 
-    #print(TME.TME_glob.uuid16_service_names)
+    #qprint(TME.TME_glob.uuid16_service_names)

@@ -182,7 +182,7 @@ def handle_btides_data(self, username, json_content):
 def handle_query(self, username, query_object):
     print(query_object)
 
-    args_array = ["--use-test-db"]
+    args_array = ["--use-test-db", "--quiet-print"]
 
     # Can't just loop through and use everything we're handed in query_object,
     # only use arguments which we are expecting, and ignore everything else

@@ -7,6 +7,7 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
+# Can't use qprint here, because this leads to circular depdendencies
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array
@@ -93,7 +94,7 @@ def ff_Names(name_type, data):
             obj["type_str"] = "IncompleteName"
         elif(name_type == type_AdvData_CompleteName):
             obj["type_str"] = "CompleteName"
-            
+
         if(data["utf8_name"]):
             obj["utf8_name"] = data["utf8_name"]
 
@@ -171,49 +172,49 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
     #print(json.dumps(AdvDataArrayEntry, indent=2))
     # Type has already been checked before finding the match, no need to check it again
     if(adv_data_type == type_AdvData_Flags):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["flags_hex_str"] == data["flags_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID16ListIncomplete or adv_data_type == type_AdvData_UUID16ListComplete):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID16List"] == data["UUID16List"]): # TODO: Can list equality be checked this way?
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID32ListIncomplete or adv_data_type == type_AdvData_UUID32ListComplete):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID32List"] == data["UUID32List"]): # TODO: Can list equality be checked this way?
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID128ListIncomplete or adv_data_type == type_AdvData_UUID128ListComplete):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID128List"] == data["UUID128List"]): # TODO: Can list equality be checked this way?
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["name_hex_str"] == data["name_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_TxPower):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["tx_power"] == data["tx_power"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_ClassOfDevice):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["CoD_hex_str"] == data["CoD_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_DeviceID):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["vendor_id_source"] == data["vendor_id_source"] and
            AdvDataArrayEntry["vendor_id"] == data["vendor_id"] and
            AdvDataArrayEntry["product_id"] == data["product_id"] and
@@ -222,34 +223,34 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
         else: return False
 
     if(adv_data_type == type_AdvData_PeripheralConnectionIntervalRange):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["conn_interval_min"] == data["conn_interval_min"] and
            AdvDataArrayEntry["conn_interval_max"] == data["conn_interval_max"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_Appearance):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["appearance_hex_str"] == data["appearance_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID16ServiceData):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID16"] == data["UUID16"] and
            AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID32ServiceData):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID32"] == data["UUID32"] and
            AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
             return True
         else: return False
 
     if(adv_data_type == type_AdvData_UUID128ServiceData):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID128"] == data["UUID128"] and
            AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
             return True
@@ -257,8 +258,8 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
 
 
     if(adv_data_type == type_AdvData_MSD):
-        if(AdvDataArrayEntry["length"] == data["length"] and 
-           AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and 
+        if(AdvDataArrayEntry["length"] == data["length"] and
+           AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and
            AdvDataArrayEntry["msd_hex_str"] == data["msd_hex_str"]):
             return True
         else: return False
@@ -267,7 +268,7 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
     print("adv_data_exact_match: unknown adv_data_type. Something is wrong. Exiting so you can debug...")
     exit(-1)
 
-# This just returns true or false of whether a specific entry already exists 
+# This just returns true or false of whether a specific entry already exists
 # If it returns True, there's no insert needed
 def AdvDataArray_entry_by_btype_exists(AdvChanData, btype, adv_data_type, data):
     #print(json.dumps(AdvChanData, indent=2))
@@ -350,20 +351,20 @@ def pdu_type_to_BTIDES_type(type):
     if(type == type_AdvChanPDU_SCAN_RSP):           return type_BTIDES_SCAN_RSP # SCAN_RSP
     if(type == type_AdvChanPDU_SCAN_REQ):           return type_AdvChanPDU_ADV_NONCONN_IND #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
     #if(type == 6): return btype_SCAN_RSP # SCAN_RSP # FIXME: From accidental incorrect pcap mix-in
-    
+
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
-    # From "Event_Type values for legacy PDUs" in spec apparently 
+    # From "Event_Type values for legacy PDUs" in spec apparently
     if(type == 16): return type_BTIDES_ADV_NONCONN_IND # 0x10 ADV_NONCONN_IND
     if(type == 18): return type_BTIDES_ADV_SCAN_IND # 0x12 ADV_SCAN_IND
     if(type == 19): return type_BTIDES_ADV_IND # 0x13 ADV_IND
     if(type == 21): return type_BTIDES_ADV_DIRECT_IND # 0x15 ADV_DIRECT_IND
     if(type == 26): return type_BTIDES_SCAN_RSP # 0x1A SCAN_RSP to ADV_SCAN_IND
     if(type == 27): return type_BTIDES_SCAN_RSP # 0x1B SCAN_RSP to ADV_IND
-    
+
     # From manually inserting EIR type
     if(type == 50): return 50 # EIR
-    
+
 # See get_le_event_type_string() for what's what
 # TODO: add AUX_* types once I start importing those into the db
 def pdu_type_to_BTIDES_type_str(type):
@@ -377,18 +378,18 @@ def pdu_type_to_BTIDES_type_str(type):
     if(type == type_AdvChanPDU_ADV_NONCONN_IND):    return "ADV_NONCONN_IND"
     if(type == type_AdvChanPDU_SCAN_RSP):           return "SCAN_RSP"
     if(type == type_AdvChanPDU_SCAN_REQ):           return "ADV_NONCONN_IND" #FIXME IN THE FUTURE: From accidental incorrect pcap mix-in off-by-one
-    #if(type == 6): return "SCAN_RSP" # FIXME: From accidental incorrect pcap mix-in. Replace with proper 
-    
+    #if(type == 6): return "SCAN_RSP" # FIXME: From accidental incorrect pcap mix-in. Replace with proper
+
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
-    # From "Event_Type values for legacy PDUs" in spec apparently 
+    # From "Event_Type values for legacy PDUs" in spec apparently
     if(type == 16): return "ADV_NONCONN_IND" # 0x10 ADV_NONCONN_IND
     if(type == 18): return "ADV_SCAN_IND" # 0x12 ADV_SCAN_IND
     if(type == 19): return "ADV_IND" # 0x13 ADV_IND
     if(type == 21): return "ADV_DIRECT_IND" # 0x15 ADV_DIRECT_IND
     if(type == 26): return "SCAN_RSP" # 0x1A SCAN_RSP to ADV_SCAN_IND
     if(type == 27): return "SCAN_RSP" # 0x1B SCAN_RSP to ADV_IND
-    
+
     # From manually inserting EIR type
     if(type == 50): return "EIR"
 

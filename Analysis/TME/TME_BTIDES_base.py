@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import json, re
-#from TME.TME_helpers import *
+#from TME.TME_helpers import qprint # Can't use circular imports
 from TME.TME_glob import BTIDES_JSON
 
 from jsonschema import validate, ValidationError
@@ -77,7 +77,7 @@ def lookup_SingleBDADDR_base_entry(bdaddr, random):
         ###print(item)
         ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
         ###print(f"lookup_base_entry: random = {random}")
-        if("bdaddr" in item.keys() and item["bdaddr"] == bdaddr and 
+        if("bdaddr" in item.keys() and item["bdaddr"] == bdaddr and
            "bdaddr_rand" in item.keys() and item["bdaddr_rand"] == random):
             return item
 
@@ -124,7 +124,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random,
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_SingleBDADDR_base(bdaddr, random)
-        base[target_tier1_array_name] = [ tier1_data ] 
+        base[target_tier1_array_name] = [ tier1_data ]
         BTIDES_JSON.append(base)
         return True
     else:
@@ -175,7 +175,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, 
     if (bdaddr_pair_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_DualBDADDR_base(connect_ind_obj)
-        base[target_tier1_array_name] = [ tier1_data ] 
+        base[target_tier1_array_name] = [ tier1_data ]
         BTIDES_JSON.append(base)
         return True
     else:
@@ -230,7 +230,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random
     if (bdaddr_specific_entry == None):
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_SingleBDADDR_base(bdaddr, random)
-        base[target_tier1_array_name] = [ tier1_data ] 
+        base[target_tier1_array_name] = [ tier1_data ]
         BTIDES_JSON.append(base)
         return True
     else:
@@ -275,7 +275,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj,
     if (bdaddr_pair_specific_entry == None):
         # There is no bdaddr_pair_specific_entry yet for this BDADDR pair. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_DualBDADDR_base(connect_ind_obj)
-        base[target_tier1_array_name] = [ tier1_data ] 
+        base[target_tier1_array_name] = [ tier1_data ]
         BTIDES_JSON.append(base)
         return True
     else:
