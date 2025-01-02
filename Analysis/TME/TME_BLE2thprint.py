@@ -149,37 +149,27 @@ def print_BLE_2thprint(bdaddr):
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         qprint("\tRaw BLE 2thprint:")
-        with open(f"./BLE2thprints/{bdaddr}.ble2thprint", 'w') as file:
-            for ll_version, ll_sub_version, device_BT_CID in version_result:
-                qprint(f"\t\t\"ll_version\",\"0x%02x\"" % ll_version)
-                file.write(f"\"ll_version\",\"0x%02x\"\n" % ll_version)
+        for ll_version, ll_sub_version, device_BT_CID in version_result:
+            qprint(f"\t\t\"ll_version\",\"0x%02x\"" % ll_version)
 
-                qprint("\t\t\"ll_sub_version\",\"0x%04x\"" % ll_sub_version)
-                file.write("\"ll_sub_version\",\"0x%04x\"\n" % ll_sub_version)
+            qprint("\t\t\"ll_sub_version\",\"0x%04x\"" % ll_sub_version)
 
-                qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
-                file.write(f"\"version_BT_CID\",\"0x%04x\"\n" % device_BT_CID)
+            qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
 
-            for device_bdaddr_type, opcode, features in features_result:
-                qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
-                file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"\n" % (opcode, features))
+        for device_bdaddr_type, opcode, features in features_result:
+            qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
 
-            for device_bdaddr_type, tx_phys, rx_phys in phys_result:
-                qprint(f"\t\t\"tx_phys\",\"0x%02x\"" % tx_phys)
-                file.write(f"\"tx_phys\",\"0x%02x\"\n" % tx_phys)
-                qprint(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
-                file.write(f"\"rx_phys\",\"0x%02x\"\n" % rx_phys)
+        for device_bdaddr_type, tx_phys, rx_phys in phys_result:
+            qprint(f"\t\t\"tx_phys\",\"0x%02x\"" % tx_phys)
+            qprint(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
 
-            for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
-                qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
-                file.write(f"\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"\n" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
+        for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
+            qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
 
-            for device_bdaddr_type, unknown_opcode in unknown_result:
-                qprint(f"\t\t\"unknown_ll_ctrl_opcode\",\"0x%02x\"" % unknown_opcode)
-                file.write(f"\"unknown_ll_ctrl_opcode\",\"0x%02x\"\n" % unknown_opcode)
+        for device_bdaddr_type, unknown_opcode in unknown_result:
+            qprint(f"\t\t\"unknown_ll_ctrl_opcode\",\"0x%02x\"" % unknown_opcode)
 
-            for ping_rsp in ping_result:
-                qprint(f"\t\t\"ll_ping_rsp\",\"1\"")
-                file.write(f"\"ll_ping_rsp\",\"1\"\n")
+        for ping_rsp in ping_result:
+            qprint(f"\t\t\"ll_ping_rsp\",\"1\"")
 
     qprint("")

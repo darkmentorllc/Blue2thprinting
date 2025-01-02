@@ -101,13 +101,13 @@ def retrieve_btides_from_btidalpool(username, query_object):
             # Validate the JSON content
             if not validate_json_content(json_content, registry):
                 print("Invalid JSON data according to schema")
-                return None
+                return (None, None)
         elif response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
-            return None
+            return (None, None)
         else:
             print("Response content is not JSON.")
-            return None
+            return (None, None)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400 or e.response.status_code == 429:
@@ -116,19 +116,19 @@ def retrieve_btides_from_btidalpool(username, query_object):
             pass
         else:
             print(f"Unexpected HTTP error occurred: {e}")
-            return None
+            return (None, None)
     except requests.exceptions.ChunkedEncodingError as e:
         print("The connection was most likely reset due to exceeding rate limits.")
         # Due to optimization on the server side this is the exception case that will occur.
         # Making it a nice mesaage for the user, rather than making the server do more work than necessary.
         #print(f"Chunked encoding error occurred: {e}")
-        return None
+        return (None, None)
     except requests.exceptions.ConnectionError as e:
         print(f"Unexpected connection error occurred (Server may not be running?): {e}")
-        return None
+        return (None, None)
     except requests.exceptions.RequestException as e:
         print(f"An unexpected error occurred: {e}")
-        return None
+        return (None, None)
 
     # Write the JSON content to a file
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -160,25 +160,58 @@ def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
 
     parser.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
-    parser.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
-    parser.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
-    parser.add_argument('--nameregex', type=str, default='', required=False, help='Value for REGEXP match against device_name.')
+
+    device_group = parser.add_argument_group('Database search arguments')
+    device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
+    device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
+    device_group.add_argument('--name-regex', type=str, default='', help='Value for REGEXP match against device_name.')
+    device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
+    device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
+    device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
+    device_group.add_argument('--UUID128-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
+    device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
+    device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
+
+    # Requirement arguments
+    requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
+    requirement_group.add_argument('--require-GATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
+    requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
+    requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
 
     args = parser.parse_args()
 
     query_object = {}
     if args.bdaddr:
         query_object["bdaddr"] = args.bdaddr
-    if args.bdaddrregex:
-        query_object["bdaddrregex"] = args.bdaddrregex
-    if args.nameregex:
-        query_object["nameregex"] = args.nameregex
+    if args.bdaddr_regex:
+        query_object["bdaddr_regex"] = args.bdaddr_regex
+    if args.name_regex:
+        query_object["name_regex"] = args.name_regex
+    if args.NOT_name_regex:
+        query_object["NOT_name_regex"] = args.NOT_name_regex
+    if args.company_regex:
+        query_object["company_regex"] = args.company_regex
+    if args.NOT_company_regex:
+        query_object["NOT_company_regex"] = args.NOT_company_regex
+    if args.UUID128_regex:
+        query_object["UUID128_regex"] = args.UUID128_regex
+    if args.UUID16_regex:
+        query_object["UUID16_regex"] = args.UUID16_regex
+    if args.MSD_regex:
+        query_object["MSD_regex"] = args.MSD_regex
+    if args.require_GATT:
+        query_object["require_GATT"] = True
+    if args.require_LL_VERSION_IND:
+        query_object["require_LL_VERSION_IND"] = True
+    if args.require_LMP_VERSION_RES:
+        query_object["require_LMP_VERSION_RES"] = True
 
     (num_records, output_filename) = retrieve_btides_from_btidalpool(
         username=args.username,
         query_object=query_object
     )
-    if(output_filename):
+    if(num_records and output_filename):
         print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")
     else:
         sys.exit(1)

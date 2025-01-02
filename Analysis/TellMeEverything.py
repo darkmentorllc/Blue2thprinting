@@ -39,7 +39,8 @@ def main():
     printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
     printout_group.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output (useful when you only want to use --output to export data).')
-    printout_group.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
+    printout_group.add_argument('--max-records-output', type=int, default=1000, required=False, help='This will limit the number of bdaddrs for which records which are printed out and exported via --output).')
+    printout_group.add_argument('--hide-BLEScope-data', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
@@ -53,26 +54,26 @@ def main():
     # Device arguments
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
-    device_group.add_argument('--bdaddrregex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
-    device_group.add_argument('--type', type=int, default=0, help='Device name type (0 or 1) for LE tables.')
-    device_group.add_argument('--nameregex', type=str, default='', help='Value for REGEXP match against device_name.')
-    device_group.add_argument('--NOTnameregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --nameregex, and then remove them from the final results.')
-    device_group.add_argument('--companyregex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
-    device_group.add_argument('--NOTcompanyregex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --companyregex, and then remove them from the final results.')
-    device_group.add_argument('--UUID128regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
-    device_group.add_argument('--UUID16regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
-    device_group.add_argument('--MSDregex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
+    device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
+    device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
+    device_group.add_argument('--name-regex', type=str, default='', help='Value for REGEXP match against device_name.')
+    device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
+    device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
+    device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
+    device_group.add_argument('--UUID128-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
+    device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
+    device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
 
     # Statistics arguments
     stats_group = parser.add_argument_group('Database statistics arguments')
-    stats_group.add_argument('--UUID128stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
-    stats_group.add_argument('--UUID16stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
+    stats_group.add_argument('--UUID128-stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
+    stats_group.add_argument('--UUID16-stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
 
     # Requirement arguments
     requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
-    requirement_group.add_argument('--requireGATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
-    requirement_group.add_argument('--require_LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
-    requirement_group.add_argument('--require_LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
+    requirement_group.add_argument('--require-GATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
+    requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
+    requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
 
     # Testing arguments
     testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
@@ -84,41 +85,25 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
-    queryBTIDALPOOL = args.query_BTIDALPOOL
-    bdaddr = args.bdaddr
-    bdaddrregex = args.bdaddrregex
-    nametype = 0 # Default to non-random
-    nametype = args.type
-    nameregex = args.nameregex
-    notnameregex = args.NOTnameregex
-    companyregex = args.companyregex
-    notcompanyregex = args.NOTcompanyregex
-    uuid128regex = args.UUID128regex
-    uuid16regex = args.UUID16regex
-    msdregex = args.MSDregex
-    uuid16stats = args.UUID16stats
-    uuid128stats = args.UUID128stats
-    requireGATT = args.requireGATT
-    require_LL_VERSION_IND = args.require_LL_VERSION_IND
-    require_LMP_VERSION_RES = args.require_LMP_VERSION_RES
-    hideBLEScopedata = args.hideBLEScopedata
+    hideBLEScopedata = args.hide_BLEScope_data
 
     #######################################################
     # If querying the BTIDALPOOL, collect that information,
     # import it into the local database, and then proceed
     # with the rest of the code as normal.
     #######################################################
-    if(queryBTIDALPOOL):
+    if(args.query_BTIDALPOOL):
         qprint("Querying BTIDALPOOL")
         query_object = {}
-        if bdaddr:
-            query_object["bdaddr"] = bdaddr
-        if bdaddrregex:
-            query_object["bdaddrregex"] = bdaddrregex
-        if nameregex:
-            query_object["nameregex"] = nameregex
+        if args.bdaddr:
+            query_object["bdaddr"] = args.bdaddr
+        if args.bdaddr_regex:
+            query_object["bdaddr_regex"] = args.bdaddr_regex
+        if args.name_regex:
+            query_object["name_regex"] = args.name_regex
         (num_records, output_filename) = retrieve_btides_from_btidalpool("xeno", query_object)
-        qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
+        if(num_records):
+            qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
         if output_filename:
             subprocess.run(["python3", "BTIDES_to_MySQL.py", "--use-test-db", "--input", output_filename])
 
@@ -149,8 +134,8 @@ def main():
     # TODO: consider doing this in the future if it adds too much overhead to every invocation
     create_ChipMaker_OUI_hash()
 
-    if(bdaddr is not None):
-        bdaddrs = [bdaddr]
+    if(args.bdaddr is not None):
+        bdaddrs = [args.bdaddr]
     else:
         bdaddrs = []
 
@@ -158,12 +143,12 @@ def main():
     # Options to simply print statistics from the database
     ######################################################
 
-    if(uuid16stats):
-        get_uuid16_stats(uuid16stats)
+    if(args.UUID16_stats):
+        get_uuid16_stats(args.UUID16_stats)
         quit() # Don't do anything other than print the stats and exit
 
-    if(uuid128stats):
-        get_uuid128_stats(uuid128stats)
+    if(args.UUID128_stats):
+        get_uuid128_stats(args.UUID128_stats)
         quit() # Don't do anything other than print the stats and exit
 
     qprint(bdaddrs)
@@ -172,47 +157,47 @@ def main():
     # Options to search based on specific values or regexes
     #######################################################
 
-    if(bdaddrregex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(bdaddrregex)
+    if(args.bdaddr_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(args.bdaddr_regex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after bdaddrregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --bdaddr-regex processing: {bdaddrs}")
 
-    if(nameregex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_name_regex(nameregex)
+    if(args.name_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_name_regex(args.name_regex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after nameregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --name-regex processing: {bdaddrs}")
 
-    if(companyregex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_company_regex(companyregex)
+    if(args.company_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_company_regex(args.company_regex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after companyregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --company-regex processing: {bdaddrs}")
 
-    if(msdregex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_msd_regex(msdregex)
+    if(args.MSD_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_msd_regex(args.MSD_regex)
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after msdregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --MSD-regex processing: {bdaddrs}")
 
-    if(uuid128regex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_uuid128_regex(uuid128regex)
+    if(args.UUID128_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_uuid128_regex(args.UUID128_regex)
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after uuid128regex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --UUID128-regex processing: {bdaddrs}")
 
-    if(uuid16regex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_uuid16_regex(uuid16regex)
+    if(args.UUID16_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_uuid16_regex(args.UUID16_regex)
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after uuid16regex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --UUID16-regex processing: {bdaddrs}")
 
-    if(notcompanyregex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_company_regex(notcompanyregex)
+    if(args.NOT_company_regex != ""):
+        bdaddrs_to_remove = get_bdaddrs_by_company_regex(args.NOT_company_regex)
         qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
@@ -225,8 +210,8 @@ def main():
 
         bdaddrs = updated_bdaddrs;
 
-    if(notnameregex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_name_regex(notnameregex)
+    if(args.NOT_name_regex != ""):
+        bdaddrs_to_remove = get_bdaddrs_by_name_regex(args.NOT_name_regex)
         qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
@@ -239,15 +224,18 @@ def main():
 
         bdaddrs = updated_bdaddrs;
 
+    # Limit the number of records output to args.max_records_output
+    if(len(bdaddrs) > args.max_records_output):
+        bdaddrs = bdaddrs[:args.max_records_output]
 
     for bdaddr in bdaddrs:
-        if(requireGATT):
+        if(args.require_GATT):
             if(device_has_GATT_info(bdaddr) != 1):
                 continue
-        if(require_LL_VERSION_IND):
+        if(args.require_LL_VERSION_IND):
             if(device_has_LL_VERSION_IND_info(bdaddr) != 1):
                 continue
-        if(require_LMP_VERSION_RES):
+        if(args.require_LMP_VERSION_RES):
             if(device_has_LMP_VERSION_RES_info(bdaddr) != 1):
                 continue
         qprint("================================================================================")
@@ -256,13 +244,11 @@ def main():
         print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
-        print_all_advdata(bdaddr, nametype)
-        print_GATT_info(bdaddr, hideBLEScopedata)           # Includes BTIDES export
+        print_all_advdata(bdaddr, args.bdaddr_type)
+        print_GATT_info(bdaddr, args.hide_BLEScope_data)    # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
         print_UniqueIDReport(bdaddr)
-
-        #BTIDES_insert_TxPower(bdaddr, "public", 1)
 
     if(out_filename != None and out_filename != ""):
         write_BTIDES(out_filename)
