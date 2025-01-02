@@ -14,10 +14,10 @@ import TME.TME_glob
 
 ############################
 # Helper "factory functions"
-############################  
+############################
 
 # TODO: we need to update database to keep track of status
-def ff_HCI_Remote_Name_Request_Complete(name):    
+def ff_HCI_Remote_Name_Request_Complete(name):
     obj = {"event_code": event_code_HCI_Remote_Name_Request_Complete, "status": type_BTIDES_status_SUCCESS, "remote_name": name}
     if(TME.TME_glob.verbose_BTIDES):
         obj["event_code_str"] = "HCI_Remote_Name_Request_Complete"
@@ -29,7 +29,6 @@ def ff_HCI_Remote_Name_Request_Complete(name):
 
 def BTIDES_export_HCI_Name_Response(bdaddr, name):
     global BTIDES_JSON
-    ###print(BTIDES_JSON)
     data = ff_HCI_Remote_Name_Request_Complete(name)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "HCIArray")
 

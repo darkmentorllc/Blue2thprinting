@@ -27,7 +27,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 import TME.TME_glob
-from TME.TME_helpers import execute_query, execute_insert
+from TME.TME_helpers import execute_query, execute_insert, qprint
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
@@ -85,7 +85,7 @@ def BTIDES_types_to_le_evt_type(type):
 
 # type 0x01
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Flags!")
+    #qprint("import_AdvData_Flags!")
 
     le_limited_discoverable_mode = 0
     le_general_discoverable_mode = 0
@@ -118,7 +118,7 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
 
 # types 0x02 & 0x03
 def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Names!")
+    #qprint("import_AdvData_Names!")
     str_UUID16s = ",".join(leaf["UUID16List"])
     list_type = leaf["type"]
 
@@ -135,7 +135,7 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
 
 # types 0x04 & 0x05
 def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Names!")
+    #qprint("import_AdvData_Names!")
     str_UUID32s = ",".join(leaf["UUID32List"])
     list_type = leaf["type"]
 
@@ -152,7 +152,7 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
 
 # types 0x06 & 0x07
 def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Names!")
+    #qprint("import_AdvData_Names!")
     UUID128List = leaf["UUID128List"]
     for i in range(len(UUID128List)):
         UUID128List[i] = UUID128List[i].replace('-','')
@@ -172,7 +172,7 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
 
 # types 0x08 & 0x09
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Names!")
+    #qprint("import_AdvData_Names!")
     device_name_type = leaf["type"]
     name_hex_str = leaf["name_hex_str"]
 
@@ -189,7 +189,7 @@ def import_AdvData_Names(bdaddr, random, db_type, leaf):
 
 # type 0x0A
 def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_TxPower!")
+    #qprint("import_AdvData_TxPower!")
     device_tx_power = leaf["tx_power"]
 
     le_evt_type = db_type
@@ -205,7 +205,7 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
 
 # type 0x0D
 def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_ClassOfDevice!")
+    #qprint("import_AdvData_ClassOfDevice!")
     CoD_hex_str = leaf["CoD_hex_str"]
 
     le_evt_type = db_type
@@ -221,7 +221,7 @@ def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
 
 # type 0x10
 def import_AdvData_DeviceID(bdaddr, db_type, leaf):
-    #print("import_AdvData_DeviceID!")
+    #qprint("import_AdvData_DeviceID!")
 
     vendor_id_source = leaf["vendor_id_source"]
     vendor_id = leaf["vendor_id"]
@@ -237,7 +237,7 @@ def import_AdvData_DeviceID(bdaddr, db_type, leaf):
 
 # type 0x12
 def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_PeripheralConnectionIntervalRange!")
+    #qprint("import_AdvData_PeripheralConnectionIntervalRange!")
 
     conn_interval_min = leaf["conn_interval_min"]
     conn_interval_max = leaf["conn_interval_max"]
@@ -254,7 +254,7 @@ def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, le
 
 # type 0x16
 def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_UUID16ServiceData!")
+    #qprint("import_AdvData_UUID16ServiceData!")
 
     ACID_length = leaf["length"]
     UUID16_hex_str = leaf["UUID16"]
@@ -267,13 +267,13 @@ def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
         return
     else:
         values = (bdaddr, random, le_evt_type, ACID_length, UUID16_hex_str, service_data_hex_str)
-        #print(values)
+        #qprint(values)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID16_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 # type 0x19
 def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_Appearance!")
+    #qprint("import_AdvData_Appearance!")
 
     appearance_int = int(leaf["appearance_hex_str"], 16)
 
@@ -289,7 +289,7 @@ def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
 
 # type 0x20
 def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_UUID32ServiceData!")
+    #qprint("import_AdvData_UUID32ServiceData!")
 
     ACID_length = leaf["length"]
     UUID32_hex_str = leaf["UUID32"]
@@ -302,13 +302,13 @@ def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
         return
     else:
         values = (bdaddr, random, le_evt_type, ACID_length, UUID32_hex_str, service_data_hex_str)
-        #print(values)
+        #qprint(values)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID32_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 # type 0x21
 def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_UUID128ServiceData!")
+    #qprint("import_AdvData_UUID128ServiceData!")
 
     ACID_length = leaf["length"]
     UUID128_hex_str = leaf["UUID128"].replace("-","")
@@ -321,13 +321,13 @@ def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
         return
     else:
         values = (bdaddr, random, le_evt_type, ACID_length, UUID128_hex_str, service_data_hex_str)
-        #print(values)
+        #qprint(values)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID128_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
-    #print("import_AdvData_MSD!")
+    #qprint("import_AdvData_MSD!")
 
     device_BT_CID = int(leaf["company_id_hex_str"], 16)
     manufacturer_specific_data = leaf["msd_hex_str"]
@@ -682,7 +682,7 @@ def import_GATT_service_entry(bdaddr, device_bdaddr_type, gatt_service_entry):
                     execute_insert(insert, values)
 
 def parse_GATTArray(entry):
-    #print(json.dumps(entry, indent=2))
+    #qprint(json.dumps(entry, indent=2))
     if("GATTArray" not in entry.keys() or entry["GATTArray"] == None):
         return # Entry not valid for this type
 
@@ -700,7 +700,7 @@ def progress_update(total, count):
     global last_printed_percentage
     percent_complete = int((count / total) * 100)
     if(percent_complete > last_printed_percentage):
-        print(f"{percent_complete}% done")
+        qprint(f"{percent_complete}% done")
         last_printed_percentage = percent_complete
 
 ######################################################
@@ -720,6 +720,7 @@ def main():
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
     parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
+    parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
     args = parser.parse_args()
 
@@ -730,7 +731,7 @@ def main():
 
     with open(in_filename, 'r') as f:
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
-        #print(json.dumps(BTIDES_JSON, indent=2))
+        #qprint(json.dumps(BTIDES_JSON, indent=2))
 
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
     all_schemas = []
@@ -738,7 +739,7 @@ def main():
         with open(f"./BTIDES_Schema/{file}", 'r') as f:
             #BTIDES_Schema
             s = json.load(f)
-            #print(s["$id"])
+            #qprint(s["$id"])
             schema = Resource.from_contents(s)
             all_schemas.append((s["$id"], schema))
 
@@ -756,13 +757,13 @@ def main():
                 ]},
                 registry=registry,
             ).validate(instance=entry)
-            #print("JSON is valid according to BTIDES Schema")
+            #qprint("JSON is valid according to BTIDES Schema")
         except ValidationError as e:
-            print("JSON data is invalid per BTIDES Schema:", e.message)
+            qprint("JSON data is invalid per BTIDES Schema:", e.message)
             if(skip_invalid):
                 continue
             else:
-                print(json.dumps(entry, indent=2))
+                qprint(json.dumps(entry, indent=2))
                 exit(-1)
 
         parse_AdvChanArray(entry)
@@ -780,8 +781,8 @@ def main():
         count += 1
         progress_update(total, count)
 
-    print(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
-    print(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
+    qprint(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
+    qprint(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
 
 if __name__ == "__main__":
     main()

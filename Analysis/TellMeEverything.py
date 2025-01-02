@@ -17,7 +17,7 @@ from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
-from TME.TME_glob import verbose_print, verbose_BTIDES
+from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 import subprocess
 # FIXME: refactor BTIDES_to_MySQL to allow just calling it as a function (and then delete subprocess)
@@ -34,10 +34,11 @@ def validate_bdaddr(value):
 # Main function to handle command line arguments
 def main():
     global verbose_print, verbose_BTIDES, use_test_db
-    parser = argparse.ArgumentParser(description='Query device names from MySQL tables.')
+    parser = argparse.ArgumentParser(description='Lookup and print information about Bluetooth devices from your local database or the BTIDALPOOL crowdsourced db!')
     # Output arguments
-    printout_group = parser.add_argument_group('Printout arguments')
+    printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
+    printout_group.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output (useful when you only want to use --output to export data).')
     printout_group.add_argument('--hideBLEScopedata', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     # BTIDES arguments
@@ -80,6 +81,7 @@ def main():
     args = parser.parse_args()
     out_filename = args.output
     TME.TME_glob.verbose_print = args.verbose_print
+    TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
     queryBTIDALPOOL = args.query_BTIDALPOOL
@@ -107,7 +109,7 @@ def main():
     # with the rest of the code as normal.
     #######################################################
     if(queryBTIDALPOOL):
-        print("Querying BTIDALPOOL")
+        qprint("Querying BTIDALPOOL")
         query_object = {}
         if args.bdaddr:
             query_object["bdaddr"] = args.bdaddr
@@ -161,7 +163,7 @@ def main():
         get_uuid128_stats(uuid128stats)
         quit() # Don't do anything other than print the stats and exit
 
-    print(bdaddrs)
+    qprint(bdaddrs)
 
     #######################################################
     # Options to search based on specific values or regexes
@@ -171,44 +173,44 @@ def main():
         bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(bdaddrregex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after bdaddrregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after bdaddrregex processing: {bdaddrs}")
 
     if(nameregex != ""):
         bdaddrs_tmp = get_bdaddrs_by_name_regex(nameregex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after nameregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after nameregex processing: {bdaddrs}")
 
     if(companyregex != ""):
         bdaddrs_tmp = get_bdaddrs_by_company_regex(companyregex)
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after companyregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after companyregex processing: {bdaddrs}")
 
     if(msdregex != ""):
         bdaddrs_tmp = get_bdaddrs_by_msd_regex(msdregex)
-        print(f"bdaddrs_tmp = {bdaddrs_tmp}")
+        qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after msdregex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after msdregex processing: {bdaddrs}")
 
     if(uuid128regex != ""):
         bdaddrs_tmp = get_bdaddrs_by_uuid128_regex(uuid128regex)
-        print(f"bdaddrs_tmp = {bdaddrs_tmp}")
+        qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after uuid128regex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after uuid128regex processing: {bdaddrs}")
 
     if(uuid16regex != ""):
         bdaddrs_tmp = get_bdaddrs_by_uuid16_regex(uuid16regex)
-        print(f"bdaddrs_tmp = {bdaddrs_tmp}")
+        qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        print(f"{len(bdaddrs)} bdaddrs after uuid16regex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after uuid16regex processing: {bdaddrs}")
 
     if(notcompanyregex != ""):
         bdaddrs_to_remove = get_bdaddrs_by_company_regex(notcompanyregex)
-        print(bdaddrs_to_remove)
+        qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
             if(value in bdaddrs_to_remove):
@@ -216,13 +218,13 @@ def main():
             else:
                 updated_bdaddrs.append(value)
 
-        print(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
+        qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
 
         bdaddrs = updated_bdaddrs;
 
     if(notnameregex != ""):
         bdaddrs_to_remove = get_bdaddrs_by_name_regex(notnameregex)
-        print(bdaddrs_to_remove)
+        qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
             if(value in bdaddrs_to_remove):
@@ -230,7 +232,7 @@ def main():
             else:
                 updated_bdaddrs.append(value)
 
-        print(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
+        qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
 
         bdaddrs = updated_bdaddrs;
 
@@ -245,8 +247,8 @@ def main():
         if(require_LMP_VERSION_RES):
             if(device_has_LMP_VERSION_RES_info(bdaddr) != 1):
                 continue
-        print("================================================================================")
-        print(f"For bdaddr = {bdaddr}:")
+        qprint("================================================================================")
+        qprint(f"For bdaddr = {bdaddr}:")
         print_ChipPrint(bdaddr)
         print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)

@@ -101,13 +101,13 @@ def retrieve_btides_from_btidalpool(username, query_object):
             # Validate the JSON content
             if not validate_json_content(json_content, registry):
                 print("Invalid JSON data according to schema")
-                sys.exit(1)
+                return None
         elif response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
-            sys.exit(1)
+            return None
         else:
             print("Response content is not JSON.")
-            sys.exit(1)
+            return None
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 400 or e.response.status_code == 429:
@@ -116,19 +116,19 @@ def retrieve_btides_from_btidalpool(username, query_object):
             pass
         else:
             print(f"Unexpected HTTP error occurred: {e}")
-            sys.exit(1)
+            return None
     except requests.exceptions.ChunkedEncodingError as e:
         print("The connection was most likely reset due to exceeding rate limits.")
         # Due to optimization on the server side this is the exception case that will occur.
         # Making it a nice mesaage for the user, rather than making the server do more work than necessary.
         #print(f"Chunked encoding error occurred: {e}")
-        sys.exit(1)
+        return None
     except requests.exceptions.ConnectionError as e:
         print(f"Unexpected connection error occurred (Server may not be running?): {e}")
-        sys.exit(1)
+        return None
     except requests.exceptions.RequestException as e:
         print(f"An unexpected error occurred: {e}")
-        sys.exit(1)
+        return None
 
     # Write the JSON content to a file
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
@@ -175,7 +175,10 @@ def main():
         username=args.username,
         query_object=query_object
     )
-    print(f"BTIDES data retrieved from BTIDALPOOL and saved to {output_filename}")
+    if(output_filename):
+        print(f"BTIDES data retrieved from BTIDALPOOL and saved to {output_filename}")
+    else:
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -9,14 +9,13 @@
 
 import re
 from TME.BTIDES_Data_Types import *
-#from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
-#from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_first_level_array, generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible, lookup_SingleBDADDR_base_entry, ff_SingleBDADDR_base
+from TME.TME_helpers import qprint
 from TME.TME_BTIDES_base import *
 import TME.TME_glob
 
 ############################
 # Helper "factory functions"
-############################  
+############################
 
 opcode_ATT_EXCHANGE_MTU_REQ          = 2
 opcode_ATT_EXCHANGE_MTU_RSP          = 3
@@ -77,15 +76,15 @@ def db_service_type_to_BTIDES_utype(db_service_type):
     elif(db_service_type == 1):
         return "2801"
     else:
-        print("UNKNOWN SERVICE_TYPE. FIX THE CODE")
+        qprint("UNKNOWN SERVICE_TYPE. FIX THE CODE")
         exit(-1)
 
 def find_exact_service_match(GATTArray, data):
     for service_entry in GATTArray:
         # Check if the begin and end service handles enclose this characteristic value
-        if(service_entry != None and "opcode" in service_entry.keys() and service_entry["utype"] == data["utype"] and 
+        if(service_entry != None and "opcode" in service_entry.keys() and service_entry["utype"] == data["utype"] and
            "begin_handle" in service_entry.keys() and service_entry["begin_handle"] == data["begin_handle"] and
-           "end_handle" in service_entry.keys() and service_entry["end_handle"] == data["begin_handle"] and 
+           "end_handle" in service_entry.keys() and service_entry["end_handle"] == data["begin_handle"] and
            "UUID" in service_entry.keys() and service_entry["UUID"] == data["UUID"]):
             return service_entry
 
@@ -134,20 +133,20 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
     placeholder_char_obj = ff_GATT_Characteristic({"placeholder_entry": True, "utype": "2803", "handle": 0xFFFE, "properties": 0xFF, "value_handle": data["value_handle"], "value_uuid": "FFFF", "char_value": data})
     # And then embed the placeholder characteristic into the placeholder service
     placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ placeholder_char_obj ]})
-    ###print(json.dumps(entry, indent=2))
+    ###qprint(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
         base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
-        #print(json.dumps(base, indent=2))
+        #qprint(json.dumps(base, indent=2))
         BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
+        #qprint(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("GATTArray" not in entry.keys()):
             # There is an entry for this BDADDR but not yet any GATTArray entries, so just insert ours
             entry["GATTArray"] = [ placeholder_svc_obj ]
-            #print(json.dumps(entry, indent=2))
+            #qprint(json.dumps(entry, indent=2))
             return
         else:
             service_entry = find_service_with_target_handle_in_range(bdaddr, random, data["value_handle"])
@@ -179,8 +178,8 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
 
             # If we get here, we exhaused all services without a match. So insert our new entry within the placeholder service & characteristic
             entry["GATTArray"].append(placeholder_svc_obj)
-            #print(json.dumps(entry, indent=2))
-            ###print(json.dumps(BTIDES_JSON, indent=2))
+            #qprint(json.dumps(entry, indent=2))
+            ###qprint(json.dumps(BTIDES_JSON, indent=2))
             return
 '''
 
@@ -193,20 +192,20 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
     placeholder_char_obj = ff_GATT_Characteristic({"placeholder_entry": True, "utype": "2803", "handle": 0xFFFE, "properties": 0xFF, "value_handle": data["value_handle"], "value_uuid": "FFFF", "char_value": data})
     # And then embed the placeholder characteristic into the placeholder service
     placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ placeholder_char_obj ]})
-    ###print(json.dumps(entry, indent=2))
+    ###qprint(json.dumps(entry, indent=2))
     if (entry == None):
         # There is no entry yet for this BDADDR. Insert a brand new one
         base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
-        #print(json.dumps(base, indent=2))
+        #qprint(json.dumps(base, indent=2))
         BTIDES_JSON.append(base)
-        #print(json.dumps(BTIDES_JSON, indent=2))
+        #qprint(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
         if("GATTArray" not in entry.keys()):
             # There is an entry for this BDADDR but not yet any GATTArray entries, so just insert ours
             entry["GATTArray"] = [ placeholder_svc_obj ]
-            #print(json.dumps(entry, indent=2))
+            #qprint(json.dumps(entry, indent=2))
             return
         else:
             service_entry = find_service_with_target_handle_in_range(bdaddr, random, data["value_handle"])
@@ -238,6 +237,6 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
 
             # If we get here, we exhaused all services without a match. So insert our new entry within the placeholder service & characteristic
             entry["GATTArray"].append(placeholder_svc_obj)
-            #print(json.dumps(entry, indent=2))
-            ###print(json.dumps(BTIDES_JSON, indent=2))
+            #qprint(json.dumps(entry, indent=2))
+            ###qprint(json.dumps(BTIDES_JSON, indent=2))
             return

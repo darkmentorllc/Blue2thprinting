@@ -77,9 +77,10 @@ BTIDES_JSON = []
 verbose_BTIDES = False
 
 #########################################
-# Verbose printing
+# Verbose/quiet printing
 #########################################
 verbose_print = False
+quiet_print = False
 
 ###############################################
 # Use alternate test database (for development)

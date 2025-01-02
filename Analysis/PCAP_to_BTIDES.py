@@ -21,8 +21,13 @@ from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to
 # GATT
 from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
 
+# Quiet print overrides verbose print if present
+def qprint(fmt):
+    if(not TME.TME_glob.quiet_print): print(fmt)
+
+# Verbose print
 def vprint(fmt):
-    if(TME.TME_glob.verbose_print): print(fmt)
+    if(TME.TME_glob.verbose_print): qprint(fmt)
 
 g_access_address_to_connect_ind_obj = {}
 
