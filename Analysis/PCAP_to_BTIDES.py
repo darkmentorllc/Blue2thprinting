@@ -5,6 +5,7 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
+from TME.TME_helpers import qprint, vprint
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 import TME.TME_glob
@@ -21,6 +22,7 @@ from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to
 # GATT
 from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
 
+'''
 # Quiet print overrides verbose print if present
 def qprint(fmt):
     if(not TME.TME_glob.quiet_print): print(fmt)
@@ -28,6 +30,7 @@ def qprint(fmt):
 # Verbose print
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): qprint(fmt)
+'''
 
 g_access_address_to_connect_ind_obj = {}
 
@@ -65,7 +68,7 @@ def scapy_flags_to_hex_str(entry):
         b |= 1 << 4
 
     flags_hex_str = f"{b:02x}"
-    #print(f"flags_hex_str = {flags_hex_str}")
+    #qprint(f"flags_hex_str = {flags_hex_str}")
     return flags_hex_str
 
 # This is just a simple wrapper around insert_std_optional_fields to insert any
@@ -213,7 +216,7 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         minor_device_class = entry.minor_device_class
         fixed = entry.fixed
         CoD_int = (major_service_classes << 13) | (major_device_class << 8) | (minor_device_class << 2) | fixed
-        #print(f"{CoD_int:06x}")
+        #qprint(f"{CoD_int:06x}")
         CoD_hex_str = f"{CoD_int:06x}"
         length = 4 # 1 byte for opcode, 3 byte CoD
         exit_on_len_mismatch(length, entry)
@@ -262,6 +265,30 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
         return True
 
+    # # type 0x17
+    # elif isinstance(entry.payload, EIR_PeripheralConnectionIntervalRange):
+    #     #entry.show()
+    #     conn_interval_min = entry.conn_interval_min
+    #     conn_interval_max = entry.conn_interval_max
+    #     length = 5 # 1 byte for opcode, 2*2 byte parameters
+    #     exit_on_len_mismatch(length, entry)
+    #     data = {"length": length, "conn_interval_min": conn_interval_min, "conn_interval_max": conn_interval_max}
+    #     vprint(f"{device_bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
+    #     BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
+    #     return True
+
+    # type 0x1A
+    # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)
+    elif isinstance(entry.payload, EIR_AdvertisingInterval):
+        entry.show()
+        advertising_interval = f"{entry.advertising_interval:04x}"
+        length = 3 # 1 byte for opcode, 2 byte service interval
+        #exit_on_len_mismatch(length, entry)
+        data = {"length": length, "advertising_interval": advertising_interval}
+        vprint(f"{device_bdaddr}: {adv_type} advertising_interval: 0x{advertising_interval}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_AdvertisingInterval, data)
+        return True
+
     # type 0x20
     elif isinstance(entry.payload, EIR_ServiceData32BitUUID):
         #entry.show()
@@ -296,10 +323,29 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
         return True
 
+    # # type 0x24
+    # elif isinstance(entry.payload, EIR_URI):
+    #     entry.show()
+    #     entry.payload.show()
+    #     URI = entry.payload.getlayer(EIR_URI)
+    #     length = entry.len  # Not clear if Scapy is using the original ACID len or their calculated and corrected len
+    #     try:
+    #         scheme = URI.uri_scheme
+    #         url_bytes = str(URI.uri_hier_part)
+    #         print(f"Type of url_bytes: {type(url_bytes)}")
+    #         URI_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
+    #     except Exception as e:
+    #         print(f"Exception occurred: {e}")
+    #     data = {"length": length, "URI_hex_str": URI_hex_str}
+    #     vprint(f"{device_bdaddr}: {adv_type}  scheme: {scheme} URI_hex_str: {URI_hex_str}")
+    #     #BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
+    #     return True
+
+
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()
-        #print(f"{device_bdaddr}")
+        #qprint(f"{device_bdaddr}")
         company_id_hex_str = f"{entry.company_id:04x}"
         length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
         msd_hex_str = ""
@@ -708,7 +754,7 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
                 data_len = len(att_data.data)
                 for i in range(0, data_len, 6):
                     if i + 6 > data_len:
-                        print("Not enough data left to process a 6-byte attribute data entry.")
+                        qprint("Not enough data left to process a 6-byte attribute data entry.")
                         break
                     list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
                                     attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
@@ -721,7 +767,7 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet):
                 data_len = len(att_data.data)
                 for i in range(0, data_len, 20):
                     if i + 20 > data_len:
-                        print("Not enough data left to process a 20-byte attribute data entry.")
+                        qprint("Not enough data left to process a 20-byte attribute data entry.")
                         break
                     list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
                                 attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
@@ -842,13 +888,13 @@ def read_pcap(file_path):
         for i, packet in enumerate(packets, start=0):
             # Print progress every 10%
             if total_packets > 0 and i % max(1, total_packets // 100) == 0:
-                print(f"Processed {i} out of {total_packets} packets ({(i / total_packets) * 100:.0f}%)")
+                qprint(f"Processed {i} out of {total_packets} packets ({(i / total_packets) * 100:.0f}%)")
 
             # Confirm packet is BTLE
             if packet.haslayer(BTLE):
                 btle_hdr = packet.getlayer(BTLE)
                 if(btle_hdr.access_addr != 0x8e89bed6 and btle_hdr.len == 0):
-                    #print("Found empty non-advertisement packet, continuing")
+                    #qprint("Found empty non-advertisement packet, continuing")
                     continue
 
                 if(btle_hdr.access_addr in g_stop_exporting_encrypted_packets_by_AA.keys()):
@@ -885,10 +931,10 @@ def read_pcap(file_path):
                     btle_adv = packet.getlayer(BTLE_ADV)
                     if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...
                         # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
+                        qprint("Found a scan request")
                         continue
-                        print("Found a scan request")
-                    print(packet.layers())
-                    print("")
+                    qprint(packet.layers())
+                    qprint("")
 
                 # LL Control packets
                 if packet.haslayer(BTLE_CTRL):
@@ -913,6 +959,7 @@ def main():
     parser.add_argument('--input', type=str, required=True, help='Input file name for pcap file.')
     parser.add_argument('--output', type=str, required=True, help='Output file name for BTIDES JSON file.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
+    parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
     parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
     parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_MySQL.py on the output BTIDES file to import into your local MySQL database.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
@@ -923,25 +970,26 @@ def main():
     in_pcap_filename = args.input
     out_BTIDES_filename = args.output
     TME.TME_glob.verbose_print = args.verbose_print
+    TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     username = args.username
 
-    print("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
+    qprint("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
     read_pcap(in_pcap_filename)
 
-    print("Writing BTIDES data to file.")
+    qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
-    print("Export completed with no errors.")
+    qprint("Export completed with no errors.")
 
     if args.to_MySQL:
-        print("Invoking BTIDES_to_MySQL.py on the output BTIDES file.")
+        qprint("Invoking BTIDES_to_MySQL.py on the output BTIDES file.")
         cmd = ["python3", "./BTIDES_to_MySQL.py", "--input", out_BTIDES_filename]
         if args.use_test_db:
             cmd.append("--use-test-db")
         subprocess.run(cmd)
 
     if args.to_BTIDALPOOL:
-        print("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
+        qprint("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
         cmd = ["python3", "./Client-BTIDALPOOL.py", username, out_BTIDES_filename]
         subprocess.run(cmd)
 

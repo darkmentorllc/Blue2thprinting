@@ -899,7 +899,7 @@
         "type_str": {
           "description": "This optional field is just for if you don't care about json file size and you want more human-readable JSON output.",
           "type": "string",
-          "const": "Appearance"
+          "const": "AdvertisingInterval"
         },
         "type": {
           "description": "This should always be exactly == 0x1A (26). (Per the assigned numbers document, \"Common Data Type\" table.)",

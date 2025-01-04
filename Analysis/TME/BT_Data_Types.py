@@ -24,9 +24,12 @@ type_AdvData_ClassOfDevice                      = 13
 type_AdvData_DeviceID                           = 16
 type_AdvData_PeripheralConnectionIntervalRange  = 18
 type_AdvData_UUID16ServiceData                  = 22
+type_AdvData_LEBluetoothDeviceAddress           = 23
 type_AdvData_Appearance                         = 25
+type_AdvData_AdvertisingInterval                = 26
 type_AdvData_UUID32ServiceData                  = 32
 type_AdvData_UUID128ServiceData                 = 33
+type_AdvData_URI                                = 36
 type_AdvData_MSD                                = 255
 
 # Advertisement channel PDU types defined in BT spec
