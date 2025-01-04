@@ -108,6 +108,10 @@
         "package_path": {
           "description": "Optional path to the Android package. (Useful for local repository lookup.)",
           "type": "string"
+        },
+        "description": {
+          "description": "Optional description of the Android package. (Useful for describing data that wasn't extracted automatically, or possibly automatically extracting android app description from store listing.)",
+          "type": "string"
         }
       }
     },
