@@ -20,7 +20,7 @@
         "company",
         "UUID_purpose",
         "UUID_usage_array",
-        "evidence"
+        "evidence_array"
       ],
       "properties": {
         "UUID": {
@@ -41,28 +41,11 @@
             "$ref": "#/definitions/UUID_usage_array_item"
           }
         },
-        "evidence": {
+        "evidence_array": {
           "description": "Evidence for the UUID's company/usage, which can be one or more of URL, description, and/or submitter.",
-          "type": "object",
-          "properties": {
-            "URL": {
-              "description": "URL for site or document that provides evidence of the UUID's use by that company. Try to capture as an archive.org URL to avoid future link breakage. If no URL is available, use the placeholder \"None\".",
-              "type": "string"
-            },
-            "description": {
-              "description": "Supplementary description of evidence for why this UUID corresponds to the given company, usage, etc. (E.g. if it's based on a specific person's experience, that person should include also a evidence_submitter field, so that any comments like \"I have seen this in FOO\" are clear about who the \"I\" is.)",
-              "type": "string"
-            },
-            "submitter": {
-              "description": "Freeform name or pseudonym of person who provided evidence for this UUID.",
-              "type": "string"
-            }
-          },
-          "anyOf": [
-            { "required": ["URL"] },
-            { "required": ["description"] },
-            { "required": ["submitter"] }
-          ]
+          "items": {
+            "$ref": "#/definitions/evidence_array_item"
+          }
         },
         "adv_channel_pdu_array": {
           "description": "Where, if anywhere, this UUID appears in advertisement channel traffice (ADV\\_IND, ADV\\_NONCONN\\_IND, SCAN\\_RSP, etc.) E.g. a GATT Service UUID may or may not appear in advertisements. If it does not, this field should not be present.",
@@ -72,7 +55,7 @@
           }
         },
         "adv_data_type_array": {
-          "$comment": "Numeric order corresponds to string ordering in adv_data_type_str", 
+          "$comment": "Numeric order corresponds to string ordering in adv_data_type_str",
           "description": "What type of AdvData field this UUID appeared in, if any. E.g. 0x02 = \"Incomplete List of 16-bit Service or Service Class UUIDs\", 0x14 = \"List of 16-bit Service Solicitation UUIDs\", etc. Note: numeric order corresponds to string ordering in adv_data_type_str.",
           "type": "array",
           "items": {
@@ -91,8 +74,65 @@
           "type": "boolean",
           "default": true,
           "enum": [true]
+        },
+        "android_info_array": {
+          "description": "Information about Android packages where this UUID has been observed.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/android_info_item"
+          }
         }
       }
+    },
+    "android_info_item": {
+      "description": "Information about an Android package where this UUID has been found. This can help indicate which company, product, or product type this UUID is associated with.",
+      "type": "object",
+      "required": [
+        "package_id",
+        "version_code",
+        "version_name"
+      ],
+      "properties": {
+        "package_id": {
+          "description": "Unique identifier for the Android package (like \"com.firewalla.chancellor\")",
+          "type": "string"
+        },
+        "version_code": {
+          "description": "Version code of the Android package (like \"1540\").",
+          "type": "integer"
+        },
+        "version_name": {
+          "description": "Version name of the Android package (like \"1.56.81\").",
+          "type": "string"
+        },
+        "package_path": {
+          "description": "Optional path to the Android package. (Useful for local repository lookup.)",
+          "type": "string"
+        }
+      }
+    },
+    "evidence_array_item": {
+      "description": "Evidence for the UUID's company/usage, which can be one or more of URL, description, and/or submitter.",
+      "type": "object",
+      "properties": {
+        "URL": {
+          "description": "URL for site or document that provides evidence of the UUID's use by that company. Try to capture as an archive.org URL to avoid future link breakage. If no URL is available, use the placeholder \"None\".",
+          "type": "string"
+        },
+        "description": {
+          "description": "Supplementary description of evidence for why this UUID corresponds to the given company, usage, etc. (E.g. if it's based on a specific person's experience, that person should include also a evidence_submitter field, so that any comments like \"I have seen this in FOO\" are clear about who the \"I\" is.)",
+          "type": "string"
+        },
+        "submitter": {
+          "description": "Freeform name or pseudonym of person who provided evidence for this UUID, or automated system name.",
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        { "required": ["URL"] },
+        { "required": ["description"] },
+        { "required": ["submitter"] }
+      ]
     },
     "UUID": {
       "description": "Must include UUID in either of the following formats",
@@ -162,7 +202,7 @@
       ]
     },
     "adv_data_type_array_item": {
-      "$comment": "Numeric order corresponds to string ordering in adv_data_type_str", 
+      "$comment": "Numeric order corresponds to string ordering in adv_data_type_str",
       "description": "What type of AdvData field this UUID appeared in, if any. E.g. 0x02 = \"Incomplete List of 16-bit Service or Service Class UUIDs\", 0x14 = \"List of 16-bit Service Solicitation UUIDs\", etc. Note: numeric order corresponds to string ordering in adv_data_type_str.",
       "type": "integer",
       "enum": [

@@ -210,3 +210,4 @@
 
 # NOTE FOR LATER: 0xFEE4 = Nordic Mesh UUID - https://github.com/alxelax/nRF5-SDK-for-Mesh/blob/08c60f6d8766bdb83bb108ec3fbd24d758689235/mesh/bootloader/include/mesh_packet.h#L47
 # I need to add that to metadata once I have the ability to capture UUID16s
+# NOTE FOR LATER: Add UUIDS from here when converting to new CustomUUIDs format (because I have seen data with these): https://github.com/google/eddystone/blob/master/configuration-service/README.md

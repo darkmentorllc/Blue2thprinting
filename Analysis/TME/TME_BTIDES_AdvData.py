@@ -142,6 +142,13 @@ def ff_Appearance(data):
         obj["type_str"] = "Appearance"
     return obj
 
+# type 0x1A
+def ff_AdvertisingInterval(data):
+    obj = {"type": type_AdvData_AdvertisingInterval, "length": data["length"], "advertising_interval": data["advertising_interval"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "Appearance"
+    return obj
+
 # type 0x20
 def ff_UUID32ServiceData(data):
     obj = {"type": type_AdvData_UUID32ServiceData, "length": data["length"], "UUID32": data["UUID32"], "service_data_hex_str": data["service_data_hex_str"]}
@@ -235,6 +242,12 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_AdvertisingInterval):
+        if(AdvDataArrayEntry["length"] == data["length"] and
+           AdvDataArrayEntry["advertising_interval"] == data["advertising_interval"]):
+            return True
+        else: return False
+
     if(adv_data_type == type_AdvData_UUID16ServiceData):
         if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["UUID16"] == data["UUID16"] and
@@ -255,7 +268,6 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
            AdvDataArrayEntry["service_data_hex_str"] == data["service_data_hex_str"]):
             return True
         else: return False
-
 
     if(adv_data_type == type_AdvData_MSD):
         if(AdvDataArrayEntry["length"] == data["length"] and
@@ -323,6 +335,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_Appearance):
         return ff_Appearance(data)
+
+    if(adv_data_type == type_AdvData_AdvertisingInterval):
+        return ff_AdvertisingInterval(data)
 
     if(adv_data_type == type_AdvData_UUID16ServiceData):
         return ff_UUID16ServiceData(data)
