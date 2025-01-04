@@ -9,6 +9,7 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104190556/https://github.com/alexa-samples/Alexa-Gadgets-Embedded-Sample-Code/blob/9b967814df31dd602aa540ceb386b7a3e8f5e9b7/ConnectionHelpers/BLE/Handshake/common.h#L23",
+        "description": "FIXME: this doesn't describe the UUID as well as my original citation, but that one broke and isn't on archive.org.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -23,6 +24,7 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104190556/https://github.com/alexa-samples/Alexa-Gadgets-Embedded-Sample-Code/blob/9b967814df31dd602aa540ceb386b7a3e8f5e9b7/ConnectionHelpers/BLE/Handshake/common.h#L23",
+        "description": "FIXME: this doesn't describe the UUID as well as my original citation, but that one broke and isn't on archive.org.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -37,6 +39,7 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104190556/https://github.com/alexa-samples/Alexa-Gadgets-Embedded-Sample-Code/blob/9b967814df31dd602aa540ceb386b7a3e8f5e9b7/ConnectionHelpers/BLE/Handshake/common.h#L23",
+        "description": "FIXME: this doesn't describe the UUID as well as my original citation, but that one broke and isn't on archive.org.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -86,7 +89,7 @@
   {
     "UUID": "fd44",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -100,7 +103,7 @@
   {
     "UUID": "4f860001-943b-49ef-bed4-2f730304427a",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown: Unknown",
+    "UUID_purpose": "Unknown fd44: Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -114,7 +117,7 @@
   {
     "UUID": "4f860002-943b-49ef-bed4-2f730304427a",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown: Unknown",
+    "UUID_purpose": "Unknown fd44: Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -128,7 +131,7 @@
   {
     "UUID": "4f860003-943b-49ef-bed4-2f730304427a",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown: Unknown",
+    "UUID_purpose": "Unknown fd44: Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -142,7 +145,7 @@
   {
     "UUID": "4f860004-943b-49ef-bed4-2f730304427a",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown: Unknown",
+    "UUID_purpose": "Unknown fd44: Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -156,7 +159,7 @@
   {
     "UUID": "94110001-6d9b-4225-a4f1-6a4a7f01b0de",
     "company": "Apple",
-    "UUID_purpose": "Apple Unknown: Unknown",
+    "UUID_purpose": "Unknown fd44: Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
