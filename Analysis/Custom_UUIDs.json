@@ -1910,72 +1910,6 @@
     "parent_UUID": "fd92"
   },
   {
-    "UUID": "Xebe81f6-b952-465e-9ece-5ca39d4e8955",
-    "company": "Samsung",
-    "UUID_purpose": "Find My Everything (FME). - FIXME: UUID is duplicated as there's a copy-paste error in both original papers!",
-    "UUID_name": "FME",
-    "UUID_usage_array": [
-      "GATT Service",
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "0487d871-d55e-44aa-8318-4faa721278e5",
-    "company": "Samsung",
-    "UUID_purpose": "Unknown",
-    "UUID_name": "MCF",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "4ebe81f6-b952-465e-9ece-5ca39d4e8955"
-  },
-  {
-    "UUID": "4a1351bb-d617-4612-a8e3-8dee6ca13e7b",
-    "company": "Samsung",
-    "UUID_purpose": "'The device's alarm can be set to ring by writing the byte 01 (encrypted using the same cipher) to the ALARM characteristic.'",
-    "UUID_name": "ALARM",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "4ebe81f6-b952-465e-9ece-5ca39d4e8955"
-  },
-  {
     "UUID": "eedd5e73-6aa8-4673-8219-398a489da87c",
     "company": "Samsung",
     "UUID_purpose": "'The Authentication Service uses three characteristics, NONCE, ENONCE and SUPPORTED_CIPHER, for authenticating a connected device over BLE.'",
@@ -2594,50 +2528,6 @@
     ]
   },
   {
-    "UUID": "bebfaa51-dcb8-44de-a4b8-fc8c9c7ef46d",
-    "company": "Samsung",
-    "UUID_purpose": "'a valid region code, e.g. 12 for AU'",
-    "UUID_name": "REGION",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fd69"
-  },
-  {
-    "UUID": "d19ddd83-bbe1-4144-bb18-f3ceb57c480a",
-    "company": "Samsung",
-    "UUID_purpose": "'12-byte, varies'",
-    "UUID_name": "Privacy ID Seed",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fd69"
-  },
-  {
     "UUID": "7534c394-1f40-4d12-afd7-dc2a75bd6a44",
     "company": "Samsung",
     "UUID_purpose": "'Value = 1000'",
@@ -2702,6 +2592,116 @@
       }
     ],
     "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "bebfaa51-dcb8-44de-a4b8-fc8c9c7ef46d",
+    "company": "Samsung",
+    "UUID_purpose": "'a valid region code, e.g. 12 for AU'",
+    "UUID_name": "REGION",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "d19ddd83-bbe1-4144-bb18-f3ceb57c480a",
+    "company": "Samsung",
+    "UUID_purpose": "'12-byte, varies'",
+    "UUID_name": "Privacy ID Seed",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955",
+    "company": "Samsung",
+    "UUID_purpose": "Find My Everything (FME). - FIXME: UUID is duplicated as there's a copy-paste error in both original papers!",
+    "UUID_name": "FME",
+    "UUID_usage_array": [
+      "GATT Service",
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "0487d871-d55e-44aa-8318-4faa721278e5",
+    "company": "Samsung",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "MCF",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955"
+  },
+  {
+    "UUID": "4a1351bb-d617-4612-a8e3-8dee6ca13e7b",
+    "company": "Samsung",
+    "UUID_purpose": "'The device's alarm can be set to ring by writing the byte 01 (encrypted using the same cipher) to the ALARM characteristic.'",
+    "UUID_name": "ALARM",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955"
   },
   {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
