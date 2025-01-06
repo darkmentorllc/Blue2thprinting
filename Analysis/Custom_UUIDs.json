@@ -1831,7 +1831,8 @@
   {
     "UUID": "8ec90003-f315-4f60-9fb8-838830daea50",
     "company": "Nordic",
-    "UUID_purpose": "BUTTONLESS_DFU",
+    "UUID_purpose": "Buttonless DFU",
+    "UUID_name": "Buttonless DFU",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1911,7 +1912,7 @@
   {
     "UUID": "eedd5e73-6aa8-4673-8219-398a489da87c",
     "company": "Samsung",
-    "UUID_purpose": "''",
+    "UUID_purpose": "'The Authentication Service uses three characteristics, NONCE, ENONCE and SUPPORTED_CIPHER, for authenticating a connected device over BLE.'",
     "UUID_name": "Authentication",
     "UUID_usage_array": [
       "GATT Service"
@@ -1932,7 +1933,7 @@
   {
     "UUID": "fd59",
     "company": "Samsung",
-    "UUID_purpose": "'for non-registered tags'",
+    "UUID_purpose": "'for non-registered tags' + 'Service UUID FD59 is used for device onboarding/registration activities. During the registration process, the owner device and the tag exchanges configuration and cryptographic data over various characteristics under this service.'",
     "UUID_name": "Onboarding",
     "UUID_usage_array": [
       "GATT Service"
@@ -1953,7 +1954,7 @@
   {
     "UUID": "08a11e38-1c6d-4929-9c32-4f32a64985ce",
     "company": "Samsung",
-    "UUID_purpose": "''",
+    "UUID_purpose": "'This data contains a rotating identifier, called the privacy ID, which is unique to the lost device and which, in theory, can only be linked to its owner by Samsung and the owner device.'",
     "UUID_name": "IDENTIFIER",
     "UUID_usage_array": [
       "GATT Characteristic"
@@ -1975,7 +1976,7 @@
   {
     "UUID": "6ac16db1-f442-4bf4-b804-04c32356465d",
     "company": "Samsung",
-    "UUID_purpose": "''",
+    "UUID_purpose": "'Among this registration data is a hashed serial number (hashed_sn) unique to the tag, which corresponds to the SHA256 digest of the BLE identity address of the tag.'",
     "UUID_name": "HASHED_SN",
     "UUID_usage_array": [
       "GATT Characteristic"
@@ -1997,7 +1998,7 @@
   {
     "UUID": "fd5a",
     "company": "Samsung",
-    "UUID_purpose": "'for registered tags'",
+    "UUID_purpose": "'for registered tags' + 'Service UUID FD5A is primarily used for performing more complicated interactions between the owner device and a tag, such as executing a supported command (e.g., alarm, changing ringtone) on the tag.'",
     "UUID_name": "Command",
     "UUID_usage_array": [
       "GATT Service"

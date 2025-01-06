@@ -1,7 +1,7 @@
 {
   "$id": "https://darkmentor.com/CustomUUIDs_Schema/CustomUUIDs_base.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Custom UUID Exchange Schema (CUES!)",
+  "description": "Custom Lightweight UUID Exchange Schema (CLUES!)",
   "version": "0.1.0",
   "type": "array",
   "items": {
