@@ -560,7 +560,8 @@ def export_BTLE_CTRL(packet):
         BTIDES_export_LL_PING_RSP(connect_ind_obj=connect_ind_obj, data=data)
         return True
     else:
-        packet.show()
+        if(not TME.TME_glob.quiet_print):
+            packet.show()
 
     return False
 
@@ -945,8 +946,9 @@ def read_pcap(file_path):
                     if(export_to_ATTArray(packet)): continue
                 # TODO: export other packet types like LL or L2CAP or ATT
                 else:
-                    print("Unknown or unparsable packet type. Skipped")
-                    packet.show()
+                    qprint("Unknown or unparsable packet type. Skipped")
+                    if(not TME.TME_glob.quiet_print):
+                        packet.show()
 
         return
     except Exception as e:
