@@ -1603,12 +1603,14 @@
         "description": "Observed under known Nest Service d2d3f8ef-9c99-4d9c-a2b3-91c85d44326c.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "d2d3f8ef-9c99-4d9c-a2b3-91c85d44326c"
   },
   {
     "UUID": "00001523-1212-efde-1523-785feabcd123",
     "company": "Nordic",
     "UUID_purpose": "LED Button Service (LBS)",
+    "UUID_name": "LED Button Service (LBS)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1620,9 +1622,42 @@
     ]
   },
   {
+    "UUID": "00001524-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "'Read: Read button data from the application. Notify: Enable notifications for the Button Characteristic to receive button data from the application.'",
+    "UUID_name": "Button",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "00001523-1212-efde-1523-785feabcd123"
+  },
+  {
+    "UUID": "00001525-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "'Write: Write data to the LED Characteristic to change the LED state.'",
+    "UUID_name": "LED",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "00001523-1212-efde-1523-785feabcd123"
+  },
+  {
     "UUID": "00001530-1212-efde-1523-785feabcd123",
     "company": "Nordic",
-    "UUID_purpose": "('Legacy'/insecure) Device Firmware Update (DFU)",
+    "UUID_purpose": "Device Firmware Update (DFU)",
+    "UUID_name": "('Legacy'/insecure) Device Firmware Update (DFU)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1634,9 +1669,58 @@
     ]
   },
   {
+    "UUID": "00001531-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "Device Firmware Update (DFU) Control Point",
+    "UUID_name": "DFU Control Point",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "00001530-1212-efde-1523-785feabcd123"
+  },
+  {
+    "UUID": "00001532-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "Device Firmware Update (DFU) input packets",
+    "UUID_name": "DFU Packet",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "00001530-1212-efde-1523-785feabcd123"
+  },
+  {
+    "UUID": "00001534-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "Device Firmware Update (DFU) version retrieval",
+    "UUID_name": "DFU Version",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "00001530-1212-efde-1523-785feabcd123"
+  },
+  {
     "UUID": "57a70000-9350-11ed-a1eb-0242ac120002",
     "company": "Nordic",
     "UUID_purpose": "Nordic Status Message Service (NSMS)",
+    "UUID_name": "Nordic Status Message Service (NSMS)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1648,9 +1732,25 @@
     ]
   },
   {
+    "UUID": "57a70001-9350-11ed-a1eb-0242ac120002",
+    "company": "Nordic",
+    "UUID_purpose": "Status",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225141/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/nsms.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "57a70000-9350-11ed-a1eb-0242ac120002"
+  },
+  {
     "UUID": "fe59",
     "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU)",
+    "UUID_purpose": "Device Firmware Update (DFU)",
+    "UUID_name": "Secure Device Firmware Update (DFU)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1662,88 +1762,36 @@
     ]
   },
   {
-    "UUID": "00001524-1212-efde-1523-785feabcd123",
+    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
     "company": "Nordic",
-    "UUID_purpose": "LED Button Service (LBS): Button - 'Read: Read button data from the application. Notify: Enable notifications for the Button Characteristic to receive button data from the application.'",
+    "UUID_purpose": "Device Firmware Update (DFU) Control Point",
+    "UUID_name": "DFU Control Point",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe59"
   },
   {
-    "UUID": "00001525-1212-efde-1523-785feabcd123",
+    "UUID": "8ec90002-f315-4f60-9fb8-838830daea50",
     "company": "Nordic",
-    "UUID_purpose": "LED Button Service (LBS): LED - 'Write: Write data to the LED Characteristic to change the LED state.'",
+    "UUID_purpose": "Device Firmware Update (DFU) input packets",
+    "UUID_name": "DFU Packet",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
         "submitter": "Xeno Kovah"
       }
-    ]
-  },
-  {
-    "UUID": "00001531-1212-efde-1523-785feabcd123",
-    "company": "Nordic",
-    "UUID_purpose": "('Legacy'/insecure) Device Firmware Update (DFU): DFU Control Point",
-    "UUID_usage_array": [
-      "GATT Characteristic"
     ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00001532-1212-efde-1523-785feabcd123",
-    "company": "Nordic",
-    "UUID_purpose": "('Legacy'/insecure) Device Firmware Update (DFU): DFU Packet",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00001534-1212-efde-1523-785feabcd123",
-    "company": "Nordic",
-    "UUID_purpose": "('Legacy'/insecure) Device Firmware Update (DFU): DFU Version",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250105123559/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "57a70001-9350-11ed-a1eb-0242ac120002",
-    "company": "Nordic",
-    "UUID_purpose": "Nordic Status Message Service (NSMS): Status - 'Read: Read the current status. Notify: Enable notifications for the Status Characteristic to receive notifications when the status message changes.'",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225141/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/nsms.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
+    "parent_UUID": "fe59"
   },
   {
     "UUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
@@ -1755,62 +1803,6 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
-    "company": "Nordic",
-    "UUID_purpose": "Nordic UART Service (NUS): Receive (RX) - 'Write data to the RX Characteristic to send it on to the UART interface.'",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
-    "company": "Nordic",
-    "UUID_purpose": "Nordic UART Service (NUS): Transmit (TX) - 'Enable notifications for the TX Characteristic to receive data from the application. The application transmits all data that is received over UART as notifications.'",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
-    "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Control Point",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "8ec90002-f315-4f60-9fb8-838830daea50",
-    "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Packet",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
         "submitter": "Xeno Kovah"
       }
     ]
