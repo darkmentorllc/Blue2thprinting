@@ -1,8 +1,50 @@
 [
   {
+    "UUID": "c7df0001-33c0-11e8-b467-0ed5f89f718b",
+    "company": "Amazon",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (r in rnet = Ring?, Ring was purchased by Amazon)",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "c7df0002-33c0-11e8-b467-0ed5f89f718b",
+    "company": "Amazon",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (r in rnet = Ring?, Ring was purchased by Amazon)",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "c7df0003-33c0-11e8-b467-0ed5f89f718b",
+    "company": "Amazon",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (r in rnet = Ring?, Ring was purchased by Amazon)",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
     "UUID": "fe03",
     "company": "Amazon",
-    "UUID_purpose": "Alexa Gadgets allows devices to connect to Amazon Echo devices. 'The BLE GATT Alexa Gadgets Service is a custom service that manages Alexa Gadgets stream transactions.' This ",
+    "UUID_purpose": "Alexa Gadgets allows devices to connect to Amazon Echo devices. 'The BLE GATT Alexa Gadgets Service is a custom service that manages Alexa Gadgets stream transactions.'",
     "UUID_name": "Alexa Gadgets",
     "UUID_usage_array": [
       "GATT Service"
@@ -55,43 +97,329 @@
     "parent_UUID": "fe03"
   },
   {
-    "UUID": "c7df0001-33c0-11e8-b467-0ed5f89f718b",
-    "company": "Amazon",
-    "UUID_purpose": "Unknown",
+    "UUID": "00000000-deca-fade-deca-deafdecacafe",
+    "company": "Apple",
+    "UUID_purpose": "MFi (Made for i{pod,Phone,Pad, etc}) Apple certification program uses the iAP (iPod Accessories Protocol) to communicate with accessories. This is the service designation for the MFI iAP client.",
+    "UUID_name": "MFi (Made for i{pod,Phone}) iAP (iPod Accessories Protocol) client",
     "UUID_usage_array": [
       "GATT Service"
     ],
     "evidence_array": [
       {
-        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (Ring?, purhcased by Amazon)",
+        "URL": "https://web.archive.org/web/20241128211458/https://wiomoc.de/misc/posts/mfi_iap.html",
+        "description": "Research reverse engineering Apple iAP2 protocol",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20250106141139/https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py",
+        "description": "Secondary attribution of this UUID to Apple MFi iAP client service",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20241217212228/https://mfi.apple.com/en/how-it-works",
+        "description": "Apple MFi page.",
         "submitter": "Xeno Kovah"
       }
     ]
   },
   {
-    "UUID": "c7df0002-33c0-11e8-b467-0ed5f89f718b",
-    "company": "Amazon",
-    "UUID_purpose": "Unknown",
+    "UUID": "00000000-deca-fade-deca-deafdecacaff",
+    "company": "Apple",
+    "UUID_purpose": "MFi (Made for i{pod,Phone,Pad, etc}) Apple certification program uses the iAP (iPod Accessories Protocol) to communicate with accessories. This is the service designation for the MFI iAP server.",
+    "UUID_name": "MFi (Made for i{pod,Phone}) iAP (iPod Accessories Protocol) server",
     "UUID_usage_array": [
       "GATT Service"
     ],
     "evidence_array": [
       {
-        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (Ring?, purhcased by Amazon)",
+        "URL": "https://web.archive.org/web/20241128211458/https://wiomoc.de/misc/posts/mfi_iap.html",
+        "description": "Research reverse engineering Apple iAP2 protocol",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20250106141139/https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py",
+        "description": "Secondary attribution of this UUID to Apple MFi iAP server service",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20241217212228/https://mfi.apple.com/en/how-it-works",
+        "description": "Apple MFi page.",
         "submitter": "Xeno Kovah"
       }
     ]
   },
   {
-    "UUID": "c7df0003-33c0-11e8-b467-0ed5f89f718b",
-    "company": "Amazon",
-    "UUID_purpose": "Unknown",
+    "UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0",
+    "company": "Apple",
+    "UUID_purpose": "Notification Center",
     "UUID_usage_array": [
       "GATT Service"
     ],
     "evidence_array": [
       {
-        "description": "Assumed to be Amazon/Ring-related (due to GATT name of Amazon) and association with 'rnet' (Ring?, purhcased by Amazon)",
+        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b",
+    "company": "Apple",
+    "UUID_purpose": "Find My",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on containing the known 6aa5000163524d57a7b4003a416fbb0b Find My characteristic underneath it",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "6aa50001-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED Based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50002-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Store company name.",
+    "UUID_name": "Company name?",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED Based on observed values of 'Apple' & 'Anker Innovations Limited' from some devices.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50003-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Store model name.",
+    "UUID_name": "Model name?",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED Based on observed values of 'AirPods Pro' & 'eufy Security Smart Finder' from some devices.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50005-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED Based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50006-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50007-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50008-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa50009-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "6aa5000a-6352-4d57-a7b4-003a416fbb0b",
+    "company": "Apple",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "ASSUMED based on UUID value near other apparent Find My values",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+  },
+  {
+    "UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc",
+    "company": "Apple",
+    "UUID_purpose": "'The Apple Media Service (AMS) is used with Bluetooth accessories that connect to iOS devices through Bluetooth low-energy links. It gives them a simple and convenient way to control media apps and access information about the media states of the connected iOS devices.'",
+    "UUID_name": "Apple Media Service",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "2f7cabce-808d-411f-9a0c-bb92ba96c102",
+    "company": "Apple",
+    "UUID_purpose": "'The Entity Update characteristic is the characteristic by which an MR can inform the MS which entity/attribute pairs it is interested in, and be informed about changes on these whenever they occur. For example, the MR can be informed about the title of the currently loaded track, or the name of the active media app.'",
+    "UUID_name": "Entity Update",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
+  },
+  {
+    "UUID": "9b3c81d8-57b1-4a8a-b8df-0e56f7ca51c2",
+    "company": "Apple",
+    "UUID_purpose": "'The Remote Command characteristic is the characteristic by which an MR can send remote commands to affect the playback state of an MS, such as Play, Next Track, Increase Volume, etc. This characteristic is also used to report to the MR the list of commands supported by the MS.'",
+    "UUID_name": "Remote Command",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
+  },
+  {
+    "UUID": "c6b2f38c-23ab-46d8-a6ab-a3a870bbd5d7",
+    "company": "Apple",
+    "UUID_purpose": "'The Entity Attribute characteristic is the characteristic by which an MR can retrieve the extended value of an attribute.'",
+    "UUID_name": "Entity Attribute",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
+  },
+  {
+    "UUID": "9fa480e0-4967-4542-9390-d343dc5d04ae",
+    "company": "Apple",
+    "UUID_purpose": "Nearby",
+    "UUID_name": "Nearby",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
+        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "af0badb1-5b99-43cd-917a-a77bc549e3cc",
+    "company": "Apple",
+    "UUID_purpose": "Nearby: Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
+        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "9fa480e0-4967-4542-9390-d343dc5d04ae"
+  },
+  {
+    "UUID": "d0611e78-bbb4-4591-a5f8-487910ae4366",
+    "company": "Apple",
+    "UUID_purpose": "'Continuity' is a mechanism for sharing data between Apple devices. It includes features like Airdrop, Handoff, Instant Hotspot, and Universal Clipboard.",
+    "UUID_name": "Continuity",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
+        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -186,341 +514,11 @@
     "parent_UUID": "fd44"
   },
   {
-    "UUID": "d0611e78-bbb4-4591-a5f8-487910ae4366",
+    "UUID": "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb",
     "company": "Apple",
-    "UUID_purpose": "'Continuity' is a mechanism for sharing data between Apple devices. It includes features like Airdrop, Handoff, Instant Hotspot, and Universal Clipboard.",
-    "UUID_name": "Continuity",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
-        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "8667556c-9a37-4c91-84ed-54ee27d90049",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_name": "Unknown",
+    "UUID_purpose": "Notification Center: Data Source",
     "UUID_usage_array": [
       "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
-        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b",
-    "company": "Apple",
-    "UUID_purpose": "Find My",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on containing the known 6aa5000163524d57a7b4003a416fbb0b Find My characteristic underneath it",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "6aa50002-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Store company name.",
-    "UUID_name": "Company name?",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED Based on observed values of 'Apple' & 'Anker Innovations Limited' from some devices.",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50003-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Store model name.",
-    "UUID_name": "Model name?",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED Based on observed values of 'AirPods Pro' & 'eufy Security Smart Finder' from some devices.",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50001-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED Based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50006-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50007-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50008-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50009-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa5000a-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50005-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED Based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "00000000-deca-fade-deca-deafdecacafe",
-    "company": "Apple",
-    "UUID_purpose": "MFi (Made for i{pod,Phone,Pad, etc}) Apple certification program uses the iAP (iPod Accessories Protocol) to communicate with accessories. This is the service designation for the MFI iAP client.",
-    "UUID_name": "MFi (Made for i{pod,Phone}) iAP (iPod Accessories Protocol) client",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20241128211458/https://wiomoc.de/misc/posts/mfi_iap.html",
-        "description": "Research reverse engineering Apple iAP2 protocol",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20250106141139/https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py",
-        "description": "Secondary attribution of this UUID to Apple MFi iAP client service",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20241217212228/https://mfi.apple.com/en/how-it-works",
-        "description": "Apple MFi page.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00000000-deca-fade-deca-deafdecacaff",
-    "company": "Apple",
-    "UUID_purpose": "MFi (Made for i{pod,Phone,Pad, etc}) Apple certification program uses the iAP (iPod Accessories Protocol) to communicate with accessories. This is the service designation for the MFI iAP server.",
-    "UUID_name": "MFi (Made for i{pod,Phone}) iAP (iPod Accessories Protocol) server",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20241128211458/https://wiomoc.de/misc/posts/mfi_iap.html",
-        "description": "Research reverse engineering Apple iAP2 protocol",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20250106141139/https://github.com/wiomoc/iap2/blob/032135e9b5f1276cffdf8a820baeaf10f5cf6b10/iap2/transport/bluetooth.py",
-        "description": "Secondary attribution of this UUID to Apple MFi iAP server service",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20241217212228/https://mfi.apple.com/en/how-it-works",
-        "description": "Apple MFi page.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc",
-    "company": "Apple",
-    "UUID_purpose": "'The Apple Media Service (AMS) is used with Bluetooth accessories that connect to iOS devices through Bluetooth low-energy links. It gives them a simple and convenient way to control media apps and access information about the media states of the connected iOS devices.'",
-    "UUID_name": "Apple Media Service",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "c6b2f38c-23ab-46d8-a6ab-a3a870bbd5d7",
-    "company": "Apple",
-    "UUID_purpose": "'The Entity Attribute characteristic is the characteristic by which an MR can retrieve the extended value of an attribute.'",
-    "UUID_name": "Entity Attribute",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
-  },
-  {
-    "UUID": "2f7cabce-808d-411f-9a0c-bb92ba96c102",
-    "company": "Apple",
-    "UUID_purpose": "'The Entity Update characteristic is the characteristic by which an MR can inform the MS which entity/attribute pairs it is interested in, and be informed about changes on these whenever they occur. For example, the MR can be informed about the title of the currently loaded track, or the name of the active media app.'",
-    "UUID_name": "Entity Update",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
-  },
-  {
-    "UUID": "9b3c81d8-57b1-4a8a-b8df-0e56f7ca51c2",
-    "company": "Apple",
-    "UUID_purpose": "'The Remote Command characteristic is the characteristic by which an MR can send remote commands to affect the playback state of an MS, such as Play, Next Track, Increase Volume, etc. This characteristic is also used to report to the MR the list of commands supported by the MS.'",
-    "UUID_name": "Remote Command",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230821013001/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleMediaService_Reference/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc"
-  },
-  {
-    "UUID": "9fa480e0-4967-4542-9390-d343dc5d04ae",
-    "company": "Apple",
-    "UUID_purpose": "Nearby",
-    "UUID_name": "Nearby",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
-        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "af0badb1-5b99-43cd-917a-a77bc549e3cc",
-    "company": "Apple",
-    "UUID_purpose": "Nearby: Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
-        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "9fa480e0-4967-4542-9390-d343dc5d04ae"
-  },
-  {
-    "UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0",
-    "company": "Apple",
-    "UUID_purpose": "Notification Center",
-    "UUID_usage_array": [
-      "GATT Service"
     ],
     "evidence_array": [
       {
@@ -544,15 +542,17 @@
     ]
   },
   {
-    "UUID": "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb",
+    "UUID": "8667556c-9a37-4c91-84ed-54ee27d90049",
     "company": "Apple",
-    "UUID_purpose": "Notification Center: Data Source",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
+        "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
+        "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -586,9 +586,9 @@
     ]
   },
   {
-    "UUID": "a87988b9-694c-479c-900e-95dfa6c00a24",
+    "UUID": "18cda784-4bd3-4370-85bb-bfed91ec86af",
     "company": "Blue Radios",
-    "UUID_purpose": "Serial Commands",
+    "UUID_purpose": "Serial RX",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -601,9 +601,9 @@
     ]
   },
   {
-    "UUID": "18cda784-4bd3-4370-85bb-bfed91ec86af",
+    "UUID": "a87988b9-694c-479c-900e-95dfa6c00a24",
     "company": "Blue Radios",
-    "UUID_purpose": "Serial RX",
+    "UUID_purpose": "Serial Commands",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -743,6 +743,20 @@
     ]
   },
   {
+    "UUID": "00001102-d102-11e1-9b23-00025b00a5a5",
+    "company": "CSR",
+    "UUID_purpose": "GAIA (Over The Air update protocol) Response Endpoint (Over The Air update protocol",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
     "UUID": "00001103-d102-11e1-9b23-00025b00a5a5",
     "company": "CSR",
     "UUID_purpose": "GAIA (Over The Air update protocol) Data Endpoint (Over The Air update protocol, not included in  found at",
@@ -756,20 +770,6 @@
       },
       {
         "URL": "https://github.com/Hypfer/fiiobta30protocol",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00001102-d102-11e1-9b23-00025b00a5a5",
-    "company": "CSR",
-    "UUID_purpose": "GAIA (Over The Air update protocol) Response Endpoint (Over The Air update protocol",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -850,9 +850,9 @@
     "evidence_array": []
   },
   {
-    "UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba",
+    "UUID": "558dfa00-4fa8-4105-9f02-4eaa93e62980",
     "company": "Fitbit",
-    "UUID_purpose": "ASSOCIATED WITH: ADV_IND, GATT_Service: Fitbit: Ace 2, Ace 3, Alta, Alta HR, Blaze, Charge 2, Charge 3, Charge HR, Flex 2, Inspire, Inspire 2, Inspire HR, Ionic, Versa, Versa Lite, Zip",
+    "UUID_purpose": "Charge 2, Inspire, Inspire 2",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -865,9 +865,9 @@
     ]
   },
   {
-    "UUID": "558dfa00-4fa8-4105-9f02-4eaa93e62980",
+    "UUID": "9f819e56-2684-4793-89a8-c7102b4f5314",
     "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire, Inspire 2",
+    "UUID_purpose": "Fitbit: Sense 2, Versa 4",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -885,6 +885,81 @@
     "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
     "UUID_usage_array": [
       "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "abbaff00-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023. Associated with Charge 4, Charge 5, Inspire 3, Ionic, Luxe, Sense, Versa, Versa 2, Versa 3, Versa Lite",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "ac2f0045-8182-4be5-91e0-2992e6b40ebb",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba",
+    "company": "Fitbit",
+    "UUID_purpose": "ASSOCIATED WITH: ADV_IND, GATT_Service: Fitbit: Ace 2, Ace 3, Alta, Alta HR, Blaze, Charge 2, Charge 3, Charge HR, Flex 2, Inspire, Inspire 2, Inspire HR, Ionic, Versa, Versa Lite, Zip",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "558dfa01-4fa8-4105-9f02-4eaa93e62980",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "9f819e56-2684-4793-89a8-c7102b4f5315",
+    "company": "Fitbit",
+    "UUID_purpose": "Fitbit: Sense 2, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
     ],
     "evidence_array": [
       {
@@ -970,39 +1045,9 @@
     ]
   },
   {
-    "UUID": "ac2f0045-8182-4be5-91e0-2992e6b40ebb",
+    "UUID": "ac2f0145-8182-4be5-91e0-2992e6b40ebb",
     "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "9f819e56-2684-4793-89a8-c7102b4f5314",
-    "company": "Fitbit",
-    "UUID_purpose": "Fitbit: Sense 2, Versa 4",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "9f819e56-2684-4793-89a8-c7102b4f5315",
-    "company": "Fitbit",
-    "UUID_purpose": "Fitbit: Sense 2, Versa 4",
+    "UUID_purpose": "Charge 4,  Charge 5,  Inspire 3,  Luxe,  Sense,  Sense 2,  Versa,  Versa 2,  Versa 3,  Versa 4",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1015,9 +1060,9 @@
     ]
   },
   {
-    "UUID": "558dfa01-4fa8-4105-9f02-4eaa93e62980",
+    "UUID": "ac2f1045-8182-4be5-91e0-2992e6b40ebb",
     "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_purpose": "Charge 5, Inspire 3, Luxe, Sense 2, Versa 4",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1090,36 +1135,6 @@
     ]
   },
   {
-    "UUID": "ac2f0145-8182-4be5-91e0-2992e6b40ebb",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4,  Charge 5,  Inspire 3,  Luxe,  Sense,  Sense 2,  Versa,  Versa 2,  Versa 3,  Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "ac2f1045-8182-4be5-91e0-2992e6b40ebb",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 5, Inspire 3, Luxe, Sense 2, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "adabfb05-6e7d-4601-bda2-bffaa68956ba",
     "company": "Fitbit",
     "UUID_purpose": "Inspire 2",
@@ -1149,9 +1164,9 @@
     ]
   },
   {
-    "UUID": "fe2c1236-8366-4814-8eb0-01de32100bea",
+    "UUID": "fe2c1233-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Account Key",
+    "UUID_purpose": "Fast Pair: Model ID",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1177,9 +1192,9 @@
     ]
   },
   {
-    "UUID": "fe2c1233-8366-4814-8eb0-01de32100bea",
+    "UUID": "fe2c1235-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Model ID",
+    "UUID_purpose": "Fast Pair: Passkey",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1191,9 +1206,9 @@
     ]
   },
   {
-    "UUID": "fe2c1235-8366-4814-8eb0-01de32100bea",
+    "UUID": "fe2c1236-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Passkey",
+    "UUID_purpose": "Fast Pair: Account Key",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1214,20 +1229,6 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "273e000a-4c4d-454d-96be-f03bac821358",
-    "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: Accelerometer",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1331,6 +1332,20 @@
     ]
   },
   {
+    "UUID": "273e000a-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Muse EEG Headset: Accelerometer",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
     "UUID": "273e000b-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
     "UUID_purpose": "Muse EEG Headset: Telemetry",
@@ -1340,6 +1355,21 @@
     "evidence_array": [
       {
         "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "company": "Laird",
+    "UUID_purpose": "Virtual serial port",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
+        "description": "'Laird Custom BLE Serial Port Service' Application Note",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1376,39 +1406,9 @@
     "regex": true
   },
   {
-    "UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "UUID": "569a2000-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
-        "description": "'Laird Custom BLE Serial Port Service' Application Note",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "569a2003-b87f-490c-92cb-11ba5ea5167c",
-    "company": "Laird",
-    "UUID_purpose": "Virtual serial port: MODEM_IN, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
-        "description": "'Laird Custom BLE Serial Port Service' Application Note",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "569a2002-b87f-490c-92cb-11ba5ea5167c",
-    "company": "Laird",
-    "UUID_purpose": "Virtual serial port: MODEM_OUT, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Virtual serial port: TX_FIFO, under 569a1101-b87f-490c-92cb-11ba5ea5167c",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1436,9 +1436,24 @@
     ]
   },
   {
-    "UUID": "569a2000-b87f-490c-92cb-11ba5ea5167c",
+    "UUID": "569a2002-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port: TX_FIFO, under 569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Virtual serial port: MODEM_OUT, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
+        "description": "'Laird Custom BLE Serial Port Service' Application Note",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "569a2003-b87f-490c-92cb-11ba5ea5167c",
+    "company": "Laird",
+    "UUID_purpose": "Virtual serial port: MODEM_IN, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1526,7 +1541,6 @@
         "description": "Observed under known Nest Service d2d3f8ef-9c99-4d9c-a2b3-91c85d44326c.",
         "submitter": "Xeno Kovah"
       }
-
     ]
   },
   {
@@ -1553,6 +1567,62 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104224034/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "57a70000-9350-11ed-a1eb-0242ac120002",
+    "company": "Nordic",
+    "UUID_purpose": "Nordic Status Message Service (NSMS)",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225141/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/nsms.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "fe59",
+    "company": "Nordic",
+    "UUID_purpose": "Secure Device Firmware Update (DFU)",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "00001524-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "LED Button Service (LBS): Button - 'Read: Read button data from the application. Notify: Enable notifications for the Button Characteristic to receive button data from the application.'",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "00001525-1212-efde-1523-785feabcd123",
+    "company": "Nordic",
+    "UUID_purpose": "LED Button Service (LBS): LED - 'Write: Write data to the LED Characteristic to change the LED state.'",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1600,62 +1670,6 @@
     ]
   },
   {
-    "UUID": "fe59",
-    "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU)",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
-    "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Control Point",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "8ec90002-f315-4f60-9fb8-838830daea50",
-    "company": "Nordic",
-    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Packet",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "57a70000-9350-11ed-a1eb-0242ac120002",
-    "company": "Nordic",
-    "UUID_purpose": "Nordic Status Message Service (NSMS)",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225141/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/nsms.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "57a70001-9350-11ed-a1eb-0242ac120002",
     "company": "Nordic",
     "UUID_purpose": "Nordic Status Message Service (NSMS): Status - 'Read: Read the current status. Notify: Enable notifications for the Status Characteristic to receive notifications when the status message changes.'",
@@ -1665,34 +1679,6 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104225141/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/nsms.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00001524-1212-efde-1523-785feabcd123",
-    "company": "Nordic",
-    "UUID_purpose": "LED Button Service (LBS): Button - 'Read: Read button data from the application. Notify: Enable notifications for the Button Characteristic to receive button data from the application.'",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "00001525-1212-efde-1523-785feabcd123",
-    "company": "Nordic",
-    "UUID_purpose": "LED Button Service (LBS): LED - 'Write: Write data to the LED Characteristic to change the LED state.'",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1735,6 +1721,34 @@
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20250104223759/https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth/services/lbs.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
+    "company": "Nordic",
+    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Control Point",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "8ec90002-f315-4f60-9fb8-838830daea50",
+    "company": "Nordic",
+    "UUID_purpose": "Secure Device Firmware Update (DFU): DFU Packet",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1796,20 +1810,6 @@
     ]
   },
   {
-    "UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307",
-    "company": "Silicon Labs",
-    "UUID_purpose": "BGX Xpress Streaming",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
     "company": "Silicon Labs",
     "UUID_purpose": "OTA Firmware Update",
@@ -1824,15 +1824,29 @@
     ]
   },
   {
-    "UUID": "f7bf3564-fb6d-4e53-88a4-5e37e0326063",
+    "UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307",
     "company": "Silicon Labs",
-    "UUID_purpose": "OTA Firmware Update, Control Attribute",
+    "UUID_purpose": "BGX Xpress Streaming",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "75a9f022-af03-4e41-b4bc-9de90a47d50b",
+    "company": "Silicon Labs",
+    "UUID_purpose": "BGX: Stream Mode (Mode)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
+        "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1852,20 +1866,6 @@
     ]
   },
   {
-    "UUID": "a9da6040-0823-4995-94ec-9ce41ca28833",
-    "company": "Silicon Labs",
-    "UUID_purpose": "BGX: Peripheral Receive (Rx)",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "a73e9a10-628f-4494-a099-12efaf72258f",
     "company": "Silicon Labs",
     "UUID_purpose": "BGX: Peripheral Transmit (Tx)",
@@ -1880,15 +1880,29 @@
     ]
   },
   {
-    "UUID": "75a9f022-af03-4e41-b4bc-9de90a47d50b",
+    "UUID": "a9da6040-0823-4995-94ec-9ce41ca28833",
     "company": "Silicon Labs",
-    "UUID_purpose": "BGX: Stream Mode (Mode)",
+    "UUID_purpose": "BGX: Peripheral Receive (Rx)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
         "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "f7bf3564-fb6d-4e53-88a4-5e37e0326063",
+    "company": "Silicon Labs",
+    "UUID_purpose": "OTA Firmware Update, Control Attribute",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1964,15 +1978,6 @@
     ]
   },
   {
-    "UUID": "9d410019-35d6-f4dd-ba60-e7bd8dc491c0",
-    "company": "Tile",
-    "UUID_purpose": "Tile Characteristic (Notify, Indicate)",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": []
-  },
-  {
     "UUID": "9d410007-35d6-f4dd-ba60-e7bd8dc491c0",
     "company": "Tile",
     "UUID_purpose": "Tile Characteristic (Readable)",
@@ -1991,16 +1996,24 @@
     "evidence_array": []
   },
   {
-    "UUID": "abbaff00-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
+    "UUID": "9d410019-35d6-f4dd-ba60-e7bd8dc491c0",
+    "company": "Tile",
+    "UUID_purpose": "Tile Characteristic (Notify, Indicate)",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": []
+  },
+  {
+    "UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5",
+    "company": "Unknown",
     "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Service"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023. Associated with Charge 4, Charge 5, Inspire 3, Ionic, Luxe, Sense, Versa, Versa 2, Versa 3, Versa Lite",
+        "description": "Present on many audio devices. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -2015,48 +2028,6 @@
     "evidence_array": [
       {
         "description": "Associated with multiple vendors' headphones. TODO: Needs investigation.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "43484152-2dab-3141-6972-6f6861424c45",
-    "company": "Unknown",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "43484152-2dab-3241-6972-6f6861424c45",
-    "company": "Unknown",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5",
-    "company": "Unknown",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "description": "Present on many audio devices. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -2113,6 +2084,34 @@
     "evidence_array": [
       {
         "description": "Present on many audio devices. Found under 0000eb10-d102-11e1-9b23-00025b00a5a5. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "43484152-2dab-3141-6972-6f6861424c45",
+    "company": "Unknown",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "43484152-2dab-3241-6972-6f6861424c45",
+    "company": "Unknown",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
     ]
