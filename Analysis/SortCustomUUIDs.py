@@ -1,11 +1,11 @@
 import json
 from itertools import groupby
+from collections import defaultdict
 
 def merge_entries(entry1, entry2):
     merged_entry = {}
     for key in entry1:
         if isinstance(entry1[key], list) and isinstance(entry2[key], list):
-            # Merge and deduplicate arrays
             merged_entry[key] = list({json.dumps(item) for item in entry1[key] + entry2[key]})
             merged_entry[key] = [json.loads(item) for item in merged_entry[key]]
         elif isinstance(entry1[key], str) and isinstance(entry2[key], str):
@@ -30,62 +30,50 @@ def sort_custom_uuids(file_path):
         company = entry['company'] if entry['company'] is not None else ''
         return company, entry['UUID_purpose'], entry['UUID']
 
-    # Group entries by UUID
+    # Group entries by UUID and merge duplicates
     uuid_groups = {}
     for entry in data:
         uuid = entry['UUID']
-        if uuid not in uuid_groups:
-            uuid_groups[uuid] = []
-        uuid_groups[uuid].append(entry)
-
-    # Merge entries within each UUID group
-    merged_entries = {}
-    for uuid, entries in uuid_groups.items():
-        if len(entries) == 1:
-            merged_entries[uuid] = entries[0]
+        if uuid in uuid_groups:
+            uuid_groups[uuid] = merge_entries(uuid_groups[uuid], entry)
         else:
-            # Start with the first entry
-            merged = entries[0]
-            # Compare and merge with subsequent entries
-            for entry in entries[1:]:
-                if not entries_are_equal(merged, entry):
-                    print(f"Merging entries for UUID: {uuid}")
-                    merged = merge_entries(merged, entry)
-            merged_entries[uuid] = merged
+            uuid_groups[uuid] = entry
 
-    sorted_data = sorted(merged_entries.values(), key=sort_key)
+    # Create company groups with parent-child relationships
+    company_groups = defaultdict(lambda: {'services': [], 'orphan_chars': []})
+    for entry in uuid_groups.values():
+        company = entry['company'] if entry['company'] is not None else ''
+        if "GATT Service" in entry['UUID_usage_array']:
+            company_groups[company]['services'].append(entry)
+        elif "GATT Characteristic" in entry['UUID_usage_array']:
+            if 'parent_UUID' in entry:
+                company_groups[company].setdefault(entry['parent_UUID'], []).append(entry)
+            else:
+                company_groups[company]['orphan_chars'].append(entry)
 
-    # Track which UUIDs we've already added to the result
-    seen_uuids = set()
     result = []
+    seen_uuids = set()
 
-    for company, group in groupby(sorted_data, key=lambda x: x['company'] if x['company'] is not None else ''):
-        group = list(group)
-        services = [entry for entry in group if "GATT Service" in entry['UUID_usage_array']]
-        characteristics = [entry for entry in group if "GATT Characteristic" in entry['UUID_usage_array']]
-
+    for company, group in company_groups.items():
+        services = sorted(group['services'], key=lambda x: x['UUID'])
         for service in services:
             if service['UUID'] not in seen_uuids:
                 result.append(service)
                 seen_uuids.add(service['UUID'])
 
-            related_characteristics = [
-                char for char in characteristics
-                if service['UUID_purpose'] in char['UUID_purpose']
-                and char['UUID'] not in seen_uuids
-            ]
+            # Add related characteristics
+            related_characteristics = sorted(group.get(service['UUID'], []), key=lambda x: x['UUID'])
             for char in related_characteristics:
+                if char['UUID'] not in seen_uuids:
+                    result.append(char)
+                    seen_uuids.add(char['UUID'])
+
+        # Add orphan characteristics
+        orphan_chars = sorted(group['orphan_chars'], key=lambda x: x['UUID'])
+        for char in orphan_chars:
+            if char['UUID'] not in seen_uuids:
                 result.append(char)
                 seen_uuids.add(char['UUID'])
-
-        unrelated_characteristics = [
-            char for char in characteristics
-            if all(service['UUID_purpose'] not in char['UUID_purpose'] for service in services)
-            and char['UUID'] not in seen_uuids
-        ]
-        for char in unrelated_characteristics:
-            result.append(char)
-            seen_uuids.add(char['UUID'])
 
     with open(file_path, 'w') as f:
         json.dump(result, f, indent=2)
