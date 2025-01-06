@@ -57,7 +57,8 @@ def sort_custom_uuids(file_path):
     result = []
     seen_uuids = set()
 
-    for company, group in company_groups.items():
+    # Sort companies and process each group
+    for company, group in sorted(company_groups.items()):
         services = sorted(group['services'], key=lambda x: x['UUID'])
         for service in services:
             if service['UUID'] not in seen_uuids:

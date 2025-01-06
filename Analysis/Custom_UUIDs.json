@@ -1747,56 +1747,24 @@
     "parent_UUID": "57a70000-9350-11ed-a1eb-0242ac120002"
   },
   {
-    "UUID": "fe59",
+    "UUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
     "company": "Nordic",
-    "UUID_purpose": "Device Firmware Update (DFU)",
-    "UUID_name": "Secure Device Firmware Update (DFU)",
+    "UUID_purpose": "Nordic UART Service (NUS)",
     "UUID_usage_array": [
       "GATT Service"
     ],
     "evidence_array": [
       {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
+        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
         "submitter": "Xeno Kovah"
       }
     ]
   },
   {
-    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
+    "UUID": "6e400002-b5a3-f393-e0a9-e50e24dcca9e",
     "company": "Nordic",
-    "UUID_purpose": "Device Firmware Update (DFU) Control Point",
-    "UUID_name": "DFU Control Point",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fe59"
-  },
-  {
-    "UUID": "8ec90002-f315-4f60-9fb8-838830daea50",
-    "company": "Nordic",
-    "UUID_purpose": "Device Firmware Update (DFU) input packets",
-    "UUID_name": "DFU Packet",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fe59"
-  },
-  {
-    "UUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
-    "company": "Nordic",
-    "UUID_purpose": "Nordic UART Service (NUS)",
+    "UUID_purpose": "'Write or Write Without Response: Write data to the RX Characteristic to send it on to the UART interface.'",
+    "UUID_name": "Receive (RX)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1805,7 +1773,81 @@
         "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
         "submitter": "Xeno Kovah"
       }
+    ],
+    "parent_UUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+  },
+  {
+    "UUID": "6e400003-b5a3-f393-e0a9-e50e24dcca9e",
+    "company": "Nordic",
+    "UUID_purpose": "'Notify: Enable notifications for the TX Characteristic to receive data from the application. The application transmits all data that is received over UART as notifications.'",
+    "UUID_name": "Transmit (TX)",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250106132129/https://docs.nordicsemi.com/bundle/ncs-1.4.1/page/nrf/include/bluetooth/services/nus.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+  },
+  {
+    "UUID": "fe59",
+    "company": "Nordic",
+    "UUID_purpose": "Secure Device Firmware Update (DFU) (in contrast to earlier Nordic 'Legacy' DFU which is known to be insecure.)",
+    "UUID_name": "Device Firmware Update (DFU))",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104225418/https://docs.nordicsemi.com/bundle/sdk_nrf5_v16.0.0/page/lib_dfu_transport_ble.html",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "Used by Samsung also according to talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024. This implies Samsung was using Nordic chips. (Confirmed by statement 'Galaxy SmartTags use the Nordic nRF52833 chip.')",
+        "submitter": "Xeno Kovah"
+      }
     ]
+  },
+  {
+    "UUID": "8ec90001-f315-4f60-9fb8-838830daea50",
+    "company": "Nordic",
+    "UUID_purpose": "Buttonless DFU",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240712091552/https://nordicsemiconductor.github.io/Nordic-Thingy52-FW/documentation/firmware_architecture.html",
+        "description": "Previous 1st party documented 'Buttonless DFU' characteristic UUID. Believed to be deprecated now though.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe59"
+  },
+  {
+    "UUID": "8ec90003-f315-4f60-9fb8-838830daea50",
+    "company": "Nordic",
+    "UUID_purpose": "BUTTONLESS_DFU",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "Used by Samsung also according to talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024. This implies Samsung was using Nordic chips. (Confirmed by statement 'Galaxy SmartTags use the Nordic nRF52833 chip.')",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20250106191040/https://devzone.nordicsemi.com/f/nordic-q-a/33034/issue-detecting-buttonless-dfu-characteristic",
+        "description": "Secondary proof that this characteristic is made by Nordic. Would prefer 1st party documentation if possible.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe59"
   },
   {
     "UUID": "fd92",
@@ -1865,6 +1907,135 @@
       }
     ],
     "parent_UUID": "fd92"
+  },
+  {
+    "UUID": "eedd5e73-6aa8-4673-8219-398a489da87c",
+    "company": "Samsung",
+    "UUID_purpose": "''",
+    "UUID_name": "Authentication",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "fd59",
+    "company": "Samsung",
+    "UUID_purpose": "'for non-registered tags'",
+    "UUID_name": "Onboarding",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "08a11e38-1c6d-4929-9c32-4f32a64985ce",
+    "company": "Samsung",
+    "UUID_purpose": "''",
+    "UUID_name": "IDENTIFIER",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd59"
+  },
+  {
+    "UUID": "6ac16db1-f442-4bf4-b804-04c32356465d",
+    "company": "Samsung",
+    "UUID_purpose": "''",
+    "UUID_name": "HASHED_SN",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd59"
+  },
+  {
+    "UUID": "fd5a",
+    "company": "Samsung",
+    "UUID_purpose": "'for registered tags'",
+    "UUID_name": "Command",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "dee30001-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "''",
+    "UUID_name": "OWNER_ALARM",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
   },
   {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
