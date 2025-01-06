@@ -43,14 +43,17 @@ def sort_custom_uuids(file_path):
             uuid_groups[uuid] = entry
 
     # Create company groups with parent-child relationships
-    company_groups = defaultdict(lambda: {'services': [], 'orphan_chars': []})
+    company_groups = defaultdict(lambda: {'services': [], 'orphan_chars': [], 'orphans': []})
     for entry in uuid_groups.values():
         company = entry['company'] if entry['company'] is not None else ''
         if "GATT Service" in entry['UUID_usage_array']:
             company_groups[company]['services'].append(entry)
         elif "GATT Characteristic" in entry['UUID_usage_array']:
             if 'parent_UUID' in entry:
-                company_groups[company].setdefault(entry['parent_UUID'], []).append(entry)
+                if entry['parent_UUID'] in uuid_groups:
+                    company_groups[company].setdefault(entry['parent_UUID'], []).append(entry)
+                else:
+                    company_groups[company]['orphans'].append(entry)
             else:
                 company_groups[company]['orphan_chars'].append(entry)
 
@@ -78,6 +81,13 @@ def sort_custom_uuids(file_path):
             if char['UUID'] not in seen_uuids:
                 result.append(char)
                 seen_uuids.add(char['UUID'])
+
+        # Add orphaned entries whose parent_UUID was not found
+        orphans = sorted(group['orphans'], key=lambda x: x['UUID'])
+        for orphan in orphans:
+            if orphan['UUID'] not in seen_uuids:
+                result.append(orphan)
+                seen_uuids.add(orphan['UUID'])
 
     with open(file_path, 'w') as f:
         json.dump(result, f, indent=2)
