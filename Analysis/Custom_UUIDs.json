@@ -1910,12 +1910,34 @@
     "parent_UUID": "fd92"
   },
   {
-    "UUID": "eedd5e73-6aa8-4673-8219-398a489da87c",
+    "UUID": "Xebe81f6-b952-465e-9ece-5ca39d4e8955",
     "company": "Samsung",
-    "UUID_purpose": "'The Authentication Service uses three characteristics, NONCE, ENONCE and SUPPORTED_CIPHER, for authenticating a connected device over BLE.'",
-    "UUID_name": "Authentication",
+    "UUID_purpose": "Find My Everything (FME). - FIXME: UUID is duplicated as there's a copy-paste error in both original papers!",
+    "UUID_name": "FME",
     "UUID_usage_array": [
-      "GATT Service"
+      "GATT Service",
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "0487d871-d55e-44aa-8318-4faa721278e5",
+    "company": "Samsung",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "MCF",
+    "UUID_usage_array": [
+      "GATT Characteristic"
     ],
     "evidence_array": [
       {
@@ -1928,7 +1950,95 @@
         "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
         "submitter": "Xeno Kovah"
       }
+    ],
+    "parent_UUID": "4ebe81f6-b952-465e-9ece-5ca39d4e8955"
+  },
+  {
+    "UUID": "4a1351bb-d617-4612-a8e3-8dee6ca13e7b",
+    "company": "Samsung",
+    "UUID_purpose": "'The device's alarm can be set to ring by writing the byte 01 (encrypted using the same cipher) to the ALARM characteristic.'",
+    "UUID_name": "ALARM",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "4ebe81f6-b952-465e-9ece-5ca39d4e8955"
+  },
+  {
+    "UUID": "eedd5e73-6aa8-4673-8219-398a489da87c",
+    "company": "Samsung",
+    "UUID_purpose": "'The Authentication Service uses three characteristics, NONCE, ENONCE and SUPPORTED_CIPHER, for authenticating a connected device over BLE.'",
+    "UUID_name": "Authentication",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "Note: Service called 'ENCRYPTION' in this talk. From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "Note: Service called 'Authentication' in this talk. From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
     ]
+  },
+  {
+    "UUID": "50f98bfd-158c-4efa-add4-0a70c2f5df5d",
+    "company": "Samsung",
+    "UUID_purpose": "'The SUPPORTED_CIPHER characteristic is readable and contains information about the cipher to be used, which is AES/CBC/PKCS7.'",
+    "UUID_name": "SUPPORTED_CIPHER",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "eedd5e73-6aa8-4673-8219-398a489da87c"
+  },
+  {
+    "UUID": "a12be31c-5b38-4773-9b9d-3d5735233a7c",
+    "company": "Samsung",
+    "UUID_purpose": "'The NONCE characteristic is readable and returns an IV to be used during encryption.'",
+    "UUID_name": "NONCE",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "eedd5e73-6aa8-4673-8219-398a489da87c"
   },
   {
     "UUID": "fd59",
@@ -2019,7 +2129,7 @@
   {
     "UUID": "dee30001-182d-5496-b1ad-14f216324184",
     "company": "Samsung",
-    "UUID_purpose": "''",
+    "UUID_purpose": "'The GATT characteristic OWNER_ALARM_CHAR (UUID DEE30001-182D-5496-B1AD-14F216324184) is used to configure the alarm on a tag. A phone can make a SmartTag ring by sending a command packet, with the command opcode 0x01, through this characteristic. The opcode for turning off the alarm is 0x00.'",
     "UUID_name": "OWNER_ALARM",
     "UUID_usage_array": [
       "GATT Characteristic"
@@ -2037,6 +2147,561 @@
       }
     ],
     "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30002-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Audio Volume",
+    "UUID_name": "Audio Volume",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30003-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "'The Remote Ring feature allows a tag to make its owner device ring by pressing the tag button. This feature is not enabled by default and needs to be explicitly enabled by the owner through the SmartThings app. The owner device can receive this command through subscribing to the indication of the remoteRing GATT characteristic (UUID DEE30003-182D-5496-B1AD-14F216324184) of the tag.'",
+    "UUID_name": "Tag Button",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30004-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Battery",
+    "UUID_name": "Battery",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30005-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "'Will be set to the current UTC Time' + 'Finally, the phone will perform time synchronization with the tag through the TIME_SYNC characteristic, then write a value to the SETUP_COMPLETE characteristic to indicate the completion of the registration process'",
+    "UUID_name": "Time",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30006-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "'A Registered SmartTag can be removed by its owner through SmartThings. If the target tag is connected to the Owner Device, the Owner Device will first perform a factory reset of the tag through GATT interaction by writing the reset command (opcode 0x01) to the tag.factoryReset characteristic (UUID dee30006-182d-5496-b1ad-14f216324184) under the Command Service'",
+    "UUID_name": "Factory Reset",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30007-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "E2E Encryption flag",
+    "UUID_name": "E2E Encryption flag",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30008-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "UWB Ranging flag",
+    "UUID_name": "UWB Ranging flag",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30009-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "UWB Parameter",
+    "UUID_name": "UWB Parameter",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000a-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Ringtone",
+    "UUID_name": "Ringtone",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000b-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "'Over-the-air firmware updates can be performed by writing encrypted commands to the FIRMWARE_CHAR (UUID DEE3000C-182D-5496-B1AD14F216324184). After establishing an authenticated session. The SmartThings application will automatically read the firmware version of a tag from characteristic UUID DEE3000B-182D-5496-B1AD14F216324184.'",
+    "UUID_name": "Firmware Version",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000c-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "'Over-the-air firmware updates can be performed by writing encrypted commands to the FIRMWARE_CHAR (UUID DEE3000C-182D-5496-B1AD14F216324184). After establishing an authenticated session. The SmartThings application will automatically read the firmware version of a tag from characteristic UUID DEE3000B-182D-5496-B1AD14F216324184.'",
+    "UUID_name": "Firmware Transfer'",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000d-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Bond",
+    "UUID_name": "Bond",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000e-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Spec Version",
+    "UUID_name": "Spec Version",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3000f-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Bond",
+    "UUID_name": "Bond",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3001a-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Private ID Pool Size",
+    "UUID_name": "Private ID Pool Size",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3001b-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Lost Message URL",
+    "UUID_name": "Lost Message URL",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3001c-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Motion Detection",
+    "UUID_name": "Motion Detection",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3001d-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Activity Tracker",
+    "UUID_name": "Activity Tracker",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee3001f-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Button Sound Volume",
+    "UUID_name": "Button Sound Volume",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30025-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "TxPower",
+    "UUID_name": "TxPower",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30030-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Debug Flag",
+    "UUID_name": "Debug Flag",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "dee30041-182d-5496-b1ad-14f216324184",
+    "company": "Samsung",
+    "UUID_purpose": "Pet Activity",
+    "UUID_name": "Pet Activity",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241225145702/https://github.com/biemster/FindMy/issues/65",
+        "description": "Per KieronQuinn github user, 'Here's the full list of characteristics for a SmartTag2 from the https://client.smartthings.com/miniature/configure?profileId=*removed* endpoint: characteristics.json. And my own table of them that was built before I found that endpoint, based on what they were used for in the APK.'",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd5a"
+  },
+  {
+    "UUID": "fd69",
+    "company": "Samsung",
+    "UUID_purpose": "'for non-registered tags' + 'Service UUID FD59 is used for device onboarding/registration activities. During the registration process, the owner device and the tag exchanges configuration and cryptographic data over various characteristics under this service.'",
+    "UUID_name": "Offline Finding",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "bebfaa51-dcb8-44de-a4b8-fc8c9c7ef46d",
+    "company": "Samsung",
+    "UUID_purpose": "'a valid region code, e.g. 12 for AU'",
+    "UUID_name": "REGION",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "d19ddd83-bbe1-4144-bb18-f3ceb57c480a",
+    "company": "Samsung",
+    "UUID_purpose": "'12-byte, varies'",
+    "UUID_name": "Privacy ID Seed",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "7534c394-1f40-4d12-afd7-dc2a75bd6a44",
+    "company": "Samsung",
+    "UUID_purpose": "'Value = 1000'",
+    "UUID_name": "Privacy Pool Size",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "abd6e6ba-3843-4786-b9b2-b69548eed881",
+    "company": "Samsung",
+    "UUID_purpose": "'16-byte, varies'",
+    "UUID_name": "Privacy ID IV",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
+  },
+  {
+    "UUID": "bcc8cce6-8af6-48dc-a0ae-547f7c095229",
+    "company": "Samsung",
+    "UUID_purpose": "Will have 'FINISH' written when done.",
+    "UUID_name": "SETUP_COMPLETE",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
+        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
+        "submitter": "Xeno Kovah"
+      },
+      {
+        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
+        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fd69"
   },
   {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
@@ -2251,7 +2916,7 @@
     ],
     "evidence_array": [
       {
-        "description": "Present on many audio devices. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
+        "description": "Present on many audio devices (Bose, Jabra, etc). Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
     ]
