@@ -577,7 +577,8 @@
         "description": "Seen under febe, 4th most common! TODO: Citation/documentation needed!",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "febe"
   },
   {
     "UUID": "9ec813b4-256b-4090-93a8-a4f0e9107733",
@@ -591,7 +592,8 @@
         "description": "Seen under febe, 4th most common! TODO: Citation/documentation needed!",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "febe"
   },
   {
     "UUID": "c65b8f2f-aee2-4c89-b758-bc4892d6f2d8",
@@ -605,7 +607,8 @@
         "description": "Seen under febe, 4th most common! TODO: Citation/documentation needed!",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "febe"
   },
   {
     "UUID": "d417c028-9818-4354-99d1-2ac09d074591",
@@ -619,7 +622,8 @@
         "description": "Seen under febe, 4th most common! TODO: Citation/documentation needed!",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "febe"
   },
   {
     "UUID": "eecb95dd-befe-40d6-98c7-0651d2d09ba9",
@@ -633,7 +637,8 @@
         "description": "Seen under febe, 4th most common! TODO: Citation/documentation needed!",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "febe"
   },
   {
     "UUID": "00001100-d102-11e1-9b23-00025b00a5a5",
@@ -661,7 +666,8 @@
         "URL": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "00001100-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "00001102-d102-11e1-9b23-00025b00a5a5",
@@ -675,7 +681,8 @@
         "URL": "https://web.archive.org/web/20220612094151/https://developer.qualcomm.com/qfile/34081/csr102x_otau_overview.pdf",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "00001100-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "00001103-d102-11e1-9b23-00025b00a5a5",
@@ -693,7 +700,8 @@
         "URL": "https://github.com/Hypfer/fiiobta30protocol",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "00001100-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "2dd10010-1c37-452d-8979-d1b4a787d0a4",
@@ -721,7 +729,8 @@
         "URL": "https://youtu.be/Z65QgA_BKgc?t=45",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "2dd10010-1c37-452d-8979-d1b4a787d0a4"
   },
   {
     "UUID": "2dd10013-1c37-452d-8979-d1b4a787d0a4",
@@ -735,7 +744,8 @@
         "URL": "https://youtu.be/Z65QgA_BKgc?t=45",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "2dd10010-1c37-452d-8979-d1b4a787d0a4"
   },
   {
     "UUID": "289d6800-08a0-4e48-986e-62fb2cc93af9",
@@ -759,7 +769,8 @@
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
-    "evidence_array": []
+    "evidence_array": [],
+    "parent_UUID": "289d6800-08a0-4e48-986e-62fb2cc93af9"
   },
   {
     "UUID": "289d6802-08a0-4e48-986e-62fb2cc93af9",
@@ -768,7 +779,8 @@
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
-    "evidence_array": []
+    "evidence_array": [],
+    "parent_UUID": "289d6800-08a0-4e48-986e-62fb2cc93af9"
   },
   {
     "UUID": "558dfa00-4fa8-4105-9f02-4eaa93e62980",
@@ -784,6 +796,22 @@
         "submitter": "Xeno Kovah"
       }
     ]
+  },
+  {
+    "UUID": "558dfa01-4fa8-4105-9f02-4eaa93e62980",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "558dfa00-4fa8-4105-9f02-4eaa93e62980"
   },
   {
     "UUID": "9f819e56-2684-4793-89a8-c7102b4f5314",
@@ -816,6 +844,54 @@
     ]
   },
   {
+    "UUID": "abbafd01-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "abbafd00-e56a-484c-b832-8b17cf6cbfe8"
+  },
+  {
+    "UUID": "abbafd02-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "abbafd00-e56a-484c-b832-8b17cf6cbfe8"
+  },
+  {
+    "UUID": "abbafd03-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "abbafd00-e56a-484c-b832-8b17cf6cbfe8"
+  },
+  {
     "UUID": "abbaff00-e56a-484c-b832-8b17cf6cbfe8",
     "company": "Fitbit",
     "UUID_purpose": "Unknown",
@@ -829,6 +905,38 @@
         "submitter": "Xeno Kovah"
       }
     ]
+  },
+  {
+    "UUID": "abbaff01-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "abbaff00-e56a-484c-b832-8b17cf6cbfe8"
+  },
+  {
+    "UUID": "abbaff02-e56a-484c-b832-8b17cf6cbfe8",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "abbaff00-e56a-484c-b832-8b17cf6cbfe8"
   },
   {
     "UUID": "ac2f0045-8182-4be5-91e0-2992e6b40ebb",
@@ -861,7 +969,7 @@
     ]
   },
   {
-    "UUID": "558dfa01-4fa8-4105-9f02-4eaa93e62980",
+    "UUID": "adabfb01-6e7d-4601-bda2-bffaa68956ba",
     "company": "Fitbit",
     "UUID_purpose": "Charge 2, Inspire 2",
     "UUID_usage_array": [
@@ -873,87 +981,77 @@
         "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba"
+  },
+  {
+    "UUID": "adabfb02-6e7d-4601-bda2-bffaa68956ba",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba"
+  },
+  {
+    "UUID": "adabfb03-6e7d-4601-bda2-bffaa68956ba",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba"
+  },
+  {
+    "UUID": "adabfb04-6e7d-4601-bda2-bffaa68956ba",
+    "company": "Fitbit",
+    "UUID_purpose": "Charge 2, Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba"
+  },
+  {
+    "UUID": "adabfb05-6e7d-4601-bda2-bffaa68956ba",
+    "company": "Fitbit",
+    "UUID_purpose": "Inspire 2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
+        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "adabfb00-6e7d-4601-bda2-bffaa68956ba"
   },
   {
     "UUID": "9f819e56-2684-4793-89a8-c7102b4f5315",
     "company": "Fitbit",
     "UUID_purpose": "Fitbit: Sense 2, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "abbafd01-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "abbafd02-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "abbafd03-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "abbaff01-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "abbaff02-e56a-484c-b832-8b17cf6cbfe8",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 4, Charge 5, Inspire 3, Luxe, Sense, Sense 2, Versa, Versa 2, Versa 3, Versa 4",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -996,81 +1094,6 @@
     ]
   },
   {
-    "UUID": "adabfb01-6e7d-4601-bda2-bffaa68956ba",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire 2",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "adabfb02-6e7d-4601-bda2-bffaa68956ba",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire 2",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "adabfb03-6e7d-4601-bda2-bffaa68956ba",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire 2",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "adabfb04-6e7d-4601-bda2-bffaa68956ba",
-    "company": "Fitbit",
-    "UUID_purpose": "Charge 2, Inspire 2",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "adabfb05-6e7d-4601-bda2-bffaa68956ba",
-    "company": "Fitbit",
-    "UUID_purpose": "Inspire 2",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20231112154202/https://darkmentor.com/PandemicSniffing_KovahCut.pdf",
-        "description": "From talk 'It Was Harder to Sniff Bluetooth Through My Mask During the Pandemic...' by Xeno Kovah, 2023.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "fe2c",
     "company": "Google",
     "UUID_purpose": "Fast Pair",
@@ -1096,7 +1119,8 @@
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe2c"
   },
   {
     "UUID": "fe2c1234-8366-4814-8eb0-01de32100bea",
@@ -1110,7 +1134,8 @@
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe2c"
   },
   {
     "UUID": "fe2c1235-8366-4814-8eb0-01de32100bea",
@@ -1124,7 +1149,8 @@
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe2c"
   },
   {
     "UUID": "fe2c1236-8366-4814-8eb0-01de32100bea",
@@ -1138,7 +1164,8 @@
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe2c"
   },
   {
     "UUID": "fe2c1237-8366-4814-8eb0-01de32100bea",
@@ -1152,7 +1179,8 @@
         "URL": "https://web.archive.org/web/20241231213832/https://developers.google.com/nearby/fast-pair/specifications/characteristics",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe2c"
   },
   {
     "UUID": "273e0001-4c4d-454d-96be-f03bac821358",
