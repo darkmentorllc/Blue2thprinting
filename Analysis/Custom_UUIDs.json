@@ -1097,6 +1097,7 @@
     "UUID": "fe2c",
     "company": "Google",
     "UUID_purpose": "Fast Pair",
+    "UUID_name": "Fast Pair",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1110,7 +1111,8 @@
   {
     "UUID": "fe2c1233-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Model ID",
+    "UUID_purpose": "'This characteristic allows the Seeker to read the model ID as needed, outside of when the device is advertising in discoverable mode.'",
+    "UUID_name": "Model ID",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1125,7 +1127,8 @@
   {
     "UUID": "fe2c1234-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Keybased Pairing",
+    "UUID_purpose": "'This characteristic controls the Key-based Pairing procedure. In this procedure, a certain level of trust is established by verifying that the Seeker and Provider are both in possession of a pre-shared key.'",
+    "UUID_name": "Keybased Pairing",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1140,7 +1143,8 @@
   {
     "UUID": "fe2c1235-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Passkey",
+    "UUID_purpose": "'This characteristic is used during the Key-based Pairing procedure.'",
+    "UUID_name": "Passkey",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1155,7 +1159,8 @@
   {
     "UUID": "fe2c1236-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Fast Pair: Account Key",
+    "UUID_purpose": "'After pairing, the Fast Pair Seeker will write an Account Key to the Fast Pair Provider.'",
+    "UUID_name": "Account Key",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1170,7 +1175,8 @@
   {
     "UUID": "fe2c1237-8366-4814-8eb0-01de32100bea",
     "company": "Google",
-    "UUID_purpose": "Google Fast Pair Personalized Name",
+    "UUID_purpose": "'The Seeker can write a personalized name to the Provider during the first pairing and when the user edits the name on the Seeker side. The Provider shall allocate space, at least 64 bytes, to store the personalized name. Writes to Additional Data characteristic with personalized name may happen in 2 flows.'",
+    "UUID_name": "Personalized Name",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1183,130 +1189,242 @@
     "parent_UUID": "fe2c"
   },
   {
+    "UUID": "fe8d",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Muse EEG Headset",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
     "UUID": "273e0001-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: Control",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Control",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
+  },
+  {
+    "UUID": "273e0002-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Left Aux",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0003-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: EEG",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "EEG:TP9",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0004-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: EEG",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "EEG:AF7",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0005-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: EEG",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "EEG:AF8",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0006-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: EEG",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "EEG:TP10",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0007-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: EEG",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Right Aux",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e0009-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: Gyroscope",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Gyroscope",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e000a-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: Accelerometer",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Accelerometer",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "273e000b-4c4d-454d-96be-f03bac821358",
     "company": "Interaxon Inc.",
-    "UUID_purpose": "Muse EEG Headset: Telemetry",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Telemetry",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
     "evidence_array": [
       {
-        "URL": "FIXME: confirm this is working: https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fe8d"
+  },
+  {
+    "UUID": "273e000f-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "PPG0",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe8d"
+  },
+  {
+    "UUID": "273e0010-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "PPG1",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe8d"
+  },
+  {
+    "UUID": "273e0011-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "PPG2",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe8d"
+  },
+  {
+    "UUID": "273e0012-4c4d-454d-96be-f03bac821358",
+    "company": "Interaxon Inc.",
+    "UUID_purpose": "Unknown",
+    "UUID_name": "Thermister",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104212731/https://github.com/brainflow-dev/brainflow/blob/4643c09f6930b1d10494471c19cd4fa23b2c883b/src/board_controller/muse/inc/muse_constants.h",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "fe8d"
   },
   {
     "UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c",
