@@ -30,9 +30,12 @@ def sort_custom_uuids(file_path):
         company = entry['company'] if entry['company'] is not None else ''
         return company, entry['UUID_purpose'], entry['UUID']
 
-    # Group entries by UUID and merge duplicates
+    # Convert UUID and parent_UUID to lowercase and group entries by UUID
     uuid_groups = {}
     for entry in data:
+        entry['UUID'] = entry['UUID'].lower()
+        if 'parent_UUID' in entry:
+            entry['parent_UUID'] = entry['parent_UUID'].lower()
         uuid = entry['UUID']
         if uuid in uuid_groups:
             uuid_groups[uuid] = merge_entries(uuid_groups[uuid], entry)

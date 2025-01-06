@@ -97,6 +97,38 @@
     "parent_UUID": "fe03"
   },
   {
+    "UUID": "34d7a574-5298-4c35-8109-1eaa2e9476e8",
+    "company": "Amazon",
+    "UUID_purpose": "Alexa automotive related.",
+    "UUID_name": "Receive (RX)",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240303113556/https://alexa.github.io/alexa-auto-sdk/docs/explore/features/bluetooth/#supporting-bluetooth-classic",
+        "description": "Alexa Auto SDK documentation",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "a49921f7-9e7d-46f6-8832-9f44658892ac",
+    "company": "Amazon",
+    "UUID_purpose": "Alexa automotive related",
+    "UUID_name": "Transmit (TX)",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240303113556/https://alexa.github.io/alexa-auto-sdk/docs/explore/features/bluetooth/#supporting-bluetooth-classic",
+        "description": "Alexa Auto SDK documentation",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
     "UUID": "00000000-deca-fade-deca-deafdecacafe",
     "company": "Apple",
     "UUID_purpose": "MFi (Made for i{pod,Phone,Pad, etc}) Apple certification program uses the iAP (iPod Accessories Protocol) to communicate with accessories. This is the service designation for the MFI iAP client.",
@@ -163,9 +195,58 @@
     ]
   },
   {
+    "UUID": "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb",
+    "company": "Apple",
+    "UUID_purpose": "'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
+    "UUID_name": "Data Source",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0"
+  },
+  {
+    "UUID": "69d1d8f3-45e1-49a8-9821-9bbdfdaad9d9",
+    "company": "Apple",
+    "UUID_purpose": "'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
+    "UUID_name": "Control Point",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0"
+  },
+  {
+    "UUID": "9fbf120d-6301-42d9-8c58-25e699a21dbd",
+    "company": "Apple",
+    "UUID_purpose": "'The Notification Source characteristic is the characteristic upon which an NC is informed of: The arrival of a new iOS notification on the NP, The modification of an iOS notification on the NP, The removal of an iOS notification on the NP'",
+    "UUID_name": "Notification Source",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0"
+  },
+  {
     "UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b",
     "company": "Apple",
-    "UUID_purpose": "Find My",
+    "UUID_purpose": "Find My allows locating Apple devices ",
+    "UUID_name": "Find My",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -224,7 +305,7 @@
     "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
   },
   {
-    "UUID": "6aa50005-6352-4d57-a7b4-003a416fbb0b",
+    "UUID": "6aa5000x-6352-4d57-a7b4-003a416fbb0b",
     "company": "Apple",
     "UUID_purpose": "Unknown",
     "UUID_usage_array": [
@@ -232,86 +313,12 @@
     ],
     "evidence_array": [
       {
-        "description": "ASSUMED Based on UUID value near other apparent Find My values",
+        "description": "Regex match for ASSUMED Find-my-related Characteristics, based on UUID value near other apparent Find My values",
         "submitter": "Xeno Kovah"
       }
     ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50006-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50007-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50008-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa50009-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
-  },
-  {
-    "UUID": "6aa5000a-6352-4d57-a7b4-003a416fbb0b",
-    "company": "Apple",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "ASSUMED based on UUID value near other apparent Find My values",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b"
+    "parent_UUID": "87290102-3c51-43b1-a1a9-11b9dc38478b",
+    "regex": true
   },
   {
     "UUID": "89d3502b-0f36-433a-8ef4-c502ad55f8dc",
@@ -379,7 +386,7 @@
   {
     "UUID": "9fa480e0-4967-4542-9390-d343dc5d04ae",
     "company": "Apple",
-    "UUID_purpose": "Nearby",
+    "UUID_purpose": "Nearby allows devices to discover other devices in proximity to each other over multiple protocols including Bluetooth.",
     "UUID_name": "Nearby",
     "UUID_usage_array": [
       "GATT Service"
@@ -395,7 +402,7 @@
   {
     "UUID": "af0badb1-5b99-43cd-917a-a77bc549e3cc",
     "company": "Apple",
-    "UUID_purpose": "Nearby: Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -439,9 +446,9 @@
     ]
   },
   {
-    "UUID": "4f860001-943b-49ef-bed4-2f730304427a",
+    "UUID": "4f86000x-943b-49ef-bed4-2f730304427a",
     "company": "Apple",
-    "UUID_purpose": "Unknown fd44: Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -451,57 +458,13 @@
         "submitter": "Xeno Kovah"
       }
     ],
-    "parent_UUID": "fd44"
-  },
-  {
-    "UUID": "4f860002-943b-49ef-bed4-2f730304427a",
-    "company": "Apple",
-    "UUID_purpose": "Unknown fd44: Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "Seen under fd44 Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder'",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fd44"
-  },
-  {
-    "UUID": "4f860003-943b-49ef-bed4-2f730304427a",
-    "company": "Apple",
-    "UUID_purpose": "Unknown fd44: Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "Seen under fd44 Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder'",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fd44"
-  },
-  {
-    "UUID": "4f860004-943b-49ef-bed4-2f730304427a",
-    "company": "Apple",
-    "UUID_purpose": "Unknown fd44: Unknown",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "description": "Seen under fd44 Apple Member UUID Service on 3rd party products like 'eufy Security Smart Finder'",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "parent_UUID": "fd44"
+    "parent_UUID": "fd44",
+    "regex": true
   },
   {
     "UUID": "94110001-6d9b-4225-a4f1-6a4a7f01b0de",
     "company": "Apple",
-    "UUID_purpose": "Unknown fd44: Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -512,34 +475,6 @@
       }
     ],
     "parent_UUID": "fd44"
-  },
-  {
-    "UUID": "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb",
-    "company": "Apple",
-    "UUID_purpose": "Notification Center: Data Source",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "69d1d8f3-45e1-49a8-9821-9bbdfdaad9d9",
-    "company": "Apple",
-    "UUID_purpose": "Notification Center: Control Point",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
   },
   {
     "UUID": "8667556c-9a37-4c91-84ed-54ee27d90049",
@@ -553,20 +488,6 @@
       {
         "URL": "https://web.archive.org/web/20230419215316/https://inria.hal.science/hal-02359914/file/paper.pdf",
         "description": "TODO: I would prefer an Apple-authoritative source for this attribution, but this UUID appears in 2019 paper 'Fingerprinting Bluetooth-Low-Energy Devices Based on the Generic Attribute Profile' by Celosia & Cunche.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "9fbf120d-6301-42d9-8c58-25e699a21dbd",
-    "company": "Apple",
-    "UUID_purpose": "Notification Center: Notification Source",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20241224071237/https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1390,7 +1311,7 @@
     ]
   },
   {
-    "UUID": "569a110X-b87f-490c-92cb-11ba5ea5167c",
+    "UUID": "569a110x-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
     "UUID_purpose": "Unknown: Unknown",
     "UUID_usage_array": [
@@ -1466,7 +1387,7 @@
     ]
   },
   {
-    "UUID": "569a300X-b87f-490c-92cb-11ba5ea5167c",
+    "UUID": "569a300x-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
     "UUID_purpose": "ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_IN Characteristic, under 569a1103b87f490c92cb11ba5ea5167c service",
     "UUID_usage_array": [
@@ -1482,7 +1403,7 @@
     "regex": true
   },
   {
-    "UUID": "569a400X-b87f-490c-92cb-11ba5ea5167c",
+    "UUID": "569a400x-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
     "UUID_purpose": "ModuleMakerPrint=Laird: Unknown, but similar to Laird virtual serial port MODEM_OUT Characteristic, under 569a1104b87f490c92cb11ba5ea5167c service",
     "UUID_usage_array": [
