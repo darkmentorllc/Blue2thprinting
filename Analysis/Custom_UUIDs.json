@@ -1816,7 +1816,7 @@
     ],
     "evidence_array": [
       {
-        "description": "fd92 is assigned to Apple in BT SIG member_uuids.yaml. Present on many audio devices. TODO: Further investigate.",
+        "description": "fd92 is assigned to Qualcomm in BT SIG member_uuids.yaml. Present on many audio devices. TODO: Further investigate.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -1824,7 +1824,7 @@
   {
     "UUID": "0000eb20-d102-11e1-9b23-00025b00a5a5",
     "company": "Qualcomm",
-    "UUID_purpose": "Unknown fd92, Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1833,12 +1833,13 @@
         "description": "Present on many audio devices. Under fd92 (Qualcomm Technologies International, Ltd. (QTIL)) service.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fd92"
   },
   {
     "UUID": "0000eb21-d102-11e1-9b23-00025b00a5a5",
     "company": "Qualcomm",
-    "UUID_purpose": "Unknown fd92, Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1847,12 +1848,13 @@
         "description": "Present on many audio devices. Under fd92 (Qualcomm Technologies International, Ltd. (QTIL)) service.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fd92"
   },
   {
     "UUID": "0000eb22-d102-11e1-9b23-00025b00a5a5",
     "company": "Qualcomm",
-    "UUID_purpose": "Unknown fd92, Unknown",
+    "UUID_purpose": "Unknown",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1861,12 +1863,14 @@
         "description": "Present on many audio devices. Under fd92 (Qualcomm Technologies International, Ltd. (QTIL)) service.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "fd92"
   },
   {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
     "company": "Silicon Labs",
-    "UUID_purpose": "OTA Firmware Update",
+    "UUID_purpose": "Over-The-Air (OTA) Firmware Update",
+    "UUID_name": "OTA Firmware Update",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1878,9 +1882,42 @@
     ]
   },
   {
+    "UUID": "984227f3-34fc-4045-a5d0-2c581f81a153",
+    "company": "Silicon Labs",
+    "UUID_purpose": "'Once in DFU mode, a remote Bluetooth device can upload a new firmware image by sending chunks of at most 244 bytes to the OTA data attribute. After the entire GBL file has been uploaded the client writes the value 0x03 to indicate that upload is finished.'",
+    "UUID_name": "Data Attribute",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0"
+  },
+  {
+    "UUID": "f7bf3564-fb6d-4e53-88a4-5e37e0326063",
+    "company": "Silicon Labs",
+    "UUID_purpose": "'The OTA procedure is triggered when the client writes the value 0x00 to the OTA control attribute, which will reboot the device in DFU mode.'",
+    "UUID_name": "Control Attribute",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0"
+  },
+  {
     "UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307",
     "company": "Silicon Labs",
-    "UUID_purpose": "BGX Xpress Streaming",
+    "UUID_purpose": "Blue Gecko Xpress (BGX) Streaming provides remote command mode and data streaming",
+    "UUID_name": "Blue Gecko Xpress (BGX)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1894,7 +1931,8 @@
   {
     "UUID": "75a9f022-af03-4e41-b4bc-9de90a47d50b",
     "company": "Silicon Labs",
-    "UUID_purpose": "BGX: Stream Mode (Mode)",
+    "UUID_purpose": "Stream Mode (Mode)",
+    "UUID_name": "Stream Mode (Mode)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1903,26 +1941,14 @@
         "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
         "submitter": "Xeno Kovah"
       }
-    ]
-  },
-  {
-    "UUID": "984227f3-34fc-4045-a5d0-2c581f81a153",
-    "company": "Silicon Labs",
-    "UUID_purpose": "OTA Firmware Update, Data Attribute",
-    "UUID_usage_array": [
-      "GATT Characteristic"
     ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
+    "parent_UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307"
   },
   {
     "UUID": "a73e9a10-628f-4494-a099-12efaf72258f",
     "company": "Silicon Labs",
-    "UUID_purpose": "BGX: Peripheral Transmit (Tx)",
+    "UUID_purpose": "'The Rx (receive) and Tx (transmit) Characteristics are named from the point of view of the Peripheral BGX device. To read a string transmitted from the Peripheral serial interface, enable Notifications or Indications from the Tx Characteristic then wait for subsequent Notification or Indication Events to occur.'",
+    "UUID_name": "Peripheral Transmit (Tx)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1931,12 +1957,14 @@
         "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307"
   },
   {
     "UUID": "a9da6040-0823-4995-94ec-9ce41ca28833",
     "company": "Silicon Labs",
-    "UUID_purpose": "BGX: Peripheral Receive (Rx)",
+    "UUID_purpose": "'The Rx (receive) and Tx (transmit) Characteristics are named from the point of view of the Peripheral BGX device. To send a string to be received by the Peripheral serial interface, write to the Rx Characteristic.'",
+    "UUID_name": "Peripheral Receive (Rx)",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1945,26 +1973,14 @@
         "URL": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
         "submitter": "Xeno Kovah"
       }
-    ]
-  },
-  {
-    "UUID": "f7bf3564-fb6d-4e53-88a4-5e37e0326063",
-    "company": "Silicon Labs",
-    "UUID_purpose": "OTA Firmware Update, Control Attribute",
-    "UUID_usage_array": [
-      "GATT Characteristic"
     ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240715114546/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
-        "submitter": "Xeno Kovah"
-      }
-    ]
+    "parent_UUID": "331a36f5-2459-45ea-9d95-6142f0c4b307"
   },
   {
     "UUID": "f000ffc0-0451-4000-b000-000000000000",
     "company": "Texas Instruments",
-    "UUID_purpose": "TI OTA Firmware update",
+    "UUID_purpose": "Over-the-Air Download (OAD) Firmware Update",
+    "UUID_name": "Over-the-Air Download (OAD)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1978,7 +1994,8 @@
   {
     "UUID": "f000ffc1-0451-4000-b000-000000000000",
     "company": "Texas Instruments",
-    "UUID_purpose": "TI OTA Firmware update",
+    "UUID_purpose": "'The Image Identify characteristic is used to exchange image metadata between OAD Downloader and target. The OAD process begins when the OAD Downloader sends the 16 byte metadata of the proposed OAD image to the target. Upon receiving the candidate metadata, the target will do some calculations to determine whether or not the proposed image should be downloaded. \u201c01:00\u201d shall be written to the CCCD of this characteristic so that notification for metadata rejection is enabled.'",
+    "UUID_name": "Image Identify",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1987,12 +2004,14 @@
         "URL": "https://web.archive.org/web/20240813033621/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "f000ffc0-0451-4000-b000-000000000000"
   },
   {
     "UUID": "f000ffc2-0451-4000-b000-000000000000",
     "company": "Texas Instruments",
-    "UUID_purpose": "TI OTA Firmware update",
+    "UUID_purpose": "'The OAD Image Block characteristic is used to request and transfer a block of the OAD image. \u201c01:00\u201d shall be written to the CCCD of this characteristic so that notification for block request is enabled. The target requests the next block of the image by sending a GATT notification to the OAD Downloader with the requested block number. The OAD Downloader will respond (GATT write no response) with the block number and a 16 byte OAD image block.'",
+    "UUID_name": "Image Block",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -2001,12 +2020,14 @@
         "URL": "https://web.archive.org/web/20240813033621/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "f000ffc0-0451-4000-b000-000000000000"
   },
   {
     "UUID": "f000ffc3-0451-4000-b000-000000000000",
     "company": "Texas Instruments",
-    "UUID_purpose": "TI OTA Firmware update",
+    "UUID_purpose": "'The OAD Image Count characteristic is used to set the number of OAD images to be downloaded. This is used for only Off-chip OAD and the default value of the characteristic is 1.'",
+    "UUID_name": "Image Count",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -2015,12 +2036,14 @@
         "URL": "https://web.archive.org/web/20240813033621/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "f000ffc0-0451-4000-b000-000000000000"
   },
   {
     "UUID": "f000ffc4-0451-4000-b000-000000000000",
     "company": "Texas Instruments",
-    "UUID_purpose": "TI OTA Firmware update",
+    "UUID_purpose": "'The OAD image status characteristic is used to report various failures that may occur during the OAD process. The OAD Downloader may use this information to determine why an OAD failed, so that it may correct for the errors and try again. To enable notifications on this characteristic \u201c01:00\u201d shall be written to the CCCD of this characteristic.'",
+    "UUID_name": "Image Status",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -2029,34 +2052,23 @@
         "URL": "https://web.archive.org/web/20240813033621/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0",
         "submitter": "Xeno Kovah"
       }
+    ],
+    "parent_UUID": "f000ffc0-0451-4000-b000-000000000000"
+  },
+  {
+    "UUID": "feed",
+    "company": "Tile",
+    "UUID_purpose": "Tile Service",
+    "UUID_name": "Tile Service",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250106182157/https://github.com/lesleyxyz/node-tile/blob/main/Tile_Protocol.md",
+        "submitter": "Xeno Kovah"
+      }
     ]
-  },
-  {
-    "UUID": "9d410007-35d6-f4dd-ba60-e7bd8dc491c0",
-    "company": "Tile",
-    "UUID_purpose": "Tile Characteristic (Readable)",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": []
-  },
-  {
-    "UUID": "9d410018-35d6-f4dd-ba60-e7bd8dc491c0",
-    "company": "Tile",
-    "UUID_purpose": "Tile Characteristic (Writable without response)",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": []
-  },
-  {
-    "UUID": "9d410019-35d6-f4dd-ba60-e7bd8dc491c0",
-    "company": "Tile",
-    "UUID_purpose": "Tile Characteristic (Notify, Indicate)",
-    "UUID_usage_array": [
-      "GATT Characteristic"
-    ],
-    "evidence_array": []
   },
   {
     "UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5",
@@ -2073,20 +2085,6 @@
     ]
   },
   {
-    "UUID": "5052494d-2dab-0341-6972-6f6861424c45",
-    "company": "Unknown",
-    "UUID_purpose": "Unknown",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "description": "Associated with multiple vendors' headphones. TODO: Needs investigation.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "0000eb11-d102-11e1-9b23-00025b00a5a5",
     "company": "Unknown",
     "UUID_purpose": "Unknown, present on many audio devices. Under 0000eb10d10211e19b2300025b00a5a5 service. Possibly something from Qualcomm based on similarly to 0000eb20d10211e19b2300025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Further investigate",
@@ -2098,7 +2096,8 @@
         "description": "Present on many audio devices. Found under 0000eb10-d102-11e1-9b23-00025b00a5a5. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "0000eb12-d102-11e1-9b23-00025b00a5a5",
@@ -2112,7 +2111,8 @@
         "description": "Present on many audio devices. Found under 0000eb10-d102-11e1-9b23-00025b00a5a5. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "0000eb13-d102-11e1-9b23-00025b00a5a5",
@@ -2126,7 +2126,8 @@
         "description": "Present on many audio devices. Found under 0000eb10-d102-11e1-9b23-00025b00a5a5. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5"
   },
   {
     "UUID": "0000eb14-d102-11e1-9b23-00025b00a5a5",
@@ -2138,6 +2139,21 @@
     "evidence_array": [
       {
         "description": "Present on many audio devices. Found under 0000eb10-d102-11e1-9b23-00025b00a5a5. Possibly something from Qualcomm based on similarly to 0000eb20-d102-11e1-9b23-00025b00a5a5 found under Qualcomm 0xfd92 UUID. TODO: Needs investigation.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "0000eb10-d102-11e1-9b23-00025b00a5a5"
+  },
+  {
+    "UUID": "5052494d-2dab-0341-6972-6f6861424c45",
+    "company": "Unknown",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "description": "Associated with multiple vendors' headphones. TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
     ]
@@ -2154,7 +2170,8 @@
         "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "5052494d-2dab-0341-6972-6f6861424c45"
   },
   {
     "UUID": "43484152-2dab-3241-6972-6f6861424c45",
@@ -2168,6 +2185,7 @@
         "description": "Associated with multiple vendors' headphones. (Below 5052494d-2dab-0341-6972-6f6861424c45 service) TODO: Needs investigation.",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "5052494d-2dab-0341-6972-6f6861424c45"
   }
 ]
