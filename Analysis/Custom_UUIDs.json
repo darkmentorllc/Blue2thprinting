@@ -1430,6 +1430,7 @@
     "UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
     "UUID_purpose": "Virtual serial port",
+    "UUID_name": "Virtual serial port",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -1440,42 +1441,12 @@
         "submitter": "Xeno Kovah"
       }
     ]
-  },
-  {
-    "UUID": "569a1102-b87f-490c-92cb-11ba5ea5167c",
-    "company": "Laird",
-    "UUID_purpose": "Unknown: Unknown",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
-        "description": "Similar to Laird virtual serial port 569a1101-b87f-490c-92cb-11ba5ea5167c. Not actually mentioned in but observed in wild.",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
-    "UUID": "569a110x-b87f-490c-92cb-11ba5ea5167c",
-    "company": "Laird",
-    "UUID_purpose": "Unknown: Unknown",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
-        "description": "Similar to Laird virtual serial port 569a1101-b87f-490c-92cb-11ba5ea5167c. Not actually mentioned in but observed in wild with X = 3 and 4.",
-        "submitter": "Xeno Kovah"
-      }
-    ],
-    "regex": true
   },
   {
     "UUID": "569a2000-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port: TX_FIFO, under 569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Serial port transmit (TX)",
+    "UUID_name": "TX_FIFO",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1485,12 +1456,14 @@
         "description": "'Laird Custom BLE Serial Port Service' Application Note",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c"
   },
   {
     "UUID": "569a2001-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port: RX_FIFO, under 569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Serial port receive (RX)",
+    "UUID_name": "RX_FIFO",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1500,12 +1473,14 @@
         "description": "'Laird Custom BLE Serial Port Service' Application Note",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c"
   },
   {
     "UUID": "569a2002-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port: MODEM_OUT, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Model (AT commands?) output",
+    "UUID_name": "MODEM_OUT",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1515,12 +1490,14 @@
         "description": "'Laird Custom BLE Serial Port Service' Application Note",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c"
   },
   {
     "UUID": "569a2003-b87f-490c-92cb-11ba5ea5167c",
     "company": "Laird",
-    "UUID_purpose": "Virtual serial port: MODEM_IN, under 569a1102-b87f-490c-92cb-11ba5ea5167c",
+    "UUID_purpose": "Model (AT commands?) input",
+    "UUID_name": "MODEM_IN",
     "UUID_usage_array": [
       "GATT Characteristic"
     ],
@@ -1530,7 +1507,25 @@
         "description": "'Laird Custom BLE Serial Port Service' Application Note",
         "submitter": "Xeno Kovah"
       }
-    ]
+    ],
+    "parent_UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c"
+  },
+  {
+    "UUID": "569a110x-b87f-490c-92cb-11ba5ea5167c",
+    "company": "Laird",
+    "UUID_purpose": "Unknown",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20240702193309/https://connectivity-staging.s3.us-east-2.amazonaws.com/s3fs-public/2019-01/Application%20Note%20-%20Laird%20BLE%20Serial%20Port%20Service%20v1_0_0.pdf",
+        "description": "Similar to Laird virtual serial port 569a1101-b87f-490c-92cb-11ba5ea5167c. Not actually mentioned in but observed in wild with X = 2, 3, and 4.",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "569a1101-b87f-490c-92cb-11ba5ea5167c",
+    "regex": true
   },
   {
     "UUID": "569a300x-b87f-490c-92cb-11ba5ea5167c",
