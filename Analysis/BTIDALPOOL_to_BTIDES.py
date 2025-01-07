@@ -1,11 +1,5 @@
 import requests
 import urllib3
-from requests.adapters import HTTPAdapter
-from urllib3.poolmanager import PoolManager
-from urllib3.util.ssl_ import create_urllib3_context
-from jsonschema import validate, ValidationError
-from referencing import Registry, Resource
-from jsonschema import Draft202012Validator
 import ssl
 import argparse
 import json
@@ -14,6 +8,13 @@ import datetime
 import hashlib
 import re
 import os
+from requests.adapters import HTTPAdapter
+from urllib3.poolmanager import PoolManager
+from urllib3.util.ssl_ import create_urllib3_context
+from jsonschema import validate, ValidationError
+from referencing import Registry, Resource
+from jsonschema import Draft202012Validator
+from oauth_helper import AuthClient
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -71,9 +72,11 @@ def validate_json_content(json_content, registry):
         return False
 
 # Import this function to call from external code without invoking via the CLI
-def retrieve_btides_from_btidalpool(username, query_object, token, refresh_token):
+def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
 
     # Load the self-signed certificate and key
+    # FIXME: Replce with Let's encrypt certs? Unclear if that's feasible with 90 day expiration as I'd need to keep swapping them out or stuff would break?
+    # FIXME: In general the main thing seems like I just need to harcode trust in my own cert, and then as long as the private key isn't available to the public, it should be secure-enough
     cert_path = "BTIDALPOOL-local-cert.pem"
     key_path = "BTIDALPOOL-local-key.pem"
 
@@ -86,7 +89,7 @@ def retrieve_btides_from_btidalpool(username, query_object, token, refresh_token
 
     # Prepare the data to send
     data = {
-        "username": username,
+        "command": 'query',
         "query": query_object,
         "token": token,
         "refresh_token": refresh_token
@@ -139,7 +142,7 @@ def retrieve_btides_from_btidalpool(username, query_object, token, refresh_token
     sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
     # Create the pool_files directory if it doesn't exist
     os.makedirs('./pool_files', exist_ok=True)
-    output_filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
+    output_filename = f'./pool_files/{sha1_hash}-{email}-{current_time}.json'
 
     try:
         # Save the JSON content to the file
@@ -151,24 +154,20 @@ def retrieve_btides_from_btidalpool(username, query_object, token, refresh_token
 
     return (len(json_content), output_filename)
 
-def validate_username(value):
-    if len(value) > 255:
-        raise argparse.ArgumentTypeError("Username must be 255 characters or less.")
-    return value
 
 def validate_bdaddr(value):
     if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', value):
         raise argparse.ArgumentTypeError("bdaddr must be in the form of a Bluetooth Device Address (e.g., AA:BB:CC:11:22:33).")
     return value
 
+
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
 
     # Requirement arguments
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
-    auth_group.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
-    auth_group.add_argument('--token', type=validate_username, required=True, help='Google OAuth2 token to authenticate with the server.')
-    auth_group.add_argument('--refresh-token', type=validate_username, required=True, help='Google OAuth2 token to authenticate with the server.')
+    auth_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
+    auth_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
 
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
@@ -217,13 +216,25 @@ def main():
         query_object["require_LMP_VERSION_RES"] = True
 
     # If the token isn't given on the CLI, then redirect them to go login and get one
-    if args.token:
+    if args.token and args.refresh_token:
         token = args.token
-    if args.refresh_token:
         refresh_token = args.refresh_token
+    else:
+        try:
+            client = AuthClient()
+            credentials = client.authenticate()
+            if(not credentials):
+                print("Authentication failed.")
+                exit(1)
+            if(client.validate_credentials(credentials)):
+                token = credentials.token
+                refresh_token = credentials.refresh_token
+        except ValueError as e:
+            print(f"Error: {e}")
+            exit(1)
 
     (num_records, output_filename) = retrieve_btides_from_btidalpool(
-        username=args.username,
+        email=client.user_info.get('email'),
         query_object=query_object,
         token=token,
         refresh_token=refresh_token

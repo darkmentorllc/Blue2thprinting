@@ -141,7 +141,6 @@ def main():
     # Import any data from CSV files as necessary
     import_nameprint_CSV_data()
     import_private_nameprint_CSV_data()
-    # DEPRECATED - DELETEME - import_custom_uuid128_CSV_data()
 
     # Fill in dictionaries based on standard BT assigned numbers YAML files
     import_CoD_to_names()
