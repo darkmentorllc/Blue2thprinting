@@ -18,6 +18,7 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 from pathlib import Path
 from oauth_helper import AuthClient
+from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
 
 # Load OAuth client secrets
 def load_oauth_secrets():
@@ -116,12 +117,10 @@ def validate_json_content(json_content, registry):
 
 
 def run_btides_to_mysql(filename):
-    # Run the BTIDES_to_MySQL.py script in a new thread.
-    def target():
-        # FIXME: update to refactor to not require subprocess.run
-        subprocess.run(["python3", "BTIDES_to_MySQL.py", "--input", filename, "--use-test-db"])
-    thread = threading.Thread(target=target)
-    thread.start()
+    # Run the primary code from BTIDES_to_MySQL.py script
+    # TODO: make this run in a separate thread? (Need to check if it's already running in its own thread vs. other queries)
+    b2m_args = btides_to_mysql_args(input=filename, use_test_db=True)
+    btides_to_mysql(b2m_args)
 
 
 # args_array should be individual arguments to pass to the script

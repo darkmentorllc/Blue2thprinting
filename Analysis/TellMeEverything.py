@@ -6,6 +6,8 @@
 ########################################
 
 import argparse
+import subprocess
+# Import from my files
 from TME.TME_helpers import *
 from TME.TME_import import *
 from TME.TME_lookup import *
@@ -19,8 +21,8 @@ from TME.TME_metadata import *
 from TME.TME_trackability import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
-import subprocess
 from oauth_helper import AuthClient
+from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
 # FIXME: refactor BTIDES_to_MySQL to allow just calling it as a function (and then delete subprocess)
 
 ########################################
@@ -150,14 +152,8 @@ def main():
         # output_filename can be None because an error occurred, or because no records were found
         # In either case we don't need to run BTIDES_to_MySQL
         if output_filename:
-            cmd = ["python3", "BTIDES_to_MySQL.py", "--input", output_filename]
-            if args.use_test_db:
-                cmd.append("--use-test-db")
-            if args.quiet_print:
-                cmd.append("--quiet-print")
-            if args.verbose_print:
-                cmd.append("--verbose-print")
-            subprocess.run(cmd)
+            b2m_args = btides_to_mysql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+            btides_to_mysql(b2m_args)
 
     # Import metadata v2
     import_metadata_v2()
