@@ -20,6 +20,7 @@ from TME.TME_trackability import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 import subprocess
+from oauth_helper import AuthClient
 # FIXME: refactor BTIDES_to_MySQL to allow just calling it as a function (and then delete subprocess)
 
 ########################################
@@ -50,6 +51,9 @@ def main():
     # BTIDALPOOL arguments
     btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
     btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will query from the remote BTIDALPOOL croudsourced database.')
+    btidalpool_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    btidalpool_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+
 
     # Device arguments
     device_group = parser.add_argument_group('Database search arguments')
@@ -117,9 +121,34 @@ def main():
             query_object["require_LL_VERSION_IND"] = True
         if args.require_LMP_VERSION_RES:
             query_object["require_LMP_VERSION_RES"] = True
-        (num_records, output_filename) = retrieve_btides_from_btidalpool("xeno", query_object)
+
+        if args.token and args.refresh_token:
+            token = args.token
+            refresh_token = args.refresh_token
+            client = AuthClient()
+            client.set_credentials(token, refresh_token)
+            if(client.validate_credentials()):
+                email = client.user_info.get('email')
+        else:
+            try:
+                client = AuthClient()
+                credentials = client.google_SSO_authenticate()
+                if(not credentials):
+                    print("Authentication failed.")
+                    exit(1)
+                if(client.validate_credentials()):
+                    token = credentials.token
+                    refresh_token = credentials.refresh_token
+                    email = client.user_info.get('email')
+            except ValueError as e:
+                print(f"Error: {e}")
+                exit(1)
+
+        (num_records, output_filename) = retrieve_btides_from_btidalpool(email, query_object, token, refresh_token)
         if(num_records):
             qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
+        # output_filename can be None because an error occurred, or because no records were found
+        # In either case we don't need to run BTIDES_to_MySQL
         if output_filename:
             cmd = ["python3", "BTIDES_to_MySQL.py", "--input", output_filename]
             if args.use_test_db:

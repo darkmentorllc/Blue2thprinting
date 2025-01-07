@@ -166,8 +166,8 @@ def main():
 
     # Requirement arguments
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
-    auth_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
-    auth_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
+    auth_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the server. If not provided, you will be prompted to perform Google SSO.')
+    auth_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the server. If not provided, you will be prompted to perform Google SSO.')
 
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
