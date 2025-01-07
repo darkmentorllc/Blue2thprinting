@@ -6,21 +6,13 @@ from googleapiclient.discovery import build
 
 class AuthClient:
     def __init__(self):
-        self.credentials_path = './credentials.json'
-        self.scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email']
+        self.scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
         self.auth_uri = "https://accounts.google.com/o/oauth2/auth"
         self.token_uri = "https://oauth2.googleapis.com/token"
-        self.redirect_uri = 'https://btidalpool.ddns.net/oauth2callback'
+        self.redirect_uri = 'https://btidalpool.ddns.net:7653/oauth2callback'
 
-        # Load client secrets
-        secrets_path = './google_oauth_client_secret.json'
-        try:
-            with open(secrets_path) as f:
-                secrets = json.load(f)
-            self.client_id = secrets['client_id'] # FIXME: Not sure this is secret anymore. Can probably hardcode it in?
-        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
-            raise RuntimeError(f"Failed to load OAuth secrets: {e}")
-
+        # BTIDALPOOL server's Google OAuth2 client ID
+        self.client_id = '6849068466-3rhiutmh069m2tpg9a2o4m26qnomaqse.apps.googleusercontent.com'
 
     # Used by clients and server
     def set_credentials(self, token, refresh_token):
