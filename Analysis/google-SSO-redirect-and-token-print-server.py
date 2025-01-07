@@ -12,12 +12,12 @@ def load_oauth_secrets():
     try:
         with open(secrets_path) as f:
             secrets = json.load(f)
-        return secrets['client_id'], secrets['client_secret']
+        return secrets['client_secret'], '6849068466-3rhiutmh069m2tpg9a2o4m26qnomaqse.apps.googleusercontent.com'
     except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
         raise RuntimeError(f"Failed to load OAuth secrets: {e}")
 
 try:
-    CLIENT_ID, CLIENT_SECRET = load_oauth_secrets()
+    CLIENT_SECRET, CLIENT_ID = load_oauth_secrets()
 except RuntimeError as e:
     print(f"Error: {e}")
     exit(1)
@@ -42,19 +42,12 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                             "token_uri": "https://oauth2.googleapis.com/token",
                         }
                     },
-                    scopes=['openid', 'https://www.googleapis.com/auth/userinfo.email'],
-                    redirect_uri='https://btidalpool.ddns.net/oauth2callback'
+                    scopes=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
+                    redirect_uri='https://btidalpool.ddns.net:7653/oauth2callback'
                 )
                 flow.fetch_token(code=query_components['code'][0])
                 credentials = flow.credentials
 
-                # token_data = {
-                #     'token': credentials.token,
-                #     'refresh_token': credentials.refresh_token,
-                #     'token_uri': credentials.token_uri,
-                #     'client_id': CLIENT_ID,
-                #     'scopes': credentials.scopes
-                # }
                 token_data = {
                     'token': credentials.token,
                     'refresh_token': credentials.refresh_token,
@@ -81,7 +74,7 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
 
 def run_server():
-    PORT = 443
+    PORT = 7653 # = 0x1de5 - Beware the Ides of BTIDES ;)
     certfile = "/etc/letsencrypt/live/btidalpool.ddns.net/fullchain.pem"
     keyfile = "/etc/letsencrypt/live/btidalpool.ddns.net/privkey.pem"
 
