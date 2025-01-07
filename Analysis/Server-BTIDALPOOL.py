@@ -20,6 +20,8 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
 
+g_local_testing = False
+
 # Load OAuth client secrets
 def load_oauth_secrets():
     secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
@@ -356,8 +358,10 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-hostname = 'localhost' # For local testing only
-#hostname = '0.0.0.0'
+if(g_local_testing):
+    hostname = 'localhost'
+else:
+    hostname = '0.0.0.0'
 httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context

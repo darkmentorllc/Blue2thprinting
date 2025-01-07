@@ -12,6 +12,8 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
 
+g_local_testing = False
+
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
         self.certfile = certfile
@@ -106,8 +108,10 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
 
     # Make a request to the server
     try:
-        response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-        #response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        if(g_local_testing):
+            response = session.post("https://localhost:4443", json=data, verify=False)
+        else:
+            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
         if response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
         else:
