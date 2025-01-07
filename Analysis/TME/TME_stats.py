@@ -124,8 +124,13 @@ def get_uuid128_stats(arg):
 #                qprint(item)
 #                qprint(uuid128)
 #                qprint(count)
-            if(uuid128 in TME.TME_glob.custom_uuid128_hash):
-                known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
+            if(uuid128 in TME.TME_glob.clues.keys()):
+                entry = TME.TME_glob.clues[uuid128]
+                if('UUID_name' in entry):
+                    name = entry['UUID_name']
+                else:
+                    name = "Unknown"
+                known_info = f"Custom UUID128: company: {entry['company']}, name: {name}"
                 known_uuid_count += 1
             else:
                 known_info = ""
@@ -165,8 +170,13 @@ def get_uuid128_stats(arg):
 #                qprint(item)
 #                qprint(uuid128)
 #                qprint(count)
-            if(uuid128 in TME.TME_glob.custom_uuid128_hash):
-                known_info = TME.TME_glob.custom_uuid128_hash[uuid128]
+            if(uuid128 in TME.TME_glob.clues.keys()):
+                entry = TME.TME_glob.clues[uuid128]
+                if('UUID_name' in entry):
+                    name = entry['UUID_name']
+                else:
+                    name = "Unknown"
+                known_info = f"Custom UUID128: company: {entry['company']}, name: {name}"
                 known_uuid_count += 1
             else:
                 known_info = ""

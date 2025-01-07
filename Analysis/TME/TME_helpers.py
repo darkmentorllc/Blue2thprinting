@@ -496,8 +496,13 @@ def get_custom_uuid128_string(uuid128):
     uuid128.strip().lower()
     uuid128_no_dash = uuid128.replace('-','')
 
-    if(uuid128_no_dash in TME.TME_glob.custom_uuid128_hash.keys()):
-        return f"Custom UUID128: {TME.TME_glob.custom_uuid128_hash[uuid128_no_dash]}"
+    if(uuid128_no_dash in TME.TME_glob.clues.keys()):
+        entry = TME.TME_glob.clues[uuid128_no_dash]
+        if('UUID_name' in entry):
+            name = entry['UUID_name']
+        else:
+            name = "Unknown"
+        return f"Custom UUID128: company: {entry['company']}, name: {name}"
     elif(uuid128_no_dash in TME.TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
         return f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}"
 

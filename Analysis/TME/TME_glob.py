@@ -10,6 +10,8 @@
 custom_uuid128_hash = {}
 # Metadata_v2 globals
 metadata_v2 = {}
+# clues globals hash indexed by UUID
+clues = {}
 # NamePrint data
 nameprint_data = {}
 

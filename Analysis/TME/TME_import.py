@@ -33,6 +33,35 @@ def import_private_metadata_v2():
     except FileNotFoundError:
         pass
 
+# This is data in CLUES format
+def import_CLUES():
+    global metadata_v2
+    # Load JSON data from file
+    json_file = './Custom_UUIDs.json'
+    with open(json_file, 'r') as f:
+        # Convert from array to hash indexed by UUID for faster lookup
+        data = json.load(f)
+        # Remove dashes from UUIDs for consistency with later checking code
+        for entry in data:
+            entry['UUID'] = entry['UUID'].replace('-', '')
+        TME.TME_glob.clues = {entry['UUID']: entry for entry in data}
+
+# Option to store private metadata in
+# this file. It will be consulted, but
+# doesn't need to be checked in
+def import_private_CLUES():
+    global metadata_v2
+    json_file = './Custom_UUIDs_private.json'
+    try:
+        with open(json_file, 'r') as f:
+            data = json.load(f)
+            # Remove dashes from UUIDs for consistency with later checking code
+            for entry in data:
+                entry['UUID'] = entry['UUID'].replace('-', '')
+            TME.TME_glob.clues.update({entry['UUID']: entry for entry in data})
+    except FileNotFoundError:
+        pass
+
 ########################################
 # BEGIN FILL DATA FROM CSVs ############
 ########################################
@@ -63,16 +92,17 @@ def import_private_nameprint_CSV_data():
     except FileNotFoundError:
         pass
 
-def import_custom_uuid128_CSV_data():
-    global custom_uuid128_hash
-    with open("./custom_uuid128s.csv", 'r') as csvfile:
-        csv_reader = csv.reader(csvfile, quoting=csv.QUOTE_ALL)
-        for row in csv_reader:
-            if len(row) >= 2:
-                key = row[0].strip().lower()
-                value = row[1].strip()
-                TME.TME_glob.custom_uuid128_hash[key] = value
-#                qprint(f"key = {key}, value = {value}")
+# TODO: This should now be deprecated in favor of CLUES - DELETEME
+# def import_custom_uuid128_CSV_data():
+#     global custom_uuid128_hash
+#     with open("./custom_uuid128s.csv", 'r') as csvfile:
+#         csv_reader = csv.reader(csvfile, quoting=csv.QUOTE_ALL)
+#         for row in csv_reader:
+#             if len(row) >= 2:
+#                 key = row[0].strip().lower()
+#                 value = row[1].strip()
+#                 TME.TME_glob.custom_uuid128_hash[key] = value
+# #                qprint(f"key = {key}, value = {value}")
 
 
 ########################################
