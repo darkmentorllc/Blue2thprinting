@@ -35,7 +35,7 @@ echo "==========================================================================
 git submodule update --init --recursive
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-sudo apt-get install -y python3-pip python3-docutils python3-referencing mariadb-server
+sudo apt-get install -y python3-pip python3-docutils python3-referencing mariadb-server python3-googleapi python3-google-auth python3-google-auth-oauthlib python3-google-auth-httplib2
 # Even for distributions like Ubuntu 24.04 which package jsonschema, it seems they're not at a new enough version to support a constructor we need. So I'm now requiring installation of this version.
 pip install jsonschema==4.23 --break-system-packages
 
