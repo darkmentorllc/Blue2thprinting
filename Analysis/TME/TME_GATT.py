@@ -220,7 +220,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     query = "SELECT device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
-    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID128 in GATT_characteristics_result}
+    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
     for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
@@ -298,7 +298,12 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 UUID128_2 = add_dashes_to_UUID128(UUID128_2)
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
                     service_match_dict[handle] = 1
-                    qprint(f"\t\t\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle:03}")
+                    # TODO: handle 2802 (include) eventually
+                    if(UUID128_2 == "00002800-0000-1000-8000-00805f9b34fb" or UUID128_2 == "00002801-0000-1000-8000-00805f9b34fb" or UUID128_2 == "00002803-0000-1000-8000-00805f9b34fb"):
+                        indent = "\t\t\t"
+                    else:
+                        indent = "\t\t\t\t"
+                    qprint(f"{indent}{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle:03}")
 
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
             if(handle in declaration_handles_dict.keys()):
@@ -308,10 +313,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-                    qprint(f"\t\t\t\tGATT Characteristic declaration:\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                    qprint(f"\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)}\n\t\t\t\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}")
                     if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
-                    if(handle not in char_value_handles_dict.keys() and (char_properties & 0x2 == 0x02)):
+                    if(char_value_handle not in char_value_handles_dict.keys() and (char_properties & 0x2 == 0x02)):
                         qprint(f"\t\t\t\tGATT Characteristic Value not successfully read, despite having readable permissions.")
 
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
