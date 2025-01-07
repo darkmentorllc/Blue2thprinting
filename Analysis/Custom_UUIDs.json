@@ -3025,5 +3025,105 @@
       }
     ],
     "parent_UUID": "5052494d-2dab-0341-6972-6f6861424c45"
+  },
+  {
+    "UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB3",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Atmotube PLUS air quality monitors.",
+    "UUID_name": "Atmotube PLUS",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB3",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Atmotube PRO air quality monitors.",
+    "UUID_name": "Atmotube PRO",
+    "UUID_usage_array": [
+      "GATT Service"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ]
+  },
+  {
+    "UUID": "DB450002-8E9A-4818-ADD7-6ED94A328AB4",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Sensirion SGPC3 sensor.",
+    "UUID_name": "SGPC3",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB4"
+  },
+  {
+    "UUID": "DB450003-8E9A-4818-ADD7-6ED94A328AB4",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Bosch Humidity sensor BME280",
+    "UUID_name": "BME280",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB4"
+  },
+  {
+    "UUID": "DB450004-8E9A-4818-ADD7-6ED94A328AB4",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Status",
+    "UUID_name": "Status",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB4"
+  },
+  {
+    "UUID": "DB450005-8E9A-4818-ADD7-6ED94A328AB4",
+    "company": "ATMOTECH INC.",
+    "UUID_purpose": "Honeywell particulat matter (PM) sensor. Measured in ug/m^3. Presence of this characteristic separates the Pro from the Plus (only the Pro has it).",
+    "UUID_name": "PM",
+    "UUID_usage_array": [
+      "GATT Characteristic"
+    ],
+    "evidence_array": [
+      {
+        "URL": "https://web.archive.org/web/20250104003833/https://atmotube.com/atmotube-support/bluetooth-api",
+        "description": "Bluetooth API documentation for Atmotube PRO",
+        "submitter": "Xeno Kovah"
+      }
+    ],
+    "parent_UUID": "DB450001-8E9A-4818-ADD7-6ED94A328AB4"
   }
 ]
