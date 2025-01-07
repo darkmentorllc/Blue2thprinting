@@ -50,18 +50,10 @@ connection_data = defaultdict(lambda: {"count": 0, "timestamps": deque()})
 # Returns's email of authenticated user if successful, None otherwise
 def validate_oauth_token(token_str, refresh_token_str):
     """Validate Google OAuth token."""
-    credentials = Credentials(
-        token=token_str,
-        refresh_token=refresh_token_str,
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"]
-    )
-
     try:
         client = AuthClient()
-        if client.validate_credentials(credentials):
+        client.set_credentials(token_str, refresh_token_str)
+        if client.validate_credentials():
             # If validate_credentials() returns true, the credentials are valid,
             # and client.user_info will contain the user's information
             email = client.user_info.get('email')

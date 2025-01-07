@@ -219,14 +219,18 @@ def main():
     if args.token and args.refresh_token:
         token = args.token
         refresh_token = args.refresh_token
+        client = AuthClient()
+        client.set_credentials(token, refresh_token)
+        if(client.validate_credentials()):
+            email = client.user_info.get('email')
     else:
         try:
             client = AuthClient()
-            credentials = client.authenticate()
+            credentials = client.google_SSO_authenticate()
             if(not credentials):
                 print("Authentication failed.")
                 exit(1)
-            if(client.validate_credentials(credentials)):
+            if(client.validate_credentials()):
                 token = credentials.token
                 refresh_token = credentials.refresh_token
         except ValueError as e:

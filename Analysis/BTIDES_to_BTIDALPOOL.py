@@ -1,3 +1,7 @@
+import ssl
+import argparse
+import json
+import sys
 import requests
 import urllib3
 from requests.adapters import HTTPAdapter
@@ -6,10 +10,7 @@ from urllib3.util.ssl_ import create_urllib3_context
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
-import ssl
-import argparse
-import json
-import sys
+from oauth_helper import AuthClient
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -67,7 +68,7 @@ def validate_json_content(json_content, registry):
         return False
 
 # Import this function to call from external code without invoking via the CLI
-def send_btides_to_btidalpool(input_file, username):
+def send_btides_to_btidalpool(input_file, token, refresh_token):
     # Load the JSON content from the file
     try:
         with open(input_file, 'r') as f:
@@ -97,14 +98,16 @@ def send_btides_to_btidalpool(input_file, username):
 
     # Prepare the data to send
     data = {
-        "username": username,
-        "btides_content": json_content
+        "command": 'upload',
+        "btides_content": json_content,
+        "token": token,
+        "refresh_token": refresh_token
     }
 
     # Make a request to the server
     try:
-        # response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-        response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+        #response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
         if response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
         else:
@@ -133,12 +136,43 @@ def send_btides_to_btidalpool(input_file, username):
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
-    parser.add_argument('--username', type=str, required=True, help='Username to attribute the upload to.')
+
+    auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
+    auth_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
+    auth_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the server.')
+
     args = parser.parse_args()
+
+    # If the token isn't given on the CLI, then redirect them to go login and get one
+    if args.token and args.refresh_token:
+        token = args.token
+        refresh_token = args.refresh_token
+        client = AuthClient()
+        client.set_credentials(token, refresh_token)
+        if(not client.validate_credentials()):
+            print("Authentication failed.")
+            exit(1)
+    else:
+        try:
+            client = AuthClient()
+            credentials = client.google_SSO_authenticate()
+            if(not credentials):
+                print("Authentication failed.")
+                exit(1)
+            if(client.validate_credentials()):
+                token = credentials.token
+                refresh_token = credentials.refresh_token
+            else:
+                print("Authentication failed.")
+                exit(1)
+        except ValueError as e:
+            print(f"Error: {e}")
+            exit(1)
 
     send_btides_to_btidalpool(
         input_file=args.input,
-        username=args.username
+        token=token,
+        refresh_token=refresh_token
     )
 
 if __name__ == "__main__":
