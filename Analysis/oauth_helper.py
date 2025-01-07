@@ -66,6 +66,7 @@ class AuthClient:
             self.user_info = service.userinfo().get().execute()
         except Exception as e:
             print(f"Failed to get user info: {e}")
+
             self.user_info = None
 
 

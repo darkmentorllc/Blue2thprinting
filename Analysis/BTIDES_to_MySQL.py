@@ -706,44 +706,37 @@ def parse_GATTArray(entry):
     for gatt_service_entry in entry["GATTArray"]:
         import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
 
-###################################
-# MAIN
-###################################
+class btides_to_mysql_args:
+    def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
+        self.input = input
+        self.skip_invalid = skip_invalid
+        self.verbose_print = verbose_print
+        self.quiet_print = quiet_print
+        self.use_test_db = use_test_db
 
-last_printed_percentage = 0
-def progress_update(total, count):
-    global last_printed_percentage
-    percent_complete = int((count / total) * 100)
-    if(percent_complete > last_printed_percentage):
-        qprint(f"{percent_complete}% done")
-        last_printed_percentage = percent_complete
+    def set_input(self, input):
+        self.input = input
 
-######################################################
-##################### WARNING!!! #####################
-##################### WARNING!!! #####################
-##################### WARNING!!! #####################
-######################################################
-# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY
-# ACID (Attacker-Controlled Input Data)!
-# SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
-# OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
+    def set_skip_invalid(self, skip_invalid):
+        self.skip_invalid = skip_invalid
 
-def main():
-    global verbose_print, use_test_db, duplicate_count, insert_count
+    def set_verbose_print(self, verbose_print):
+        self.verbose_print = verbose_print
 
-    parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
-    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
-    parser.add_argument('--skipinvalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
-    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
-    parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
-    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
-    args = parser.parse_args()
+    def set_quiet_print(self, quiet_print):
+        self.quiet_print = quiet_print
 
-    in_filename = args.input
+    def set_use_test_db(self, use_test_db):
+        self.use_test_db = use_test_db
+
+
+# Input must be a Namespace like args from argparse
+def btides_to_mysql(args):
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.use_test_db = args.use_test_db
-    skip_invalid = args.skipinvalid
+    in_filename = args.input
+    skip_invalid = args.skip_invalid
 
     with open(in_filename, 'r') as f:
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
@@ -799,6 +792,41 @@ def main():
 
     qprint(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
     qprint(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
+
+###################################
+# MAIN
+###################################
+
+last_printed_percentage = 0
+def progress_update(total, count):
+    global last_printed_percentage
+    percent_complete = int((count / total) * 100)
+    if(percent_complete > last_printed_percentage):
+        qprint(f"{percent_complete}% done")
+        last_printed_percentage = percent_complete
+
+######################################################
+##################### WARNING!!! #####################
+##################### WARNING!!! #####################
+##################### WARNING!!! #####################
+######################################################
+# THIS IS YOUR REMINDER THAT THE BTIDES INPUT FILE IS ENTIRELY
+# ACID (Attacker-Controlled Input Data)!
+# SANITY CHECK THE HELL OUT OF EVERY FIELD BEFORE USE!
+# OTHERWISE YOU WILL HAVE SQL INJECTION VULNS (AT A MINIMUM)!
+
+def main():
+    global verbose_print, use_test_db, duplicate_count, insert_count
+
+    parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
+    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--skip-invalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
+    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
+    parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
+    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
+    args = parser.parse_args()
+
+    btides_to_mysql(args)
 
 if __name__ == "__main__":
     main()
