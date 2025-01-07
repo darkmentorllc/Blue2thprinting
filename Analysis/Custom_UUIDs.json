@@ -267,7 +267,8 @@
   {
     "UUID": "7905f431-b5ce-4e99-a40f-4b1e122d00d0",
     "company": "Apple",
-    "UUID_purpose": "Notification Center",
+    "UUID_purpose": "Apple Notification Center Service (ANCS) sends (G)ATT notifications from Peripherals (e.g. an iPhone) to Centrals (e.g. an Apple watch).",
+    "UUID_name": "Apple Notification Center Service (ANCS)",
     "UUID_usage_array": [
       "GATT Service"
     ],
@@ -281,7 +282,7 @@
   {
     "UUID": "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb",
     "company": "Apple",
-    "UUID_purpose": "'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
+    "UUID_purpose": "'characteristic[] require[s] authorization for access' + 'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
     "UUID_name": "Data Source",
     "UUID_usage_array": [
       "GATT Characteristic"
@@ -297,7 +298,7 @@
   {
     "UUID": "69d1d8f3-45e1-49a8-9821-9bbdfdaad9d9",
     "company": "Apple",
-    "UUID_purpose": "'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
+    "UUID_purpose": "'characteristic[] require[s] authorization for access' + 'An NC may want to interact with an iOS notification. It may want to retrieve more information about it, including its contents, or it may want to perform actions on it. The retrieval of these attributes is performed through the Control Point and Data Source characteristics.'",
     "UUID_name": "Control Point",
     "UUID_usage_array": [
       "GATT Characteristic"
@@ -313,7 +314,7 @@
   {
     "UUID": "9fbf120d-6301-42d9-8c58-25e699a21dbd",
     "company": "Apple",
-    "UUID_purpose": "'The Notification Source characteristic is the characteristic upon which an NC is informed of: The arrival of a new iOS notification on the NP, The modification of an iOS notification on the NP, The removal of an iOS notification on the NP'",
+    "UUID_purpose": "'characteristic[] require[s] authorization for access' + 'The Notification Source characteristic is the characteristic upon which an NC is informed of: The arrival of a new iOS notification on the NP, The modification of an iOS notification on the NP, The removal of an iOS notification on the NP'",
     "UUID_name": "Notification Source",
     "UUID_usage_array": [
       "GATT Characteristic"
