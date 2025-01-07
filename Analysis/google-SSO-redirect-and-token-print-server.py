@@ -48,12 +48,16 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                 flow.fetch_token(code=query_components['code'][0])
                 credentials = flow.credentials
 
+                # token_data = {
+                #     'token': credentials.token,
+                #     'refresh_token': credentials.refresh_token,
+                #     'token_uri': credentials.token_uri,
+                #     'client_id': CLIENT_ID,
+                #     'scopes': credentials.scopes
+                # }
                 token_data = {
                     'token': credentials.token,
                     'refresh_token': credentials.refresh_token,
-                    'token_uri': credentials.token_uri,
-                    'client_id': CLIENT_ID,
-                    'scopes': credentials.scopes
                 }
 
                 self.send_response(200)
