@@ -13,7 +13,7 @@ fi
 USERNAME="$SUDO_USER"
 echo "Username detected as '$USERNAME'."
 
-if [ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]; then
+if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
     echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
     echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
     exit -1
@@ -72,8 +72,6 @@ else
     sudo apt-get install -y python3-mysql.connector
 fi
 
-
-
 # Next commands assume they run from the Analysis folder
 cd ./Analysis/one_time_initialization
 
@@ -85,6 +83,7 @@ echo "==================================="
 #### It will then create all the database tables where imported data will be stored
 #### It will give an error message (that can be ignored) if the user or tables are already created
 ./initialize_database.sh
+./initialize_test_database.sh
 
 echo ""
 echo "===================================="
