@@ -17,6 +17,7 @@ from jsonschema import Draft202012Validator
 from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 from pathlib import Path
+from oauth_helper import AuthClient
 
 # Load OAuth client secrets
 def load_oauth_secrets():
@@ -46,6 +47,7 @@ g_unique_files = {}
 # Global dictionary to store connection data for rate limiting
 connection_data = defaultdict(lambda: {"count": 0, "timestamps": deque()})
 
+# Returns's email of authenticated user if successful, None otherwise
 def validate_oauth_token(token_str, refresh_token_str):
     """Validate Google OAuth token."""
     credentials = Credentials(
@@ -58,18 +60,19 @@ def validate_oauth_token(token_str, refresh_token_str):
     )
 
     try:
-        service = build('oauth2', 'v2', credentials=credentials)
-        user_info = service.userinfo().get().execute()
-
-        if user_info and user_info.get('email'):
-            print(f"Authentication successful for user {user_info.get('email')}!")
-            return True
+        client = AuthClient()
+        if client.validate_credentials(credentials):
+            # If validate_credentials() returns true, the credentials are valid,
+            # and client.user_info will contain the user's information
+            email = client.user_info.get('email')
+            print(f"Authentication successful for user {email}!")
+            return email
         else:
             print("Authentication failed. Unable to retrieve user information.")
-            return False
+            return None
     except Exception as e:
         print(f"Authentication failed: {e}")
-        return False
+        return None
 
 
 def initialize_unique_files(directory):
@@ -324,16 +327,13 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         if 'token' not in post_json_data or 'refresh_token' not in post_json_data:
             send_back_response(self, 400, 'text/plain', b'Missing Google OAuth SSO token.')
             return
-        if 'username' not in post_json_data:
-            send_back_response(self, 400, 'text/plain', b'Missing username.')
-            return
-        username = post_json_data.get('username')
-        if len(username) > 255:
-            send_back_response(self, 400, 'text/plain', b'Username too long.')
+        if 'command' not in post_json_data:
+            send_back_response(self, 400, 'text/plain', b'Missing command.')
             return
 
         # Validate OAuth token
-        if not validate_oauth_token(post_json_data['token'], post_json_data['refresh_token']):
+        username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
+        if not username:
             self.send_response(401)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -342,11 +342,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             }).encode())
             return
 
-        # TODO: We probably need an explicit "command" parameter because inferring based on presence and absence doesn't scale to many parameters
-        if 'btides_content' in post_json_data and 'query' not in post_json_data:
+        if post_json_data['command'] == "upload" and 'btides_content' in post_json_data and 'query' not in post_json_data:
             json_content = post_json_data.get('btides_content')
             handle_btides_data(self, username, json_content)
-        elif 'query' in post_json_data and 'btides_content' not in post_json_data:
+        elif post_json_data['command'] == "query" and 'query' in post_json_data and 'btides_content' not in post_json_data:
             query_object = post_json_data.get('query')
             handle_query(self, username, query_object)
         else:
