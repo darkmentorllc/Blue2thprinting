@@ -17,8 +17,7 @@ class AuthClient:
         try:
             with open(secrets_path) as f:
                 secrets = json.load(f)
-            self.client_id = secrets['client_id']
-            self.client_secret = secrets['client_secret']
+            self.client_id = secrets['client_id'] # FIXME: Not sure this is secret anymore. Can probably hardcode it in?
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             raise RuntimeError(f"Failed to load OAuth secrets: {e}")
 
@@ -31,7 +30,6 @@ class AuthClient:
             refresh_token=refresh_token,
             token_uri=self.token_uri,
             client_id=self.client_id,
-            client_secret=self.client_secret,
             scopes=self.scopes
         )
         return self.credentials
@@ -40,12 +38,10 @@ class AuthClient:
     # Returns credentials if authentication is successful, and None if it fails
     # Only used by clients
     def google_SSO_authenticate(self):
-        # FIXME: remove client_secret and see if it works! (Because we can't be shipping the client secret!)
         flow = Flow.from_client_config(
             {
                 "web": {
                     "client_id": self.client_id,
-                    "client_secret": self.client_secret,
                     "auth_uri": self.auth_uri,
                     "token_uri": self.token_uri,
                 }
@@ -77,6 +73,7 @@ class AuthClient:
         try:
             self.user_info = service.userinfo().get().execute()
         except Exception as e:
+            print(f"Failed to get user info: {e}")
             self.user_info = None
 
 
