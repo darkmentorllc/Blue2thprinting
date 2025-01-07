@@ -71,7 +71,7 @@ def validate_json_content(json_content, registry):
         return False
 
 # Import this function to call from external code without invoking via the CLI
-def retrieve_btides_from_btidalpool(username, query_object):
+def retrieve_btides_from_btidalpool(username, query_object, token, refresh_token):
 
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-local-cert.pem"
@@ -87,13 +87,15 @@ def retrieve_btides_from_btidalpool(username, query_object):
     # Prepare the data to send
     data = {
         "username": username,
-        "query": query_object
+        "query": query_object,
+        "token": token,
+        "refresh_token": refresh_token
     }
 
     # Make a request to the server
     try:
-        #response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
-        response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+        response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+        #response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
         if response.headers.get('Content-Type') == 'application/json':
             json_content = response.json()
             # Load the schemas and create a registry
@@ -162,7 +164,11 @@ def validate_bdaddr(value):
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
 
-    parser.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
+    # Requirement arguments
+    auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
+    auth_group.add_argument('--username', type=validate_username, required=True, help='Username to attribute the upload to.')
+    auth_group.add_argument('--token', type=validate_username, required=True, help='Google OAuth2 token to authenticate with the server.')
+    auth_group.add_argument('--refresh-token', type=validate_username, required=True, help='Google OAuth2 token to authenticate with the server.')
 
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
@@ -210,9 +216,17 @@ def main():
     if args.require_LMP_VERSION_RES:
         query_object["require_LMP_VERSION_RES"] = True
 
+    # If the token isn't given on the CLI, then redirect them to go login and get one
+    if args.token:
+        token = args.token
+    if args.refresh_token:
+        refresh_token = args.refresh_token
+
     (num_records, output_filename) = retrieve_btides_from_btidalpool(
         username=args.username,
-        query_object=query_object
+        query_object=query_object,
+        token=token,
+        refresh_token=refresh_token
     )
     if(num_records and output_filename):
         print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")

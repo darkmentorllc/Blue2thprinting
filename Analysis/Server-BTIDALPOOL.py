@@ -6,12 +6,34 @@ import datetime
 import hashlib
 import threading
 import subprocess
+import time
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google.auth.exceptions import GoogleAuthError
+from googleapiclient.discovery import build
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
-import time
+from pathlib import Path
+
+# Load OAuth client secrets
+def load_oauth_secrets():
+    secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
+    try:
+        with open(secrets_path) as f:
+            secrets = json.load(f)
+        return secrets['client_id'], secrets['client_secret']
+    except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+        raise RuntimeError(f"Failed to load OAuth secrets: {e}")
+
+# Initialize OAuth credentials
+try:
+    CLIENT_ID, CLIENT_SECRET = load_oauth_secrets()
+except RuntimeError as e:
+    print(f"Error: {e}")
+    exit(1)
 
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
@@ -23,6 +45,32 @@ g_unique_files = {}
 
 # Global dictionary to store connection data for rate limiting
 connection_data = defaultdict(lambda: {"count": 0, "timestamps": deque()})
+
+def validate_oauth_token(token_str, refresh_token_str):
+    """Validate Google OAuth token."""
+    credentials = Credentials(
+        token=token_str,
+        refresh_token=refresh_token_str,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        scopes=["openid", "https://www.googleapis.com/auth/userinfo.email"]
+    )
+
+    try:
+        service = build('oauth2', 'v2', credentials=credentials)
+        user_info = service.userinfo().get().execute()
+
+        if user_info and user_info.get('email'):
+            print(f"Authentication successful for user {user_info.get('email')}!")
+            return True
+        else:
+            print("Authentication failed. Unable to retrieve user information.")
+            return False
+    except Exception as e:
+        print(f"Authentication failed: {e}")
+        return False
+
 
 def initialize_unique_files(directory):
     """Initialize the g_unique_files dictionary with SHA1 hashes from existing files."""
@@ -267,24 +315,39 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
 
         # Read the POST data
-        post_data = self.rfile.read(content_length)
+        post_raw_data = self.rfile.read(content_length)
 
         # Extract fields to determine whether this is a send of BTIDES data, or a query requesting BTIDES data
-        data = json.loads(post_data)
+        post_json_data = json.loads(post_raw_data)
 
-        if 'username' not in data:
+        # Initial sanity checks
+        if 'token' not in post_json_data or 'refresh_token' not in post_json_data:
+            send_back_response(self, 400, 'text/plain', b'Missing Google OAuth SSO token.')
+            return
+        if 'username' not in post_json_data:
             send_back_response(self, 400, 'text/plain', b'Missing username.')
             return
-        username = data.get('username')
+        username = post_json_data.get('username')
         if len(username) > 255:
             send_back_response(self, 400, 'text/plain', b'Username too long.')
             return
 
-        if 'btides_content' in data and 'query' not in data:
-            json_content = data.get('btides_content')
+        # Validate OAuth token
+        if not validate_oauth_token(post_json_data['token'], post_json_data['refresh_token']):
+            self.send_response(401)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "error": "Invalid OAuth token"
+            }).encode())
+            return
+
+        # TODO: We probably need an explicit "command" parameter because inferring based on presence and absence doesn't scale to many parameters
+        if 'btides_content' in post_json_data and 'query' not in post_json_data:
+            json_content = post_json_data.get('btides_content')
             handle_btides_data(self, username, json_content)
-        elif 'query' in data and 'btides_content' not in data:
-            query_object = data.get('query')
+        elif 'query' in post_json_data and 'btides_content' not in post_json_data:
+            query_object = post_json_data.get('query')
             handle_query(self, username, query_object)
         else:
             send_back_response(self, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
@@ -303,8 +366,8 @@ registry = load_schemas()
 handler = CustomHandler
 
 # Create the server
-#hostname = 'localhost' # For local testing only
-hostname = '0.0.0.0'
+hostname = 'localhost' # For local testing only
+#hostname = '0.0.0.0'
 httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context
