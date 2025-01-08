@@ -4,3 +4,6 @@
 [submodule "Analysis/CLUES_Schema"]
 	path = Analysis/CLUES_Schema
 	url = git@github.com:darkmentorllc/CLUES_Schema.git
+[submodule "Analysis/BTIDES_Schema"]
+	path = Analysis/BTIDES_Schema
+	url = git@github.com:darkmentorllc/BTIDES_Schema.git
