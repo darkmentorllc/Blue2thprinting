@@ -37,7 +37,7 @@ sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-sudo apt-get install -y python3-pip python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf python3-gmplot python3-intelhex
+sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf
 if [ $? != 0 ]; then
     echo ""
     echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -45,72 +45,9 @@ if [ $? != 0 ]; then
 fi
 echo "  Done"
 
-# Conditionally install the packages which differ from distro to distro
-### inotify
-dpkg -l | grep -q '^ii  python3-inotify'
-if [ $? != 0 ]; then
-    echo "  NOTE: This distribution is missing the python3-inotify package. This would prevent the code from working correctly, and is fatal. Attempting to install through pip instead."
-    pip3 install inotify
-    if [ $? != 0 ]; then
-        echo "  Could not install inotify. Tool will not work without it."
-        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
-        while true; do
-            read -p "Do you want to install with --break-system-packages (y/n): " user_input
-            case "$user_input" in
-                [Yy]* )
-                    pip3 install inotify --break-system-packages
-                    if [ $? != 0 ]; then
-                        echo "  Could not install inotify. Tool will not work without it. Exiting."
-                        exit -1
-                    fi
-                    break
-                    ;;
-                [Nn]* )
-                    echo "  Could not install inotify. Tool will not work without it. Exiting."
-                    exit -1
-                    ;;
-                * )
-                    echo "Please answer y or n."
-                    ;;
-            esac
-        done
-    fi
-else
-    sudo apt-get install -y python3-inotify
-fi
-
-### mysql-connector
-dpkg -l | grep -q '^ii  python3-mysql.connector'
-if [ $? != 0 ]; then
-    echo "  NOTE: This distribution is missing the python3-mysql.connector package. This may cause issues for data analysis. Attempting to install through pip instead."
-    pip3 install mysql-connector
-    if [ $? != 0 ]; then
-        echo "  Could not install mysql-connector. Tool will not work without it."
-        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
-        while true; do
-            read -p "Do you want to install with --break-system-packages (y/n): " user_input
-            case "$user_input" in
-                [Yy]* )
-                    pip3 install mysql-connector --break-system-packages
-                    if [ $? != 0 ]; then
-                        echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
-                        exit -1
-                    fi
-                    break
-                    ;;
-                [Nn]* )
-                    echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
-                    exit -1
-                    ;;
-                * )
-                    echo "Please answer y or n."
-                    ;;
-            esac
-        done
-    fi
-else
-    sudo apt-get install -y python3-mysql.connector
-fi
+python3 -m venv ./venv
+source ./venv/bin/activate
+pip install gmplot intelhex inotify mysql-connector
 
 no_python2=1
 ### Python 2.7
