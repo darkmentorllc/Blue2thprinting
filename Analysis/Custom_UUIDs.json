@@ -2593,27 +2593,6 @@
     "parent_UUID": "fd5a"
   },
   {
-    "UUID": "fd69",
-    "company": "Samsung",
-    "UUID_purpose": "'for non-registered tags' + 'Service UUID FD59 is used for device onboarding/registration activities. During the registration process, the owner device and the tag exchanges configuration and cryptographic data over various characteristics under this service.'",
-    "UUID_name": "Offline Finding",
-    "UUID_usage_array": [
-      "GATT Service"
-    ],
-    "evidence_array": [
-      {
-        "URL": "https://web.archive.org/web/20240830172748/https://www.usenix.org/system/files/usenixsecurity24-yu-tingfeng.pdf",
-        "description": "From talk 'Security and Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2024",
-        "submitter": "Xeno Kovah"
-      },
-      {
-        "URL": "https://web.archive.org/web/20221028085349/https://arxiv.org/pdf/2210.14702.pdf",
-        "description": "From talk 'Privacy Analysis of Samsung's Crowd-Sourced Bluetooth Location Tracking System', by Tingfeng Yu et al., 2022",
-        "submitter": "Xeno Kovah"
-      }
-    ]
-  },
-  {
     "UUID": "7534c394-1f40-4d12-afd7-dc2a75bd6a44",
     "company": "Samsung",
     "UUID_purpose": "'Value = 1000'",
@@ -2724,9 +2703,9 @@
     "parent_UUID": "fd69"
   },
   {
-    "UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955",
+    "UUID": "fd69",
     "company": "Samsung",
-    "UUID_purpose": "Find My Everything (FME). - FIXME: UUID is duplicated as there's a copy-paste error in both original papers!",
+    "UUID_purpose": "Find My Everything (FME).",
     "UUID_name": "FME",
     "UUID_usage_array": [
       "GATT Service",
@@ -2765,7 +2744,7 @@
         "submitter": "Xeno Kovah"
       }
     ],
-    "parent_UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955"
+    "parent_UUID": "fd69"
   },
   {
     "UUID": "4a1351bb-d617-4612-a8e3-8dee6ca13e7b",
@@ -2787,7 +2766,7 @@
         "submitter": "Xeno Kovah"
       }
     ],
-    "parent_UUID": "xebe81f6-b952-465e-9ece-5ca39d4e8955"
+    "parent_UUID": "fd69"
   },
   {
     "UUID": "1d14d6ee-fd63-4fa1-bfa4-8f47b42119f0",
