@@ -65,7 +65,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
-g_local_testing = True
+g_local_testing = False
 
 # Load OAuth client secrets
 def load_oauth_secrets():
