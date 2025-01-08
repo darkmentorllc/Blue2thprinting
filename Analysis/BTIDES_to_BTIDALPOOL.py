@@ -142,20 +142,30 @@ def main():
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
 
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
-    auth_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the server. If not provided, you will be prompted to perform Google SSO.')
-    auth_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the server. If not provided, you will be prompted to perform Google SSO.')
+    # btidalpool_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    # btidalpool_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    auth_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
 
     args = parser.parse_args()
 
     # If the token isn't given on the CLI, then redirect them to go login and get one
-    if args.token and args.refresh_token:
-        token = args.token
-        refresh_token = args.refresh_token
+    if args.token_file:
+        with open(args.token_file, 'r') as f:
+            token_data = json.load(f)
+        token = token_data['token']
+        refresh_token = token_data['refresh_token']
         client = AuthClient()
         client.set_credentials(token, refresh_token)
-        if(not client.validate_credentials()):
-            print("Authentication failed.")
-            exit(1)
+        if(client.validate_credentials()):
+            email = client.user_info.get('email')
+    # elif args.token and args.refresh_token:
+    #     token = args.token
+    #     refresh_token = args.refresh_token
+    #     client = AuthClient()
+    #     client.set_credentials(token, refresh_token)
+    #     if(not client.validate_credentials()):
+    #         print("Authentication failed.")
+    #         exit(1)
     else:
         try:
             client = AuthClient()
