@@ -37,7 +37,7 @@ def import_private_metadata_v2():
 def import_CLUES():
     global metadata_v2
     # Load JSON data from file
-    json_file = './Custom_UUIDs.json'
+    json_file = './CLUES_Schema/CLUES_data.json'
     with open(json_file, 'r') as f:
         # Convert from array to hash indexed by UUID for faster lookup
         data = json.load(f)
@@ -51,7 +51,7 @@ def import_CLUES():
 # doesn't need to be checked in
 def import_private_CLUES():
     global metadata_v2
-    json_file = './Custom_UUIDs_private.json'
+    json_file = './CLUES_Schema/CLUES_data_private.json'
     try:
         with open(json_file, 'r') as f:
             data = json.load(f)
