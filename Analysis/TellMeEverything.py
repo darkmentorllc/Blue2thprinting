@@ -53,8 +53,9 @@ def main():
     # BTIDALPOOL arguments
     btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
     btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will query from the remote BTIDALPOOL croudsourced database.')
-    btidalpool_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
-    btidalpool_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    # btidalpool_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    # btidalpool_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
+    btidalpool_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
 
 
     # Device arguments
@@ -127,6 +128,15 @@ def main():
         if args.token and args.refresh_token:
             token = args.token
             refresh_token = args.refresh_token
+            client = AuthClient()
+            client.set_credentials(token, refresh_token)
+            if(client.validate_credentials()):
+                email = client.user_info.get('email')
+        elif args.token_file:
+            with open(args.token_file, 'r') as f:
+                token_data = json.load(f)
+            token = token_data['token']
+            refresh_token = token_data['refresh_token']
             client = AuthClient()
             client.set_credentials(token, refresh_token)
             if(client.validate_credentials()):
