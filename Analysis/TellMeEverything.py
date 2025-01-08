@@ -6,7 +6,6 @@
 ########################################
 
 import argparse
-import subprocess
 # Import from my files
 from TME.TME_helpers import *
 from TME.TME_import import *
@@ -23,7 +22,6 @@ from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 from oauth_helper import AuthClient
 from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
-# FIXME: refactor BTIDES_to_MySQL to allow just calling it as a function (and then delete subprocess)
 
 ########################################
 # MAIN #################################
@@ -125,14 +123,7 @@ def main():
         if args.require_LMP_VERSION_RES:
             query_object["require_LMP_VERSION_RES"] = True
 
-        if args.token and args.refresh_token:
-            token = args.token
-            refresh_token = args.refresh_token
-            client = AuthClient()
-            client.set_credentials(token, refresh_token)
-            if(client.validate_credentials()):
-                email = client.user_info.get('email')
-        elif args.token_file:
+        if args.token_file:
             with open(args.token_file, 'r') as f:
                 token_data = json.load(f)
             token = token_data['token']
@@ -141,6 +132,13 @@ def main():
             client.set_credentials(token, refresh_token)
             if(client.validate_credentials()):
                 email = client.user_info.get('email')
+        # elif args.token and args.refresh_token:
+        #     token = args.token
+        #     refresh_token = args.refresh_token
+        #     client = AuthClient()
+        #     client.set_credentials(token, refresh_token)
+        #     if(client.validate_credentials()):
+        #         email = client.user_info.get('email')
         else:
             try:
                 client = AuthClient()
