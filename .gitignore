@@ -5,5 +5,7 @@
 *.Po
 *.Plo
 *.bin
+*.vscode
 google_oauth_client_secret.json
 private
+btidalpool.ddns.net.key
