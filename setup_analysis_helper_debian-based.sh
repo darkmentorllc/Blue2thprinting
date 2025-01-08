@@ -54,6 +54,7 @@ echo "==================================="
 ./initialize_database.sh
 ./initialize_test_database.sh
 
+# TODO: want to get rid of the below and just let TME use its local copy, but that requires updating some queries
 echo ""
 echo "===================================="
 echo "Importing IEEE OUI list to database."
