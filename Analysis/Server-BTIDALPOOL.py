@@ -63,7 +63,7 @@ from socketserver import ThreadingMixIn
 from collections import defaultdict, deque
 from pathlib import Path
 from oauth_helper import AuthClient
-from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
+from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
 g_local_testing = True
 
@@ -163,11 +163,11 @@ def validate_json_content(json_content, registry):
         return False
 
 
-def run_btides_to_mysql(filename):
-    # Run the primary code from BTIDES_to_MySQL.py script
+def run_btides_to_sql(filename):
+    # Run the primary code from BTIDES_to_SQL.py script
     # TODO: make this run in a separate thread? (Need to check if it's already running in its own thread vs. other queries)
-    b2m_args = btides_to_mysql_args(input=filename, use_test_db=True)
-    btides_to_mysql(b2m_args)
+    b2s_args = btides_to_sql_args(input=filename, use_test_db=True)
+    btides_to_sql(b2s_args)
 
 
 # args_array should be individual arguments to pass to the script
@@ -271,8 +271,8 @@ def handle_btides_data(self, username, json_content):
         # Update the global dictionary
         g_unique_files[sha1_hash] = True
 
-        # Spawn a new thread to run the BTIDES_to_MySQL.py script
-        run_btides_to_mysql(filename)
+        # Spawn a new thread to run the BTIDES_to_SQL.py script
+        run_btides_to_sql(filename)
 
         # Send a success response
         send_back_response(self, 200, 'text/plain', b'File saved successfully.')

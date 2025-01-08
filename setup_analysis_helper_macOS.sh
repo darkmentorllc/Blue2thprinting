@@ -47,6 +47,12 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client scapy
 
+# Currently we need the latest version of Scapy for PCAP_to_BTIDES.py because there hasn't been a release bundled yet which includes Antonio Vasquez Blanco's improvements
+git clone https://github.com/secdev/scapy.git
+cd scapy
+pip install .
+cd ..
+
 echo ""
 echo "====================================================================================================================================="
 echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."

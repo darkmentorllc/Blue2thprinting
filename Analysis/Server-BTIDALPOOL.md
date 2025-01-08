@@ -6,7 +6,7 @@
 
 # Copy files onto AWS server
 1) scp the Server-BTIDALPOOL.py
-scp -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem Server-BTIDALPOOL.py ubuntu@3.145.185.23:~/ 
+scp -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem Server-BTIDALPOOL.py ubuntu@3.145.185.23:~/
 2) scp the public/private key
 scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDALPOOL-loca* ubuntu@3.145.185.23:~/
 3) scp the BTIDES_Schema folder
@@ -15,7 +15,7 @@ scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_Schema ubuntu@
 # Modify files:
 Modify client and server to use '3.145.185.23' instead of 'localhost'
 
-# Then it can just be run with 
+# Then it can just be run with
 python3 Server-BTIDALPOOL.py
 
 ---
@@ -27,6 +27,6 @@ cd ~/Blue2thprinting
 sudo ./Analysis/one_time_initialization/initialize_test_database.sh
 sudo ./Analysis/one_time_initialization/initialize_test_database.sh
 
-# Copy over BTIDES_to_MySQL.py
-scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_to_MySQL.py ubuntu@3.145.185.23:~/
+# Copy over BTIDES_to_SQL.py
+scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_to_SQL.py ubuntu@3.145.185.23:~/
 scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem TME ubuntu@3.145.185.23:~/
