@@ -43,37 +43,9 @@ if [ ! $? ]; then
     exit -1
 fi
 
-pip3 install pyyaml
-if [ ! $? ]; then
-    echo "================================================================================================================================================="
-    echo "The command \"pip3 install pyyaml\" did not succeed. Please ensure you have python3 and pip3 installed first."
-    echo "================================================================================================================================================="
-    exit -1
-fi
-
-pip3 install mysql-connector-python
-if [ ! $? ]; then
-    echo "================================================================================================================================================="
-    echo "The command \"pip3 install mysql-connector-python\" did not succeed. Please ensure you have python3 and pip3 installed first."
-    echo "================================================================================================================================================="
-    exit -1
-fi
-
-pip3 install jsonschema
-if [ ! $? ]; then
-    echo "================================================================================================================================================="
-    echo "The command \"pip3 install jsonschema\" did not succeed. Please ensure you have python3 and pip3 installed first."
-    echo "================================================================================================================================================="
-    exit -1
-fi
-
-pip3 install scapy
-if [ ! $? ]; then
-    echo "================================================================================================================================================="
-    echo "The command \"pip3 install scapy\" did not succeed. Please ensure you have python3 and pip3 installed first."
-    echo "================================================================================================================================================="
-    exit -1
-fi
+python3 -m venv ./venv
+source ./venv/bin/activate
+pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client scapy
 
 echo ""
 echo "====================================================================================================================================="
