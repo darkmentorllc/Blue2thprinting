@@ -60,7 +60,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
 
-g_local_testing = False
+g_local_testing = True
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -121,17 +121,12 @@ def validate_json_content(json_content, registry):
 def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
 
     # Load the self-signed certificate and key
-    # FIXME: Replce with Let's encrypt certs? Unclear if that's feasible with 90 day expiration as I'd need to keep swapping them out or stuff would break?
-    # FIXME: In general the main thing seems like I just need to harcode trust in my own cert, and then as long as the private key isn't available to the public, it should be secure-enough
-    cert_path = "BTIDALPOOL-local-cert.pem"
-    key_path = "BTIDALPOOL-local-key.pem"
+    cert_path = "BTIDALPOOL-client.crt"
+    key_path = "BTIDALPOOL-client.key"
 
     # Create a session and mount the SSL adapter
     session = requests.Session()
     session.mount('https://', SSLAdapter(certfile=cert_path, keyfile=key_path))
-
-    # Suppress the InsecureRequestWarning
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # Prepare the data to send
     data = {
@@ -144,9 +139,11 @@ def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
     # Make a request to the server
     try:
         if(g_local_testing):
+            # Suppress the InsecureRequestWarning
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
         else:
-            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify='./btidalpool.ddns.net.crt')
         if response.headers.get('Content-Type') == 'application/json':
             json_content = response.json()
             # Load the schemas and create a registry

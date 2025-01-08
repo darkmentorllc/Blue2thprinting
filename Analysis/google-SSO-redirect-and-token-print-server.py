@@ -61,7 +61,7 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                     <h1>Authentication Successful!</h1>
                     <p>Your token:</p>
                     <p>{json.dumps(token_data)}</p>
-                    <p>Please copy the entire token including the curly brackets and paste it into the CLI application.</p>
+                    <p>Please copy the entire token including the curly brackets and paste it into the CLI application and/or store it into a file and pass it with --token-file.</p>
                     </body></html>
                 """.encode())
             except Exception as e:

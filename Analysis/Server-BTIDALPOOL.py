@@ -65,7 +65,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
 
-g_local_testing = False
+g_local_testing = True
 
 # Load OAuth client secrets
 def load_oauth_secrets():
@@ -411,7 +411,7 @@ httpd = ThreadingHTTPServer((hostname, 4443), handler)
 
 # Create an SSL context
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-context.load_cert_chain(certfile="BTIDALPOOL-local-cert.pem", keyfile="BTIDALPOOL-local-key.pem")
+context.load_cert_chain(certfile="./btidalpool.ddns.net.crt", keyfile="./btidalpool.ddns.net.key")
 
 # Wrap the server socket with SSL
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
