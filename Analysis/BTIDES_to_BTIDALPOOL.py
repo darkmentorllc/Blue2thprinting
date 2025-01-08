@@ -133,15 +133,12 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
         sys.exit(1)
 
     # Load the self-signed certificate and key
-    cert_path = "BTIDALPOOL-local-cert.pem"
-    key_path = "BTIDALPOOL-local-key.pem"
+    cert_path = "BTIDALPOOL-client.crt"
+    key_path = "BTIDALPOOL-client.key "
 
     # Create a session and mount the SSL adapter
     session = requests.Session()
     session.mount('https://', SSLAdapter(certfile=cert_path, keyfile=key_path))
-
-    # Suppress the InsecureRequestWarning
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # Prepare the data to send
     data = {
@@ -154,9 +151,11 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
     # Make a request to the server
     try:
         if(g_local_testing):
+            # Suppress the InsecureRequestWarning
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             response = session.post("https://localhost:4443", json=data, verify=False)
         else:
-            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify=False)
+            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify='./btidalpool.ddns.net.crt')
         if response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
         else:
