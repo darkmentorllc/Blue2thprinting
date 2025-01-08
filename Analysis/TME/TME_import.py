@@ -26,7 +26,7 @@ def import_metadata_v2():
 # doesn't need to be checked in
 def import_private_metadata_v2():
     global metadata_v2
-    json_file = './Metadata_v2_private.json'
+    json_file = './private/Metadata_v2_private.json'
     try:
         with open(json_file, 'r') as f:
             TME.TME_glob.metadata_v2.update(json.load(f))
@@ -51,7 +51,7 @@ def import_CLUES():
 # doesn't need to be checked in
 def import_private_CLUES():
     global metadata_v2
-    json_file = './CLUES_Schema/CLUES_data_private.json'
+    json_file = './private/CLUES_data_private.json'
     try:
         with open(json_file, 'r') as f:
             data = json.load(f)
@@ -82,7 +82,7 @@ def import_private_nameprint_CSV_data():
     # this file. It will be consulted, but
     # doesn't need to be checked in
     try:
-        with open('./NAMEPRINT_DB_private.csv', 'r') as csvfile:
+        with open('./private/NAMEPRINT_DB_private.csv', 'r') as csvfile:
             csv_reader = csv.reader(csvfile)
             for row in csv_reader:
                 if len(row) >= 2:
@@ -91,18 +91,6 @@ def import_private_nameprint_CSV_data():
                     TME.TME_glob.nameprint_data[key] = value
     except FileNotFoundError:
         pass
-
-# TODO: This should now be deprecated in favor of CLUES - DELETEME
-# def import_custom_uuid128_CSV_data():
-#     global custom_uuid128_hash
-#     with open("./custom_uuid128s.csv", 'r') as csvfile:
-#         csv_reader = csv.reader(csvfile, quoting=csv.QUOTE_ALL)
-#         for row in csv_reader:
-#             if len(row) >= 2:
-#                 key = row[0].strip().lower()
-#                 value = row[1].strip()
-#                 TME.TME_glob.custom_uuid128_hash[key] = value
-# #                qprint(f"key = {key}, value = {value}")
 
 
 ########################################
