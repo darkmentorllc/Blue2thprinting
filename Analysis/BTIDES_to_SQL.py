@@ -746,7 +746,7 @@ def parse_GATTArray(entry):
     for gatt_service_entry in entry["GATTArray"]:
         import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
 
-class btides_to_mysql_args:
+class btides_to_sql_args:
     def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
         self.input = input
         self.skip_invalid = skip_invalid
@@ -771,7 +771,7 @@ class btides_to_mysql_args:
 
 
 # Input must be a Namespace like args from argparse
-def btides_to_mysql(args):
+def btides_to_sql(args):
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.use_test_db = args.use_test_db
@@ -866,7 +866,7 @@ def main():
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
     args = parser.parse_args()
 
-    btides_to_mysql(args)
+    btides_to_sql(args)
 
 if __name__ == "__main__":
     main()

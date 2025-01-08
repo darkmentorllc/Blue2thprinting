@@ -60,7 +60,7 @@ from TME.TME_trackability import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 from oauth_helper import AuthClient
-from BTIDES_to_MySQL import btides_to_mysql_args, btides_to_mysql
+from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
 ########################################
 # MAIN #################################
@@ -189,10 +189,10 @@ def main():
             if(num_records):
                 qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
             # output_filename can be None because an error occurred, or because no records were found
-            # In either case we don't need to run BTIDES_to_MySQL
+            # In either case we don't need to run BTIDES_to_SQL
             if output_filename:
-                b2m_args = btides_to_mysql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
-                btides_to_mysql(b2m_args)
+                b2s_args = btides_to_sql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+                btides_to_sql(b2s_args)
 
     # Import metadata v2
     import_metadata_v2()

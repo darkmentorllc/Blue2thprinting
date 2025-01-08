@@ -1009,7 +1009,7 @@ def main():
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
     parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
     parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
-    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_MySQL.py on the output BTIDES file to import into your local MySQL database.')
+    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_SQL.py on the output BTIDES file to import into your local MySQL database.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
     parser.add_argument('--to-BTIDALPOOL', action='store_true', required=False, help='Immediately invoke Client-BTIDALPOOL.py on the output BTIDES file to send it to the BTIDALPOOL crowdsourcing MySQL database.')
     parser.add_argument('--username', type=str, required=False, help='Username for use in Client-BTIDALPOOL.py.')
@@ -1030,8 +1030,8 @@ def main():
     qprint("Export completed with no errors.")
 
     if args.to_MySQL:
-        qprint("Invoking BTIDES_to_MySQL.py on the output BTIDES file.")
-        cmd = ["python3", "./BTIDES_to_MySQL.py", "--input", out_BTIDES_filename]
+        qprint("Invoking BTIDES_to_SQL.py on the output BTIDES file.")
+        cmd = ["python3", "./BTIDES_to_SQL.py", "--input", out_BTIDES_filename]
         if args.use_test_db:
             cmd.append("--use-test-db")
         subprocess.run(cmd)
