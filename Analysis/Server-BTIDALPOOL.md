@@ -6,14 +6,14 @@
 
 # Copy files onto AWS server
 1) scp the Server-BTIDALPOOL.py
-scp -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem Server-BTIDALPOOL.py ubuntu@3.145.185.23:~/
+scp -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem Server-BTIDALPOOL.py ubuntu@btidalpool.ddns.net:~/
 2) scp the public/private key
-scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDALPOOL-loca* ubuntu@3.145.185.23:~/
+scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDALPOOL-loca* ubuntu@btidalpool.ddns.net:~/
 3) scp the BTIDES_Schema folder
-scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_Schema ubuntu@3.145.185.23:~/
+scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_Schema ubuntu@btidalpool.ddns.net:~/
 
 # Modify files:
-Modify client and server to use '3.145.185.23' instead of 'localhost'
+Modify client and server to use 'btidalpool.ddns.net' instead of 'localhost'
 
 # Then it can just be run with
 python3 Server-BTIDALPOOL.py
@@ -28,5 +28,5 @@ sudo ./Analysis/one_time_initialization/initialize_test_database.sh
 sudo ./Analysis/one_time_initialization/initialize_test_database.sh
 
 # Copy over BTIDES_to_SQL.py
-scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_to_SQL.py ubuntu@3.145.185.23:~/
-scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem TME ubuntu@3.145.185.23:~/
+scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem BTIDES_to_SQL.py ubuntu@btidalpool.ddns.net:~/
+scp -r -i /Users/xeno/Blue2thprinting/Analysis/jakerue.pem TME ubuntu@btidalpool.ddns.net:~/

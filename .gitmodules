@@ -1,3 +1,6 @@
 [submodule "Analysis/public"]
 	path = Analysis/public
 	url = https://bitbucket.org/bluetooth-SIG/public.git
+[submodule "Analysis/CLUES_Schema"]
+	path = Analysis/CLUES_Schema
+	url = git@github.com:darkmentorllc/CLUES_Schema.git
