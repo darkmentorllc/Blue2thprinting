@@ -60,7 +60,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
 
-g_local_testing = True
+g_local_testing = False
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
