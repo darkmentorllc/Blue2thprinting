@@ -1,4 +1,50 @@
-import sys, re, json, argparse
+########################################
+# Created by Xeno Kovah
+# Copyright(c) Dark Mentor LLC 2023-2025
+########################################
+
+import os
+import sys
+from pathlib import Path
+def activate_venv():
+    """Activate virtual environment if it exists"""
+    script_dir = Path(__file__).parent
+    venv_path = script_dir / '../venv'
+
+    if not venv_path.exists():
+        # Because I do testing with it in a different location, try this
+        venv_path = script_dir / './venv'
+        if not venv_path.exists():
+            return False
+
+    # Get Python version from venv binary
+    venv_python = venv_path / 'bin' / 'python'
+    if not venv_python.exists():
+        return False
+
+    # Set environment variables
+    os.environ['VIRTUAL_ENV'] = str(venv_path)
+    os.environ['PATH'] = f"{venv_path}/bin:{os.environ['PATH']}"
+
+    # Remove PYTHONHOME if set
+    if 'PYTHONHOME' in os.environ:
+        del os.environ['PYTHONHOME']
+
+    # Add site-packages to path
+    for lib_dir in venv_path.glob('lib/python*/site-packages'):
+        sys.path.insert(0, str(lib_dir))
+        break
+
+    # Set base prefix
+    sys.prefix = str(venv_path)
+    sys.exec_prefix = str(venv_path)
+
+    return True
+
+# Activate venv before any other imports
+activate_venv()
+
+import argparse
 
 from scapy.all import *
 from jsonschema import validate, ValidationError
@@ -279,15 +325,15 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
 
     # type 0x1A
     # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)
-    elif isinstance(entry.payload, EIR_AdvertisingInterval):
-        entry.show()
-        advertising_interval = f"{entry.advertising_interval:04x}"
-        length = 3 # 1 byte for opcode, 2 byte service interval
-        #exit_on_len_mismatch(length, entry)
-        data = {"length": length, "advertising_interval": advertising_interval}
-        vprint(f"{device_bdaddr}: {adv_type} advertising_interval: 0x{advertising_interval}")
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_AdvertisingInterval, data)
-        return True
+    # elif isinstance(entry.payload, EIR_AdvertisingInterval):
+    #     entry.show()
+    #     advertising_interval = f"{entry.advertising_interval:04x}"
+    #     length = 3 # 1 byte for opcode, 2 byte service interval
+    #     #exit_on_len_mismatch(length, entry)
+    #     data = {"length": length, "advertising_interval": advertising_interval}
+    #     vprint(f"{device_bdaddr}: {adv_type} advertising_interval: 0x{advertising_interval}")
+    #     BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_AdvertisingInterval, data)
+    #     return True
 
     # type 0x20
     elif isinstance(entry.payload, EIR_ServiceData32BitUUID):

@@ -1,9 +1,48 @@
-#!/usr/bin/python3
-
 ########################################
 # Created by Xeno Kovah
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
+
+import os
+import sys
+from pathlib import Path
+def activate_venv():
+    """Activate virtual environment if it exists"""
+    script_dir = Path(__file__).parent
+    venv_path = script_dir / '../venv'
+
+    if not venv_path.exists():
+        # Because I do testing with it in a different location, try this
+        venv_path = script_dir / './venv'
+        if not venv_path.exists():
+            return False
+
+    # Get Python version from venv binary
+    venv_python = venv_path / 'bin' / 'python'
+    if not venv_python.exists():
+        return False
+
+    # Set environment variables
+    os.environ['VIRTUAL_ENV'] = str(venv_path)
+    os.environ['PATH'] = f"{venv_path}/bin:{os.environ['PATH']}"
+
+    # Remove PYTHONHOME if set
+    if 'PYTHONHOME' in os.environ:
+        del os.environ['PYTHONHOME']
+
+    # Add site-packages to path
+    for lib_dir in venv_path.glob('lib/python*/site-packages'):
+        sys.path.insert(0, str(lib_dir))
+        break
+
+    # Set base prefix
+    sys.prefix = str(venv_path)
+    sys.exec_prefix = str(venv_path)
+
+    return True
+
+# Activate venv before any other imports
+activate_venv()
 
 import argparse
 # Import from my files
@@ -51,10 +90,7 @@ def main():
     # BTIDALPOOL arguments
     btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
     btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will query from the remote BTIDALPOOL croudsourced database.')
-    # btidalpool_group.add_argument('--token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
-    # btidalpool_group.add_argument('--refresh-token', type=str, required=False, help='Google OAuth2 token to authenticate with the BTIDALPOOL server. If not provided, you will be prompted to perform Google SSO.')
     btidalpool_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
-
 
     # Device arguments
     device_group = parser.add_argument_group('Database search arguments')
@@ -123,6 +159,7 @@ def main():
         if args.require_LMP_VERSION_RES:
             query_object["require_LMP_VERSION_RES"] = True
 
+        email = None
         if args.token_file:
             with open(args.token_file, 'r') as f:
                 token_data = json.load(f)
@@ -132,13 +169,6 @@ def main():
             client.set_credentials(token, refresh_token)
             if(client.validate_credentials()):
                 email = client.user_info.get('email')
-        # elif args.token and args.refresh_token:
-        #     token = args.token
-        #     refresh_token = args.refresh_token
-        #     client = AuthClient()
-        #     client.set_credentials(token, refresh_token)
-        #     if(client.validate_credentials()):
-        #         email = client.user_info.get('email')
         else:
             try:
                 client = AuthClient()
@@ -154,14 +184,15 @@ def main():
                 print(f"Error: {e}")
                 exit(1)
 
-        (num_records, output_filename) = retrieve_btides_from_btidalpool(email, query_object, token, refresh_token)
-        if(num_records):
-            qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
-        # output_filename can be None because an error occurred, or because no records were found
-        # In either case we don't need to run BTIDES_to_MySQL
-        if output_filename:
-            b2m_args = btides_to_mysql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
-            btides_to_mysql(b2m_args)
+        if(email):
+            (num_records, output_filename) = retrieve_btides_from_btidalpool(email, query_object, token, refresh_token)
+            if(num_records):
+                qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
+            # output_filename can be None because an error occurred, or because no records were found
+            # In either case we don't need to run BTIDES_to_MySQL
+            if output_filename:
+                b2m_args = btides_to_mysql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+                btides_to_mysql(b2m_args)
 
     # Import metadata v2
     import_metadata_v2()
