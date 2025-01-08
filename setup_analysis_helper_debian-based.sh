@@ -35,42 +35,11 @@ echo "==========================================================================
 git submodule update --init --recursive
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-sudo apt-get install -y python3-pip python3-docutils python3-referencing mariadb-server python3-googleapi python3-google-auth python3-google-auth-oauthlib python3-google-auth-httplib2
+sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server
+python3 -m venv ./venv
+source ./venv/bin/activate
 # Even for distributions like Ubuntu 24.04 which package jsonschema, it seems they're not at a new enough version to support a constructor we need. So I'm now requiring installation of this version.
-pip install jsonschema==4.23 --break-system-packages
-
-### mysql-connector
-dpkg -l | grep -q '^ii  python3-mysql.connector'
-if [ $? != 0 ]; then
-    echo "  NOTE: This distribution is missing the python3-mysql.connector package. This may cause issues for data analysis. Attempting to install through pip instead."
-    pip3 install mysql-connector
-    if [ $? != 0 ]; then
-        echo "  Could not install mysql-connector. Tool will not work without it."
-        echo "  This is known to not be packaged by Ubuntu 24.04/Raspbian Bookworm and to require using the --break-system-packages option to install."
-        while true; do
-            read -p "Do you want to install with --break-system-packages (y/n): " user_input
-            case "$user_input" in
-                [Yy]* )
-                    pip3 install mysql-connector --break-system-packages
-                    if [ $? != 0 ]; then
-                        echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
-                        exit -1
-                    fi
-                    break
-                    ;;
-                [Nn]* )
-                    echo "  Could not install mysql-connector. Data import to database & analysis will not work without it. Exiting."
-                    exit -1
-                    ;;
-                * )
-                    echo "Please answer y or n."
-                    ;;
-            esac
-        done
-    fi
-else
-    sudo apt-get install -y python3-mysql.connector
-fi
+pip install jsonschema==4.23 mysql-connector pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
 # Next commands assume they run from the Analysis folder
 cd ./Analysis/one_time_initialization
