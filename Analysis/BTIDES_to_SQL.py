@@ -2,7 +2,6 @@
 # Created by Xeno Kovah
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
-
 # This file is to import data that conforms to the
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html

@@ -1,5 +1,4 @@
 import json
-import os
 import requests
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
@@ -40,8 +39,8 @@ class AuthClient:
                     "refresh_token": self.credentials.refresh_token,
                     "client_id": self.client_id
                 },
-                verify=False
-            ) #verify='./OAuthServer.crt'
+                verify='./fullchain-with-root.pem' # LetsEncrypt fullchain.pem w/ root cert manually downloaded and catted on the end
+            )
             if response.status_code == 200:
                 token_data = response.json()
                 return self.set_credentials(token_data['token'], token_data['refresh_token'], self.token_file)
