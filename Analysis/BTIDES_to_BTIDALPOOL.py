@@ -191,36 +191,30 @@ def main():
     args = parser.parse_args()
 
     # If the token isn't given on the CLI, then redirect them to go login and get one
+    client = AuthClient()
     if args.token_file:
         with open(args.token_file, 'r') as f:
             token_data = json.load(f)
         token = token_data['token']
         refresh_token = token_data['refresh_token']
-        client = AuthClient()
-        client.set_credentials(token, refresh_token)
-        if(client.validate_credentials()):
-            email = client.user_info.get('email')
+        client.set_credentials(token, refresh_token, token_file=args.token_file)
+        if(not client.validate_credentials()):
+            print("Authentication failed.")
+            exit(1)
     else:
         try:
-            client = AuthClient()
-            credentials = client.google_SSO_authenticate()
-            if(not credentials):
-                print("Authentication failed.")
-                exit(1)
-            if(client.validate_credentials()):
-                token = credentials.token
-                refresh_token = credentials.refresh_token
-            else:
+            if(not client.google_SSO_authenticate() or not client.validate_credentials()):
                 print("Authentication failed.")
                 exit(1)
         except ValueError as e:
             print(f"Error: {e}")
             exit(1)
 
+    # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
     send_btides_to_btidalpool(
         input_file=args.input,
-        token=token,
-        refresh_token=refresh_token
+        token=client.credentials.token,
+        refresh_token=client.credentials.refresh_token
     )
 
 if __name__ == "__main__":
