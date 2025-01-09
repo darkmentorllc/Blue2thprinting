@@ -159,33 +159,33 @@ def main():
         if args.require_LMP_VERSION_RES:
             query_object["require_LMP_VERSION_RES"] = True
 
-        email = None
+        # If the token isn't given on the CLI, then redirect them to go login and get one
+        client = AuthClient()
         if args.token_file:
             with open(args.token_file, 'r') as f:
                 token_data = json.load(f)
-            token = token_data['token']
-            refresh_token = token_data['refresh_token']
-            client = AuthClient()
-            client.set_credentials(token, refresh_token)
-            if(client.validate_credentials()):
-                email = client.user_info.get('email')
+            client.set_credentials(token_data['token'], token_data['refresh_token'], token_file=args.token_file)
+            if(not client.validate_credentials()):
+                print("Authentication failed.")
+                exit(1)
         else:
             try:
-                client = AuthClient()
-                credentials = client.google_SSO_authenticate()
-                if(not credentials):
+                if(not client.google_SSO_authenticate() or not client.validate_credentials()):
                     print("Authentication failed.")
                     exit(1)
-                if(client.validate_credentials()):
-                    token = credentials.token
-                    refresh_token = credentials.refresh_token
-                    email = client.user_info.get('email')
             except ValueError as e:
                 print(f"Error: {e}")
                 exit(1)
 
-        if(email):
-            (num_records, output_filename) = retrieve_btides_from_btidalpool(email, query_object, token, refresh_token)
+        # Using the presence of the email address as proof of successful authentication
+        # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
+        if(client.user_info and client.user_info.get('email')):
+            (num_records, output_filename) = retrieve_btides_from_btidalpool(
+                email=client.user_info.get('email'),
+                query_object=query_object,
+                token=client.credentials.token,
+                refresh_token=client.credentials.refresh_token
+            )
             if(num_records):
                 qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
             # output_filename can be None because an error occurred, or because no records were found
