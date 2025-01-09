@@ -313,7 +313,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-                    qprint(f"\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)}\n\t\t\t\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}")
+                    qprint(f"\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})\n\t\t\t\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}")
                     if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
                     if(char_value_handle not in char_value_handles_dict.keys() and (char_properties & 0x2 == 0x02)):
