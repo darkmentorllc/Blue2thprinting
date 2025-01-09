@@ -6,6 +6,7 @@ import urllib.parse
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from pathlib import Path
+from google.auth.transport.requests import Request
 
 def load_oauth_secrets():
     secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
@@ -72,6 +73,40 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
         else:
             self.send_response(400)
             self.end_headers()
+
+    def do_POST(self):
+        if self.path == '/refresh':
+            content_length = int(self.headers['Content-Length'])
+            post_data = json.loads(self.rfile.read(content_length))
+
+            try:
+                credentials = Credentials(
+                    token=None,
+                    refresh_token=post_data['refresh_token'],
+                    token_uri="https://oauth2.googleapis.com/token",
+                    client_id=CLIENT_ID,
+                    client_secret=CLIENT_SECRET,
+                    scopes=['openid', 'https://www.googleapis.com/auth/userinfo.email',
+                           'https://www.googleapis.com/auth/userinfo.profile']
+                )
+
+                # Refresh the credentials
+                credentials.refresh(Request())
+
+                token_data = {
+                    'token': credentials.token,
+                    'refresh_token': credentials.refresh_token
+                }
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(token_data).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(str(e).encode())
 
 def run_server():
     PORT = 7653 # = 0x1de5 - Beware the Ides of BTIDES ;)
