@@ -33,6 +33,10 @@ BTIDES_files = ["BTIDES_base.json",
 def write_BTIDES(out_filename):
     # Sanity check the BTIDES data against the schema before export, to not write garbage
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
+    if(len(BTIDES_JSON) == 0):
+        print("BTIDES_JSON is empty. Nothing to write.")
+        exit(-1)
+
     all_schemas = []
     required_version = "0.1.0"
 
