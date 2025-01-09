@@ -57,7 +57,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
 
-g_local_testing = False
+g_local_testing = True
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -134,7 +134,7 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
 
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-client.crt"
-    key_path = "BTIDALPOOL-client.key "
+    key_path = "BTIDALPOOL-client.key"
 
     # Create a session and mount the SSL adapter
     session = requests.Session()
