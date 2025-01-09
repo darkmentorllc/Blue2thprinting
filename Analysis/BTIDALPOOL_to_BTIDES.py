@@ -60,7 +60,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
 
-g_local_testing = False
+g_local_testing = True
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, certfile=None, keyfile=None, password=None, **kwargs):
@@ -260,6 +260,7 @@ def main():
         query_object["require_LMP_VERSION_RES"] = True
 
     # If the token isn't given on the CLI, then redirect them to go login and get one
+    email = None
     if args.token_file:
         with open(args.token_file, 'r') as f:
             token_data = json.load(f)
@@ -283,16 +284,17 @@ def main():
             print(f"Error: {e}")
             exit(1)
 
-    (num_records, output_filename) = retrieve_btides_from_btidalpool(
-        email=client.user_info.get('email'),
-        query_object=query_object,
-        token=token,
-        refresh_token=refresh_token
-    )
-    if(num_records and output_filename):
-        print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")
-    else:
-        sys.exit(1)
+    if(email):
+        (num_records, output_filename) = retrieve_btides_from_btidalpool(
+            email=client.user_info.get('email'),
+            query_object=query_object,
+            token=token,
+            refresh_token=refresh_token
+        )
+        if(num_records and output_filename):
+            print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")
+        else:
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

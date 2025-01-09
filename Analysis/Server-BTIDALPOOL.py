@@ -65,24 +65,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
-g_local_testing = False
-
-# Load OAuth client secrets
-def load_oauth_secrets():
-    secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
-    try:
-        with open(secrets_path) as f:
-            secrets = json.load(f)
-        return secrets['client_id'], secrets['client_secret']
-    except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
-        raise RuntimeError(f"Failed to load OAuth secrets: {e}")
-
-# Initialize OAuth credentials
-try:
-    CLIENT_ID, CLIENT_SECRET = load_oauth_secrets()
-except RuntimeError as e:
-    print(f"Error: {e}")
-    exit(1)
+g_local_testing = True
 
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
