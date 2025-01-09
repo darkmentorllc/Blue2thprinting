@@ -25,6 +25,40 @@ except RuntimeError as e:
 
 class OAuthHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith('/tos'):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(f"""
+                <html><body>
+                <h1>BTIDALPOOL Terms of Service</h1>
+                <p>This is the BTIDALPOOL server. It is <b><i>researchware</i></b>. Therefore there are no guarantees about uptime, performance, etc.</p>
+                <p>The following limitations currently apply to uploads/downloads:
+                    <ul>
+                        <li>Maximum connections per user per day: 100</li>
+                        <li>Maximum BTIDES objects per download: 100</li>
+                        <li>Maximum BTIDES file upload size: 20MB</li>
+                    </ul>
+                </p>
+                <p>Researchers and top contributors can request Trusted Contributor status, which will not be subject to these limitations.</p>
+                <p>Users who routinely exceed the limits will have their access revoked.</p>
+                </body></html>
+            """.encode())
+            return
+
+        if self.path.startswith('/privacy'):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(f"""
+                <html><body>
+                <h1>BTIDALPOOL Privacy Policy</h1>
+                <p>You agree that all data you upload shall be considered in the public domain thereafter.</p>
+                <p>You agree to the use of Google Single-Sign-On for purposes of user account access control. This will grant access to the account's email and public profile information (if any. i.e. name for account). The email will be used as the primary user ID.</p>
+                </body></html>
+            """.encode())
+            return
+
         if not self.path.startswith('/oauth2callback'):
             self.send_response(404)
             self.end_headers()
