@@ -3,10 +3,12 @@ import http.server
 import ssl
 import socketserver
 import urllib.parse
+from pathlib import Path
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
-from pathlib import Path
 from google.auth.transport.requests import Request
+import os
+import pwd
 
 def load_oauth_secrets():
     secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
@@ -149,6 +151,28 @@ def run_server():
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(certfile=certfile, keyfile=keyfile)
+
+    # Drop root privileges after reading the privileged files
+    def drop_privileges(uid_name='ubuntu'):
+        if os.getuid() != 0:
+            return
+
+        # Get the uid/gid from the name
+        pw_record = pwd.getpwnam(uid_name)
+        uid = pw_record.pw_uid
+        gid = pw_record.pw_gid
+
+        # Remove group privileges
+        os.setgroups([])
+
+        # Try setting the new uid/gid
+        os.setgid(gid)
+        os.setuid(uid)
+
+        # Ensure a very conservative umask
+        os.umask(0o077)
+
+    drop_privileges()
 
     handler = OAuthHandler
     httpd = socketserver.TCPServer(("", PORT), handler)

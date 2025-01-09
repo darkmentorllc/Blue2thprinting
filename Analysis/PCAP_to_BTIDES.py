@@ -3,45 +3,11 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
+# Activate venv before any other imports
 import os
 import sys
 from pathlib import Path
-def activate_venv():
-    """Activate virtual environment if it exists"""
-    script_dir = Path(__file__).parent
-    venv_path = script_dir / '../venv'
-
-    if not venv_path.exists():
-        # Because I do testing with it in a different location, try this
-        venv_path = script_dir / './venv'
-        if not venv_path.exists():
-            return False
-
-    # Get Python version from venv binary
-    venv_python = venv_path / 'bin' / 'python'
-    if not venv_python.exists():
-        return False
-
-    # Set environment variables
-    os.environ['VIRTUAL_ENV'] = str(venv_path)
-    os.environ['PATH'] = f"{venv_path}/bin:{os.environ['PATH']}"
-
-    # Remove PYTHONHOME if set
-    if 'PYTHONHOME' in os.environ:
-        del os.environ['PYTHONHOME']
-
-    # Add site-packages to path
-    for lib_dir in venv_path.glob('lib/python*/site-packages'):
-        sys.path.insert(0, str(lib_dir))
-        break
-
-    # Set base prefix
-    sys.prefix = str(venv_path)
-    sys.exec_prefix = str(venv_path)
-
-    return True
-
-# Activate venv before any other imports
+from handle_venv import activate_venv
 activate_venv()
 
 import argparse
@@ -1035,11 +1001,6 @@ def main():
     qprint("Export completed with no errors.")
 
     if args.to_SQL:
-        # qprint("Invoking BTIDES_to_SQL.py on the output BTIDES file.")
-        # cmd = ["python3", "./BTIDES_to_SQL.py", "--input", out_BTIDES_filename]
-        # if args.use_test_db:
-        #     cmd.append("--use-test-db")
-        # subprocess.run(cmd)
         b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
         btides_to_sql(b2s_args)
 
@@ -1070,10 +1031,6 @@ def main():
             token=client.credentials.token,
             refresh_token=client.credentials.refresh_token
         )
-        # qprint("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
-        # cmd = ["python3", "./BTIDES_to_BTIDALPOOL.py", "--input", out_BTIDES_filename]
-        # subprocess.run(cmd)
-
 
 if __name__ == "__main__":
     main()
