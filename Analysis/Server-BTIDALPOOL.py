@@ -65,7 +65,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
-g_local_testing = True
+g_local_testing = False
 
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
@@ -154,7 +154,7 @@ def run_btides_to_sql(filename):
 
 
 # args_array should be individual arguments to pass to the script
-def run_TellMeEverything(self, args_array, output_filename):
+def run_TellMeEverything(self, username, args_array, output_filename):
     # Run the TellMeEverything.py script in a new thread.
     def target():
         # FIXME: update to refactor to not require subprocess.run (or to use a separate script)
@@ -169,17 +169,17 @@ def run_TellMeEverything(self, args_array, output_filename):
             json_content = json.load(f)
 
             if len(json_content) == 0:  # Content is just []
-                send_back_response(self, 400, 'text/plain', b'Query yielded empty result.')
+                send_back_response(self, username, 400, 'text/plain', b'Query yielded empty result.')
                 return 1
 
             # Validate the JSON content
             if not validate_json_content(json_content, registry):
-                send_back_response(self, 400, 'text/plain', b'Query yielded invalid JSON data according to schema. Rejected.')
+                send_back_response(self, username, 400, 'text/plain', b'Query yielded invalid JSON data according to schema. Rejected.')
                 return 1
 
     except FileNotFoundError:
         # This will happen if there's a bug that causes TellMeEverything to not write the output file
-        send_back_response(self, 500, 'text/plain', b'Output file not found.')
+        send_back_response(self, username, 500, 'text/plain', b'Output file not found.')
         return 1
 
     return json_content
@@ -208,7 +208,9 @@ def rate_limit_checks(client_ip):
     return True
 
 
-def send_back_response(self, type, header, text):
+def send_back_response(self, username, type, header, text):
+    if(header == 'text/plain'):
+        log_user_result(username, self.client_address[0], f"{type}: {text}")
     self.send_response(type)
     self.send_header('Content-Type', header)
     self.end_headers()
@@ -224,12 +226,12 @@ def handle_btides_data(self, username, json_content):
 
         # Check the size of the JSON content
         if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
-            send_back_response(self, 400, 'text/plain', b'File size too big.')
+            send_back_response(self, username, 400, 'text/plain', b'File size too big.')
             return
 
         # Validate the JSON content
         if not validate_json_content(json_content, registry):
-            send_back_response(self, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
+            send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
             return
 
         # Create the directory if it doesn't exist
@@ -240,7 +242,7 @@ def handle_btides_data(self, username, json_content):
 
         # Check if the file already exists
         if sha1_hash in g_unique_files:
-            send_back_response(self, 400, 'text/plain', b'A file with this exact content already exists on the server.')
+            send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server.')
             return
 
         # Generate the filename
@@ -258,10 +260,10 @@ def handle_btides_data(self, username, json_content):
         run_btides_to_sql(filename)
 
         # Send a success response
-        send_back_response(self, 200, 'text/plain', b'File saved successfully.')
+        send_back_response(self, username, 200, 'text/plain', b'File saved successfully.')
 
     except json.JSONDecodeError:
-        send_back_response(self, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
+        send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
 
 def handle_query(self, username, query_object):
     print(query_object)
@@ -309,16 +311,41 @@ def handle_query(self, username, query_object):
     random = os.urandom(4).hex()
     output_filename = f"/tmp/{username}-{current_time}-{random}.json"
 
-    json_content = run_TellMeEverything(self, args_array, output_filename)
+    json_content = run_TellMeEverything(self, username, args_array, output_filename)
     if(json_content == 1): # Error
         # Error message should have already been sent to the client in run_TellMeEverything
         return
     else:
-        send_back_response(self, 200, 'application/json', json.dumps(json_content).encode('utf-8'))
+        send_back_response(self, username, 200, 'application/json', json.dumps(json_content).encode('utf-8'))
+        log_user_result(username, self.client_address[0], f"{len(json_content)} records returned.")
 
     # Delete the output file after sending the response
     if os.path.exists(output_filename):
         os.remove(output_filename)
+
+
+log_file = open('./user_access.log', 'a')
+log_mutex = threading.Lock()
+
+# Append a log line to the user_access.log file.
+def log_user_access(username, client_ip, post_json_data):
+    # We don't want to save any of these fields in the log
+    log_data = post_json_data.copy()
+    log_data.pop('btides_content', None)
+    log_data.pop('token', None)
+    log_data.pop('refresh_token', None)
+    log_line = f"{datetime.datetime.now().isoformat()} - User: {username}, IP: {client_ip}, json data: {log_data}\n"
+    with log_mutex:
+        log_file.write(log_line)
+        log_file.flush()
+
+# Append a log line to the user_access.log file.
+def log_user_result(username, client_ip, result_str):
+    log_line = f"{datetime.datetime.now().isoformat()} - User: {username}, IP: {client_ip}, result: {result_str}\n"
+    with log_mutex:
+        log_file.write(log_line)
+        log_file.flush()
+
 
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
@@ -330,7 +357,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         # Check rate limits before reading the request body
         if not rate_limit_checks(client_ip):
-            send_back_response(self, 429, 'text/plain', b'Too many requests')
+            send_back_response(self, username, 429, 'text/plain', b'Too many requests')
             # Returning before the self.rfile.read() below will lead to the client perceiving it as a connection reset
             # However this just saves the server from processing an unnecessary request that it knows it will reject
             return
@@ -346,22 +373,26 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
         # Initial sanity checks
         if 'token' not in post_json_data or 'refresh_token' not in post_json_data:
-            send_back_response(self, 400, 'text/plain', b'Missing Google OAuth SSO token.')
+            send_back_response(self, username, 400, 'text/plain', b'Missing Google OAuth SSO token.')
             return
         if 'command' not in post_json_data:
-            send_back_response(self, 400, 'text/plain', b'Missing command.')
+            send_back_response(self, username, 400, 'text/plain', b'Missing command.')
             return
 
         # Validate OAuth token
         username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
         if not username:
-            self.send_response(401)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                "error": "Invalid OAuth token"
-            }).encode())
+            send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
+            # self.send_response(400)
+            # self.send_header('Content-type', 'application/json')
+            # self.end_headers()
+            # self.wfile.write(json.dumps({
+            #     "error": "Invalid OAuth token"
+            # }).encode())
             return
+
+        # Log request
+        log_user_access(username, client_ip, post_json_data)
 
         if post_json_data['command'] == "upload" and 'btides_content' in post_json_data and 'query' not in post_json_data:
             json_content = post_json_data.get('btides_content')
@@ -370,7 +401,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             query_object = post_json_data.get('query')
             handle_query(self, username, query_object)
         else:
-            send_back_response(self, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
+            send_back_response(self, username, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
             return
 
         # Decrement the connection count
