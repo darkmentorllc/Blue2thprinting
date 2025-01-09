@@ -334,14 +334,14 @@ def log_user_access(username, client_ip, post_json_data):
     log_data.pop('btides_content', None)
     log_data.pop('token', None)
     log_data.pop('refresh_token', None)
-    log_line = f"{datetime.datetime.now().isoformat()} - User: {username}, IP: {client_ip}, json data: {log_data}\n"
+    log_line = f"{datetime.datetime.now().isoformat()} - {username},{client_ip},json data: {log_data}\n"
     with log_mutex:
         log_file.write(log_line)
         log_file.flush()
 
 # Append a log line to the user_access.log file.
 def log_user_result(username, client_ip, result_str):
-    log_line = f"{datetime.datetime.now().isoformat()} - User: {username}, IP: {client_ip}, result: {result_str}\n"
+    log_line = f"{datetime.datetime.now().isoformat()} - {username},{client_ip},result: {result_str}\n"
     with log_mutex:
         log_file.write(log_line)
         log_file.flush()
@@ -383,12 +383,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
         if not username:
             send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
-            # self.send_response(400)
-            # self.send_header('Content-type', 'application/json')
-            # self.end_headers()
-            # self.wfile.write(json.dumps({
-            #     "error": "Invalid OAuth token"
-            # }).encode())
             return
 
         # Log request

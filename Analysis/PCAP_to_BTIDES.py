@@ -45,11 +45,13 @@ def activate_venv():
 activate_venv()
 
 import argparse
-
 from scapy.all import *
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
+from oauth_helper import AuthClient
+from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
+from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
 from TME.TME_helpers import qprint, vprint
 from TME.BT_Data_Types import *
@@ -68,15 +70,7 @@ from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to
 # GATT
 from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
 
-'''
-# Quiet print overrides verbose print if present
-def qprint(fmt):
-    if(not TME.TME_glob.quiet_print): print(fmt)
 
-# Verbose print
-def vprint(fmt):
-    if(TME.TME_glob.verbose_print): qprint(fmt)
-'''
 
 g_access_address_to_connect_ind_obj = {}
 
@@ -1003,16 +997,28 @@ def read_pcap(file_path):
 
 def main():
     global verbose_print, verbose_BTIDES
-    parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
+    parser = argparse.ArgumentParser(description='pcap file input arguments')
     parser.add_argument('--input', type=str, required=True, help='Input file name for pcap file.')
-    parser.add_argument('--output', type=str, required=True, help='Output file name for BTIDES JSON file.')
-    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print output about the found fields as each packet is parsed.')
-    parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
-    parser.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
-    parser.add_argument('--to-MySQL', action='store_true', required=False, help='Immediately invoke BTIDES_to_SQL.py on the output BTIDES file to import into your local MySQL database.')
-    parser.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
-    parser.add_argument('--to-BTIDALPOOL', action='store_true', required=False, help='Immediately invoke Client-BTIDALPOOL.py on the output BTIDES file to send it to the BTIDALPOOL crowdsourcing MySQL database.')
-    parser.add_argument('--username', type=str, required=False, help='Username for use in Client-BTIDALPOOL.py.')
+
+    # BTIDES arguments
+    btides_group = parser.add_argument_group('BTIDES file output arguments')
+    btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
+    btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+
+    # SQL arguments
+    sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
+    sql.add_argument('--to-SQL', action='store_true', required=False, help='Immediately invoke store output BTIDES file to your local SQL database.')
+    sql.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
+
+    # BTIDALPOOL arguments
+    btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
+    btidalpool_group.add_argument('--to-BTIDALPOOL', action='store_true', required=False, help='Immediately invoke Client-BTIDALPOOL.py on the output BTIDES file to send it to the BTIDALPOOL crowdsourcing SQL database.')
+    btidalpool_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
+
+    printout_group = parser.add_argument_group('Print verbosity arguments')
+    printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
+    printout_group.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output (useful when you only want to use --output to export data).')
+
     args = parser.parse_args()
 
     in_pcap_filename = args.input
@@ -1020,7 +1026,6 @@ def main():
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
-    username = args.username
 
     qprint("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
     read_pcap(in_pcap_filename)
@@ -1029,17 +1034,45 @@ def main():
     write_BTIDES(out_BTIDES_filename)
     qprint("Export completed with no errors.")
 
-    if args.to_MySQL:
-        qprint("Invoking BTIDES_to_SQL.py on the output BTIDES file.")
-        cmd = ["python3", "./BTIDES_to_SQL.py", "--input", out_BTIDES_filename]
-        if args.use_test_db:
-            cmd.append("--use-test-db")
-        subprocess.run(cmd)
+    if args.to_SQL:
+        # qprint("Invoking BTIDES_to_SQL.py on the output BTIDES file.")
+        # cmd = ["python3", "./BTIDES_to_SQL.py", "--input", out_BTIDES_filename]
+        # if args.use_test_db:
+        #     cmd.append("--use-test-db")
+        # subprocess.run(cmd)
+        b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:
-        qprint("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
-        cmd = ["python3", "./Client-BTIDALPOOL.py", username, out_BTIDES_filename]
-        subprocess.run(cmd)
+        # If the token isn't given on the CLI, then redirect them to go login and get one
+        client = AuthClient()
+        if args.token_file:
+            with open(args.token_file, 'r') as f:
+                token_data = json.load(f)
+            token = token_data['token']
+            refresh_token = token_data['refresh_token']
+            client.set_credentials(token, refresh_token, token_file=args.token_file)
+            if(not client.validate_credentials()):
+                print("Authentication failed.")
+                exit(1)
+        else:
+            try:
+                if(not client.google_SSO_authenticate() or not client.validate_credentials()):
+                    print("Authentication failed.")
+                    exit(1)
+            except ValueError as e:
+                print(f"Error: {e}")
+                exit(1)
+
+        # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
+        send_btides_to_btidalpool(
+            input_file=out_BTIDES_filename,
+            token=client.credentials.token,
+            refresh_token=client.credentials.refresh_token
+        )
+        # qprint("Invoking Client-BTIDALPOOL.py on the output BTIDES file.")
+        # cmd = ["python3", "./BTIDES_to_BTIDALPOOL.py", "--input", out_BTIDES_filename]
+        # subprocess.run(cmd)
 
 
 if __name__ == "__main__":
