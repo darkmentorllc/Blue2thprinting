@@ -47,9 +47,14 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client scapy
 
-# Currently we need the latest version of Scapy for PCAP_to_BTIDES.py because there hasn't been a release bundled yet which includes Antonio Vasquez Blanco's improvements
-git clone https://github.com/secdev/scapy.git
+# Using my branch until all of my and Antonio's changes are merged in
+git clone https://github.com/XenoKovah/scapy.git
 cd scapy
+pip install .
+cd ..
+# We need this branch of btsnoop which added support for BTSNOOP_FORMAT_MONITOR sufficient to get the data into scapy for parsing
+git clone https://github.com/XenoKovah/btsnoop.git
+cd btsnoop
 pip install .
 cd ..
 
