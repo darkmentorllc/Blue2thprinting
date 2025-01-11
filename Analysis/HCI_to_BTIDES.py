@@ -32,8 +32,8 @@ from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
 
-def export_AdvChannelData(packet, adv_type):
-    ble_adv_fields = packet.getlayer(HCI_LE_Meta_Advertising_Report).fields
+def export_AdvChannelData(packet, scapy_type, adv_type):
+    ble_adv_fields = packet.getlayer(scapy_type).fields
     bdaddr_random = ble_adv_fields['atype']
     device_bdaddr = ble_adv_fields['addr']
 
@@ -45,34 +45,63 @@ def export_AdvChannelData(packet, adv_type):
     if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(ble_adv_fields['data']) == 0)):
         return True
     else:
-        return False
+        return False # This is known to fire for things not yet supported like unprovisioned mesh beacons
 
 
 def read_HCI(file_path):
     try:
         records = bts.parse(file_path)
         for record in records:
-            p = HCI_Hdr(record.data)
-            if p.haslayer(HCI_LE_Meta_Advertising_Report):
+            try:
+                p = HCI_Hdr(record.data)
+            except Exception as e:
+                print(f"Error forcing type on packet: {e}")
+                pass
+
+            #p.show()
+            if p.haslayer(HCI_LE_Meta_Advertising_Reports):
                 #p.show()
-                adv_report = p.getlayer(HCI_LE_Meta_Advertising_Report)
-                # Nominally this is supposed to be a list of entries, but I've only ever seen one entry in the list
-                adv_event_type = adv_report.fields['type']
-                if adv_event_type == 0x00:  # ADV_IND
-                    export_AdvChannelData(p, type_AdvChanPDU_ADV_IND)
-                elif adv_event_type == 0x01:  # ADV_DIRECT_IND
-                    export_AdvChannelData(p, type_AdvChanPDU_ADV_DIRECT_IND)
-                elif adv_event_type == 0x02:  # ADV_SCAN_IND
-                    export_AdvChannelData(p, type_AdvChanPDU_ADV_SCAN_IND)
-                elif adv_event_type == 0x03:  # ADV_NONCONN_IND
-                    export_AdvChannelData(p, type_AdvChanPDU_ADV_NONCONN_IND)
-                elif adv_event_type == 0x04:  # SCAN_RSP
-                    export_AdvChannelData(p, type_AdvChanPDU_SCAN_RSP)
+                adv_report = p.getlayer(HCI_LE_Meta_Advertising_Reports)
+                for report in adv_report.fields['reports']:
+                    adv_event_type = report.fields['type']
+                    if adv_event_type == 0x00:  # ADV_IND
+                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_IND)
+                    elif adv_event_type == 0x01:  # ADV_DIRECT_IND
+                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)
+                    elif adv_event_type == 0x02:  # ADV_SCAN_IND
+                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND)
+                    elif adv_event_type == 0x03:  # ADV_NONCONN_IND
+                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND)
+                    elif adv_event_type == 0x04:  # SCAN_RSP
+                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_SCAN_RSP)
+            if p.haslayer(HCI_LE_Meta_Extended_Advertising_Reports):
+                #p.show()
+                adv_report = p.getlayer(HCI_LE_Meta_Extended_Advertising_Reports)
+                for report in adv_report.fields['reports']:
+                    #adv_event_type = report.fields['type']
+                    if(report.fields['legacy']):
+                        # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
+                        # 0b0000 - ADV_NONCONN_IND
+                        if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
+                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND)
+                        # 0b0010 - ADV_SCAN_IND
+                        elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
+                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND)
+                        # 0b0011 - ADV_IND
+                        if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
+                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND)
+                        # 0b0101 - ADV_DIRECT_IND
+                        elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
+                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)
+                        # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
+                        elif not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable']:
+                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP)
 
     #     return
     except Exception as e:
         print(f"Error reading HCI log file: {e}")
-        exit(1)
+        pass
+        #exit(1)
 
 
 def main():
