@@ -28,17 +28,14 @@ from TME.BTIDES_Data_Types import *
 import TME.TME_glob
 from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 # Advertisement Channel
-# from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
-# from TME.TME_AdvChan import *
 from scapy_to_BTIDES_common import *
-# from TME.TME_AdvChan import ff_CONNECT_IND, ff_CONNECT_IND_placeholder
 from TME.TME_AdvChan import *
 # LL Control
 from TME.TME_BTIDES_LL import *
 # ATT
-from TME.TME_BTIDES_ATT import * # Tired of importing everything. Want things to just work.
+from TME.TME_BTIDES_ATT import *
 # GATT
-from TME.TME_BTIDES_GATT import * # Tired of importing everything. Want things to just work.
+from TME.TME_BTIDES_GATT import *
 
 g_access_address_to_connect_ind_obj = {}
 
