@@ -141,35 +141,35 @@
 			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Data Endpoint"
 		}
 	},
-        "TeLink GATTPrints": {
-                "comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-                "2thprint_Chip_Maker": "Telink Semiconductor Co. Ltd",
-                "company_website": "https://telink-semi.cn//",
-                "submitted_by": "Xeno Kovah",
-                "submission_date": "2025-01-16",
-                "evidence_URL": {
-                        "Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h"
-                },
-                "confirmed_by": "Xeno Kovah",
-                "confirmation_date": "2025-01-16",
-                "confirmation_method": "evidence_URL",
-                "confirmation_confidence": "10/10",
-                "2thprint_ChipMaker_GATTprint": "True",
-                "GATT_Vendor_Specific": {
-                        "00010203-0405-0607-0809-0a0b0c0d1910": "Service: TeLink: Serial Port Profile (if 2b10 characteristic is present) OR Mesh Light Service (if 1911 characteristic is present). Unfortunate UUID reuse!",
-                        "00010203-0405-0607-0809-0a0b0c0d2b10": "Characteristic: TeLink: Serial Port Profile (SPP): SERVER2CLIENT",
-                        "00010203-0405-0607-0809-0a0b0c0d2b11": "Characteristic: TeLink: Serial Port Profile (SPP): CLIENT2SERVER",
-                        "00010203-0405-0607-0809-0a0b0c0d1911": "Service: TeLink: Audio OR Characteristic: TeLink: Mesh Light Status",
-                        "00010203-0405-0607-0809-0a0b0c0d1912": "Service: TeLink: Over-The-Air (OTA) update OR Characteristic: TeLink: Mesh Light Command. Unfortunate UUID reuse!",
-                        "00010203-0405-0607-0809-0a0b0c0d2b12": "Characteristic: TeLink: Over-The-Air (OTA) update: data",
-						"00010203-0405-0607-0809-0a0b0c0d2b13": "Characteristic: TeLink: Serial Port Profile: Pair",
-						"00010203-0405-0607-0809-0a0b0c0d2b14": "Characteristic: TeLink: Serial Port Profile: User-defined Data",
-						"00010203-0405-0607-0809-0a0b0c0d1913": "Characteristic: TeLink: Mesh Light OTA update",
-						"00010203-0405-0607-0809-0a0b0c0d1914": "Characteristic: TeLink: Mesh Light Pair",
-						"00010203-0405-0607-0809-0a0b0c0d1920": "Service: TeLink: TeLink Mesh (proprietary?)",
-						"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)"
-                }
-        },
+	"TeLink GATTPrints": {
+			"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+			"2thprint_Chip_Maker": "Telink Semiconductor Co. Ltd",
+			"company_website": "https://telink-semi.cn//",
+			"submitted_by": "Xeno Kovah",
+			"submission_date": "2025-01-16",
+			"evidence_URL": {
+					"Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h"
+			},
+			"confirmed_by": "Xeno Kovah",
+			"confirmation_date": "2025-01-16",
+			"confirmation_method": "evidence_URL",
+			"confirmation_confidence": "10/10",
+			"2thprint_ChipMaker_GATTprint": "True",
+			"GATT_Vendor_Specific": {
+					"00010203-0405-0607-0809-0a0b0c0d1910": "Service: TeLink: Serial Port Profile (if 2b10 characteristic is present) OR Mesh Light Service (if 1911 characteristic is present). Unfortunate UUID reuse!",
+					"00010203-0405-0607-0809-0a0b0c0d2b10": "Characteristic: TeLink: Serial Port Profile (SPP): SERVER2CLIENT",
+					"00010203-0405-0607-0809-0a0b0c0d2b11": "Characteristic: TeLink: Serial Port Profile (SPP): CLIENT2SERVER",
+					"00010203-0405-0607-0809-0a0b0c0d1911": "Service: TeLink: Audio OR Characteristic: TeLink: Mesh Light Status",
+					"00010203-0405-0607-0809-0a0b0c0d1912": "Service: TeLink: Over-The-Air (OTA) update OR Characteristic: TeLink: Mesh Light Command. Unfortunate UUID reuse!",
+					"00010203-0405-0607-0809-0a0b0c0d2b12": "Characteristic: TeLink: Over-The-Air (OTA) update: data",
+					"00010203-0405-0607-0809-0a0b0c0d2b13": "Characteristic: TeLink: Serial Port Profile: Pair",
+					"00010203-0405-0607-0809-0a0b0c0d2b14": "Characteristic: TeLink: Serial Port Profile: User-defined Data",
+					"00010203-0405-0607-0809-0a0b0c0d1913": "Characteristic: TeLink: Mesh Light OTA update",
+					"00010203-0405-0607-0809-0a0b0c0d1914": "Characteristic: TeLink: Mesh Light Pair",
+					"00010203-0405-0607-0809-0a0b0c0d1920": "Service: TeLink: TeLink Mesh (proprietary?)",
+					"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)"
+			}
+	},
 	"Texas Instruments GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Texas Instruments",
