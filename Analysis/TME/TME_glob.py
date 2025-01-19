@@ -12,6 +12,8 @@ custom_uuid128_hash = {}
 metadata_v2 = {}
 # clues globals hash indexed by UUID
 clues = {}
+# clues globals hash indexed by UUID, containing a UUID meant to be interpreted as a regex
+clues_regexed = {}
 # NamePrint data
 nameprint_data = {}
 

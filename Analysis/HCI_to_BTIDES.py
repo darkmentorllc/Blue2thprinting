@@ -51,31 +51,46 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
 def read_HCI(file_path):
     try:
         records = bts.parse(file_path)
-        for record in records:
+        total_records = len(records)
+        # for record in records:
+        for i, record in enumerate(records, start=0):
+            # Print progress every 1%
+            if total_records > 0 and i % max(1, total_records // 100) == 0:
+                qprint(f"Processed {i} out of {total_records} records ({(i / total_records) * 100:.0f}%)")
+
             try:
                 p = HCI_Hdr(record.data)
             except Exception as e:
-                print(f"Error forcing type on packet: {e}")
-                pass
+                print(f"Error forcing HCI_Hdr type on packet: {e}")
+                exit(1)
 
             #p.show()
             if p.haslayer(HCI_LE_Meta_Advertising_Reports):
                 #p.show()
+                data_exported = False
                 adv_report = p.getlayer(HCI_LE_Meta_Advertising_Reports)
                 for report in adv_report.fields['reports']:
                     adv_event_type = report.fields['type']
                     if adv_event_type == 0x00:  # ADV_IND
-                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_IND)
+                        if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_IND)):
+                            data_exported = True
                     elif adv_event_type == 0x01:  # ADV_DIRECT_IND
-                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)
+                        if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)):
+                            data_exported = True
                     elif adv_event_type == 0x02:  # ADV_SCAN_IND
-                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND)
+                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
+                            data_exported = True
                     elif adv_event_type == 0x03:  # ADV_NONCONN_IND
-                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND)
+                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
+                            data_exported = True
                     elif adv_event_type == 0x04:  # SCAN_RSP
-                        export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_SCAN_RSP)
-            if p.haslayer(HCI_LE_Meta_Extended_Advertising_Reports):
+                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
+                            data_exported = True
+                if (data_exported):
+                    continue
+            elif p.haslayer(HCI_LE_Meta_Extended_Advertising_Reports):
                 #p.show()
+                data_exported = False
                 adv_report = p.getlayer(HCI_LE_Meta_Extended_Advertising_Reports)
                 for report in adv_report.fields['reports']:
                     #adv_event_type = report.fields['type']
@@ -83,19 +98,38 @@ def read_HCI(file_path):
                         # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
                         # 0b0000 - ADV_NONCONN_IND
                         if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
-                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND)
+                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
+                                data_exported = True
                         # 0b0010 - ADV_SCAN_IND
                         elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
-                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND)
+                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
+                                data_exported = True
                         # 0b0011 - ADV_IND
                         if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
-                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND)
+                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND):
+                                data_exported = True
                         # 0b0101 - ADV_DIRECT_IND
                         elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
-                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)
+                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND):
+                                data_exported = True
                         # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
                         elif not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable']:
-                            export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP)
+                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
+                                data_exported = True
+                if (data_exported):
+                    continue
+            # elif not p.haslayer(HCI_Command_Hdr):
+            #     p.show()
+            #     pass
+            # # If we get here it means it wasn't an advertising packet, try ACL instead
+            # try:
+            #     p = HCI_ACL_Hdr(record.data)
+            # except Exception as e:
+            #     print(f"Error forcing HCI_ACL_Hdr type on packet: {e}")
+            #     exit(1)
+            # if p.haslayer(ATT_Hdr):
+            #     p.show()
+            #     pass
 
     #     return
     except Exception as e:

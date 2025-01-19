@@ -188,6 +188,7 @@ def main():
     device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
     device_group.add_argument('--UUID128-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
+    device_group.add_argument('--NOT-UUID128-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID128-regex, and then remove them from the final results.')
     device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
 
@@ -214,6 +215,8 @@ def main():
         query_object["NOT_company_regex"] = args.NOT_company_regex
     if args.UUID128_regex:
         query_object["UUID128_regex"] = args.UUID128_regex
+    if args.NOT_UUID128_regex:
+        query_object["NOT_UUID128_regex"] = args.NOT_UUID128_regex
     if args.UUID16_regex:
         query_object["UUID16_regex"] = args.UUID16_regex
     if args.MSD_regex:
