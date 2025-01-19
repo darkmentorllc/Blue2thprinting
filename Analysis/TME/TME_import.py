@@ -35,7 +35,8 @@ def import_private_metadata_v2():
 
 # This is data in CLUES format
 def import_CLUES():
-    global metadata_v2
+    global clues
+    global clues_regexed
     # Load JSON data from file
     json_file = './CLUES_Schema/CLUES_data.json'
     with open(json_file, 'r') as f:
@@ -44,13 +45,17 @@ def import_CLUES():
         # Remove dashes from UUIDs for consistency with later checking code
         for entry in data:
             entry['UUID'] = entry['UUID'].replace('-', '')
-        TME.TME_glob.clues = {entry['UUID']: entry for entry in data}
+            TME.TME_glob.clues[entry['UUID']] = entry
+            if("regex" in entry.keys()):
+                TME.TME_glob.clues_regexed[entry['UUID']] = entry
+#        TME.TME_glob.clues = {entry['UUID']: entry for entry in data}
 
 # Option to store private metadata in
 # this file. It will be consulted, but
 # doesn't need to be checked in
 def import_private_CLUES():
-    global metadata_v2
+    global clues
+    global clues_regexed
     json_file = './private/CLUES_data_private.json'
     try:
         with open(json_file, 'r') as f:

@@ -260,6 +260,9 @@ def handle_query(self, username, query_object):
     if("UUID128_regex" in query_object):
         args_array.append(f"--UUID128-regex")
         args_array.append(f"{query_object['UUID128_regex']}")
+    if("NOT_UUID128_regex" in query_object):
+        args_array.append(f"--NOT-UUID128-regex")
+        args_array.append(f"{query_object['NOT_UUID128_regex']}")
     if("UUID16_regex" in query_object):
         args_array.append(f"--UUID16-regex")
         args_array.append(f"{query_object['UUID16_regex']}")

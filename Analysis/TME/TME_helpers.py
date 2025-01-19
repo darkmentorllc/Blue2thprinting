@@ -505,6 +505,16 @@ def get_custom_uuid128_string(uuid128):
         return f"Custom UUID128: company: {entry['company']}, name: {name}"
     elif(uuid128_no_dash in TME.TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
         return f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}"
+    else:
+        for UUID_regex in TME.TME_glob.clues_regexed.keys():
+            replaced_UUID_regex = UUID_regex.replace('-','').replace('x','[0-9a-fA-F]')
+            if re.match(replaced_UUID_regex, uuid128_no_dash):
+                entry = TME.TME_glob.clues_regexed[UUID_regex]
+                if('UUID_name' in entry):
+                    name = entry['UUID_name']
+                else:
+                    name = "Unknown"
+                return f"Custom UUID128: company: {entry['company']}, name: {name}"
 
     # TODO: Add lookup in Metadata_v2
 
