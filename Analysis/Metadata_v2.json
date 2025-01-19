@@ -54,6 +54,46 @@
 		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1133148/External-Photos/External-Photos-3989912.pdf",
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1133148/Internal-Photos/Internal-Photos-3989913.pdf"
 	},
+	"Atmel GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Atmel Corporation",
+		"company_website": "https://microchip.com",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-01-19",
+		"evidence_URL": {
+				"ATWILC3000": "https://web.archive.org/web/20250119140358/https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/UserGuides/Atmel-42683-ATWINC3400-BLE-WiFi-Scan-and-Connect-Services-Guide_UserGuide.pdf"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-01-19",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+				"77880001-d229-11e4-8689-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Connect/Provisioning",
+				"fb8c0001-d224-11e4-85a1-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Scan"
+		}
+	},
+	"Microchip GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Microchip Technology Inc.",
+		"company_website": "https://microchip.com",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-01-19",
+		"evidence_URL": {
+				"UART": "https://web.archive.org/web/20240718111653/https://developerhelp.microchip.com/xwiki/bin/view/products/wireless-connectivity/ble/bm70/bm70-compact-demo-board-users-guide/transparent-uart/",
+				"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-01-19",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+				"49535343-fe7d-4ae5-8fa9-9fafd205e455": "Service: Microchip: Transparent UART",
+				"49535343-1e4d-4bd9-ba61-23c647249616": "Characteristic: Microchip: Transparent UART Transmit (TX)",
+				"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)"
+		}
+	},
 	"Nordic GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Nordic Semiconductor",
@@ -144,7 +184,7 @@
 	"TeLink GATTPrints": {
 			"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 			"2thprint_Chip_Maker": "Telink Semiconductor Co. Ltd",
-			"company_website": "https://telink-semi.cn//",
+			"company_website": "https://telink-semi.cn",
 			"submitted_by": "Xeno Kovah",
 			"submission_date": "2025-01-16",
 			"evidence_URL": {
