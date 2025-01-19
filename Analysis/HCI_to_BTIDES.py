@@ -47,10 +47,15 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
     else:
         return False # This is known to fire for things not yet supported like unprovisioned mesh beacons
 
+g_last_handle_to_bdaddr = {}
 
 def read_HCI(file_path):
     try:
-        records = bts.parse(file_path)
+        try:
+            records = bts.parse(file_path)
+        except Exception as e:
+            print(f"Error reading HCI log file: {e}")
+            exit(1)
         total_records = len(records)
         # for record in records:
         for i, record in enumerate(records, start=0):
@@ -64,7 +69,7 @@ def read_HCI(file_path):
                 print(f"Error forcing HCI_Hdr type on packet: {e}")
                 exit(1)
 
-            #p.show()
+            p.show()
             if p.haslayer(HCI_LE_Meta_Advertising_Reports):
                 #p.show()
                 data_exported = False
@@ -122,6 +127,26 @@ def read_HCI(file_path):
                                 data_exported = True
                 if (data_exported):
                     continue
+            elif p.haslayer(HCI_LE_Meta_Connection_Complete):
+                p.show()
+                event = p.getlayer(HCI_LE_Meta_Connection_Complete)
+                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
+                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
+                g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+                continue
+            elif p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
+                p.show()
+                event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
+                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
+                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
+                if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+                    features = event.fields['le_features']
+                    features_int = int.from_bytes(features, byteorder='little')
+                    #features_hex_str = ''.join(format(byte, '02x') for byte in reversed(features))
+                    (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
+                    data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
+                    export_LE_Features(bdaddr, bdaddr_type, data)
+                continue
             # elif not p.haslayer(HCI_Command_Hdr):
             #     p.show()
             #     pass
@@ -137,9 +162,9 @@ def read_HCI(file_path):
 
     #     return
     except Exception as e:
-        print(f"Error reading HCI log file: {e}")
-        pass
-        #exit(1)
+        print(f"Caught unhandled exception: {e}")
+        #pass
+        exit(1)
 
 
 def main():

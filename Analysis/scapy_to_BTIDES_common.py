@@ -21,6 +21,8 @@ from TME.TME_BTIDES_base import insert_std_optional_fields
 # Advertisement Channel
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
+# Feature response
+from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LL_FEATURE_RSP
 
 # Saved text for printing fields
 #    for field in btle_adv.fields_desc:
@@ -61,7 +63,7 @@ def if_verbose_insert_std_optional_fields(obj, packet):
     if(not TME.TME_glob.verbose_BTIDES):
         return
 
-    if(packet.haslayer(BTLE_RF)):
+    if(packet and packet.haslayer(BTLE_RF)):
         rf_fields = packet.getlayer(BTLE_RF)
         channel_freq = rf_fields.rf_channel * 2 + 2402 # Channel in MHz
         RSSI = rf_fields.signal
@@ -343,3 +345,17 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         return True
 
     return False
+
+# This is the main function which converts from Scapy data format to BTIDES
+def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
+    try:
+        data = ff_LL_FEATURE_RSP(
+            direction=in_data['direction'],
+            features=in_data['features']
+        )
+        if_verbose_insert_std_optional_fields(data, None)
+        BTIDES_export_LL_FEATURE_RSP(bdaddr=device_bdaddr, random=bdaddr_random, data=data)
+        return True
+    except Exception as e:
+        print(f"Error processing LL_FEATURE_RSP: {e}")
+        return False
