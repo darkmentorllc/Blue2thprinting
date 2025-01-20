@@ -3,9 +3,9 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-#import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_BTIDES_EIR import *
 
 ########################################
 # BTC EIR Device CID
@@ -35,5 +35,33 @@ def print_classic_EIR_CID_info(bdaddr):
 
         data = {"length": 9, "vendor_id_source": vendor_id_source, "vendor_id": vendor_id, "product_id": product_id, "version": product_version}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_DeviceID, data)
+
+    qprint("")
+
+########################################
+# BTC Page Scan Repetition Mode
+########################################
+
+# We don't really care about showing this to users... this is more just for BTIDES export
+def print_PSRM(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    eir_query = "SELECT page_scan_rep_mode FROM EIR_bdaddr_to_PSRM WHERE device_bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
+
+    if (len(eir_result)== 0 and len(le_result) == 0):
+        vprint("\tNo Page Scan Repetition Mode Data found.")
+        return
+    else:
+        qprint("\tPage Scan Repetition Mode Data:")
+
+    for (page_scan_rep_mode,) in eir_result:
+        # Export BTIDES data first
+        BTIDES_export_Page_Scan_Repetition_Mode(bdaddr, page_scan_rep_mode)
+
+        # Then human UI output
+        qprint(f"\t\tPage Scan Repetition Mode: 0x{page_scan_rep_mode:02x}")
+        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_PSRM)")
 
     qprint("")
