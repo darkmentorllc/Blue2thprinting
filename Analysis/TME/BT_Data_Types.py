@@ -23,6 +23,7 @@ type_AdvData_TxPower                            = 10
 type_AdvData_ClassOfDevice                      = 13
 type_AdvData_DeviceID                           = 16
 type_AdvData_PeripheralConnectionIntervalRange  = 18
+type_AdvData_UUID16ListServiceSolicitation      = 20
 type_AdvData_UUID16ServiceData                  = 22
 type_AdvData_LEBluetoothDeviceAddress           = 23
 type_AdvData_Appearance                         = 25

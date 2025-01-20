@@ -128,6 +128,13 @@ def ff_PeripheralConnectionIntervalRange(data):
         obj["type_str"] = "PeripheralConnectionIntervalRange"
     return obj
 
+# type 0x14
+def ff_UUID16ListServiceSolicitation(data):
+    obj = {"type": type_AdvData_UUID16ListServiceSolicitation, "length": data["length"], "UUID16List": data["UUID16List"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "UUID16ListServiceSolicitation"
+    return obj
+
 # type 0x16
 def ff_UUID16ServiceData(data):
     obj = {"type": type_AdvData_UUID16ServiceData, "length": data["length"], "UUID16": data["UUID16"], "service_data_hex_str": data["service_data_hex_str"]}
@@ -348,6 +355,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
     if(adv_data_type == type_AdvData_UUID128ServiceData):
         return ff_UUID128ServiceData(data)
 
+    if(adv_data_type == type_AdvData_UUID16ListServiceSolicitation):
+        return ff_UUID16ListServiceSolicitation(data)
+
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)
 
@@ -370,12 +380,12 @@ def pdu_type_to_BTIDES_type(type):
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
     # From "Event_Type values for legacy PDUs" in spec apparently
-    if(type == 16): return type_BTIDES_ADV_NONCONN_IND # 0x10 ADV_NONCONN_IND
-    if(type == 18): return type_BTIDES_ADV_SCAN_IND # 0x12 ADV_SCAN_IND
-    if(type == 19): return type_BTIDES_ADV_IND # 0x13 ADV_IND
-    if(type == 21): return type_BTIDES_ADV_DIRECT_IND # 0x15 ADV_DIRECT_IND
-    if(type == 26): return type_BTIDES_SCAN_RSP # 0x1A SCAN_RSP to ADV_SCAN_IND
-    if(type == 27): return type_BTIDES_SCAN_RSP # 0x1B SCAN_RSP to ADV_IND
+    if(type == 16): return type_BTIDES_ADV_NONCONN_IND  # 0x10 0b10000 ADV_NONCONN_IND
+    if(type == 18): return type_BTIDES_ADV_SCAN_IND     # 0x12 0b10010 ADV_SCAN_IND
+    if(type == 19): return type_BTIDES_ADV_IND          # 0x13 0b10011 ADV_IND
+    if(type == 21): return type_BTIDES_ADV_DIRECT_IND   # 0x15 0b10101 ADV_DIRECT_IND
+    if(type == 26): return type_BTIDES_SCAN_RSP         # 0x1A 0b11010 SCAN_RSP to ADV_SCAN_IND
+    if(type == 27): return type_BTIDES_SCAN_RSP         # 0x1B 0b11011 SCAN_RSP to ADV_IND
 
     # From manually inserting EIR type
     if(type == 50): return 50 # EIR
@@ -398,12 +408,12 @@ def pdu_type_to_BTIDES_type_str(type):
     # Values from older HCI logs where they had a different format for the event type which was a bitfield of scannable, connectable, etc
     # instead of just using the PDU type from the packet as they seem to in newer HCI logs
     # From "Event_Type values for legacy PDUs" in spec apparently
-    if(type == 16): return "ADV_NONCONN_IND" # 0x10 ADV_NONCONN_IND
-    if(type == 18): return "ADV_SCAN_IND" # 0x12 ADV_SCAN_IND
-    if(type == 19): return "ADV_IND" # 0x13 ADV_IND
-    if(type == 21): return "ADV_DIRECT_IND" # 0x15 ADV_DIRECT_IND
-    if(type == 26): return "SCAN_RSP" # 0x1A SCAN_RSP to ADV_SCAN_IND
-    if(type == 27): return "SCAN_RSP" # 0x1B SCAN_RSP to ADV_IND
+    if(type == 16): return "ADV_NONCONN_IND"    # 0x10 0b10000 ADV_NONCONN_IND
+    if(type == 18): return "ADV_SCAN_IND"       # 0x12 0b10010 ADV_SCAN_IND
+    if(type == 19): return "ADV_IND"            # 0x13 0b10011 ADV_IND
+    if(type == 21): return "ADV_DIRECT_IND"     # 0x15 0b10101 ADV_DIRECT_IND
+    if(type == 26): return "SCAN_RSP"           # 0x1A 0b11010 SCAN_RSP to ADV_SCAN_IND
+    if(type == 27): return "SCAN_RSP"           # 0x1B 0b11011 SCAN_RSP to ADV_IND
 
     # From manually inserting EIR type
     if(type == 50): return "EIR"
