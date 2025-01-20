@@ -84,7 +84,7 @@ def print_UniqueIDReport(bdaddr):
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
-        eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name3 WHERE device_bdaddr = %s"
+        eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
         eir_result = execute_query(eir_query, values)
         for (name_hex_str,) in eir_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -92,7 +92,7 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name2 WHERE device_bdaddr = %s"
+        rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
         rsp_result = execute_query(rsp_query, values)
         for (name_hex_str,) in rsp_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')

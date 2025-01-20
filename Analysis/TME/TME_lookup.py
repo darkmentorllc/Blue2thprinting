@@ -37,20 +37,20 @@ def get_bdaddrs_by_name_regex(nameregex):
     bdaddrs = []
 
     values = (nameregex,)
-    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name3 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name3")
+    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for RSP_bdaddr_to_name2 table
-    rsp_query = "SELECT device_bdaddr FROM RSP_bdaddr_to_name2 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = "SELECT device_bdaddr FROM RSP_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     rsp_result = execute_query(rsp_query, values)
     for (bdaddr,) in rsp_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name2")
+    qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name4 table
@@ -95,7 +95,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0 "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0 "
+        "    SELECT device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         "    UNION ALL "
@@ -119,11 +119,11 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_DevID "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM EIR_bdaddr_to_flags2 "
+        "    SELECT device_bdaddr FROM EIR_bdaddr_to_flags "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM EIR_bdaddr_to_name3 "
+        "    SELECT device_bdaddr FROM EIR_bdaddr_to_name "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_PSRM "
         "    UNION ALL "
@@ -155,7 +155,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT CONVERT(device_bdaddr USING utf8) FROM LMP_VERSION_RES "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services2 "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services "
         ") AS t "
         "WHERE t.device_bdaddr REGEXP regex.bdaddr_regex;"
     )
@@ -330,7 +330,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_flags2 WHERE bdaddr_random = 0
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0
                 UNION ALL
@@ -354,11 +354,11 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_DevID
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_flags2
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_flags
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_MSD
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_name3
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_name
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_PSRM
                 UNION ALL
@@ -390,7 +390,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LMP_VERSION_RES
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM GATT_services2
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM GATT_services
             ) AS t
             WHERE t.device_bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');
             """
@@ -464,7 +464,7 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_service_query = "SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP %s"
+    gatt_service_query = "SELECT device_bdaddr FROM GATT_services WHERE UUID REGEXP %s"
     gatt_service_result = execute_query(gatt_service_query, values)
     for (bdaddr,) in gatt_service_result:
         bdaddr_hash[bdaddr] = 1
@@ -490,11 +490,11 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
 
         values = (uuid128regex_with_dashes,)
 
-        gatt_service_query = "SELECT device_bdaddr FROM GATT_services2 WHERE UUID REGEXP %s"
+        gatt_service_query = "SELECT device_bdaddr FROM GATT_services WHERE UUID REGEXP %s"
         gatt_service_result = execute_query(gatt_service_query, values)
         for (bdaddr,) in gatt_service_result:
             bdaddr_hash[bdaddr] = 1
-        qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services2 by adding dashes to regex")
+        qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services by adding dashes to regex")
         qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
         gatt_char_query = "SELECT device_bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
