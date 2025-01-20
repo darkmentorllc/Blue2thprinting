@@ -1,4 +1,4 @@
-# Script to process /tmp/LL_LENGTHs_uniq.csv created by pcap_fill_BLE2th_LL_LENGTHs.sh
+# Script to process /tmp/LL_LENGTHs_uniq.csv created by pcap_fill_LL_LENGTHs.sh
 
 ##########################################
 # Created by Xeno Kovah
@@ -81,7 +81,7 @@ for key, value in result_dict_LENGTH_RSP.items():
     print(f"{key}: {value}")
 '''
 
-# Write the CSV lines to a file appropriate for direct import to mysql BLE2th_LL_LENGTHs table via a CLI mysql invocation
+# Write the CSV lines to a file appropriate for direct import to mysql LL_LENGTHs table via a CLI mysql invocation
 with open('/tmp/LL_LENGTHs_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 

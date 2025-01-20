@@ -84,13 +84,13 @@ def print_BTC_2thprint(bdaddr):
 
     values = (bdaddr,)
 
-    version_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    version_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
     version_result = execute_query(version_query, values)
 
-    features_query = "SELECT page, features FROM BTC2th_LMP_features_res WHERE device_bdaddr = %s"
+    features_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE device_bdaddr = %s"
     features_result = execute_query(features_query, values)
 
-    name_query = "SELECT device_name FROM BTC2th_LMP_name_res WHERE device_bdaddr = %s"
+    name_query = "SELECT device_name FROM LMP_NAME_RES WHERE device_bdaddr = %s"
     name_result = execute_query(name_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
@@ -107,12 +107,12 @@ def print_BTC_2thprint(bdaddr):
     for page, features in features_result:
         qprint("\t\tBTC LMP Features: 0x%016x" % features)
         decode_BTC_features(page, features)
-        BTIDES_export_LMP_FEATURES_RSP(bdaddr, features)
+        BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
 
     for (device_name,) in name_result:
         qprint(f"\t\tBTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
-        # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RSP fragments (it's defragmented)
+        # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RES fragments (it's defragmented)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):

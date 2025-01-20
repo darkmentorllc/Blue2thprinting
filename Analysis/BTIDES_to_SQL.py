@@ -450,7 +450,7 @@ def parse_AdvChanArray(entry):
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
     values = (random, bdaddr, unknown_opcode)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -459,7 +459,7 @@ def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     device_BT_CID = ll_entry["company_id"]
     ll_sub_version = ll_entry["subversion"]
     values = (random, bdaddr, ll_version, device_BT_CID, ll_sub_version)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -468,7 +468,7 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     opcode = ll_entry["opcode"]
     features = int(ll_entry["le_features_hex_str"], 16)
     values = (random, bdaddr, opcode, features)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -477,7 +477,7 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
 def import_LL_PING_RSP(bdaddr, random, ll_entry):
     #opcode = ll_entry["opcode"]
     values = (random, bdaddr, 1)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -489,7 +489,7 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     max_tx_octets = ll_entry["max_tx_octets"]
     max_tx_time = ll_entry["max_tx_time"]
     values = (random, bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -500,7 +500,7 @@ def import_LL_PHYs(bdaddr, random, ll_entry):
     tx_phys = ll_entry["TX_PHYS"]
     rx_phys = ll_entry["RX_PHYS"]
     values = (random, bdaddr, tx_phys, rx_phys)
-    insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -541,20 +541,20 @@ def parse_LLArray(entry):
 # BTIDES_LMP.json information
 ###################################
 
-def import_LMP_VERSION_RSP(bdaddr, lmp_entry):
+def import_LMP_VERSION_RES(bdaddr, lmp_entry):
     lmp_version = lmp_entry["version"]
     device_BT_CID = lmp_entry["company_id"]
     lmp_sub_version = lmp_entry["subversion"]
     values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
-    insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LMP_VERSION_RES (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
-def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
-    #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename BTC2th_LMP_features_res to BTC2th_LMP_FEATURES
+def import_LMP_FEATURES_RES(bdaddr, lmp_entry):
+    #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename LMP_FEATURES_RES to BTC2th_LMP_FEATURES
     features = int(lmp_entry["lmp_features_hex_str"], 16)
     values = (bdaddr, 0, features)
-    insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES (%s, %s, %s);"
+    insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (device_bdaddr, page, features) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -571,10 +571,10 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
-        if(has_known_LL_packet(type_opcode_LMP_VERSION_RSP, lmp_entry)):
-            import_LMP_VERSION_RSP(bdaddr, lmp_entry)
-        if(has_known_LL_packet(type_opcode_LMP_FEATURES_RSP, lmp_entry)):
-            import_LMP_FEATURES_RSP(bdaddr, lmp_entry)
+        if(has_known_LL_packet(type_opcode_LMP_VERSION_RES, lmp_entry)):
+            import_LMP_VERSION_RES(bdaddr, lmp_entry)
+        if(has_known_LL_packet(type_opcode_LMP_FEATURES_RES, lmp_entry)):
+            import_LMP_FEATURES_RES(bdaddr, lmp_entry)
 
 ###################################
 # BTIDES_HCI.json information
