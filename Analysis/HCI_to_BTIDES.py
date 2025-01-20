@@ -103,7 +103,7 @@ def read_HCI(file_path):
                 print(f"Error forcing HCI_Hdr type on packet: {e}")
                 exit(1)
 
-            p.show()
+            #p.show()
             if p.haslayer(HCI_LE_Meta_Advertising_Reports):
                 #p.show()
                 data_exported = False
@@ -161,25 +161,27 @@ def read_HCI(file_path):
                                 data_exported = True
                 if (data_exported):
                     continue
+            # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
+            # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
             elif p.haslayer(HCI_LE_Meta_Connection_Complete):
-                p.show()
+                #p.show()
                 event = p.getlayer(HCI_LE_Meta_Connection_Complete)
-                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
-                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
                 g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
                 continue
             elif p.haslayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1):
-                p.show()
+                #p.show()
                 event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
-                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
-                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
                 g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
                 continue
+            elif p.haslayer(HCI_Event_Connection_Complete):
+                #p.show()
+                event = p.getlayer(HCI_Event_Connection_Complete)
+                if(event.fields['status'] == 0):
+                    g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
+                continue
             elif p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
-                p.show()
+                #p.show()
                 event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
-                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
-                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
                 if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
                     features = event.fields['le_features']
                     features_int = int.from_bytes(features, byteorder='little')
@@ -187,28 +189,27 @@ def read_HCI(file_path):
                     data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
                     export_LE_Features(bdaddr, bdaddr_type, data)
                 continue
-            if p.haslayer(ATT_Hdr):
-                print(record)
+            elif p.haslayer(HCI_Event_Remote_Name_Request_Complete):
+                #p.show()
+                event = p.getlayer(HCI_Event_Remote_Name_Request_Complete)
+                # Not going to capture anything other than status = Success (0) for now
+                # (FWIW the most common alt status is 0x04 which is timeout, but that doesn't feel useful to capture
+                # because it could just mean that something was too far away and didn't hear us.)
+                if(event.fields['status'] == 0):
+                    name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
+                    remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
+                    #remote_name_hex_str = ''.join(format(byte, '02x') for byte in event.fields['remote_name'])
+                    export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
+                continue
+            elif p.haslayer(ATT_Hdr):
+                #print(record)
                 if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
                     direction = type_BTIDES_direction_C2P
                 else:
                     direction = type_BTIDES_direction_P2C
                 if(export_to_ATTArray(p, direction)):
                     continue
-            # elif not p.haslayer(HCI_Command_Hdr):
-            #     p.show()
-            #     pass
-            # # If we get here it means it wasn't an advertising packet, try ACL instead
-            # try:
-            #     p = HCI_ACL_Hdr(record.data)
-            # except Exception as e:
-            #     print(f"Error forcing HCI_ACL_Hdr type on packet: {e}")
-            #     exit(1)
-            # if p.haslayer(ATT_Hdr):
-            #     p.show()
-            #     pass
 
-    #     return
     except Exception as e:
         print(f"Caught unhandled exception: {e}")
         #pass

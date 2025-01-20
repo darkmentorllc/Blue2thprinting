@@ -185,10 +185,10 @@ def import_AdvData_Names(bdaddr, random, db_type, leaf):
     if(le_evt_type == 50):
         # EIR
         values = (bdaddr, device_name_type, name_hex_str)
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name2 (device_bdaddr, device_name_type, name_hex_str) VALUES (%s, %s, %s);"
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name3 (device_bdaddr, device_name_type, name_hex_str) VALUES (%s, %s, %s);"
         execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name3 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, name_hex_str) VALUES (%s, %s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name4 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, name_hex_str) VALUES (%s, %s, %s, %s, %s);"
         values = (bdaddr, random, le_evt_type, device_name_type, name_hex_str)
         execute_insert(le_insert, values)
 
@@ -555,9 +555,9 @@ def parse_LMPArray(entry):
 ###################################
 
 def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
-    device_name = hci_entry["remote_name"]
+    device_name = hci_entry["remote_name_hex_str"]
     values = (bdaddr, device_name)
-    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (device_bdaddr, device_name) VALUES (%s, %s);"
+    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name2 (device_bdaddr, name_hex_str) VALUES (%s, %s);"
     execute_insert(insert, values)
 
 event_code_HCI_Remote_Name_Request_Complete = 7
