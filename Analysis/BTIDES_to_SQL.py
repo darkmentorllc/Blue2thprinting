@@ -551,16 +551,30 @@ def import_LMP_VERSION_RES(bdaddr, lmp_entry):
 
 
 def import_LMP_FEATURES_RES(bdaddr, lmp_entry):
-    #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename LMP_FEATURES_RES to BTC2th_LMP_FEATURES
     features = int(lmp_entry["lmp_features_hex_str"], 16)
     values = (bdaddr, 0, features)
     insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (device_bdaddr, page, features) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
-def has_known_LMP_packet(opcode, lmp_entry):
+def import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry):
+    features = int(lmp_entry["lmp_features_hex_str"], 16)
+    page = lmp_entry["page"]
+    max_page = lmp_entry["max_page"]
+    values = (bdaddr, page, max_page, features)
+    insert = f"INSERT IGNORE INTO LMP_FEATURES_RES_EXT (device_bdaddr, page, max_page, features) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
-        return True
+        if(extended_opcode):
+            if("extended_opcode" in lmp_entry.keys() and lmp_entry["extended_opcode"] == extended_opcode):
+                return True
+            else:
+                return False
+        else:
+            return True
     else:
         return False
 
@@ -571,10 +585,14 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
-        if(has_known_LL_packet(type_opcode_LMP_VERSION_RES, lmp_entry)):
+        if(has_known_LMP_packet(type_opcode_LMP_VERSION_RES, lmp_entry)):
             import_LMP_VERSION_RES(bdaddr, lmp_entry)
-        if(has_known_LL_packet(type_opcode_LMP_FEATURES_RES, lmp_entry)):
+            continue
+        if(has_known_LMP_packet(type_opcode_LMP_FEATURES_RES, lmp_entry)):
             import_LMP_FEATURES_RES(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_packet(type_opcode_LMP_FEATURES_RES_EXT, lmp_entry, extended_opcode=type_extended_opcode_LMP_FEATURES_RES_EXT)):
+            import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
 
 ###################################
 # BTIDES_HCI.json information

@@ -210,6 +210,18 @@ def read_HCI(file_path):
                     data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
                     export_LE_Features(bdaddr, bdaddr_type, data)
                 continue
+            elif p.haslayer(HCI_Event_Read_Remote_Extended_Features_Complete):
+                #p.show()
+                event = p.getlayer(HCI_Event_Read_Remote_Extended_Features_Complete)
+                if(event.fields['handle'] in g_last_handle_to_bdaddr.keys() and event.fields['status'] == 0):
+                    #features = event.fields['extended_features']
+                    features_int = event.fields['extended_features']# int.from_bytes(features, byteorder='little')
+                    page = event.fields['page']
+                    max_page = event.fields['max_page']
+                    (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
+                    data = {"bdaddr": bdaddr, "page": page, "max_page": max_page, "features": features_int}
+                    export_LMP_Features_Ext(bdaddr, data)
+                continue
             elif p.haslayer(HCI_Event_Remote_Name_Request_Complete):
                 #p.show()
                 event = p.getlayer(HCI_Event_Remote_Name_Request_Complete)
