@@ -222,7 +222,7 @@ def process_features(p):
         #p.show()
         event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
         if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
-            features_int = event.fields['le_features'].value
+            features_int = event.fields['le_features']
             (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
             data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
             export_LE_Features(bdaddr, bdaddr_type, data)
