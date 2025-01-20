@@ -194,7 +194,7 @@ def import_AdvData_Names(bdaddr, random, db_type, leaf):
         eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_name (device_bdaddr, device_name_type, name_hex_str) VALUES (%s, %s, %s);"
         execute_insert(eir_insert, values)
     else:
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name4 (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, name_hex_str) VALUES (%s, %s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_name (device_bdaddr, bdaddr_random, le_evt_type, device_name_type, name_hex_str) VALUES (%s, %s, %s, %s, %s);"
         values = (bdaddr, random, le_evt_type, device_name_type, name_hex_str)
         execute_insert(le_insert, values)
 

@@ -53,12 +53,12 @@ def get_bdaddrs_by_name_regex(nameregex):
     qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for LE_bdaddr_to_name4 table
-    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name4 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    # Query for LE_bdaddr_to_name table
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name4")
+    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -99,7 +99,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM LE_bdaddr_to_name4 WHERE bdaddr_random = 0 "
+        "    SELECT device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
         "    UNION ALL "
@@ -334,7 +334,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_name4 WHERE bdaddr_random = 0
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0
                 UNION ALL
