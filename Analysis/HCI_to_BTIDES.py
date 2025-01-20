@@ -88,6 +88,163 @@ def export_to_ATTArray(packet, direction):
     if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=direction)):
         return True
 
+def process_connections(p):
+    # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
+    # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
+    if p.haslayer(HCI_LE_Meta_Connection_Complete):
+        #p.show()
+        event = p.getlayer(HCI_LE_Meta_Connection_Complete)
+        g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+        return True
+    elif p.haslayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1):
+        #p.show()
+        event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
+        g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+        return True
+    elif p.haslayer(HCI_Event_Connection_Complete):
+        #p.show()
+        event = p.getlayer(HCI_Event_Connection_Complete)
+        if(event.fields['status'] == 0):
+            g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
+        return True
+
+    return False
+
+def process_advertisements(p):
+    if p.haslayer(HCI_LE_Meta_Advertising_Reports):
+        #p.show()
+        data_exported = False
+        adv_report = p.getlayer(HCI_LE_Meta_Advertising_Reports)
+        for report in adv_report.fields['reports']:
+            adv_event_type = report.fields['type']
+            if adv_event_type == 0x00:  # ADV_IND
+                if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_IND)):
+                    data_exported = True
+            elif adv_event_type == 0x01:  # ADV_DIRECT_IND
+                if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)):
+                    data_exported = True
+            elif adv_event_type == 0x02:  # ADV_SCAN_IND
+                if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
+                    data_exported = True
+            elif adv_event_type == 0x03:  # ADV_NONCONN_IND
+                if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
+                    data_exported = True
+            elif adv_event_type == 0x04:  # SCAN_RSP
+                if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
+                    data_exported = True
+            if (data_exported):
+                return True
+    elif p.haslayer(HCI_LE_Meta_Extended_Advertising_Reports):
+        #p.show()
+        data_exported = False
+        adv_report = p.getlayer(HCI_LE_Meta_Extended_Advertising_Reports)
+        for report in adv_report.fields['reports']:
+            #adv_event_type = report.fields['type']
+            if(report.fields['legacy']):
+                # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
+                # 0b0000 - ADV_NONCONN_IND
+                if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
+                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
+                        data_exported = True
+                        continue
+                # 0b0010 - ADV_SCAN_IND
+                elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
+                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
+                        data_exported = True
+                        continue
+                # 0b0011 - ADV_IND
+                if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
+                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND):
+                        data_exported = True
+                        continue
+                # 0b0101 - ADV_DIRECT_IND
+                elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
+                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND):
+                        data_exported = True
+                        continue
+                # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
+                elif report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable']:
+                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
+                        data_exported = True
+        if (data_exported):
+            return True
+    elif p.haslayer(HCI_Event_Extended_Inquiry_Result):
+        #p.show()
+        inq_result = p.getlayer(HCI_Event_Extended_Inquiry_Result)
+        export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
+        CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
+        export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
+        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
+        if(inq_result.fields['num_response'] > 1):
+            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
+            exit(1)
+        if (p.haslayer(EIR_Hdr)):
+            eir = p.getlayer(EIR_Hdr)
+            if eir.fields['len'] != 0:
+                export_AdvChannelData(p, HCI_Event_Extended_Inquiry_Result, type_BTIDES_EIR)
+        return True
+
+    return False
+
+def process_features(p):
+    if p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
+        #p.show()
+        event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
+        if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+            features_int = event.fields['le_features'].value
+            (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
+            data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
+            export_LE_Features(bdaddr, bdaddr_type, data)
+        return True
+    elif p.haslayer(HCI_Event_Read_Remote_Extended_Features_Complete):
+        #p.show()
+        event = p.getlayer(HCI_Event_Read_Remote_Extended_Features_Complete)
+        if(event.fields['handle'] in g_last_handle_to_bdaddr.keys() and event.fields['status'] == 0):
+            features_int = event.fields['extended_features']
+            page = event.fields['page']
+            max_page = event.fields['max_page']
+            (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
+            data = {"bdaddr": bdaddr, "page": page, "max_page": max_page, "features": features_int}
+            export_LMP_Features_Ext(bdaddr, data)
+        return True
+    elif p.haslayer(HCI_Event_Remote_Host_Supported_Features_Notification):
+        #p.show()
+        event = p.getlayer(HCI_Event_Remote_Host_Supported_Features_Notification)
+#        features = event.fields['lmp_features']
+        features_int = event.fields['lmp_features'].value
+        bdaddr = event.fields['bd_addr']
+        data = {"bdaddr": bdaddr, "page": 0, "features": features_int}
+        export_LMP_Features(bdaddr, data)
+        return True
+
+    return False
+
+def process_names(p):
+    if p.haslayer(HCI_Event_Remote_Name_Request_Complete):
+        #p.show()
+        event = p.getlayer(HCI_Event_Remote_Name_Request_Complete)
+        # Not going to capture anything other than status = Success (0) for now
+        # (FWIW the most common alt status is 0x04 which is timeout, but that doesn't feel useful to capture
+        # because it could just mean that something was too far away and didn't hear us.)
+        if(event.fields['status'] == 0):
+            name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
+            remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
+            #remote_name_hex_str = ''.join(format(byte, '02x') for byte in event.fields['remote_name'])
+            export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
+            return True
+
+    return False
+
+def process_ATT(p, record):
+    if p.haslayer(ATT_Hdr):
+        #print(record)
+        if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
+            direction = type_BTIDES_direction_C2P
+        else:
+            direction = type_BTIDES_direction_P2C
+        if(export_to_ATTArray(p, direction)):
+            return True
+    return False
 
 def read_HCI(file_path):
     try:
@@ -110,138 +267,16 @@ def read_HCI(file_path):
                 exit(1)
 
             #p.show()
-            if p.haslayer(HCI_LE_Meta_Advertising_Reports):
-                #p.show()
-                data_exported = False
-                adv_report = p.getlayer(HCI_LE_Meta_Advertising_Reports)
-                for report in adv_report.fields['reports']:
-                    adv_event_type = report.fields['type']
-                    if adv_event_type == 0x00:  # ADV_IND
-                        if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_IND)):
-                            data_exported = True
-                    elif adv_event_type == 0x01:  # ADV_DIRECT_IND
-                        if(export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND)):
-                            data_exported = True
-                    elif adv_event_type == 0x02:  # ADV_SCAN_IND
-                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
-                            data_exported = True
-                    elif adv_event_type == 0x03:  # ADV_NONCONN_IND
-                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
-                            data_exported = True
-                    elif adv_event_type == 0x04:  # SCAN_RSP
-                        if export_AdvChannelData(p, HCI_LE_Meta_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
-                            data_exported = True
-                if (data_exported):
-                    continue
-            elif p.haslayer(HCI_LE_Meta_Extended_Advertising_Reports):
-                #p.show()
-                data_exported = False
-                adv_report = p.getlayer(HCI_LE_Meta_Extended_Advertising_Reports)
-                for report in adv_report.fields['reports']:
-                    #adv_event_type = report.fields['type']
-                    if(report.fields['legacy']):
-                        # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
-                        # 0b0000 - ADV_NONCONN_IND
-                        if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
-                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
-                                data_exported = True
-                                continue
-                        # 0b0010 - ADV_SCAN_IND
-                        elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
-                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
-                                data_exported = True
-                                continue
-                        # 0b0011 - ADV_IND
-                        if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
-                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND):
-                                data_exported = True
-                                continue
-                        # 0b0101 - ADV_DIRECT_IND
-                        elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
-                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND):
-                                data_exported = True
-                                continue
-                        # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
-                        elif report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable']:
-                            if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
-                                data_exported = True
-                if (data_exported):
-                    continue
-            elif p.haslayer(HCI_Event_Extended_Inquiry_Result):
-                #p.show()
-                inq_result = p.getlayer(HCI_Event_Extended_Inquiry_Result)
-                export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
-                CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
-                export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
-                # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
-                if(inq_result.fields['num_response'] > 1):
-                    print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
-                    exit(1)
-                if (p.haslayer(EIR_Hdr)):
-                    eir = p.getlayer(EIR_Hdr)
-                    if eir.fields['len'] != 0:
-                        export_AdvChannelData(p, HCI_Event_Extended_Inquiry_Result, type_BTIDES_EIR)
+            if(process_connections(p)):
                 continue
-            # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
-            # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
-            elif p.haslayer(HCI_LE_Meta_Connection_Complete):
-                #p.show()
-                event = p.getlayer(HCI_LE_Meta_Connection_Complete)
-                g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+            elif(process_advertisements(p)):
                 continue
-            elif p.haslayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1):
-                #p.show()
-                event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
-                g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+            elif(process_features(p)):
                 continue
-            elif p.haslayer(HCI_Event_Connection_Complete):
-                #p.show()
-                event = p.getlayer(HCI_Event_Connection_Complete)
-                if(event.fields['status'] == 0):
-                    g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
+            elif(process_names(p)):
                 continue
-            elif p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
-                #p.show()
-                event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
-                if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
-                    features = event.fields['le_features']
-                    features_int = int.from_bytes(features, byteorder='little')
-                    (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
-                    data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
-                    export_LE_Features(bdaddr, bdaddr_type, data)
+            elif(process_ATT(p, record)):
                 continue
-            elif p.haslayer(HCI_Event_Read_Remote_Extended_Features_Complete):
-                #p.show()
-                event = p.getlayer(HCI_Event_Read_Remote_Extended_Features_Complete)
-                if(event.fields['handle'] in g_last_handle_to_bdaddr.keys() and event.fields['status'] == 0):
-                    #features = event.fields['extended_features']
-                    features_int = event.fields['extended_features']# int.from_bytes(features, byteorder='little')
-                    page = event.fields['page']
-                    max_page = event.fields['max_page']
-                    (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
-                    data = {"bdaddr": bdaddr, "page": page, "max_page": max_page, "features": features_int}
-                    export_LMP_Features_Ext(bdaddr, data)
-                continue
-            elif p.haslayer(HCI_Event_Remote_Name_Request_Complete):
-                #p.show()
-                event = p.getlayer(HCI_Event_Remote_Name_Request_Complete)
-                # Not going to capture anything other than status = Success (0) for now
-                # (FWIW the most common alt status is 0x04 which is timeout, but that doesn't feel useful to capture
-                # because it could just mean that something was too far away and didn't hear us.)
-                if(event.fields['status'] == 0):
-                    name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
-                    remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
-                    #remote_name_hex_str = ''.join(format(byte, '02x') for byte in event.fields['remote_name'])
-                    export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
-                continue
-            elif p.haslayer(ATT_Hdr):
-                #print(record)
-                if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
-                    direction = type_BTIDES_direction_C2P
-                else:
-                    direction = type_BTIDES_direction_P2C
-                if(export_to_ATTArray(p, direction)):
-                    continue
 
     except Exception as e:
         print(f"Caught unhandled exception: {e}")
