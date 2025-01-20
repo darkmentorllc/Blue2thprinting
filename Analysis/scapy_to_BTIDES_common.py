@@ -29,7 +29,8 @@ from TME.TME_BTIDES_HCI import *
 from TME.TME_BTIDES_ATT import *
 # EIR
 from TME.TME_BTIDES_EIR import *
-
+# LMP
+from TME.TME_BTIDES_LMP import *
 
 # We need to keep state between ATT_READ_BY_GROUP_TYPE_REQ and ATT_READ_BY_GROUP_TYPE_RSP
 # in order to insert GATT service information into the BTIDES JSON
@@ -632,6 +633,14 @@ def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
         return True
     except Exception as e:
         print(f"Error processing LL_FEATURE_RSP: {e}")
+        return False
+
+def export_LMP_Features_Ext(device_bdaddr, in_data):
+    try:
+        BTIDES_export_LMP_FEATURES_RES_EXT(device_bdaddr, in_data['page'], in_data['max_page'], in_data['features'])
+        return True
+    except Exception as e:
+        print(f"Error processing LMP_FEATURES_RES_EXT: {e}")
         return False
 
 ######################################################################

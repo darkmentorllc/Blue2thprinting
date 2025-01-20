@@ -62,6 +62,9 @@ type_opcode_LL_PHY_RSP                   = 23
 ## LMP PDU types defined in BT spec
 type_opcode_LMP_VERSION_RES             = 38
 type_opcode_LMP_FEATURES_RES            = 40
+type_opcode_LMP_FEATURES_RES_EXT        = 127
+
+type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 
 ll_ctrl_pdu_opcodes_to_strings = {
     2: "LL_TERMINATE_IND",
