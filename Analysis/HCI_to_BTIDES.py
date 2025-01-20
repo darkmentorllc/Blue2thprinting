@@ -31,6 +31,8 @@ from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
+# Used to keep track of state between packets
+g_last_handle_to_bdaddr = {}
 
 def export_AdvChannelData(packet, scapy_type, adv_type):
     ble_adv_fields = packet.getlayer(scapy_type).fields
@@ -47,7 +49,39 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
     else:
         return False # This is known to fire for things not yet supported like unprovisioned mesh beacons
 
-g_last_handle_to_bdaddr = {}
+
+def export_to_ATTArray(packet, direction):
+
+    acl = packet.getlayer(HCI_ACL_Hdr)
+
+    if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+        (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[acl.fields['handle']]
+        connect_ind_obj = ff_CONNECT_IND(peripheral_bdaddr=bdaddr, peripheral_bdaddr_rand=bdaddr_type)
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    # To convert ATT data into a GATT hierarchy requires us to statefully
+    # remember information between packets (i.e. which UUID corresponds to which handle)
+    if(export_ATT_Error_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Exchange_MTU_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Find_Information_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Group_Type_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+
 
 def read_HCI(file_path):
     try:
@@ -134,6 +168,13 @@ def read_HCI(file_path):
                 # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
                 g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
                 continue
+            elif p.haslayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1):
+                p.show()
+                event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
+                # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
+                # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
+                g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+                continue
             elif p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
                 p.show()
                 event = p.getlayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete)
@@ -142,11 +183,18 @@ def read_HCI(file_path):
                 if(event.fields['handle'] in g_last_handle_to_bdaddr.keys()):
                     features = event.fields['le_features']
                     features_int = int.from_bytes(features, byteorder='little')
-                    #features_hex_str = ''.join(format(byte, '02x') for byte in reversed(features))
                     (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
                     data = {"direction": type_BTIDES_direction_P2C, "bdaddr": bdaddr, "bdaddr_type": bdaddr_type, "features": features_int}
                     export_LE_Features(bdaddr, bdaddr_type, data)
                 continue
+            if p.haslayer(ATT_Hdr):
+                print(record)
+                if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
+                    direction = type_BTIDES_direction_C2P
+                else:
+                    direction = type_BTIDES_direction_P2C
+                if(export_to_ATTArray(p, direction)):
+                    continue
             # elif not p.haslayer(HCI_Command_Hdr):
             #     p.show()
             #     pass
