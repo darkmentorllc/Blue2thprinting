@@ -126,7 +126,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_flags2
+    FROM EIR_bdaddr_to_flags
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
@@ -134,7 +134,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM EIR_bdaddr_to_name3
+    FROM EIR_bdaddr_to_name
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
@@ -219,7 +219,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_flags2
+    FROM LE_bdaddr_to_flags
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -303,7 +303,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM GATT_services2
+    FROM GATT_services
     WHERE device_bdaddr = %s and device_bdaddr_type = 1;
     """
 
@@ -626,11 +626,11 @@ def print_device_names(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    # Query for EIR_bdaddr_to_name3 table
-    eir_query = "SELECT device_name_type, name_hex_str FROM EIR_bdaddr_to_name3 WHERE device_bdaddr = %s"
+    # Query for EIR_bdaddr_to_name table
+    eir_query = "SELECT device_name_type, name_hex_str FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    # Query for RSP_bdaddr_to_name2 table
-    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name2 WHERE device_bdaddr = %s"
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
     rsp_result = execute_query(rsp_query, values)
     # Query for LE_bdaddr_to_name4 table
     le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name4 WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
@@ -643,7 +643,7 @@ def print_device_names(bdaddr, nametype):
     for device_name_type, name_hex_str in eir_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name3)")
+        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
@@ -653,7 +653,7 @@ def print_device_names(bdaddr, nametype):
     for name_hex_str, in rsp_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        qprint("\t\tIn BT Classic Data (RSP_bdaddr_to_name2)")
+        qprint("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 

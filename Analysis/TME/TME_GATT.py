@@ -165,7 +165,7 @@ def characteristic_value_decoding(indent, UUID128, bytes):
 def device_has_GATT_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services2 WHERE device_bdaddr = %s";
+    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services WHERE device_bdaddr = %s";
     GATT_services_result = execute_query(query, values)
 
     query = "SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE device_bdaddr = %s";
@@ -205,7 +205,7 @@ def print_associated_android_package_names(type, indent, UUID128):
 def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services2 WHERE device_bdaddr = %s";
+    query = "SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE device_bdaddr = %s";
     GATT_services_result = execute_query(query, values)
     for device_bdaddr_type, service_type, begin_handle, end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)

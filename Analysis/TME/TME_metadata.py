@@ -30,14 +30,14 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     # First see if we have a name for this device
     we_have_a_name = False
 
-    # Query for EIR_bdaddr_to_name3 table
+    # Query for EIR_bdaddr_to_name table
     values = (bdaddr,)
-    eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name3 WHERE device_bdaddr = %s"
+    eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
     if(len(eir_result) > 0): we_have_a_name = True
 
-    # Query for RSP_bdaddr_to_name2 table
-    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name2 WHERE device_bdaddr = %s"
+    # Query for RSP_bdaddr_to_name table
+    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
     rsp_result = execute_query(rsp_query, values)
     if(len(rsp_result) > 0): we_have_a_name = True
 
@@ -87,12 +87,12 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                     for (name_hex_str,) in eir_result:
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name3 table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
                 if(len(rsp_result) > 0):
                     for (name_hex_str,) in rsp_result:
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name2 table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -177,7 +177,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     we_have_GATT = False
 
     values = (bdaddr,)
-    services_query = "SELECT UUID FROM GATT_services2 WHERE device_bdaddr = %s"
+    services_query = "SELECT UUID FROM GATT_services WHERE device_bdaddr = %s"
     services_result = execute_query(services_query, values)
     if(len(services_result) > 0): we_have_GATT = True
 
@@ -212,7 +212,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                     UUID128_metadata_ = UUID128_metadata.replace('-','').lower()
 
                     if(len(services_result) > 0):
-                        # Iterate through every UUID128 from the GATT_services2 database query
+                        # Iterate through every UUID128 from the GATT_services database query
                         for (UUID128_db,) in services_result:
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()

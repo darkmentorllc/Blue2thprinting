@@ -96,9 +96,9 @@ def print_flags(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags2 WHERE device_bdaddr = %s"
+    eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags2 WHERE device_bdaddr = %s"
+    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE device_bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
@@ -108,7 +108,7 @@ def print_flags(bdaddr):
         qprint("\tFlags found:")
 
     for (le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in eir_result:
-        qprint(f"\tIn BT Classic Data (EIR_bdaddr_to_flags2)")
+        qprint(f"\tIn BT Classic Data (EIR_bdaddr_to_flags)")
         qprint(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
         qprint(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
         qprint(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
@@ -120,7 +120,7 @@ def print_flags(bdaddr):
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_Flags, data)
 
     for (bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in le_result:
-        qprint(f"\tIn BLE Data (LE_bdaddr_to_flags2)")
+        qprint(f"\tIn BLE Data (LE_bdaddr_to_flags)")
         qprint(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
         qprint(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
         qprint(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
