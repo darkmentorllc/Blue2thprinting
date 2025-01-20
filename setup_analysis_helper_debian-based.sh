@@ -39,7 +39,7 @@ sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server
 python3 -m venv ./venv
 source ./venv/bin/activate
 # Even for distributions like Ubuntu 24.04 which package jsonschema, it seems they're not at a new enough version to support a constructor we need. So I'm now requiring installation of this version.
-pip install jsonschema==4.23 mysql-connector pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+pip install jsonschema==4.23 mysql-connector pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
 
 # Using my branch until all of my and Antonio's changes are merged in
 git clone https://github.com/XenoKovah/scapy.git
