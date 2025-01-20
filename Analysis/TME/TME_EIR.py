@@ -50,7 +50,7 @@ def print_PSRM(bdaddr):
     eir_query = "SELECT page_scan_rep_mode FROM EIR_bdaddr_to_PSRM WHERE device_bdaddr = %s"
     eir_result = execute_query(eir_query, values)
 
-    if (len(eir_result)== 0 and len(le_result) == 0):
+    if (len(eir_result)== 0):
         vprint("\tNo Page Scan Repetition Mode Data found.")
         return
     else:

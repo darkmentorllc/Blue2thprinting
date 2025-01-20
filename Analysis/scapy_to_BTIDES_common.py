@@ -249,6 +249,18 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
         return True
 
+    # type 0x14
+    elif isinstance(entry.payload, EIR_ServiceSolicitation16BitUUID):
+        entry.show()
+        uuid_list = entry.svc_uuids
+        UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
+        length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "UUID16List": UUID16List}
+        vprint(f"{device_bdaddr}: {adv_type} Service Solicitiation UUID16 list: {','.join(UUID16List)}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListServiceSolicitation, data)
+        return True
+
     # type 0x16
     elif isinstance(entry.payload, EIR_ServiceData16BitUUID):
         #entry.show()

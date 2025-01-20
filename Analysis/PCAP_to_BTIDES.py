@@ -291,7 +291,7 @@ def export_CONNECT_IND(packet):
     ble_adv_fields = packet.getlayer(BTLE_ADV)
     central_bdaddr_rand = ble_adv_fields.TxAdd
     peripheral_bdaddr_rand = ble_adv_fields.RxAdd
-    connect_fields = packet.getlayer(BTLE_CONNECT_REQ)
+    connect_fields = packet.getlayer(BTLE_CONNECT_IND)
     central_bdaddr = connect_fields.InitA
     peripheral_bdaddr = connect_fields.AdvA
     # The following 3 multi-byte fields are in the incorrect byte order in Scapy (according to looking at their values in Wireshark, which I trust more)
@@ -350,7 +350,7 @@ def read_pcap(file_path):
                 # If a packet matches on any export function, move on to the next packet
 
                 # Connection requests
-                if packet.haslayer(BTLE_CONNECT_REQ): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
+                if packet.haslayer(BTLE_CONNECT_IND): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
                     if(export_CONNECT_IND(packet)): continue
 
                 # Advertisement channel packets
