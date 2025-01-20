@@ -227,7 +227,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_name4
+    FROM LE_bdaddr_to_name
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -632,8 +632,8 @@ def print_device_names(bdaddr, nametype):
     # Query for RSP_bdaddr_to_name table
     rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
     rsp_result = execute_query(rsp_query, values)
-    # Query for LE_bdaddr_to_name4 table
-    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name4 WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    # Query for LE_bdaddr_to_name table
+    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 
     if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
@@ -660,7 +660,7 @@ def print_device_names(bdaddr, nametype):
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name4), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 

@@ -100,7 +100,7 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name4 WHERE device_bdaddr = %s"
+        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = %s"
         le_result = execute_query(le_query, values)
         for name_hex_str, le_evt_type in le_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
