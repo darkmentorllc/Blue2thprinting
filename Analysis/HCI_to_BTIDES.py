@@ -231,6 +231,15 @@ def process_features(p):
             data = {"bdaddr": bdaddr, "page": page, "max_page": max_page, "features": features_int}
             export_LMP_Features_Ext(bdaddr, data)
         return True
+    elif p.haslayer(HCI_Event_Read_Remote_Supported_Features_Complete):
+        #p.show()
+        event = p.getlayer(HCI_Event_Read_Remote_Supported_Features_Complete)
+        if(event.fields['handle'] in g_last_handle_to_bdaddr.keys() and event.fields['status'] == 0):
+            features_int = event.fields['lmp_features'].value
+            (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[event.fields['handle']]
+            data = {"bdaddr": bdaddr, "page": 0, "features": features_int}
+            export_LMP_Features(bdaddr, data)
+        return True
     elif p.haslayer(HCI_Event_Remote_Host_Supported_Features_Notification):
         #p.show()
         event = p.getlayer(HCI_Event_Remote_Host_Supported_Features_Notification)
