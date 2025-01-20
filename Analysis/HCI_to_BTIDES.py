@@ -207,6 +207,13 @@ def process_advertisements(p):
             exit(1)
         # This has no AdvData inclusion
         return True
+    # This is obviously not an advertisement, but it does include the Class of Device, so we will collect it here with the other CoD entries
+    elif p.haslayer(HCI_Event_Connection_Request):
+        connection_req = p.getlayer(HCI_Event_Connection_Request)
+        CoD_hex_str = f"{connection_req.fields['device_class']:06x}"
+        export_Class_of_Device(connection_req.fields['bd_addr'], CoD_hex_str)
+        return True
+
 
     return False
 
@@ -277,6 +284,8 @@ def process_ATT(p, record):
         if(export_to_ATTArray(p, direction)):
             return True
     return False
+
+# TODO: for the future when we add process_SMP we should look for bthci_evt.code == 0x32
 
 def read_HCI(file_path):
     try:
