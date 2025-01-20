@@ -22,7 +22,7 @@ type_BTIDES_CONNECT_IND       = 40
 type_BTIDES_EIR               = 50
 
 adv_chan_types_to_strings = {
-    type_BTIDES_ADV_IND: "ADV_IND", 
+    type_BTIDES_ADV_IND: "ADV_IND",
     type_BTIDES_ADV_DIRECT_IND: "ADV_DIRECT_IND",
     type_BTIDES_ADV_NONCONN_IND: "ADV_NONCONN_IND",
     type_BTIDES_ADV_SCAN_IND: "ADV_SCAN_IND",
@@ -46,3 +46,7 @@ type_BTIDES_ATT_WriteWithResponse =     1
 type_BTIDES_ATT_WriteWithoutResponse =  2
 type_BTIDES_ATT_Notification =          3
 type_BTIDES_ATT_Indication =            4
+
+# EIR types
+type_BTIDES_EIR_PSRM    = 1
+type_BTIDES_EIR_CoD     = 2

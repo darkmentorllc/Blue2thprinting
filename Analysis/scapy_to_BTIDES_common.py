@@ -27,6 +27,9 @@ from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LL_FEATURE_RSP
 from TME.TME_BTIDES_HCI import *
 # ATT
 from TME.TME_BTIDES_ATT import *
+# EIR
+from TME.TME_BTIDES_EIR import *
+
 
 # We need to keep state between ATT_READ_BY_GROUP_TYPE_REQ and ATT_READ_BY_GROUP_TYPE_RSP
 # in order to insert GATT service information into the BTIDES JSON
@@ -226,7 +229,6 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
     # type 0x10
     # I don't think this can actually appear in BLE as opposed to EIR...so I'm not sure if this will get any testing...
     elif isinstance(entry.payload, EIR_Device_ID):
-        device_tx_power = entry.level
         length = 9 # 1 byte for opcode + 2 bytes * 4 fields
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "vendor_id_source": entry.vendor_id_source, "vendor_id": entry.vendor_id, "product_id": entry.product_id, "version": entry.version}
@@ -631,3 +633,13 @@ def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
     except Exception as e:
         print(f"Error processing LL_FEATURE_RSP: {e}")
         return False
+
+######################################################################
+# EIR SECTION
+######################################################################
+
+def export_Page_Scan_Repetition_Mode(bdaddr, page_scan_repetition_mode_int):
+    BTIDES_export_Page_Scan_Repetition_Mode(bdaddr, page_scan_repetition_mode_int)
+
+def export_Class_of_Device(bdaddr, CoD_hex_str):
+    BTIDES_export_Class_of_Device(bdaddr, CoD_hex_str)
