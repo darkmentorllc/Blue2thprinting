@@ -635,6 +635,14 @@ def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
         print(f"Error processing LL_FEATURE_RSP: {e}")
         return False
 
+def export_LMP_Features(device_bdaddr, in_data):
+    try:
+        BTIDES_export_LMP_FEATURES_RES(device_bdaddr, in_data['features'])
+        return True
+    except Exception as e:
+        print(f"Error processing LMP_FEATURES_RES: {e}")
+        return False
+
 def export_LMP_Features_Ext(device_bdaddr, in_data):
     try:
         BTIDES_export_LMP_FEATURES_RES_EXT(device_bdaddr, in_data['page'], in_data['max_page'], in_data['features'])
