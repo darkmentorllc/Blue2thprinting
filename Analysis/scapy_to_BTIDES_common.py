@@ -23,6 +23,8 @@ from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
 # Feature response
 from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LL_FEATURE_RSP
+# HCI (for Remote Name Request Complete)
+from TME.TME_BTIDES_HCI import *
 # ATT
 from TME.TME_BTIDES_ATT import *
 
@@ -81,6 +83,10 @@ def get_packet_direction(packet):
         return type_BTIDES_direction_C2P
     else:
         return type_BTIDES_direction_P2C
+
+######################################################################
+# AdvData SECTION
+######################################################################
 
 # This is the main function which converts from Scapy data format to BTIDES
 def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
@@ -352,19 +358,10 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
 
     return False
 
-# This is the main function which converts from Scapy data format to BTIDES
-def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
-    try:
-        data = ff_LL_FEATURE_RSP(
-            direction=in_data['direction'],
-            features=in_data['features']
-        )
-        if_verbose_insert_std_optional_fields(data, None)
-        BTIDES_export_LL_FEATURE_RSP(bdaddr=device_bdaddr, random=bdaddr_random, data=data)
-        return True
-    except Exception as e:
-        print(f"Error processing LL_FEATURE_RSP: {e}")
-        return False
+
+######################################################################
+# ATT SECTION
+######################################################################
 
 # It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
 # But just doing it out of an abundance of caution
@@ -378,6 +375,7 @@ def get_ATT_data(packet, scapy_type, packet_type):
         return None
     else:
         return packet.getlayer(scapy_type)
+
 
 def export_ATT_Error_Response(connect_ind_obj, packet, direction=None):
     att_data = get_ATT_data(packet, ATT_Error_Response, type_ATT_ERROR_RSP)
@@ -396,6 +394,7 @@ def export_ATT_Error_Response(connect_ind_obj, packet, direction=None):
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
+
 
 def export_ATT_Exchange_MTU_Request(connect_ind_obj, packet, direction=None):
     att_data = get_ATT_data(packet, ATT_Exchange_MTU_Request, type_ATT_EXCHANGE_MTU_REQ)
@@ -606,3 +605,29 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=No
 
         return True
     return False
+
+######################################################################
+# HCI SECTION
+######################################################################
+
+def export_Remote_Name_Request_Complete(bdaddr, name):
+    BTIDES_export_HCI_Name_Response(bdaddr, name)
+
+
+######################################################################
+# FEATURES (via HCI) SECTION
+######################################################################
+
+# This is the main function which converts from Scapy data format to BTIDES
+def export_LE_Features(device_bdaddr, bdaddr_random, in_data):
+    try:
+        data = ff_LL_FEATURE_RSP(
+            direction=in_data['direction'],
+            features=in_data['features']
+        )
+        if_verbose_insert_std_optional_fields(data, None)
+        BTIDES_export_LL_FEATURE_RSP(bdaddr=device_bdaddr, random=bdaddr_random, data=data)
+        return True
+    except Exception as e:
+        print(f"Error processing LL_FEATURE_RSP: {e}")
+        return False

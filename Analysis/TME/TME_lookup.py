@@ -37,28 +37,28 @@ def get_bdaddrs_by_name_regex(nameregex):
     bdaddrs = []
 
     values = (nameregex,)
-    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name2 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    eir_query = "SELECT device_bdaddr FROM EIR_bdaddr_to_name3 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name2")
+    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name3")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = "SELECT device_bdaddr FROM RSP_bdaddr_to_name WHERE device_name REGEXP %s"
+    # Query for RSP_bdaddr_to_name2 table
+    rsp_query = "SELECT device_bdaddr FROM RSP_bdaddr_to_name2 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     rsp_result = execute_query(rsp_query, values)
     for (bdaddr,) in rsp_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
+    qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name2")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for LE_bdaddr_to_name3 table
-    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name3 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    # Query for LE_bdaddr_to_name4 table
+    le_query = "SELECT device_bdaddr FROM LE_bdaddr_to_name4 WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name3")
+    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name4")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -99,7 +99,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM LE_bdaddr_to_name3 WHERE bdaddr_random = 0 "
+        "    SELECT device_bdaddr FROM LE_bdaddr_to_name4 WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
         "    UNION ALL "
@@ -123,7 +123,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_MSD "
         "    UNION ALL "
-        "    SELECT device_bdaddr FROM EIR_bdaddr_to_name2 "
+        "    SELECT device_bdaddr FROM EIR_bdaddr_to_name3 "
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_PSRM "
         "    UNION ALL "
@@ -334,7 +334,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_name3 WHERE bdaddr_random = 0
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_name4 WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0
                 UNION ALL
@@ -358,7 +358,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_MSD
                 UNION ALL
-                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_name2
+                SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_name3
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_PSRM
                 UNION ALL

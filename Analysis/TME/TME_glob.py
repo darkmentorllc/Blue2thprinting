@@ -78,7 +78,7 @@ uuid16_service_names = {}
 # BTIDES JSON data to export
 #########################################
 BTIDES_JSON = []
-verbose_BTIDES = True
+verbose_BTIDES = False
 
 #########################################
 # Verbose/quiet printing
