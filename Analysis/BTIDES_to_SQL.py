@@ -58,6 +58,7 @@ def get_bdaddr_peripheral(entry):
 
     return bdaddr, bdaddr_rand
 
+
 def get_bdaddr_central(entry):
     if("CONNECT_IND" in entry.keys()):
         bdaddr = entry["CONNECT_IND"]["central_bdaddr"].lower()
@@ -87,6 +88,7 @@ def BTIDES_types_to_le_evt_type(type):
     # From manually inserting EIR type
     # There is of course no corresponding LE type
     if(type == type_BTIDES_EIR):              return type_BTIDES_EIR
+
 
 # type 0x01
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
@@ -121,6 +123,7 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_flags2 (device_bdaddr, bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # types 0x02 & 0x03
 def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_Names!")
@@ -138,6 +141,7 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # types 0x04 & 0x05
 def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_Names!")
@@ -154,6 +158,7 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
         values = (bdaddr, random, le_evt_type, list_type, str_UUID32s)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID32s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
+
 
 # types 0x06 & 0x07
 def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
@@ -175,6 +180,7 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128s (device_bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # types 0x08 & 0x09
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_Names!")
@@ -192,6 +198,7 @@ def import_AdvData_Names(bdaddr, random, db_type, leaf):
         values = (bdaddr, random, le_evt_type, device_name_type, name_hex_str)
         execute_insert(le_insert, values)
 
+
 # type 0x0A
 def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_TxPower!")
@@ -207,6 +214,7 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
         values = (bdaddr, random, le_evt_type, device_tx_power)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_tx_power (device_bdaddr, bdaddr_random, le_evt_type, device_tx_power) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
+
 
 # type 0x0D
 def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
@@ -224,6 +232,7 @@ def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_CoD (device_bdaddr, bdaddr_random, le_evt_type, class_of_device) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # type 0x10
 def import_AdvData_DeviceID(bdaddr, db_type, leaf):
     #qprint("import_AdvData_DeviceID!")
@@ -236,9 +245,10 @@ def import_AdvData_DeviceID(bdaddr, db_type, leaf):
     if(db_type == 50):
         # EIR
         values = (bdaddr, vendor_id_source, vendor_id, product_id, product_version)
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES ('%s, %s, %s, %s, %s);"
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_DevID (device_bdaddr, vendor_id_source, vendor_id, product_id, product_version) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(eir_insert, values)
     # AFAIK this can't exist in LE AdvData, only EIR
+
 
 # type 0x12
 def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, leaf):
@@ -256,6 +266,7 @@ def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, le
         values = (bdaddr, random, le_evt_type, conn_interval_min, conn_interval_max)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_connect_interval (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
+
 
 # type 0x16
 def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
@@ -276,6 +287,7 @@ def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID16_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # type 0x19
 def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_Appearance!")
@@ -291,6 +303,7 @@ def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
         values = (bdaddr, random, le_evt_type, appearance_int)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_appearance (device_bdaddr, bdaddr_random, le_evt_type, appearance) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
+
 
 # type 0x20
 def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
@@ -311,6 +324,7 @@ def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID32_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # type 0x21
 def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_UUID128ServiceData!")
@@ -330,6 +344,7 @@ def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128_service_data (device_bdaddr, bdaddr_random, le_evt_type, ACID_length, UUID128_hex_str, service_data_hex_str) VALUES (%s, %s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     #qprint("import_AdvData_MSD!")
@@ -341,12 +356,13 @@ def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     if(db_type == 50):
         # EIR
         values = (bdaddr, device_BT_CID, manufacturer_specific_data)
-        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES (%s, %s, %s');"
+        eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_MSD (device_bdaddr, device_BT_CID, manufacturer_specific_data) VALUES (%s, %s, %s);"
         execute_insert(eir_insert, values)
     else:
         values = (bdaddr, random, le_evt_type, device_BT_CID, manufacturer_specific_data)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_MSD (device_bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
+
 
 def has_AdvDataArray(entry):
     if(entry != None and entry["AdvDataArray"] != None):
@@ -354,11 +370,13 @@ def has_AdvDataArray(entry):
     else:
         return False
 
+
 def has_known_AdvData_type(type, entry):
     if(entry != None and "type" in entry.keys() and entry["type"] == type):
         return True
     else:
         return False
+
 
 def parse_AdvChanArray(entry):
     if("AdvChanArray" not in entry.keys() or entry["AdvChanArray"] == None):
@@ -435,6 +453,7 @@ def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     insert = f"INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
+
 def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     ll_version = ll_entry["version"]
     device_BT_CID = ll_entry["company_id"]
@@ -442,6 +461,7 @@ def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     values = (random, bdaddr, ll_version, device_BT_CID, ll_sub_version)
     insert = f"INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
     execute_insert(insert, values)
+
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
 def import_LL_FEATUREs(bdaddr, random, ll_entry):
@@ -451,6 +471,7 @@ def import_LL_FEATUREs(bdaddr, random, ll_entry):
     insert = f"INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
+
 # This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
 # TODO: I should really update the table to have the opcode field for differentiation of types
 def import_LL_PING_RSP(bdaddr, random, ll_entry):
@@ -458,6 +479,7 @@ def import_LL_PING_RSP(bdaddr, random, ll_entry):
     values = (random, bdaddr, 1)
     insert = f"INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
+
 
 # This can be used for LL_FEATURE_REQ, LL_FEATURE_RSP, and LL_PERIPHERAL_FEATURE_REQ, since they're all going into the same table
 def import_LL_LENGTHs(bdaddr, random, ll_entry):
@@ -470,6 +492,7 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     insert = f"INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
+
 # This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
 # TODO: I should really update the table to have the opcode field for differentiation of types
 def import_LL_PHYs(bdaddr, random, ll_entry):
@@ -480,11 +503,13 @@ def import_LL_PHYs(bdaddr, random, ll_entry):
     insert = f"INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
+
 def has_known_LL_packet(opcode, ll_entry):
     if("opcode" in ll_entry.keys() and ll_entry["opcode"] == opcode):
         return True
     else:
         return False
+
 
 def parse_LLArray(entry):
     if("LLArray" not in entry.keys() or entry["LLArray"] == None):
@@ -524,6 +549,7 @@ def import_LMP_VERSION_RSP(bdaddr, lmp_entry):
     insert = f"INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
+
 def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
     #opcode = lmp_entry["opcode"] # TODO: Update database to include this (and rename BTC2th_LMP_features_res to BTC2th_LMP_FEATURES
     features = int(lmp_entry["lmp_features_hex_str"], 16)
@@ -531,13 +557,13 @@ def import_LMP_FEATURES_RSP(bdaddr, lmp_entry):
     insert = f"INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
-opcode_LMP_VERSION_RSP          = 38
-opcode_LMP_FEATURES_RSP         = 40
+
 def has_known_LMP_packet(opcode, lmp_entry):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
         return True
     else:
         return False
+
 
 def parse_LMPArray(entry):
     if("LMPArray" not in entry.keys() or entry["LMPArray"] == None or entry["bdaddr_rand"] != 0):
@@ -545,9 +571,9 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
-        if(has_known_LL_packet(opcode_LMP_VERSION_RSP, lmp_entry)):
+        if(has_known_LL_packet(type_opcode_LMP_VERSION_RSP, lmp_entry)):
             import_LMP_VERSION_RSP(bdaddr, lmp_entry)
-        if(has_known_LL_packet(opcode_LMP_FEATURES_RSP, lmp_entry)):
+        if(has_known_LL_packet(type_opcode_LMP_FEATURES_RSP, lmp_entry)):
             import_LMP_FEATURES_RSP(bdaddr, lmp_entry)
 
 ###################################
@@ -560,12 +586,13 @@ def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name2 (device_bdaddr, name_hex_str) VALUES (%s, %s);"
     execute_insert(insert, values)
 
-event_code_HCI_Remote_Name_Request_Complete = 7
+
 def has_known_HCI_entry(event_code, hci_entry):
     if("event_code" in hci_entry.keys() and hci_entry["event_code"] == event_code):
         return True
     else:
         return False
+
 
 def parse_HCIArray(entry):
     if("HCIArray" not in entry.keys() or entry["HCIArray"] == None):
@@ -575,6 +602,44 @@ def parse_HCIArray(entry):
     for hci_entry in entry["HCIArray"]:
         if(has_known_HCI_entry(event_code_HCI_Remote_Name_Request_Complete, hci_entry)):
             import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry)
+
+###################################
+# BTIDES_EIR.json information
+###################################
+
+def import_Page_Scan_Repetition_Mode(bdaddr, eir_entry):
+    page_scan_repetition_mode = eir_entry["page_scan_repetition_mode"]
+    values = (bdaddr, page_scan_repetition_mode)
+    insert = f"INSERT IGNORE INTO EIR_bdaddr_to_PSRM (device_bdaddr, page_scan_rep_mode) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_Class_of_Device(bdaddr, eir_entry):
+    class_of_device = int(eir_entry["CoD_hex_str"], 16)
+    values = (bdaddr, class_of_device)
+    insert = f"INSERT IGNORE INTO EIR_bdaddr_to_CoD (device_bdaddr, class_of_device) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def has_known_EIR_entry(type, eir_entry):
+    if("type" in eir_entry.keys() and eir_entry["type"] == type):
+        return True
+    else:
+        return False
+
+
+def parse_EIRArray(entry):
+    if("EIRArray" not in entry.keys() or entry["EIRArray"] == None):
+        return # Entry not valid for this type
+
+    bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+    for eir_entry in entry["EIRArray"]:
+        if(has_known_EIR_entry(type_BTIDES_EIR_PSRM, eir_entry)):
+            import_Page_Scan_Repetition_Mode(bdaddr, eir_entry)
+            continue
+        if(has_known_EIR_entry(type_BTIDES_EIR_CoD, eir_entry)):
+            import_Class_of_Device(bdaddr, eir_entry)
+
 
 ###################################
 # BTIDES_ATT.json information
@@ -711,6 +776,8 @@ def parse_GATTArray(entry):
     for gatt_service_entry in entry["GATTArray"]:
         import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
 
+###################################
+
 class btides_to_sql_args:
     def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
         self.input = input
@@ -791,6 +858,8 @@ def btides_to_sql(args):
         parse_ATTArray(entry)
 
         parse_GATTArray(entry)
+
+        parse_EIRArray(entry)
 
         count += 1
         progress_update(total, count)

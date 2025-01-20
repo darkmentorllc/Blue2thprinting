@@ -35,16 +35,22 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 g_last_handle_to_bdaddr = {}
 
 def export_AdvChannelData(packet, scapy_type, adv_type):
-    ble_adv_fields = packet.getlayer(scapy_type).fields
-    bdaddr_random = ble_adv_fields['atype']
-    device_bdaddr = ble_adv_fields['addr']
+    fields = packet.getlayer(scapy_type).fields
+    if(scapy_type == HCI_Event_Extended_Inquiry_Result):
+        bdaddr_random = 0
+        device_bdaddr = fields['bd_addr']
+        data = fields['eir_data']
+    else:
+        bdaddr_random = fields['atype']
+        device_bdaddr = fields['addr']
+        data = fields['data']
 
     data_exported = False
-    for entry in ble_adv_fields['data']: # This is an array of AdvData entries
+    for entry in data: # This is an array of AdvData entries
         if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
             data_exported = True
 
-    if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(ble_adv_fields['data']) == 0)):
+    if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(data) == 0)):
         return True
     else:
         return False # This is known to fire for things not yet supported like unprovisioned mesh beacons
@@ -161,6 +167,21 @@ def read_HCI(file_path):
                                 data_exported = True
                 if (data_exported):
                     continue
+            elif p.haslayer(HCI_Event_Extended_Inquiry_Result):
+                #p.show()
+                inq_result = p.getlayer(HCI_Event_Extended_Inquiry_Result)
+                export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
+                CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
+                export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
+                # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
+                if(inq_result.fields['num_response'] > 1):
+                    print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
+                    exit(1)
+                if (p.haslayer(EIR_Hdr)):
+                    eir = p.getlayer(EIR_Hdr)
+                    if eir.fields['len'] != 0:
+                        export_AdvChannelData(p, HCI_Event_Extended_Inquiry_Result, type_BTIDES_EIR)
+                continue
             # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
             # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
             elif p.haslayer(HCI_LE_Meta_Connection_Complete):
