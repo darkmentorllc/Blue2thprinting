@@ -45,7 +45,7 @@ fi
 
 python3 -m venv ./venv
 source ./venv/bin/activate
-pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client scapy
+pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
 
 # Using my branch until all of my and Antonio's changes are merged in
 git clone https://github.com/XenoKovah/scapy.git
