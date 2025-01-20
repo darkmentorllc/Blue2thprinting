@@ -166,15 +166,15 @@ def is_bdaddr_classic(bdaddr):
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM BTC2th_LMP_features_res
+    FROM LMP_FEATURES_RES
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM BTC2th_LMP_name_res
+    FROM LMP_NAME_RES
     WHERE device_bdaddr = %s
     UNION
     SELECT 1
-    FROM BTC2th_LMP_version_res
+    FROM LMP_VERSION_RES
     WHERE device_bdaddr = %s;
     """
     result = execute_query(query, values)
@@ -267,27 +267,27 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE device_bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_FEATUREs
+    FROM LL_FEATUREs
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_LENGTHs
+    FROM LL_LENGTHs
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_PHYs
+    FROM LL_PHYs
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_PING_RSP
+    FROM LL_PING_RSP
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_UNKNOWN_RSP
+    FROM LL_UNKNOWN_RSP
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1
-    FROM BLE2th_LL_VERSION_IND
+    FROM LL_VERSION_IND
     WHERE device_bdaddr = %s and device_bdaddr_type = 1
     UNION
     SELECT 1

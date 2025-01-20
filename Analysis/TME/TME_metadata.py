@@ -315,14 +315,14 @@ def print_ChipMakerPrint(bdaddr):
 
     # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
     values = (bdaddr,)
-    ble_version_query = "SELECT device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = %s"
+    ble_version_query = "SELECT device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version FROM LL_VERSION_IND WHERE device_bdaddr = %s"
     ble_version_result = execute_query(ble_version_query, values)
     if(len(ble_version_result) != 0):
         no_results_found = False
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
-            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (BLE2th_LL_VERSION_IND)")
+            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (LL_VERSION_IND)")
             # FIXME: For now all the data in the database is P2C, but we need to update the DB to capture this in the future
             data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, ll_version, device_BT_CID, ll_sub_version)
             BTIDES_export_LL_VERSION_IND(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
@@ -333,15 +333,15 @@ def print_ChipMakerPrint(bdaddr):
     #==========================#
 
     # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
-    btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
     btc_version_result = execute_query(btc_version_query, values)
     if(len(btc_version_result) != 0):
         no_results_found = False
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
-            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (BTC2th_LMP_version_res table)")
-            BTIDES_export_LMP_VERSION_RSP(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
+            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (LMP_VERSION_RES table)")
+            BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
     if(time_profile): qprint(f"NamePrint = {time.time()}")
     #================#
@@ -568,7 +568,7 @@ def print_ChipPrint(bdaddr):
     # We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
 
     values = (bdaddr,)
-    version_query = "SELECT ll_sub_version, device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_query = "SELECT ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE device_bdaddr = %s"
     version_result = execute_query(version_query, values)
 
     if(len(version_result) != 0):
@@ -578,7 +578,7 @@ def print_ChipPrint(bdaddr):
         for (ll_sub_version,device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(ll_sub_version, device_BT_CID)
             if(chip_name != ""):
-                qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (BLE2th_LL_VERSION_IND table)")
+                qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (LL_VERSION_IND table)")
 
     #==========================#
     # LMP_VERSION_REQ/RSP data #
@@ -586,7 +586,7 @@ def print_ChipPrint(bdaddr):
 
     # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
 
-    version_query = "SELECT lmp_sub_version, device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    version_query = "SELECT lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
     version_result = execute_query(version_query, values)
 
     if(len(version_result) != 0):
@@ -596,7 +596,7 @@ def print_ChipPrint(bdaddr):
         for (lmp_sub_version, device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
             if(chip_name != ""):
-                qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (BTC2th_LMP_version_res table)")
+                qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (LMP_VERSION_RES table)")
 
     #================#
     # NamePrint data #

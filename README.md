@@ -1,4 +1,4 @@
-Welcome to Xeno's basic Blue2thprinting setup! It's cheap(ish, other than the small form factor PC) and *good enough* to get started!  
+Welcome to Xeno's basic Blue2thprinting setup! It's cheap(ish, other than the small form factor PC) and *good enough* to get started!
 
 # Disclaimer!
 
@@ -7,9 +7,9 @@ The code in this repository is ***researchware***. That means **its purpose is p
 # Assumed Hardware
 (If you do not have any of the below, you will need to purchase.)
 
-* Keyboard  
-* Mouse  
-* Monitor with HDMI input (or DVI input and an HDMI adapter. Note: Raspberry Pis have not worked with all monitors / adapter configurations for me.)   
+* Keyboard
+* Mouse
+* Monitor with HDMI input (or DVI input and an HDMI adapter. Note: Raspberry Pis have not worked with all monitors / adapter configurations for me.)
 
 
 # Recommended Hardware
@@ -21,9 +21,9 @@ Note: the below hardware purchase links are Amazon affiliate links that support 
 
 A small form-factor x86-based PC (because currently Sweyntooth and Braktooth are only available as x86-64 Linux binaries.) You can use a laptop if you want, but I wanted to create a device I could place in a weather-proof container and lock up somewhere and sniff without fear of it being stolen, so this build is based around that assumed form factor.
 
-* 1x - Up Squared (aka UP^2) [Intel Atom® x7-E3950 SKU](https://up-shop.org/default/up-squared-series.html) - \$289 + \$13.99 power supply + \$29.99 "M.2 2230 WiFi kit (RE-WFKIT-9260NVP)"  
-* * I used this because I had one laying around because it's a decent test platform if you're interested in using Positive Technologies' [Intel ME Exploit]() (they're still selling permanently vulnerable boards! :D)  
-* * Note: Unfortunately this cannot run off a simple USB battery pack. You will need to buy a higher voltage (e.g. 12V) battery and a voltage converter to decrease to ~5.5V.  
+* 1x - Up Squared (aka UP^2) [Intel Atom® x7-E3950 SKU](https://up-shop.org/default/up-squared-series.html) - \$289 + \$13.99 power supply + \$29.99 "M.2 2230 WiFi kit (RE-WFKIT-9260NVP)"
+* * I used this because I had one laying around because it's a decent test platform if you're interested in using Positive Technologies' [Intel ME Exploit]() (they're still selling permanently vulnerable boards! :D)
+* * Note: Unfortunately this cannot run off a simple USB battery pack. You will need to buy a higher voltage (e.g. 12V) battery and a voltage converter to decrease to ~5.5V.
 
 * 2x - [12V battery pack](https://amzn.to/3tqAj34) - ~\$40/unit
 
@@ -42,7 +42,7 @@ For Braktooth - [ESP-WROVER-KIT](https://www.mouser.com/ProductDetail/Espressif-
 For Sweyntooth - [nRF52840 USB dongle](https://www.mouser.com/ProductDetail/Nordic-Semiconductor/nRF52840-Dongle?qs=gTYE2QTfZfTbdrOaMHWEZg%3D%3D) - ~\$10/unit
 
 ---
-**Accessories** 
+**Accessories**
 
 * 1x - [Non-separate-power USB-A hub](https://amzn.to/3qHCkXw) - ~$8/unit
 * * Necessary because there's not enough USB ports for everything you need to connect
@@ -72,7 +72,7 @@ Nice to have:
 
 * 1x - [Short & flexible HDMI cable](https://www.amazon.com/gp/product/B0B5TDFVVW/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&th=1) for above mini-screen - ~$14/unit
 
-* USB micro male to USB A male cable (to power the mini-screen) - 
+* USB micro male to USB A male cable (to power the mini-screen) -
 
 ---
 
@@ -81,47 +81,47 @@ Nice to have:
 **If you bought & set up everything correctly, your setup should look like this**
 
 ![MySetup](./img/Blue2th_IAB1.jpeg)
-* Note: This is without the GPS USB connected (for deployment in a fixed location).  
-* 1 = "UP^2" above  
-* 2 = "M.2 2230 WiFi kit" above  
-* 3 = "12V battery pack" above (note, it actually comes with that splitter, for charging and using at the same time, but I use the splitter to connect 2 batteries at once for longer runtime.)  
-* 4 = "Plugs for voltage converter input" above  
-* 5 = "Voltage converter" above  
-* 6 = "Plugs for voltage converter output" above  
-* 7 = "Non-separate-power USB-A hub" above  
-* 8 = "nRF52840 USB dongle" above  
-* 9 = "ESP-WROVER-KIT" above (with USB micro male to USB A male cable (needs data transport))  
-* 10 = "5" Mini screen" above  
-* 11 = "Short & flexible HDMI cable" above  
-* 12 = "USB micro male to USB A male cable" (only needs power transport) above  
-* 13 = "Lockable water-proof outdoor box" above  
+* Note: This is without the GPS USB connected (for deployment in a fixed location).
+* 1 = "UP^2" above
+* 2 = "M.2 2230 WiFi kit" above
+* 3 = "12V battery pack" above (note, it actually comes with that splitter, for charging and using at the same time, but I use the splitter to connect 2 batteries at once for longer runtime.)
+* 4 = "Plugs for voltage converter input" above
+* 5 = "Voltage converter" above
+* 6 = "Plugs for voltage converter output" above
+* 7 = "Non-separate-power USB-A hub" above
+* 8 = "nRF52840 USB dongle" above
+* 9 = "ESP-WROVER-KIT" above (with USB micro male to USB A male cable (needs data transport))
+* 10 = "5" Mini screen" above
+* 11 = "Short & flexible HDMI cable" above
+* 12 = "USB micro male to USB A male cable" (only needs power transport) above
+* 13 = "Lockable water-proof outdoor box" above
 
 **Example of how I install the equipment in the box:**
 ![MySetup](./img/Blue2th_IAB2.jpeg)
-⬆️ Step 1: I put some foam in to padd some components:  
+⬆️ Step 1: I put some foam in to padd some components:
 
 ![MySetup](./img/Blue2th_IAB3.jpeg)
-⬆️ Step 2: I place the UP^2 to one side, with the heat-sink facing outward, and one antenna oriented vertically and one horizontally (superstition!) Note, the metal on the antennas is wrapped in tape to avoid it touching any other component's pins.  
+⬆️ Step 2: I place the UP^2 to one side, with the heat-sink facing outward, and one antenna oriented vertically and one horizontally (superstition!) Note, the metal on the antennas is wrapped in tape to avoid it touching any other component's pins.
 
 ![MySetup](./img/Blue2th_IAB4.jpeg)
-⬆️ Step 3: I connect the USB hub to the UP^2. The USB hub has the Nordic USB dongle and wireless mouse dongle plugged in, as well as the ESP-WROVER-KIT data cable. I place the ESP-WROVER-KIT at the opposite side of the box, wrapped in something non-conductive (e.g. bubble wrap in this case), so that its exposed pins don't touch any other components.  
+⬆️ Step 3: I connect the USB hub to the UP^2. The USB hub has the Nordic USB dongle and wireless mouse dongle plugged in, as well as the ESP-WROVER-KIT data cable. I place the ESP-WROVER-KIT at the opposite side of the box, wrapped in something non-conductive (e.g. bubble wrap in this case), so that its exposed pins don't touch any other components.
 
 ![MySetup](./img/Blue2th_IAB5.jpeg)
-⬆️ Step 4: I connect the keyboard USB cable to the USB hub. And I insert the two 12V batteries, connected via their included splitter. I place the batteries so that there is a gap inbetween them, where the screen will be slotted when not in use later.  
+⬆️ Step 4: I connect the keyboard USB cable to the USB hub. And I insert the two 12V batteries, connected via their included splitter. I place the batteries so that there is a gap inbetween them, where the screen will be slotted when not in use later.
 
 ![MySetup](./img/Blue2th_IAB6.jpeg)
-⬆️ Step 5: I connect the 5" screen via HDMI and USB. The screen has a switch to power it off when not in use, which should be flipped to save battery life.  
+⬆️ Step 5: I connect the 5" screen via HDMI and USB. The screen has a switch to power it off when not in use, which should be flipped to save battery life.
 
 ![MySetup](./img/Blue2th_IAB7.jpeg)
-⬆️ Step 6: I connect the assembled 12V -> 5.5V power converter, connecting one end to the 12V batteries' splitter, and one end to the power of the UP^2.  
+⬆️ Step 6: I connect the assembled 12V -> 5.5V power converter, connecting one end to the 12V batteries' splitter, and one end to the power of the UP^2.
 
 ![MySetup](./img/Blue2th_IAB8.jpeg)
-⬆️ Step 7: At this point the USB keyboard cord can be coiled in the box, and the box powered on, for portable sniffing or placement at a location for static sniffing.  
+⬆️ Step 7: At this point the USB keyboard cord can be coiled in the box, and the box powered on, for portable sniffing or placement at a location for static sniffing.
 
 ![MySetup](./img/Blue2th_IAB9.jpeg)
-⬆️ Step 8: The box can then be opened and the keyboard connected and powered on, the mouse powered on, and screen removed and powered on and it can be interacted with like any other Linux-based PC. The power converted can be disconnected from the splitter connected to the 12V batteries, and a charger connected instead, to charge the 12V batteries once they're dead. Or the device can simply be connected to the UP^2's wall power adapter when experimenting and not needing to run off battery.  
+⬆️ Step 8: The box can then be opened and the keyboard connected and powered on, the mouse powered on, and screen removed and powered on and it can be interacted with like any other Linux-based PC. The power converted can be disconnected from the splitter connected to the 12V batteries, and a charger connected instead, to charge the 12V batteries once they're dead. Or the device can simply be connected to the UP^2's wall power adapter when experimenting and not needing to run off battery.
 
-* Note: In principle it's desirable to use a wired mouse/keyboard, *not* wireless ones, to not introduce any additional 2.4GHz interference. On the other hand, I find that using a normal wired mouse is inconvenient if I'm driving around and want to look at something, because there's no decent mousing surfaces. Hence why I use a wireless trackball. (I should probably get a wired trackball.)  
+* Note: In principle it's desirable to use a wired mouse/keyboard, *not* wireless ones, to not introduce any additional 2.4GHz interference. On the other hand, I find that using a normal wired mouse is inconvenient if I'm driving around and want to look at something, because there's no decent mousing surfaces. Hence why I use a wireless trackball. (I should probably get a wired trackball.)
 
 ---
 
@@ -148,16 +148,16 @@ If you stopped right now and rebooted, you'd have a functional automatic-capture
 
 ### Setup Braktooth
 
-Place the Braktooth code in the location assumed by `central_app_launcher2.py`:  
+Place the Braktooth code in the location assumed by `central_app_launcher2.py`:
 
 ```
 cd ~/Downloads
 git clone https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks.git
 ```
 
-You are required to setup Braktooth to work **[per the "Installation instructions" in the Braktooth repository](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks)**. 
+You are required to setup Braktooth to work **[per the "Installation instructions" in the Braktooth repository](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks)**.
 
-**Known issues with instructions:** 
+**Known issues with instructions:**
 
 **1)** The `wdissector.tar.zst` in the root of the folder isn't the full 300MB+ file; it instead needs to be grabbed from the [artifact release](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks/releases/download/v1.0.1/release.zip).
 
@@ -170,7 +170,7 @@ sudo dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
 
 **3)** Modify the following file to make it so that the `LMP2thprint.cpp` will compile properly.
 
-In `~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector$ nano src/ModulesInclude.hpp`, replace all the instances of "extern", with "static", as shown below. 
+In `~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector$ nano src/ModulesInclude.hpp`, replace all the instances of "extern", with "static", as shown below.
 
 Replace
 
@@ -220,13 +220,13 @@ Once you have confirmed this works, you should set `btc_2thprint_enabled = True`
 
 ### Setup Sweyntooth
 
-Place the Sweyntooth code in the location assumed by `central_app_launcher2.py`:  
+Place the Sweyntooth code in the location assumed by `central_app_launcher2.py`:
 
 ```
 cp -r ~/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
 ```
 
-You are required to setup Sweyntooth to work **[by following the instructions in the Sweyntooth repository](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks)**. 
+You are required to setup Sweyntooth to work **[by following the instructions in the Sweyntooth repository](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks)**.
 
 Once you get the custom firmware onto the Nordic device, the theoretical minimal instructions to make this local copy of Sweyntooth work are as follows:
 
@@ -265,9 +265,9 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 
 The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot. So now reboot with `sudo reboot`.
 
-After the system comes back up, run:  
-`~/Blue2thprinting/Scripts/check.sh`  
-If you are too quick, you will see things like `start_btmon.sh` and `start_bluetoothctl.sh`.  
+After the system comes back up, run:
+`~/Blue2thprinting/Scripts/check.sh`
+If you are too quick, you will see things like `start_btmon.sh` and `start_bluetoothctl.sh`.
 But after their sleep timers have expired, they will transition to things like:
 
 ```
@@ -315,7 +315,7 @@ All found names:
 ```
 from within the Scripts folder.
 
-*Note:* The accepted name format is just the filename, not the full path. 
+*Note:* The accepted name format is just the filename, not the full path.
 
 ## Import data into MySQL
 
@@ -332,7 +332,7 @@ sudo ./setup_analysis_helper_debian-based.sh
 
 **macOS Software Setup**: macOS cannot be used for collection, but it can be used for analysis of files collected on other platforms. You must first [install HomeBrew](https://brew.sh/), and then run `brew install mysql` and `brew install wireshark` (for the `tshark` CLI version). (If for some reason neither tshark nor wireshark are found in your PATH, look in / add from /usr/local/Cellar/wireshark/). Then also edit `/usr/local/etc/my.cnf` and add `secure_file_priv = /tmp` at the end of the file, and then start the mysql server with `/usr/local/opt/mysql/bin/mysqld_safe --datadir=/usr/local/var/mysql`.
 
-Then run  
+Then run
 
 ```
 cd ~/Blue2thprinting
@@ -399,7 +399,7 @@ The above `cat` step is useful both to speed up the parsing of a single host's d
 **To confirm that some data was successfully imported, you can issue:**
 
 ```
-mysql -u user -pa -D bt -e "SELECT * FROM BLE2th_LL_VERSION_IND LIMIT 10;"
+mysql -u user -pa -D bt -e "SELECT * FROM LL_VERSION_IND LIMIT 10;"
 ```
 
 ### Importing BTC LMP data from BTC_2THPRINT.log
@@ -417,7 +417,7 @@ Unfortunately no deduplication of data is possible currently due to the fact tha
 **To confirm that some data was successfully imported, you can issue:**
 
 ```
-mysql -u user -pa -D bt -e "SELECT * FROM BTC2th_LMP_version_res LIMIT 10;"
+mysql -u user -pa -D bt -e "SELECT * FROM LMP_VERSION_RES LIMIT 10;"
 ```
 
 ## Inspecting data with TellMeEverything.py

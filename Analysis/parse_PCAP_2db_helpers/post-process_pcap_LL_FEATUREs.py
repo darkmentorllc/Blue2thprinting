@@ -1,4 +1,4 @@
-# Script to process /tmp/LL_FEATUREs_uniq.csv created by pcap_fill_BLE2th_LL_FEATUREs.sh
+# Script to process /tmp/LL_FEATUREs_uniq.csv created by pcap_fill_LL_FEATUREs.sh
 
 ##########################################
 # Created by Xeno Kovah
@@ -81,7 +81,7 @@ for key, value in result_dict_FEATURE_RSP.items():
     print(f"{key}: {value}")
 '''
 
-# Write the CSV lines to a file appropriate for direct import to mysql BLE2th_LL_FEATUREs table via a CLI mysql invocation
+# Write the CSV lines to a file appropriate for direct import to mysql LL_FEATUREs table via a CLI mysql invocation
 with open('/tmp/LL_FEATUREs_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 

@@ -14,7 +14,7 @@ from TME.TME_helpers import *
 # Returns 0 if there is no LL_VERSION_IND info for this BDADDR, else returns 1
 def device_has_LL_VERSION_IND_info(bdaddr):
     values = (bdaddr,)
-    version_query = "SELECT device_BT_CID FROM BLE2th_LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_query = "SELECT device_BT_CID FROM LL_VERSION_IND WHERE device_bdaddr = %s"
     version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
         return 1
@@ -24,7 +24,7 @@ def device_has_LL_VERSION_IND_info(bdaddr):
 # Returns 0 if there is no LMP_VERSION_RES info for this BDADDR, else returns 1
 def device_has_LMP_VERSION_RES_info(bdaddr):
     values = (bdaddr,)
-    version_query = "SELECT device_BT_CID FROM BTC2th_LMP_version_res WHERE device_bdaddr = %s"
+    version_query = "SELECT device_BT_CID FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
     version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
         return 1
@@ -137,23 +137,23 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT device_bdaddr FROM EIR_bdaddr_to_UUID32s "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_FEATUREs "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_FEATUREs "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_LENGTHs "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_LENGTHs "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_PHYs "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_PHYs "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_PING_RSP "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_PING_RSP "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_UNKNOWN_RSP "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_UNKNOWN_RSP "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BLE2th_LL_VERSION_IND "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LL_VERSION_IND "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BTC2th_LMP_features_res "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LMP_FEATURES_RES "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BTC2th_LMP_name_res "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LMP_NAME_RES "
         "    UNION ALL "
-        "    SELECT CONVERT(device_bdaddr USING utf8) FROM BTC2th_LMP_version_res "
+        "    SELECT CONVERT(device_bdaddr USING utf8) FROM LMP_VERSION_RES "
         "    UNION ALL "
         "    SELECT CONVERT(device_bdaddr USING utf8) FROM GATT_services2 "
         ") AS t "
@@ -210,18 +210,18 @@ def get_bdaddrs_by_company_regex(companyregex):
         for key in device_bt_cids_to_names.keys():
 
             values = (key,)
-            tooth_lmp_query = "SELECT device_bdaddr FROM BTC2th_LMP_version_res WHERE device_BT_CID = %s"
+            tooth_lmp_query = "SELECT device_bdaddr FROM LMP_VERSION_RES WHERE device_BT_CID = %s"
             tooth_lmp_result = execute_query(tooth_lmp_query, values)
             for (bdaddr,) in tooth_lmp_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(tooth_lmp_result)} results found in BTC2th_LMP_version_res for key 0x{key:04x}")
+            qprint(f"{len(tooth_lmp_result)} results found in LMP_VERSION_RES for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            tooth_ll_query = "SELECT device_bdaddr FROM BLE2th_LL_VERSION_IND WHERE device_BT_CID = %s"
+            tooth_ll_query = "SELECT device_bdaddr FROM LL_VERSION_IND WHERE device_BT_CID = %s"
             tooth_ll_result = execute_query(tooth_ll_query, values)
             for (bdaddr,) in tooth_ll_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(tooth_ll_result)} results found in BLE2th_LL_VERSION_IND for key 0x{key:04x}")
+            qprint(f"{len(tooth_ll_result)} results found in LL_VERSION_IND for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             le_msd_query = "SELECT device_bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
@@ -372,23 +372,23 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT device_bdaddr COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM EIR_bdaddr_to_UUID32s
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_FEATUREs
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_FEATUREs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_LENGTHs
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_LENGTHs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_PHYs
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_PHYs
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_PING_RSP
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_PING_RSP
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_UNKNOWN_RSP
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_UNKNOWN_RSP
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BLE2th_LL_VERSION_IND
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LL_VERSION_IND
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BTC2th_LMP_features_res
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LMP_FEATURES_RES
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BTC2th_LMP_name_res
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LMP_NAME_RES
                 UNION ALL
-                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM BTC2th_LMP_version_res
+                SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM LMP_VERSION_RES
                 UNION ALL
                 SELECT CONVERT(device_bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS device_bdaddr FROM GATT_services2
             ) AS t

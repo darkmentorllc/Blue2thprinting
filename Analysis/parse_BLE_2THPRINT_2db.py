@@ -20,12 +20,12 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-sql_BLE2th_LL_VERSION_IND = "INSERT IGNORE INTO BLE2th_LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s)"
-sql_BLE2th_LL_UNKNOWN_RSP = "INSERT IGNORE INTO BLE2th_LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s)"
-sql_BLE2th_LL_FEATUREs    = "INSERT IGNORE INTO BLE2th_LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s)"
-sql_BLE2th_LL_PHYs        = "INSERT IGNORE INTO BLE2th_LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
-sql_BLE2th_LL_LENGTHs     = "INSERT IGNORE INTO BLE2th_LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-sql_BLE2th_LL_PING_RSP    = "INSERT IGNORE INTO BLE2th_LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s)"
+sql_LL_VERSION_IND = "INSERT IGNORE INTO LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s)"
+sql_LL_UNKNOWN_RSP = "INSERT IGNORE INTO LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s)"
+sql_LL_FEATUREs    = "INSERT IGNORE INTO LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s)"
+sql_LL_PHYs        = "INSERT IGNORE INTO LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
+sql_LL_LENGTHs     = "INSERT IGNORE INTO LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+sql_LL_PING_RSP    = "INSERT IGNORE INTO LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s)"
 file_path = './BLE_2THPRINT_dedup.log'
 
 ll_versions = {
@@ -83,7 +83,7 @@ with open(file_path, 'r') as file:
             # Define the parameter values to be inserted
             values = (bdaddr_type, bdaddr, int(tokens[4], 16), features)
             # Execute the SQL statement
-            cursor.execute(sql_BLE2th_LL_FEATUREs, values)
+            cursor.execute(sql_LL_FEATUREs, values)
             # Commit the changes to the database
             db_connection.commit()
 
@@ -105,7 +105,7 @@ with open(file_path, 'r') as file:
             # Define the parameter values to be inserted
             values = (bdaddr_type, bdaddr, int(tokens[4], 16), max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
             # Execute the SQL statement
-            cursor.execute(sql_BLE2th_LL_LENGTHs, values)
+            cursor.execute(sql_LL_LENGTHs, values)
             # Commit the changes to the database
             db_connection.commit()
 
@@ -115,7 +115,7 @@ with open(file_path, 'r') as file:
             # Define the parameter values to be inserted
             values = (bdaddr_type, bdaddr, 1)
             # Execute the SQL statement
-            cursor.execute(sql_BLE2th_LL_PING_RSP, values)
+            cursor.execute(sql_LL_PING_RSP, values)
             # Commit the changes to the database
             db_connection.commit()
 
@@ -132,7 +132,7 @@ with open(file_path, 'r') as file:
                 # Define the parameter values to be inserted
                 values = (bdaddr_type, bdaddr, lmp_byte, company_id, ll_sub_version)
                 # Execute the SQL statement
-                cursor.execute(sql_BLE2th_LL_VERSION_IND, values)
+                cursor.execute(sql_LL_VERSION_IND, values)
                 # Commit the changes to the database
                 db_connection.commit()
 
@@ -144,7 +144,7 @@ with open(file_path, 'r') as file:
             # Define the parameter values to be inserted
             values = (bdaddr_type, bdaddr, unknown_opcode)
             # Execute the SQL statement
-            cursor.execute(sql_BLE2th_LL_UNKNOWN_RSP, values)
+            cursor.execute(sql_LL_UNKNOWN_RSP, values)
             # Commit the changes to the database
             db_connection.commit()
 
@@ -157,7 +157,7 @@ with open(file_path, 'r') as file:
             # Define the parameter values to be inserted
             values = (bdaddr_type, bdaddr, tx_phys, rx_phys)
             # Execute the SQL statement
-            cursor.execute(sql_BLE2th_LL_PHYs, values)
+            cursor.execute(sql_LL_PHYs, values)
             # Commit the changes to the database
             db_connection.commit()
 

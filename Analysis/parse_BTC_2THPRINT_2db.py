@@ -38,9 +38,9 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-sql_BTC2th_LMP_version_res = "INSERT IGNORE INTO BTC2th_LMP_version_res (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s)"
-sql_BTC2th_LMP_features_res = "INSERT IGNORE INTO BTC2th_LMP_features_res (device_bdaddr, page, features) VALUES (%s, %s, %s)"
-sql_BTC2th_LMP_name_res = "INSERT IGNORE INTO BTC2th_LMP_name_res (device_bdaddr, device_name) VALUES (%s, %s)"
+sql_LMP_VERSION_RES = "INSERT IGNORE INTO LMP_VERSION_RES (device_bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s)"
+sql_LMP_FEATURES_RES = "INSERT IGNORE INTO LMP_FEATURES_RES (device_bdaddr, page, features) VALUES (%s, %s, %s)"
+sql_LMP_NAME_RES = "INSERT IGNORE INTO LMP_NAME_RES (device_bdaddr, device_name) VALUES (%s, %s)"
 
 def print_string(args):
     try:
@@ -73,7 +73,7 @@ def func_LMP_OP_0x02(bdaddr, args):
     # Define the parameter values to be inserted
     values = (bdaddr, unicode_string)
     # Execute the SQL statement
-    cursor.execute(sql_BTC2th_LMP_name_res, values)
+    cursor.execute(sql_LMP_NAME_RES, values)
     # Commit the changes to the database
     db_connection.commit()
 
@@ -87,7 +87,7 @@ def func_LMP_OP_0x04(bdaddr, args):
 #    else print("args: ", args)
     '''
 
-# LMP_VERSION_RSP
+# LMP_VERSION_RES
 def func_LMP_OP_0x26(bdaddr, args):
     print("Called: func_LMP_OP_0x26 with bdaddr:", bdaddr)
     if check_args(args) == -1:
@@ -108,7 +108,7 @@ def func_LMP_OP_0x26(bdaddr, args):
     # Define the parameter values to be inserted
     values = (bdaddr, int(args[0], 16), bt_CID, subversion)
     # Execute the SQL statement
-    cursor.execute(sql_BTC2th_LMP_version_res, values)
+    cursor.execute(sql_LMP_VERSION_RES, values)
     # Commit the changes to the database
     db_connection.commit()
 
@@ -135,7 +135,7 @@ def func_LMP_OP_0x28(bdaddr, args):
     # Define the parameter values to be inserted
     values = (bdaddr, page, features)
     # Execute the SQL statement
-    cursor.execute(sql_BTC2th_LMP_features_res, values)
+    cursor.execute(sql_LMP_FEATURES_RES, values)
     # Commit the changes to the database
     db_connection.commit()
 

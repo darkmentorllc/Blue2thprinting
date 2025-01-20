@@ -1,4 +1,4 @@
-# Script to process /tmp/LL_VERSION_IND_uniq.csv created by pcap_fill_BLE2th_LL_VERSION_IND.sh
+# Script to process /tmp/LL_VERSION_IND_uniq.csv created by pcap_fill_LL_VERSION_IND.sh
 
 ##########################################
 # Created by Xeno Kovah
@@ -66,7 +66,7 @@ for key, value in result_dict_VERSION.items():
     print(f"{key}: {value}")
 '''
 
-# Write the CSV lines to a file appropriate for direct import to mysql BLE2th_LL_VERSION_IND table via a CLI mysql invocation
+# Write the CSV lines to a file appropriate for direct import to mysql LL_VERSION_IND table via a CLI mysql invocation
 with open('/tmp/LL_VERSION_IND_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 

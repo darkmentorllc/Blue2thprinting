@@ -33,4 +33,4 @@ echo "Post-processing raw tshark pcap output"
 python3 ./parse_PCAP_2db_helpers/post-process_pcap_LL_LENGTHs.py
 
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LL_LENGTHs_uniq_done.csv' IGNORE INTO TABLE BLE2th_LL_LENGTHs FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time);"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LL_LENGTHs_uniq_done.csv' IGNORE INTO TABLE LL_LENGTHs FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time);"
