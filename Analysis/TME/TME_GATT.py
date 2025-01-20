@@ -3,13 +3,17 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-import os
+#import os
 import re
 import struct
 import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_ATT import *
 from TME.TME_BTIDES_GATT import *
+
+from colorama import Fore, Back, Style, init
+
+init(autoreset=True)
 
 def get_uuid16_gatt_service_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT services
@@ -325,8 +329,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 for byte_values in char_value_handles_dict[handle]:
                     if(handle <= svc_end_handle and handle >= svc_begin_handle):
                         service_match_dict[handle] = 1
-                        qprint(f"\t\t\t\tGATT Characteristic Value read as {byte_values}")
-                        characteristic_value_decoding("\t\t\t\t\t", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                        fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
+                        qprint(f"\t\t\t\tGATT Characteristic Value read as {fmt_byte_values}")
+                        if(handle in attribute_handles_dict.keys()):
+                            characteristic_value_decoding("\t\t\t\t\t", attribute_handles_dict[handle], byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Second pass:
     # Iterate through all known handles, printing only information about handles which never matched any service
