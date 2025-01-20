@@ -183,6 +183,30 @@ def process_advertisements(p):
             if eir.fields['len'] != 0:
                 export_AdvChannelData(p, HCI_Event_Extended_Inquiry_Result, type_BTIDES_EIR)
         return True
+    elif p.haslayer(HCI_Event_Inquiry_Result):
+        p.show()
+        inq_result = p.getlayer(HCI_Event_Inquiry_Result)
+        export_Page_Scan_Repetition_Mode(inq_result.fields['addr'], inq_result.fields['page_scan_repetition_mode'])
+        CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
+        export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
+        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
+        if(inq_result.fields['num_response'] > 1):
+            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
+            exit(1)
+        # This has no AdvData inclusion
+        return True
+    elif p.haslayer(HCI_Event_Inquiry_Result_With_Rssi):
+        #p.show()
+        inq_result = p.getlayer(HCI_Event_Inquiry_Result_With_Rssi)
+        export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
+        CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
+        export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
+        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
+        if(inq_result.fields['num_response'] > 1):
+            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
+            exit(1)
+        # This has no AdvData inclusion
+        return True
 
     return False
 
@@ -210,7 +234,6 @@ def process_features(p):
     elif p.haslayer(HCI_Event_Remote_Host_Supported_Features_Notification):
         #p.show()
         event = p.getlayer(HCI_Event_Remote_Host_Supported_Features_Notification)
-#        features = event.fields['lmp_features']
         features_int = event.fields['lmp_features'].value
         bdaddr = event.fields['bd_addr']
         data = {"bdaddr": bdaddr, "page": 0, "features": features_int}
