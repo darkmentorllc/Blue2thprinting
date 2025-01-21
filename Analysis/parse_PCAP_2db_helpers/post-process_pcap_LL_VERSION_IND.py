@@ -70,9 +70,9 @@ for key, value in result_dict_VERSION.items():
 with open('/tmp/LL_VERSION_IND_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 
-    for device_bdaddr, device_bdaddr_type in result_dict_CONNECT.items():
-        if device_bdaddr in result_dict_VERSION:
-            ll_version_hex, device_BT_CID_hex, ll_sub_version_hex = result_dict_VERSION[device_bdaddr]
+    for bdaddr, bdaddr_random in result_dict_CONNECT.items():
+        if bdaddr in result_dict_VERSION:
+            ll_version_hex, device_BT_CID_hex, ll_sub_version_hex = result_dict_VERSION[bdaddr]
 
             # Convert hexadecimal values to decimal integers
             ll_version = int(ll_version_hex, 16)
@@ -80,6 +80,6 @@ with open('/tmp/LL_VERSION_IND_uniq_done.csv', 'w', newline='\n') as csvfile:
             ll_sub_version = int(ll_sub_version_hex, 16)
 
             # Print CSV line
-            #print(f'"{device_bdaddr_type}","{device_bdaddr}","{ll_version}","{device_BT_CID}","{ll_sub_version}"')
+            #print(f'"{bdaddr_random}","{bdaddr}","{ll_version}","{device_BT_CID}","{ll_sub_version}"')
 
-            csvwriter.writerow([device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version])
+            csvwriter.writerow([bdaddr_random, bdaddr, ll_version, device_BT_CID, ll_sub_version])

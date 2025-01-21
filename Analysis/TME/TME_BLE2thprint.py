@@ -75,22 +75,22 @@ def print_BLE_2thprint(bdaddr):
 
     values = (bdaddr,)
 
-    version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
 
-    features_query = "SELECT device_bdaddr_type, opcode, features FROM LL_FEATUREs WHERE device_bdaddr = %s"
+    features_query = "SELECT bdaddr_random, opcode, features FROM LL_FEATUREs WHERE bdaddr = %s"
     features_result = execute_query(features_query, values)
 
-    phys_query = "SELECT device_bdaddr_type, tx_phys, rx_phys FROM LL_PHYs WHERE device_bdaddr = %s"
+    phys_query = "SELECT bdaddr_random, tx_phys, rx_phys FROM LL_PHYs WHERE bdaddr = %s"
     phys_result = execute_query(phys_query, values)
 
-    lengths_query = "SELECT device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE device_bdaddr = %s"
+    lengths_query = "SELECT bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE bdaddr = %s"
     lengths_result = execute_query(lengths_query, values)
 
-    ping_query = "SELECT device_bdaddr_type FROM LL_PING_RSP WHERE device_bdaddr = %s"
+    ping_query = "SELECT bdaddr_random FROM LL_PING_RSP WHERE bdaddr = %s"
     ping_result = execute_query(ping_query, values)
 
-    unknown_query = "SELECT device_bdaddr_type, unknown_opcode FROM LL_UNKNOWN_RSP WHERE device_bdaddr = %s"
+    unknown_query = "SELECT bdaddr_random, unknown_opcode FROM LL_UNKNOWN_RSP WHERE bdaddr = %s"
     unknown_result = execute_query(unknown_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
@@ -106,25 +106,25 @@ def print_BLE_2thprint(bdaddr):
         qprint("\t\tLL Sub-version: 0x%04x" % ll_sub_version)
         qprint(f"\t\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
-    for device_bdaddr_type, opcode, features in features_result:
+    for bdaddr_random, opcode, features in features_result:
         qprint(f"\t\tBLE LL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
         qprint("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
         data = ff_LL_FEATURE_RSP(direction, features)
         if(opcode == type_opcode_LL_FEATURE_REQ):
-            BTIDES_export_LL_FEATURE_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_FEATURE_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_FEATURE_RSP):
-            BTIDES_export_LL_FEATURE_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_FEATURE_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
-            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for device_bdaddr_type, tx_phys, rx_phys in phys_result:
+    for bdaddr_random, tx_phys, rx_phys in phys_result:
         qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
         qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
         data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
-        BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+        BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
+    for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         qprint(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
         qprint(f"\t\t\tMax RX octets: {max_rx_octets}")
         qprint(f"\t\t\tMax RX time: {max_rx_time} microseconds")
@@ -132,20 +132,20 @@ def print_BLE_2thprint(bdaddr):
         qprint(f"\t\t\tMax TX time: {max_tx_time} microseconds")
         if(opcode == type_opcode_LL_LENGTH_REQ):
             data = ff_LL_LENGTH_REQ(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-            BTIDES_export_LL_LENGTH_REQ(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_LENGTH_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_LENGTH_RSP):
             data = ff_LL_LENGTH_RSP(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-            BTIDES_export_LL_LENGTH_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_LENGTH_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for device_bdaddr_type, unknown_opcode in unknown_result:
+    for bdaddr_random, unknown_opcode in unknown_result:
         qprint(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes_to_strings[unknown_opcode]})")
         data = ff_LL_UNKNOWN_RSP(direction, unknown_opcode)
-        BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+        BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for device_bdaddr_type, in ping_result:
+    for bdaddr_random, in ping_result:
         qprint(f"\t\tLL Ping Response Received")
         data = ff_LL_PING_RSP(direction)
-        BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+        BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         qprint("\tRaw BLE 2thprint:")
@@ -156,17 +156,17 @@ def print_BLE_2thprint(bdaddr):
 
             qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
 
-        for device_bdaddr_type, opcode, features in features_result:
+        for bdaddr_random, opcode, features in features_result:
             qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
 
-        for device_bdaddr_type, tx_phys, rx_phys in phys_result:
+        for bdaddr_random, tx_phys, rx_phys in phys_result:
             qprint(f"\t\t\"tx_phys\",\"0x%02x\"" % tx_phys)
             qprint(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
 
-        for device_bdaddr_type, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
+        for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
             qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
 
-        for device_bdaddr_type, unknown_opcode in unknown_result:
+        for bdaddr_random, unknown_opcode in unknown_result:
             qprint(f"\t\t\"unknown_ll_ctrl_opcode\",\"0x%02x\"" % unknown_opcode)
 
         for ping_rsp in ping_result:

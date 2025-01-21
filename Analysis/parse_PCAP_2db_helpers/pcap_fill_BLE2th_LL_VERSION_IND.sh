@@ -21,9 +21,9 @@ fi
 cat /tmp/LL_VERSION_IND.csv | sort | uniq > /tmp/LL_VERSION_IND_uniq.csv
 
 echo "Post-processing raw tshark pcap output"
-# This script will process /tmp/LL_VERSION_IND_uniq.csv and output /tmp/LL_VERSION_IND_uniq_done.csv, which will have cut down the device_bdaddr field to only the master or slave field based on whichever was actually responsible for sending the LL_VERSION_IND
+# This script will process /tmp/LL_VERSION_IND_uniq.csv and output /tmp/LL_VERSION_IND_uniq_done.csv, which will have cut down the bdaddr field to only the master or slave field based on whichever was actually responsible for sending the LL_VERSION_IND
 # It's not possible to print everything the way we want in one pass in a stateless way with wireshark (e.g. because we can't determine based only on the LL_VERSION_IND whether the addresses are public or random, because that's only in the CONNECT_IND)
 python3 ./parse_PCAP_2db_helpers/post-process_pcap_LL_VERSION_IND.py
 
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LL_VERSION_IND_uniq_done.csv' IGNORE INTO TABLE LL_VERSION_IND FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version);"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LL_VERSION_IND_uniq_done.csv' IGNORE INTO TABLE LL_VERSION_IND FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr_random, bdaddr, ll_version, device_BT_CID, ll_sub_version);"

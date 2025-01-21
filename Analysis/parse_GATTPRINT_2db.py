@@ -23,12 +23,12 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-#sql_GATT_services = "INSERT IGNORE INTO GATT_services (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
+#sql_GATT_services = "INSERT IGNORE INTO GATT_services (bdaddr, bdaddr_random, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
 # Currently date from gatttool can only capture primary services, so hardcode service_type to 0 (for 0x2800, but to save space. 0x2801 would therefore be 1))
-sql_GATT_services2 = "INSERT IGNORE INTO GATT_services2 (device_bdaddr_type, device_bdaddr, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
-sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
-sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
-sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (device_bdaddr_type, device_bdaddr, read_handle, byte_values) VALUES (%s, %s, %s, %s)"
+sql_GATT_services2 = "INSERT IGNORE INTO GATT_services2 (bdaddr, bdaddr_random, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
+sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (bdaddr, bdaddr_random, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
+sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
+sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, read_handle, byte_values) VALUES (%s, %s, %s, %s)"
 
 # Try to find the bdaddr that will be substituted for {}, in any of our BLE tables
 sql_lookup_bdaddr_type = """
@@ -36,63 +36,63 @@ SELECT bdaddr_random
 FROM (
   SELECT bdaddr_random
   FROM LE_bdaddr_to_appearance
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_CoD
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_connect_interval
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_flags
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_MSD
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_name
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_other_le_bdaddr
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_public_target_bdaddr
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_tx_power
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_URI
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID128_service_solicit
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID128s
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID16_service_solicit
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID16s
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID32s
-  WHERE device_bdaddr = '{bda}'
+  WHERE bdaddr = '{bda}'
 ) AS combined_results;
 """
 
@@ -110,14 +110,14 @@ def print_string(args):
         print("Error decoding the string.")
         return -1
 
-# If new = 1, that means it has the new style formatting with the device_bdaddr_type already embedded
-def func_CHARACTERISTIC(device_bdaddr_type, new, args):
+# If new = 1, that means it has the new style formatting with the bdaddr_random already embedded
+def func_CHARACTERISTIC(bdaddr_random, new, args):
     #print("Called: func_CHARACTERISTIC with args:", args)
     if(new == 0):
         if (len(args) != 5):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[0]
+        bdaddr = args[0]
         try:
             declaration_handle = int(args[1], 16)
             char_properties = int(args[2], 16)
@@ -131,7 +131,7 @@ def func_CHARACTERISTIC(device_bdaddr_type, new, args):
         if (len(args) != 6):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[1]
+        bdaddr = args[1]
         try:
             declaration_handle = int(args[2], 16)
             char_properties = int(args[3], 16)
@@ -143,28 +143,28 @@ def func_CHARACTERISTIC(device_bdaddr_type, new, args):
         UUID128 = args[5]
 
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
+    values = (bdaddr_random, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_characteristics, values)
     # Commit the changes to the database
     db_connection.commit()
 
-# If new = 1, that means it has the new style formatting with the device_bdaddr_type already embedded
-def func_CHAR_VALUE(device_bdaddr_type, new, args):
+# If new = 1, that means it has the new style formatting with the bdaddr_random already embedded
+def func_CHAR_VALUE(bdaddr_random, new, args):
 #    print("Called: func_CHAR_VALUE with args:", args)
     if(new == 0):
         if (len(args) != 3):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[0]
+        bdaddr = args[0]
         read_handle = int(args[1], 16)
         byte_values = args[2]
     else:
         if (len(args) != 4):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[1]
+        bdaddr = args[1]
         read_handle = int(args[2], 16)
         byte_values = args[3]
 
@@ -176,21 +176,21 @@ def func_CHAR_VALUE(device_bdaddr_type, new, args):
 #        print("Couldn't decode byte_values")
         pass
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, read_handle, binary_string)
+    values = (bdaddr_random, bdaddr, read_handle, binary_string)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_characteristics_values, values)
     # Commit the changes to the database
     db_connection.commit()
 
-# If new = 1, that means it has the new style formatting with the device_bdaddr_type already embedded
-def func_SERVICE(device_bdaddr_type, new, args):
+# If new = 1, that means it has the new style formatting with the bdaddr_random already embedded
+def func_SERVICE(bdaddr_random, new, args):
     #print("Called: func_SERVICE with args:", args)
     if(new == 0):
         if (len(args) != 4):
             print("args rejected as they were not the correct number of elements 1:", args)
             return
-        device_bdaddr = args[0]
+        bdaddr = args[0]
         try:
             begin_handle = int(args[1], 16)
             end_handle = int(args[2], 16)
@@ -202,7 +202,7 @@ def func_SERVICE(device_bdaddr_type, new, args):
         if (len(args) != 5):
             print("args rejected as they were not the correct number of elements 2:", new, args)
             return
-        device_bdaddr = args[1]
+        bdaddr = args[1]
         try:
             begin_handle = int(args[2], 16)
             end_handle = int(args[3], 16)
@@ -212,42 +212,42 @@ def func_SERVICE(device_bdaddr_type, new, args):
         UUID128 = args[4]
 
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, begin_handle, end_handle, UUID128)
+    values = (bdaddr_random, bdaddr, begin_handle, end_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_services2, values)
     # Commit the changes to the database
     db_connection.commit()
 
-# If new = 1, that means it has the new style formatting with the device_bdaddr_type already embedded
-def func_ATT_HANDLES(device_bdaddr_type, new, args):
+# If new = 1, that means it has the new style formatting with the bdaddr_random already embedded
+def func_ATT_HANDLES(bdaddr_random, new, args):
     #print("Called: func_ATT_HANDLES with args:", args)
     if(new == 0):
         if (len(args) != 3):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[0]
+        bdaddr = args[0]
         attribute_handle = int(args[1], 16)
         UUID128 = args[2]
     else:
         if (len(args) != 4):
             print("args rejected as they were not the correct number of elements:", args)
             return
-        device_bdaddr = args[1]
+        bdaddr = args[1]
         attribute_handle = int(args[2], 16)
         UUID128 = args[3]
 
     # Define the parameter values to be inserted
-    values = (device_bdaddr_type, device_bdaddr, attribute_handle, UUID128)
+    values = (bdaddr_random, bdaddr, attribute_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_attribute_handles, values)
     # Commit the changes to the database
     db_connection.commit()
 
-# Attempt a workaround to deal with data that was missing the device_bdaddr_type field in the log
+# Attempt a workaround to deal with data that was missing the bdaddr_random field in the log
 # Look up whether we have any existing data for this bd_addr
-def lookup_device_bdaddr_type(line):
+def lookup_bdaddr_random(line):
     # Check for erroneous / skippable lines
     if(len(line) < 3):
 #        print("skipping", line)
@@ -268,11 +268,11 @@ def lookup_device_bdaddr_type(line):
         results = cursor.execute(sql_filled)
         results = cursor.fetchall()
         if(len(results) > 0):
-            #print("lookup_device_bdaddr_type returning", results[0][0])
+            #print("lookup_bdaddr_random returning", results[0][0])
             type_cache[line[1]] = results[0][0]
             return (results[0][0], 0)
         else:
-            #print("lookup_device_bdaddr_type returning", 9)
+            #print("lookup_bdaddr_random returning", 9)
             type_cache[line[1]] = 9
             return (9,0) # Special value indicating we don't have data for this bdaddr
     else:
@@ -283,15 +283,15 @@ def lookup_device_bdaddr_type(line):
         # If the length is any other value, this means it's probably not a type-missing line
         # So check line[1] for whether it's "random" or "public"
         if(line[1] == "public"):
-            print("lookup_device_bdaddr_type returning new 0")
+            print("lookup_bdaddr_random returning new 0")
             type_cache[line[2]] = 0
             return (0,1)
         elif(line[1] == "random"):
-            print("lookup_device_bdaddr_type returning new 1")
+            print("lookup_bdaddr_random returning new 1")
             type_cache[line[2]] = 1
             return (1,1)
         else:
-            print("lookup_device_bdaddr_type returning new 9 (should never get here for now)")
+            print("lookup_bdaddr_random returning new 9 (should never get here for now)")
             type_cache[line[2]] = 9
             return (9,1) # Special value indicating we don't have data for this bdaddr
 
@@ -308,22 +308,22 @@ try:
                 print(line)
                 if (line[0] == "GATTPRINT:CHARACTERISTIC" or line[0] == "GATTPRINT:CHAR_DESC"): # start supporting BetterGATTGetter.py alt (newer & clearer IMHO) names
                     #print("GATTPRINT:CHARACTERISTIC")
-                    (bdaddr_type, new) = lookup_device_bdaddr_type(line)
+                    (bdaddr_type, new) = lookup_bdaddr_random(line)
                     if bdaddr_type == -1: continue
                     func_CHARACTERISTIC(bdaddr_type, new, line[1:])
                 elif line[0] == "GATTPRINT:CHAR_VALUE":
                     #print("GATTPRINT:CHAR_VALUE")
-                    (bdaddr_type, new) = lookup_device_bdaddr_type(line)
+                    (bdaddr_type, new) = lookup_bdaddr_random(line)
                     if bdaddr_type == -1: continue
                     func_CHAR_VALUE(bdaddr_type, new, line[1:])
                 elif (line[0] == "GATTPRINT:DESCRIPTORS" or line[0] == "GATTPRINT:HANDLE_UUID"): # start supporting BetterGATTGetter.py alt (newer & clearer IMHO) names
                     #print("GATTPRINT:DESCRIPTORS")
-                    (bdaddr_type, new) = lookup_device_bdaddr_type(line)
+                    (bdaddr_type, new) = lookup_bdaddr_random(line)
                     if bdaddr_type == -1: continue
                     func_ATT_HANDLES(bdaddr_type, new, line[1:])
                 elif line[0] == "GATTPRINT:SERVICE":
                     #print("GATTPRINT:SERVICE")
-                    (bdaddr_type, new) = lookup_device_bdaddr_type(line)
+                    (bdaddr_type, new) = lookup_bdaddr_random(line)
                     if bdaddr_type == -1: continue
                     func_SERVICE(bdaddr_type, new, line[1:])
                 else:

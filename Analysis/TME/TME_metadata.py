@@ -32,28 +32,28 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
 
     # Query for EIR_bdaddr_to_name table
     values = (bdaddr,)
-    eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+    eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
     if(len(eir_result) > 0): we_have_a_name = True
 
     # Query for RSP_bdaddr_to_name table
-    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
+    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE bdaddr = %s"
     rsp_result = execute_query(rsp_query, values)
     if(len(rsp_result) > 0): we_have_a_name = True
 
     # Query for LE_bdaddr_to_name table
-    le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = %s"
+    le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
     if(len(le_result) > 0): we_have_a_name = True
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00' AND cv.device_bdaddr = %s;"
+    chars_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' AND cv.bdaddr = %s;"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_a_name = True
 
     # Query Manufacturer-Specific Data (MSD) to see if there's types like Microsoft's Swift Pair which are known to contain a Device Name
     ms_msd_name_present = False
-    ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030'"
+    ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030'"
     ms_msd_result = execute_query(ms_msd_query, values)
     for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
         ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
@@ -65,7 +65,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     ms_msd_name_present2 = False
     regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
     values2 = (bdaddr, regex)
-    ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s"
+    ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s"
     ms_msd_result2 = execute_query(ms_msd_query2, values2)
     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
         try:
@@ -130,7 +130,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
     s = ""
 
     values = (bdaddr,)
-    chars_query = "SELECT UUID,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = %s"
+    chars_query = "SELECT UUID,char_value_handle FROM GATT_characteristics WHERE bdaddr = %s"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_GATT = True
 
@@ -143,7 +143,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
             if( (check_if_UUIDs_match(UUID128_db_, "2a24") or check_if_UUIDs_match(UUID128_db_, "2a27")) and model_name_match == 0):
                 # If so, go lookup the actual data behind it, so we can see if the "Model Number String" is a Chip
                 values = (bdaddr, f"char_value_handle:03")
-                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s and read_handle = %s"
+                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and read_handle = %s"
                 char_value_result = execute_query(char_value_query, values)
                 if(len(char_value_result) > 0):
                     for (byte_values,) in char_value_result:
@@ -177,23 +177,23 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     we_have_GATT = False
 
     values = (bdaddr,)
-    services_query = "SELECT UUID FROM GATT_services WHERE device_bdaddr = %s"
+    services_query = "SELECT UUID FROM GATT_services WHERE bdaddr = %s"
     services_result = execute_query(services_query, values)
     if(len(services_result) > 0): we_have_GATT = True
 
-    chars_query = "SELECT UUID,char_value_handle FROM GATT_characteristics WHERE device_bdaddr = %s"
+    chars_query = "SELECT UUID,char_value_handle FROM GATT_characteristics WHERE bdaddr = %s"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_GATT = True
 
-    le_adv_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+    le_adv_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE bdaddr = %s"
     le_adv_result = execute_query(le_adv_query, values)
     if(len(le_adv_result) > 0): we_have_GATT = True
 
-    le_adv2_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE device_bdaddr = %s"
+    le_adv2_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr = %s"
     le_adv2_result = execute_query(le_adv2_query, values)
     if(len(le_adv2_result) > 0): we_have_GATT = True
 
-    eir_adv_query = "SELECT str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+    eir_adv_query = "SELECT str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE bdaddr = %s"
     eir_adv_result = execute_query(eir_adv_query, values)
     if(len(eir_adv_result) > 0): we_have_GATT = True
 
@@ -231,7 +231,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
                                 # If so, go lookup the actual data behind it, so we can see if the "Manufacturer Name" is a ChipMaker
                                 values = (bdaddr, f"char_value_handle:03")
-                                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s and read_handle = %s"
+                                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and read_handle = %s"
                                 char_value_result = execute_query(char_value_query, values)
                                 if(len(char_value_result) > 0):
                                     for (byte_values,) in char_value_result:
@@ -291,7 +291,7 @@ ChipMaker_OUI_hash = {}
 def create_ChipMaker_OUI_hash():
     for company in ChipMaker_names_and_BT_CIDs.keys():
         values = (company,)
-        oui_query = "SELECT device_bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP %s"
+        oui_query = "SELECT bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP %s"
         oui_result = execute_query(oui_query, values)
         for (oui,company_name) in oui_result:
             ChipMaker_OUI_hash[oui.lower()] = company_name # I'm using the IEEE name instead of the company regex since it will generally be longer and more verbose, since I cut down some regexes to match both IEEE OUIs and BT CIDs
@@ -315,17 +315,17 @@ def print_ChipMakerPrint(bdaddr):
 
     # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
     values = (bdaddr,)
-    ble_version_query = "SELECT device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version FROM LL_VERSION_IND WHERE device_bdaddr = %s"
+    ble_version_query = "SELECT bdaddr_random, ll_version, device_BT_CID, ll_sub_version FROM LL_VERSION_IND WHERE bdaddr = %s"
     ble_version_result = execute_query(ble_version_query, values)
     if(len(ble_version_result) != 0):
         no_results_found = False
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
-        for (device_bdaddr_type, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
+        for (bdaddr_random, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
             qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (LL_VERSION_IND)")
             # FIXME: For now all the data in the database is P2C, but we need to update the DB to capture this in the future
             data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, ll_version, device_BT_CID, ll_sub_version)
-            BTIDES_export_LL_VERSION_IND(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+            BTIDES_export_LL_VERSION_IND(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(time_profile): qprint(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#
@@ -333,7 +333,7 @@ def print_ChipMakerPrint(bdaddr):
     #==========================#
 
     # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
-    btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
+    btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM LMP_VERSION_RES WHERE bdaddr = %s"
     btc_version_result = execute_query(btc_version_query, values)
     if(len(btc_version_result) != 0):
         no_results_found = False
@@ -391,7 +391,7 @@ def print_ChipMakerPrint(bdaddr):
     # Manufacturer-Specific Data (MSD) - BTC #
     #========================================#
     # In general more companies tend to leave this uninitialized for BTC, than for BLE. So a BTC hit is more likely to be accurate than BLE
-    MSD_query = "SELECT device_BT_CID,manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    MSD_query = "SELECT device_BT_CID,manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE bdaddr = %s"
     MSD_result = execute_query(MSD_query, values)
 
     if(len(MSD_result) != 0):
@@ -415,7 +415,7 @@ def print_ChipMakerPrint(bdaddr):
     #========================================#
     # Manufacturer-Specific Data (MSD) - BLE #
     #========================================#
-    MSD_query = "SELECT bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    MSD_query = "SELECT bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s"
     MSD_result = execute_query(MSD_query, values)
 
     if(len(MSD_result) != 0):
@@ -568,7 +568,7 @@ def print_ChipPrint(bdaddr):
     # We currently have limited visibility into where sub-versions correlate to specific chip IDs. So this is just a PoC for now.
 
     values = (bdaddr,)
-    version_query = "SELECT ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE device_bdaddr = %s"
+    version_query = "SELECT ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
 
     if(len(version_result) != 0):
@@ -586,7 +586,7 @@ def print_ChipPrint(bdaddr):
 
     # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
 
-    version_query = "SELECT lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE device_bdaddr = %s"
+    version_query = "SELECT lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
 
     if(len(version_result) != 0):

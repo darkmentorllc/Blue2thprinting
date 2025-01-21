@@ -27,7 +27,7 @@ def print_UniqueIDReport(bdaddr):
 
     # Or if it has Classic BDADDR embedded in Microsoft Swift Pair MSD
     values = (bdaddr,)
-    le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
+    le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) != 0):
@@ -45,7 +45,7 @@ def print_UniqueIDReport(bdaddr):
     # To be clear, we don't necessarily need to have successfully read the value for this. The mere presence of a definition for it is suggestive enough of the presence of a DUID to report on it
 
     we_have_GATT = False
-    chars_query = "SELECT UUID FROM GATT_characteristics WHERE device_bdaddr = %s"
+    chars_query = "SELECT UUID FROM GATT_characteristics WHERE bdaddr = %s"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_GATT = True
 
@@ -84,7 +84,7 @@ def print_UniqueIDReport(bdaddr):
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
-        eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE device_bdaddr = %s"
+        eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
         eir_result = execute_query(eir_query, values)
         for (name_hex_str,) in eir_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -92,7 +92,7 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE device_bdaddr = %s"
+        rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE bdaddr = %s"
         rsp_result = execute_query(rsp_query, values)
         for (name_hex_str,) in rsp_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -100,7 +100,7 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE device_bdaddr = %s"
+        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
         for name_hex_str, le_evt_type in le_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -108,7 +108,7 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        chars_query = "SELECT cv.device_bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.device_bdaddr = c.device_bdaddr WHERE c.UUID = '2a00' and cv.device_bdaddr = %s;"
+        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
         chars_result = execute_query(chars_query, values)
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
@@ -117,7 +117,7 @@ def print_UniqueIDReport(bdaddr):
                 qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
                 no_results_found = False
 
-        ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
+        ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
         ms_msd_result = execute_query(ms_msd_query, values)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
@@ -128,7 +128,7 @@ def print_UniqueIDReport(bdaddr):
 
         regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
         values2 = (bdaddr, regex)
-        ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
+        ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
             try:

@@ -38,16 +38,16 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
     fields = packet.getlayer(scapy_type).fields
     if(scapy_type == HCI_Event_Extended_Inquiry_Result):
         bdaddr_random = 0
-        device_bdaddr = fields['bd_addr']
+        bdaddr = fields['bd_addr']
         data = fields['eir_data']
     else:
         bdaddr_random = fields['atype']
-        device_bdaddr = fields['addr']
+        bdaddr = fields['addr']
         data = fields['data']
 
     data_exported = False
     for entry in data: # This is an array of AdvData entries
-        if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
+        if export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
             data_exported = True
 
     if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(data) == 0)):

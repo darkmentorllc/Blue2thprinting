@@ -20,12 +20,12 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-sql_LL_VERSION_IND = "INSERT IGNORE INTO LL_VERSION_IND (device_bdaddr_type, device_bdaddr, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s)"
-sql_LL_UNKNOWN_RSP = "INSERT IGNORE INTO LL_UNKNOWN_RSP (device_bdaddr_type, device_bdaddr, unknown_opcode) VALUES (%s, %s, %s)"
-sql_LL_FEATUREs    = "INSERT IGNORE INTO LL_FEATUREs (device_bdaddr_type, device_bdaddr, opcode, features) VALUES (%s, %s, %s, %s)"
-sql_LL_PHYs        = "INSERT IGNORE INTO LL_PHYs (device_bdaddr_type, device_bdaddr, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
-sql_LL_LENGTHs     = "INSERT IGNORE INTO LL_LENGTHs (device_bdaddr_type, device_bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-sql_LL_PING_RSP    = "INSERT IGNORE INTO LL_PING_RSP (device_bdaddr_type, device_bdaddr, ping_rsp) VALUES (%s, %s, %s)"
+sql_LL_VERSION_IND = "INSERT IGNORE INTO LL_VERSION_IND (bdaddr, bdaddr_random, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s)"
+sql_LL_UNKNOWN_RSP = "INSERT IGNORE INTO LL_UNKNOWN_RSP (bdaddr, bdaddr_random, unknown_opcode) VALUES (%s, %s, %s)"
+sql_LL_FEATUREs    = "INSERT IGNORE INTO LL_FEATUREs (bdaddr, bdaddr_random, opcode, features) VALUES (%s, %s, %s, %s)"
+sql_LL_PHYs        = "INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
+sql_LL_LENGTHs     = "INSERT IGNORE INTO LL_LENGTHs (bdaddr, bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+sql_LL_PING_RSP    = "INSERT IGNORE INTO LL_PING_RSP (bdaddr, bdaddr_random, ping_rsp) VALUES (%s, %s, %s)"
 file_path = './BLE_2THPRINT_dedup.log'
 
 ll_versions = {

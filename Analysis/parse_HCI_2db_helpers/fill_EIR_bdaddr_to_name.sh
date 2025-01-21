@@ -24,5 +24,5 @@ fi
 cat /tmp/EIR_bdaddr_to_name_short.csv | sort | uniq > /tmp/EIR_bdaddr_to_name_short_uniq.csv
 cat /tmp/EIR_bdaddr_to_name_complete.csv | sort | uniq > /tmp/EIR_bdaddr_to_name_complete_uniq.csv
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_name_short_uniq.csv'  IGNORE INTO TABLE EIR_bdaddr_to_name FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, device_name) SET device_name_type = 8;"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_name_complete_uniq.csv'  IGNORE INTO TABLE EIR_bdaddr_to_name FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, device_name) SET device_name_type = 9;"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_name_short_uniq.csv'  IGNORE INTO TABLE EIR_bdaddr_to_name FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, device_name) SET device_name_type = 8;"
+mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/EIR_bdaddr_to_name_complete_uniq.csv'  IGNORE INTO TABLE EIR_bdaddr_to_name FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, device_name) SET device_name_type = 9;"

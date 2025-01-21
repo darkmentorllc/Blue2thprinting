@@ -21,5 +21,5 @@ fi
 
 if [ -s "/tmp/LE_bdaddr_to_CoD_uniq.csv" ]; then
     echo "mysql import"
-    mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LE_bdaddr_to_CoD_uniq.csv' IGNORE INTO TABLE LE_bdaddr_to_CoD FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (device_bdaddr, @bdaddr_random, @le_evt_type, @class_of_device) SET bdaddr_random = CAST(CONV(REPLACE(@bdaddr_random, '0x', ''), 16, 10) AS UNSIGNED), le_evt_type = CAST(CONV(REPLACE(@le_evt_type, '0x', ''), 16, 10) AS UNSIGNED), class_of_device = CAST(CONV(REPLACE(@class_of_device, '0x', ''), 16, 10) AS UNSIGNED);"
+    mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LE_bdaddr_to_CoD_uniq.csv' IGNORE INTO TABLE LE_bdaddr_to_CoD FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, @bdaddr_random, @le_evt_type, @class_of_device) SET bdaddr_random = CAST(CONV(REPLACE(@bdaddr_random, '0x', ''), 16, 10) AS UNSIGNED), le_evt_type = CAST(CONV(REPLACE(@le_evt_type, '0x', ''), 16, 10) AS UNSIGNED), class_of_device = CAST(CONV(REPLACE(@class_of_device, '0x', ''), 16, 10) AS UNSIGNED);"
 fi

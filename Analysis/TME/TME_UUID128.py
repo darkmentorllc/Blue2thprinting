@@ -44,13 +44,13 @@ def check_if_UUIDs_match(UUID1, UUID2):
     return False
 
 
-# Function to print UUID128s for a given device_bdaddr
-def print_uuid128s(device_bdaddr):
-    values = (device_bdaddr,)
-    eir_UUID128s_query = "SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+# Function to print UUID128s for a given bdaddr
+def print_uuid128s(bdaddr):
+    values = (bdaddr,)
+    eir_UUID128s_query = "SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE bdaddr = %s"
     eir_UUID128s_result = execute_query(eir_UUID128s_query, values)
 
-    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE device_bdaddr = %s"
+    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE bdaddr = %s"
     le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(eir_UUID128s_result) == 0 and len(le_UUID128s_result) == 0):
@@ -70,7 +70,7 @@ def print_uuid128s(device_bdaddr):
             UUID128List = []
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
         data = {"length": length, "UUID128List": UUID128List}
-        BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
+        BTIDES_export_AdvData(bdaddr, 0, 50, list_type, data)
 
         # Then human UI output
         if(str_UUID128s == ""):
@@ -94,7 +94,7 @@ def print_uuid128s(device_bdaddr):
             UUID128List = []
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
         data = {"length": length, "UUID128List": UUID128List}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, list_type, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, list_type, data)
 
         # Then human UI output
         if(str_UUID128s == ""):
@@ -105,15 +105,15 @@ def print_uuid128s(device_bdaddr):
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
                 qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
-        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
-# Function to print UUID128s for a given device_bdaddr
-def print_uuid128s_service_solicit(device_bdaddr):
-    values = (device_bdaddr,)
-    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE device_bdaddr = %s"
+# Function to print UUID128s for a given bdaddr
+def print_uuid128s_service_solicit(bdaddr):
+    values = (bdaddr,)
+    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, str_UUID128s FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr = %s"
     le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(le_UUID128s_result) == 0):
@@ -143,10 +143,10 @@ def print_service_data_interpretation(UUID128, service_data_hex_str, indent):
         serial = get_utf8_string_from_hex_string(service_data_hex_str)
         qprint(f"{indent}Possible interpretation: Serial Number: {serial}")
 
-# Function to print UUID128s service data for a given device_bdaddr
-def print_uuid128_service_data(device_bdaddr):
-    values = (device_bdaddr,)
-    le_uuid128_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID128_service_data WHERE device_bdaddr = %s"
+# Function to print UUID128s service data for a given bdaddr
+def print_uuid128_service_data(bdaddr):
+    values = (bdaddr,)
+    le_uuid128_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr = %s"
     le_uuid128_service_data_result = execute_query(le_uuid128_service_data_query, values)
 
     if(len(le_uuid128_service_data_result) == 0):
@@ -160,7 +160,7 @@ def print_uuid128_service_data(device_bdaddr):
         dashed_uuid128 = add_dashes_to_UUID128(UUID128_hex_str)
         length = 17 + int(len(service_data_hex_str) / 2) # 1 byte for opcode + 16 bytes for UUID128 + half as many bytes as there are hex nibble characters
         data = {"length": length, "UUID128": add_dashes_to_UUID128(UUID128_hex_str), "service_data_hex_str": service_data_hex_str}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID128ServiceData, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID128ServiceData, data)
 
         # Then human UI output
         custom_uuid128 = get_custom_uuid128_string(UUID128_hex_str)
@@ -168,7 +168,7 @@ def print_uuid128_service_data(device_bdaddr):
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
         print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, "\t\t")
 
-        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
