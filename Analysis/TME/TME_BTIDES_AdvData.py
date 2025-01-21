@@ -156,6 +156,13 @@ def ff_PublicTargetAddress(data):
         obj["type_str"] = "PublicTargetAddress"
     return obj
 
+# type 0x18
+def ff_RandomTargetAddress(data):
+    obj = {"type": type_AdvData_RandomTargetAddress, "length": data["length"], "random_bdaddr": data["random_bdaddr"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "RandomTargetAddress"
+    return obj
+
 # type 0x19
 def ff_Appearance(data):
     obj = {"type": type_AdvData_Appearance, "length": data["length"], "appearance_hex_str": data["appearance_hex_str"]}
@@ -304,6 +311,11 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
 
     if(adv_data_type == type_AdvData_PublicTargetAddress):
         if(AdvDataArrayEntry["public_bdaddr"] == data["public_bdaddr"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_PublicTargetAddress):
+        if(AdvDataArrayEntry["random_bdaddr"] == data["random_bdaddr"]):
             return True
         else: return False
 

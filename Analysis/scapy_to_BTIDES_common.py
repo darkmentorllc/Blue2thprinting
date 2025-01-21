@@ -301,6 +301,17 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PublicTargetAddress, data)
         return True
 
+    # type 0x18
+    elif isinstance(entry.payload, EIR_RandomTargetAddress):
+        #entry.show()
+        bdaddr = entry.bd_addr
+        length = 7 # 1 byte for opcode, 6 bytes for BDADDR
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "public_bdaddr": bdaddr}
+        vprint(f"{device_bdaddr}: {adv_type} public_bdaddr: {bdaddr}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_RandomTargetAddress, data)
+        return True
+
     # type 0x1A
     # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)
     # elif isinstance(entry.payload, EIR_AdvertisingInterval):

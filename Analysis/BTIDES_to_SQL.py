@@ -332,6 +332,21 @@ def import_AdvData_PublicTargetAddress(bdaddr, random, db_type, leaf):
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_public_target_bdaddr (device_bdaddr, bdaddr_random, le_evt_type, public_bdaddr) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+# type 0x18
+def import_AdvData_RandomTargetAddress(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_RandomTargetAddress!")
+    random_bdaddr = leaf["random_bdaddr"]
+
+    le_evt_type = db_type
+    if(db_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, random_bdaddr)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_public_target_bdaddr (device_bdaddr, bdaddr_random, le_evt_type, random_bdaddr) VALUES (%s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
 
 # type 0x19
 def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
@@ -477,6 +492,11 @@ def parse_AdvChanArray(entry):
                 # PublicTargetAddress
                 if(has_known_AdvData_type(type_AdvData_PublicTargetAddress, AdvData)):
                     import_AdvData_PublicTargetAddress(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # RandomTargetAddress
+                if(has_known_AdvData_type(type_AdvData_RandomTargetAddress, AdvData)):
+                    import_AdvData_RandomTargetAddress(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
 
                 # Appearance
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
