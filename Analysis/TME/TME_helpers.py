@@ -204,7 +204,8 @@ def is_bdaddr_le_and_random(bdaddr):
 
     # Note: this is a suboptimal query, but it's the first one I could get working and I wanted to move on
     # It would be better if it returned an error on an empty set, implying we needed to update the tables list
-    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
+    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
+
     query = """
     SELECT 1
     FROM LE_bdaddr_to_appearance
@@ -294,7 +295,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LL_PING_RSP
+    FROM LL_PINGs
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -321,6 +322,8 @@ def is_bdaddr_le_and_random(bdaddr):
     FROM GATT_services
     WHERE bdaddr = %s and bdaddr_random = 1;
     """
+
+
 
     result = execute_query(query, values)
     if(len(result) == 0):

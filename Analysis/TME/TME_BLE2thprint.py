@@ -87,7 +87,7 @@ def print_BLE_2thprint(bdaddr):
     lengths_query = "SELECT bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE bdaddr = %s"
     lengths_result = execute_query(lengths_query, values)
 
-    ping_query = "SELECT bdaddr_random FROM LL_PING_RSP WHERE bdaddr = %s"
+    ping_query = "SELECT bdaddr_random, opcode FROM LL_PINGs WHERE bdaddr = %s"
     ping_result = execute_query(ping_query, values)
 
     unknown_query = "SELECT bdaddr_random, unknown_opcode FROM LL_UNKNOWN_RSP WHERE bdaddr = %s"
@@ -142,34 +142,41 @@ def print_BLE_2thprint(bdaddr):
         data = ff_LL_UNKNOWN_RSP(direction, unknown_opcode)
         BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for bdaddr_random, in ping_result:
-        qprint(f"\t\tLL Ping Response Received")
-        data = ff_LL_PING_RSP(direction)
-        BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+    for bdaddr_random, opcode in ping_result:
+        if(opcode == type_opcode_LL_PING_RSP):
+            qprint(f"\t\tCentral received LL Ping Response from this device.")
+            data = ff_LL_PING_RSP(direction)
+            BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        elif(opcode == type_opcode_LL_PING_REQ):
+            qprint(f"\t\tCentral received LL Ping Request from this device.")
+            data = ff_LL_PING_REQ(direction)
+            BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
-        qprint("\tRaw BLE 2thprint:")
+        vprint("\tRaw BLE 2thprint:")
         for ll_version, ll_sub_version, device_BT_CID in version_result:
-            qprint(f"\t\t\"ll_version\",\"0x%02x\"" % ll_version)
+            vprint(f"\t\t\"LL_VERSION_IND:ll_version\",\"0x%02x\"" % ll_version)
 
-            qprint("\t\t\"ll_sub_version\",\"0x%04x\"" % ll_sub_version)
+            vprint("\t\t\"LL_VERSION_IND:ll_sub_version\",\"0x%04x\"" % ll_sub_version)
 
-            qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
+            vprint(f"\t\t\"LL_VERSION_IND:version_BT_CID\",\"0x%04x\"" % device_BT_CID)
 
         for bdaddr_random, opcode, features in features_result:
-            qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
+            vprint(f"\t\t\"LL_FEATURE* opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
 
         for bdaddr_random, tx_phys, rx_phys in phys_result:
-            qprint(f"\t\t\"tx_phys\",\"0x%02x\"" % tx_phys)
-            qprint(f"\t\t\"rx_phys\",\"0x%02x\"" % rx_phys)
+            vprint(f"\t\t\"LL_PHY_RSP:tx_phys\",\"0x%02x\"" % tx_phys)
+            vprint(f"\t\t\"LL_PHY_RSP:rx_phys\",\"0x%02x\"" % rx_phys)
 
         for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
-            qprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
+            vprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))
 
         for bdaddr_random, unknown_opcode in unknown_result:
-            qprint(f"\t\t\"unknown_ll_ctrl_opcode\",\"0x%02x\"" % unknown_opcode)
+            vprint(f"\t\t\"LL_UNKNOWN_RSP to opcode\",\"0x%02x\"" % unknown_opcode)
 
-        for ping_rsp in ping_result:
-            qprint(f"\t\t\"ll_ping_rsp\",\"1\"")
-
+        for bdaddr_random, opcode in ping_result:
+            if(opcode == type_opcode_LL_PING_RSP):
+                vprint(f"\t\t\"LL_PING_RSP\",\"P2C\"")
+            elif(opcode == type_opcode_LL_PING_REQ):
+                vprint(f"\t\t\"LL_PING_REQ\",\"P2C\"")
     qprint("")

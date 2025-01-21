@@ -159,7 +159,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PING_RSP "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs "
         "    UNION ALL "
         "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP "
         "    UNION ALL "
@@ -410,7 +410,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PHYs
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PING_RSP
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PINGs
                 UNION ALL
                 SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_UNKNOWN_RSP
                 UNION ALL
