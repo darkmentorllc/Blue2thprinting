@@ -515,7 +515,6 @@ def parse_AdvChanArray(entry):
                 if(has_known_AdvData_type(type_AdvData_RandomTargetAddress, AdvData)):
                     import_AdvData_RandomTargetAddress(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
-
                 # Appearance
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
                     import_AdvData_Appearance(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
@@ -532,7 +531,7 @@ def parse_AdvChanArray(entry):
                 if(has_known_AdvData_type(type_AdvData_UUID128ServiceData, AdvData)):
                     import_AdvData_UUID128ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
-                # UUID128ServiceData
+                # URI
                 if(has_known_AdvData_type(type_AdvData_URI, AdvData)):
                     import_AdvData_URI(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 

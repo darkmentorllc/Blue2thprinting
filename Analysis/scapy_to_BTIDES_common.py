@@ -377,7 +377,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         url_bytes = entry.uri_hier_part
         URI_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
         URI_hex_str = f"{entry.scheme:02x}" + URI_hex_str
-        length = int(len(URI_hex_str) / 2)
+        length = 1 + int(len(URI_hex_str) / 2) # 1 byte opcode + half the size due to it being hex_str with 2 characters per byte
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "URI_hex_str": URI_hex_str}
         vprint(f"{bdaddr}: {adv_type}  scheme: {entry.scheme} URI_hex_str: {URI_hex_str}")
