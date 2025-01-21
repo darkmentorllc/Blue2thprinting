@@ -81,7 +81,7 @@ def print_BLE_2thprint(bdaddr):
     features_query = "SELECT bdaddr_random, opcode, features FROM LL_FEATUREs WHERE bdaddr = %s"
     features_result = execute_query(features_query, values)
 
-    phys_query = "SELECT bdaddr_random, tx_phys, rx_phys FROM LL_PHYs WHERE bdaddr = %s"
+    phys_query = "SELECT bdaddr_random, opcode, tx_phys, rx_phys FROM LL_PHYs WHERE bdaddr = %s"
     phys_result = execute_query(phys_query, values)
 
     lengths_query = "SELECT bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE bdaddr = %s"
@@ -118,11 +118,17 @@ def print_BLE_2thprint(bdaddr):
         elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
             BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    for bdaddr_random, tx_phys, rx_phys in phys_result:
-        qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
-        qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
-        data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
-        BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+    for bdaddr_random, opcode, tx_phys, rx_phys in phys_result:
+        if(opcode == type_opcode_LL_PHY_RSP):
+            qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
+            qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
+            data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
+            BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        elif(opcode == type_opcode_LL_PHY_REQ):
+            qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
+            qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
+            data = ff_LL_PHY_REQ(direction, tx_phys, rx_phys)
+            BTIDES_export_LL_PHY_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         qprint(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
@@ -164,9 +170,13 @@ def print_BLE_2thprint(bdaddr):
         for bdaddr_random, opcode, features in features_result:
             vprint(f"\t\t\"LL_FEATURE* opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
 
-        for bdaddr_random, tx_phys, rx_phys in phys_result:
-            vprint(f"\t\t\"LL_PHY_RSP:tx_phys\",\"0x%02x\"" % tx_phys)
-            vprint(f"\t\t\"LL_PHY_RSP:rx_phys\",\"0x%02x\"" % rx_phys)
+        for bdaddr_random, opcode, tx_phys, rx_phys in phys_result:
+            if(opcode == type_opcode_LL_PHY_RSP):
+                vprint(f"\t\t\"LL_PHY_RSP:tx_phys\",\"0x%02x\"" % tx_phys)
+                vprint(f"\t\t\"LL_PHY_RSP:rx_phys\",\"0x%02x\"" % rx_phys)
+            elif(opcode == type_opcode_LL_PHY_REQ):
+                vprint(f"\t\t\"LL_PHY_REQ:tx_phys\",\"0x%02x\"" % tx_phys)
+                vprint(f"\t\t\"LL_PHY_REQ:rx_phys\",\"0x%02x\"" % rx_phys)
 
         for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
             vprint(f"\t\t\"ll_ctrl_opcode\",\"0x%02x\",\"max_rx_octets\",\"0x%04x\",\"max_rx_time\",\"0x%04x\",\"max_tx_octets\",\"0x%04x\",\"max_tx_time\",\"0x%04x\"" % (opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time))

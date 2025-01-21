@@ -387,10 +387,9 @@ def read_pcap(file_path):
                     btle_adv = packet.getlayer(BTLE_ADV)
                     if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...
                         # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
-                        qprint("Found a scan request")
                         continue
-                    qprint(packet.layers())
-                    qprint("")
+                    # qprint(packet.layers())
+                    # qprint("")
 
                 # LL Control packets
                 if packet.haslayer(BTLE_CTRL):
@@ -401,8 +400,8 @@ def read_pcap(file_path):
                     if(export_to_ATTArray(packet)): continue
                 # TODO: export other packet types like LL or L2CAP or ATT
                 else:
-                    qprint("Unknown or unparsable packet type. Skipped")
-                    if(not TME.TME_glob.quiet_print):
+                    if(TME.TME_glob.verbose_print):
+                        vprint("Unknown or unparsable packet type. Skipped")
                         packet.show()
 
         return
