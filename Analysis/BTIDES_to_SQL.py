@@ -669,12 +669,21 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
 
 
 # This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
-def import_LL_PHYs(bdaddr, random, ll_entry):
+def import_LL_PHYs(bdaddr, random, ll_entry, entry):
+    direction = ll_entry["direction"]
     opcode = ll_entry["opcode"]
+    if(direction == type_BTIDES_direction_C2P):
+        # We can't do like with LL_PINGs, in that even if we can infer the existence of an un-seen P2C REQ
+        # we can't create it, because we don't know what the RX/TX values were set to
+        # TODO: For now skip the LL_PHY_REQ/RSP *our* Central sends to the Peripheral.
+        # TODO: But ideally in the future we need to detect if the packet came
+        # TODO: from *our* Central (hardcode its BDADDR?), or one which we just happen to have overhead by chance with Sniffle.
+        # TODO: Because in the case of devices other than our own, we would want to capture the fact that a Central naturally sends pings
+        return
     tx_phys = ll_entry["TX_PHYS"]
     rx_phys = ll_entry["RX_PHYS"]
-    values = (bdaddr, random, opcode, tx_phys, rx_phys)
-    insert = f"INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, opcode, tx_phys, rx_phys) VALUES (%s, %s, %s, %s, %s);"
+    values = (bdaddr, random, opcode, direction, tx_phys, rx_phys)
+    insert = f"INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, opcode, direction, tx_phys, rx_phys) VALUES (%s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -709,7 +718,7 @@ def parse_LLArray(entry):
         if(has_known_LL_packet(type_opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_LENGTH_RSP, ll_entry)):
             import_LL_LENGTHs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(type_opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_PHY_RSP, ll_entry)):
-            import_LL_PHYs(bdaddr, bdaddr_rand, ll_entry)
+            import_LL_PHYs(bdaddr, bdaddr_rand, ll_entry, entry)
 
 ###################################
 # BTIDES_LMP.json information
