@@ -403,6 +403,24 @@ def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
         execute_insert(le_insert, values)
 
 
+# type 0x24
+def import_AdvData_URI(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_URI!")
+
+    URI_hex_str = leaf["URI_hex_str"]
+
+    le_evt_type = db_type
+    if(db_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, URI_hex_str)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_URI (bdaddr, bdaddr_random, le_evt_type, URI_hex_str) VALUES (%s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
+
+
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_MSD!")
@@ -513,6 +531,10 @@ def parse_AdvChanArray(entry):
                 # UUID128ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID128ServiceData, AdvData)):
                     import_AdvData_UUID128ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # UUID128ServiceData
+                if(has_known_AdvData_type(type_AdvData_URI, AdvData)):
+                    import_AdvData_URI(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # Manufacturer-Specific Data
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
