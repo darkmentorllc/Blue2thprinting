@@ -139,6 +139,7 @@ def print_flags(bdaddr):
 ########################################
 
 uri_scheme_prefixes = {
+    0x00: "invalid:",
     0x01: '',
     0x02: 'aaa:',
     0x03: 'aaas:',
@@ -343,8 +344,12 @@ def print_URI(bdaddr):
     for (bdaddr_random, le_evt_type, URI_hex_str) in le_result:
 
         type_part = int(URI_hex_str[0:2], 16)
-        uri_part = bytes.fromhex(URI_hex_str[2:]).decode('utf-8')
-        uri_str = uri_scheme_prefixes[type_part] + uri_part
+        if(type_part == 0):
+            # Print hex bytes out still for the invalid case, just to show what kind of invalid data it has
+            uri_str = uri_scheme_prefixes[type_part] + URI_hex_str[2:]
+        else:
+            uri_part = bytes.fromhex(URI_hex_str[2:]).decode('utf-8')
+            uri_str = uri_scheme_prefixes[type_part] + uri_part
 
         qprint(f"\t\tURI: {uri_str}")
         qprint(f"\t\tIn BLE Data (LE_bdaddr_to_URI)")
