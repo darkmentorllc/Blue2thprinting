@@ -362,6 +362,40 @@ def print_URI(bdaddr):
     qprint("")
 
 ########################################
+# LE Role
+########################################
+
+role_dict = {
+    0: "Only Peripheral Role supported",
+    1: "Only Central Role supported",
+    2: "Peripheral and Central Role supported, Peripheral Role preferred for connection establishment",
+    3: "Peripheral and Central Role supported, Central Role preferred for connection establishment"
+}
+
+def print_role(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    le_query = "SELECT bdaddr_random, le_evt_type, role FROM LE_bdaddr_to_role WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0):
+        vprint("\tNo LE Role found.")
+        return
+    else:
+        qprint("\tLE Role found:")
+
+    for (bdaddr_random, le_evt_type, role) in le_result:
+        qprint(f"\t\tLE Role: {role}: {role_dict[role]}")
+        qprint(f"\t\tIn BLE Data (LE_bdaddr_to_role)")
+
+        # Export to BTIDES
+        data = {"length": 2, "role": role}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_LE_Role, data)
+
+    qprint("")
+
+########################################
 # Manufacturer-specific Data
 ########################################
 
@@ -542,4 +576,5 @@ def print_all_advdata(bdaddr, nametype):
     print_manufacturer_data(bdaddr)
     print_class_of_device(bdaddr)                       # Includes BTIDES export
     print_PSRM(bdaddr)                                  # Includes BTIDES export
-    print_URI(bdaddr)                                  # Includes BTIDES export
+    print_URI(bdaddr)                                   # Includes BTIDES export
+    print_role(bdaddr)                                  # Includes BTIDES export

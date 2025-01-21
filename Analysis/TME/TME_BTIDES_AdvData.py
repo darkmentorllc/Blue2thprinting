@@ -178,10 +178,17 @@ def ff_AdvertisingInterval(data):
     return obj
 
 # type 0x1B
-def ff_LEBDADDR(data):
-    obj = {"type": type_AdvData_LEBDADDR, "length": data["length"], "bdaddr_type": data["bdaddr_type"], "le_bdaddr": data["le_bdaddr"]}
+def ff_LE_BDADDR(data):
+    obj = {"type": type_AdvData_LE_BDADDR, "length": data["length"], "bdaddr_type": data["bdaddr_type"], "le_bdaddr": data["le_bdaddr"]}
     if(TME.TME_glob.verbose_BTIDES):
-        obj["type_str"] = "LEBDADDR"
+        obj["type_str"] = "LE_BDADDR"
+    return obj
+
+# type 0x1C
+def ff_LE_Role(data):
+    obj = {"type": type_AdvData_LE_Role, "length": data["length"], "role": data["role"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "LE_Role"
     return obj
 
 # type 0x20
@@ -333,8 +340,13 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
-    if(adv_data_type == type_AdvData_LEBDADDR):
+    if(adv_data_type == type_AdvData_LE_BDADDR):
         if(AdvDataArrayEntry["le_bdaddr"] == data["le_bdaddr"] and AdvDataArrayEntry["bdaddr_type"] == data["bdaddr_type"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_LE_Role):
+        if(AdvDataArrayEntry["role"] == data["role"]):
             return True
         else: return False
 
@@ -434,8 +446,11 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
     if(adv_data_type == type_AdvData_RandomTargetAddress):
         return ff_RandomTargetAddress(data)
 
-    if(adv_data_type == type_AdvData_LEBDADDR):
-        return ff_LEBDADDR(data)
+    if(adv_data_type == type_AdvData_LE_BDADDR):
+        return ff_LE_BDADDR(data)
+
+    if(adv_data_type == type_AdvData_LE_Role):
+        return ff_LE_Role(data)
 
     if(adv_data_type == type_AdvData_URI):
         return ff_URI(data)
