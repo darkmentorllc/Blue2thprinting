@@ -79,7 +79,23 @@ FROM (
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
+  FROM LE_bdaddr_to_UUID128_service_data
+  WHERE bdaddr = '{bda}'
+  UNION ALL
+  SELECT bdaddr_random
   FROM LE_bdaddr_to_UUID128s_list
+  WHERE bdaddr = '{bda}'
+UNION ALL
+  SELECT bdaddr_random
+  FROM LE_bdaddr_to_UUID32_service_solicit
+  WHERE bdaddr = '{bda}'
+  UNION ALL
+  SELECT bdaddr_random
+  FROM LE_bdaddr_to_UUID32_service_data
+  WHERE bdaddr = '{bda}'
+  UNION ALL
+  SELECT bdaddr_random
+  FROM LE_bdaddr_to_UUID32s_list
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
@@ -87,11 +103,11 @@ FROM (
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_UUID16s_list
+  FROM LE_bdaddr_to_UUID16_service_data
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_UUID32s_list
+  FROM LE_bdaddr_to_UUID16s_list
   WHERE bdaddr = '{bda}'
 ) AS combined_results;
 """

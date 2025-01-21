@@ -216,6 +216,13 @@ def ff_URI(data):
 
 # type 0x30 handled in ff_Names
 
+# type 0x3d
+def ff_3DInfoData(data):
+    obj = {"type": type_AdvData_3DInfoData, "length": data["length"], "byte1": data["byte1"], "path_loss": data["path_loss"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "3DInfoData"
+    return obj
+
 # type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
@@ -359,6 +366,11 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_3DInfoData):
+        if(AdvDataArrayEntry["byte1"] == data["byte1"] and AdvDataArrayEntry["path_loss"] == data["path_loss"]):
+            return True
+        else: return False
+
     if(adv_data_type == type_AdvData_MSD):
         if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and
@@ -458,6 +470,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_URI):
         return ff_URI(data)
+
+    if(adv_data_type == type_AdvData_3DInfoData):
+        return ff_3DInfoData(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)
