@@ -135,6 +135,13 @@ def ff_UUID16ListServiceSolicitation(data):
         obj["type_str"] = "UUID16ListServiceSolicitation"
     return obj
 
+# type 0x15
+def ff_UUID128ListServiceSolicitation(data):
+    obj = {"type": type_AdvData_UUID128ListServiceSolicitation, "length": data["length"], "UUID128List": data["UUID128List"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "UUID128ListServiceSolicitation"
+    return obj
+
 # type 0x16
 def ff_UUID16ServiceData(data):
     obj = {"type": type_AdvData_UUID16ServiceData, "length": data["length"], "UUID16": data["UUID16"], "service_data_hex_str": data["service_data_hex_str"]}
@@ -357,6 +364,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_UUID16ListServiceSolicitation):
         return ff_UUID16ListServiceSolicitation(data)
+
+    if(adv_data_type == type_AdvData_UUID128ListServiceSolicitation):
+        return ff_UUID128ListServiceSolicitation(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)

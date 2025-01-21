@@ -92,7 +92,7 @@ def BTIDES_types_to_le_evt_type(type):
 
 # type 0x01
 def import_AdvData_Flags(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Flags!")
+    #vprint("import_AdvData_Flags!")
 
     le_limited_discoverable_mode = 0
     le_general_discoverable_mode = 0
@@ -126,7 +126,7 @@ def import_AdvData_Flags(bdaddr, random, db_type, leaf):
 
 # types 0x02 & 0x03
 def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Names!")
+    #vprint("import_AdvData_UUID16s!")
     str_UUID16s = ",".join(leaf["UUID16List"])
     list_type = leaf["type"]
 
@@ -144,7 +144,7 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
 
 # types 0x04 & 0x05
 def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Names!")
+    #vprint("import_AdvData_UUID32s!")
     str_UUID32s = ",".join(leaf["UUID32List"])
     list_type = leaf["type"]
 
@@ -162,7 +162,7 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
 
 # types 0x06 & 0x07
 def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Names!")
+    #vprint("import_AdvData_UUID128s!")
     UUID128List = leaf["UUID128List"]
     for i in range(len(UUID128List)):
         UUID128List[i] = UUID128List[i].replace('-','')
@@ -183,7 +183,7 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
 
 # types 0x08 & 0x09
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Names!")
+    #vprint("import_AdvData_Names!")
     device_name_type = leaf["type"]
     name_hex_str = leaf["name_hex_str"]
 
@@ -201,7 +201,7 @@ def import_AdvData_Names(bdaddr, random, db_type, leaf):
 
 # type 0x0A
 def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_TxPower!")
+    #vprint("import_AdvData_TxPower!")
     device_tx_power = leaf["tx_power"]
 
     le_evt_type = db_type
@@ -218,7 +218,7 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
 
 # type 0x0D
 def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_ClassOfDevice!")
+    #vprint("import_AdvData_ClassOfDevice!")
     CoD_hex_str = leaf["CoD_hex_str"]
 
     le_evt_type = db_type
@@ -235,7 +235,7 @@ def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
 
 # type 0x10
 def import_AdvData_DeviceID(bdaddr, db_type, leaf):
-    #qprint("import_AdvData_DeviceID!")
+    #vprint("import_AdvData_DeviceID!")
 
     vendor_id_source = leaf["vendor_id_source"]
     vendor_id = leaf["vendor_id"]
@@ -252,7 +252,7 @@ def import_AdvData_DeviceID(bdaddr, db_type, leaf):
 
 # type 0x12
 def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_PeripheralConnectionIntervalRange!")
+    #vprint("import_AdvData_PeripheralConnectionIntervalRange!")
 
     conn_interval_min = leaf["conn_interval_min"]
     conn_interval_max = leaf["conn_interval_max"]
@@ -267,10 +267,40 @@ def import_AdvData_PeripheralConnectionIntervalRange(bdaddr, random, db_type, le
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_connect_interval (device_bdaddr, bdaddr_random, le_evt_type, interval_min, interval_max) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
+# type 0x14
+def import_AdvData_UUID16ListServiceSolicit(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_UUID16ListServiceSolicit!")
+    str_UUID16s = ",".join(leaf["UUID16List"])
+
+    le_evt_type = db_type
+    if(le_evt_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, str_UUID16s)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16_service_solicit (device_bdaddr, bdaddr_random, le_evt_type, str_UUID16s) VALUES (%s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
+# type 0x15
+def import_AdvData_UUID128ListServiceSolicit(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_UUID128ListServiceSolicit!")
+    str_UUID128s = ",".join(leaf["UUID128List"])
+
+    le_evt_type = db_type
+    if(le_evt_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, str_UUID128s)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128_service_solicit (device_bdaddr, bdaddr_random, le_evt_type, str_UUID128s) VALUES (%s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
 
 # type 0x16
 def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_UUID16ServiceData!")
+    #vprint("import_AdvData_UUID16ServiceData!")
 
     ACID_length = leaf["length"]
     UUID16_hex_str = leaf["UUID16"]
@@ -290,7 +320,7 @@ def import_AdvData_UUID16ServiceData(bdaddr, random, db_type, leaf):
 
 # type 0x19
 def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_Appearance!")
+    #vprint("import_AdvData_Appearance!")
 
     appearance_int = int(leaf["appearance_hex_str"], 16)
 
@@ -307,7 +337,7 @@ def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
 
 # type 0x20
 def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_UUID32ServiceData!")
+    #vprint("import_AdvData_UUID32ServiceData!")
 
     ACID_length = leaf["length"]
     UUID32_hex_str = leaf["UUID32"]
@@ -327,7 +357,7 @@ def import_AdvData_UUID32ServiceData(bdaddr, random, db_type, leaf):
 
 # type 0x21
 def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_UUID128ServiceData!")
+    #vprint("import_AdvData_UUID128ServiceData!")
 
     ACID_length = leaf["length"]
     UUID128_hex_str = leaf["UUID128"].replace("-","")
@@ -347,7 +377,7 @@ def import_AdvData_UUID128ServiceData(bdaddr, random, db_type, leaf):
 
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
-    #qprint("import_AdvData_MSD!")
+    #vprint("import_AdvData_MSD!")
 
     device_BT_CID = int(leaf["company_id_hex_str"], 16)
     manufacturer_specific_data = leaf["msd_hex_str"]
@@ -422,6 +452,14 @@ def parse_AdvChanArray(entry):
                 # PeripheralConnectionIntervalRange
                 if(has_known_AdvData_type(type_AdvData_PeripheralConnectionIntervalRange, AdvData)):
                     import_AdvData_PeripheralConnectionIntervalRange(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # UUID16ListServiceSolicitation
+                if(has_known_AdvData_type(type_AdvData_UUID16ListServiceSolicitation, AdvData)):
+                    import_AdvData_UUID16ListServiceSolicit(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # UUID128ListServiceSolicitation
+                if(has_known_AdvData_type(type_AdvData_UUID128ListServiceSolicitation, AdvData)):
+                    import_AdvData_UUID128ListServiceSolicit(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # Appearance
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
