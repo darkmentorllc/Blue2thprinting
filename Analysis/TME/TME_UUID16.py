@@ -11,15 +11,15 @@ from TME.TME_BTIDES_AdvData import *
 # UUID16s
 ########################################
 
-# Function to print UUID16s for a given device_bdaddr
-def print_uuid16s(device_bdaddr):
+# Function to print UUID16s for a given bdaddr
+def print_uuid16s(bdaddr):
     # Query for EIR_bdaddr_to_UUID16s table
-    values = (device_bdaddr,)
-    eir_uuid16s_query = "SELECT list_type, str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE device_bdaddr = %s"
+    values = (bdaddr,)
+    eir_uuid16s_query = "SELECT list_type, str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
     eir_uuid16s_result = execute_query(eir_uuid16s_query, values)
 
     # Query for LE_bdaddr_to_UUID16s table
-    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s WHERE device_bdaddr = %s"
+    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s WHERE bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(eir_uuid16s_result) == 0 and len(le_uuid16s_result) == 0):
@@ -39,7 +39,7 @@ def print_uuid16s(device_bdaddr):
             UUID16List = []
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
         data = {"length": length, "UUID16List": UUID16List}
-        BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
+        BTIDES_export_AdvData(bdaddr, 0, 50, list_type, data)
 
         # Then human UI output
         if(str_UUID16s == ""):
@@ -78,7 +78,7 @@ def print_uuid16s(device_bdaddr):
             UUID16List = []
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
         data = {"length": length, "UUID16List": UUID16List}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, list_type, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, list_type, data)
 
         # Then human UI output
         if(str_UUID16s == ""):
@@ -105,15 +105,15 @@ def print_uuid16s(device_bdaddr):
                     qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
                     qprint(f"\t\tUUID16 {uuid16} (No matches)")
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
-# Function to print UUID16s service solicitation data for a given device_bdaddr
-def print_uuid16s_service_solicit(device_bdaddr):
-    values = (device_bdaddr,)
-    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE device_bdaddr = %s"
+# Function to print UUID16s service solicitation data for a given bdaddr
+def print_uuid16s_service_solicit(bdaddr):
+    values = (bdaddr,)
+    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(le_uuid16s_result) == 0):
@@ -145,15 +145,15 @@ def print_uuid16s_service_solicit(device_bdaddr):
                 qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
             else:
                 qprint(f"\t\tUUID16 {uuid16} (No matches)")
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
-# Function to print UUID16s service data for a given device_bdaddr
-def print_uuid16_service_data(device_bdaddr):
-    values = (device_bdaddr,)
-    le_uuid16_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE device_bdaddr = %s"
+# Function to print UUID16s service data for a given bdaddr
+def print_uuid16_service_data(bdaddr):
+    values = (bdaddr,)
+    le_uuid16_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
     le_uuid16_service_data_result = execute_query(le_uuid16_service_data_query, values)
 
     if(len(le_uuid16_service_data_result) == 0):
@@ -166,7 +166,7 @@ def print_uuid16_service_data(device_bdaddr):
         # Export BTIDES data first
         length = 3 + int(len(service_data_hex_str) / 2) # 1 byte for opcode + 2 bytes for UUID16 + half as many bytes as there are hex nibble characters
         data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID16ServiceData, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID16ServiceData, data)
 
         # Then human UI output
         # Lookup the UUID16 and see if it matches any well-known UUID16s
@@ -187,7 +187,7 @@ def print_uuid16_service_data(device_bdaddr):
             qprint(f"\t\tUUID16 {UUID16_hex_str} (No matches)")
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

@@ -45,11 +45,11 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
 
     # Access the BTLE_ADV layer
     btle_adv = packet.getlayer(scapy_type)
-    device_bdaddr = btle_adv.AdvA
+    bdaddr = btle_adv.AdvA
 
     data_exported = False
     for entry in btle_adv.data:
-        if export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
+        if export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
             data_exported = True
 
     if(data_exported or (adv_type == type_AdvChanPDU_SCAN_RSP and len(btle_adv.data) == 0)):

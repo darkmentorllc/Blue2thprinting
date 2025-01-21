@@ -85,25 +85,25 @@ for key, value in result_dict_FEATURE_RSP.items():
 with open('/tmp/LL_FEATUREs_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 
-    for device_bdaddr, device_bdaddr_type in result_dict_CONNECT.items():
-        if device_bdaddr in result_dict_FEATURE_REQ:
-            features = result_dict_FEATURE_REQ[device_bdaddr]
+    for bdaddr, bdaddr_random in result_dict_CONNECT.items():
+        if bdaddr in result_dict_FEATURE_REQ:
+            features = result_dict_FEATURE_REQ[bdaddr]
 
             # Convert hexadecimal values to decimal integers
             features = int(features, 16)
 
             # Print CSV line
-            #print(f'"{device_bdaddr_type}","{device_bdaddr}","8","{features}"')
+            #print(f'"{bdaddr_random}","{bdaddr}","8","{features}"')
 
-            csvwriter.writerow([device_bdaddr_type, device_bdaddr, 8, features])
+            csvwriter.writerow([bdaddr_random, bdaddr, 8, features])
 
-        if device_bdaddr in result_dict_FEATURE_RSP:
-            features = result_dict_FEATURE_RSP[device_bdaddr]
+        if bdaddr in result_dict_FEATURE_RSP:
+            features = result_dict_FEATURE_RSP[bdaddr]
 
             # Convert hexadecimal values to decimal integers
             features = int(features, 16)
 
             # Print CSV line
-            #print(f'"{device_bdaddr_type}","{device_bdaddr}","9","{features}"')
+            #print(f'"{bdaddr_random}","{bdaddr}","9","{features}"')
 
-            csvwriter.writerow([device_bdaddr_type, device_bdaddr, 9, features])
+            csvwriter.writerow([bdaddr_random, bdaddr, 9, features])

@@ -62,10 +62,10 @@ def print_transmit_power(bdaddr, nametype):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    eir_query = "SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE device_bdaddr = %s"
+    eir_query = "SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-#    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = %s AND bdaddr_random = {nametype}"
-    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE device_bdaddr = %s" # I think I prefer without the nametype, to always return more info
+#    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s AND bdaddr_random = {nametype}"
+    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
@@ -97,9 +97,9 @@ def print_flags(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags WHERE device_bdaddr = %s"
+    eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE device_bdaddr = %s"
+    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
@@ -160,9 +160,9 @@ def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    eir_query = "SELECT device_BT_CID, manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    eir_query = "SELECT device_BT_CID, manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_bdaddr = %s"
+    le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):

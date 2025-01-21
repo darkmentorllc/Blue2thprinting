@@ -11,15 +11,15 @@ from TME.TME_BTIDES_AdvData import *
 # UUID32s
 ########################################
 
-# Function to print UUID32s for a given device_bdaddr
-def print_uuid32s(device_bdaddr):
-    values = (device_bdaddr,)
+# Function to print UUID32s for a given bdaddr
+def print_uuid32s(bdaddr):
+    values = (bdaddr,)
     # Query for EIR_bdaddr_to_UUID32s table
-    eir_uuid32s_query = "SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE device_bdaddr = %s"
+    eir_uuid32s_query = "SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE bdaddr = %s"
     eir_uuid32s_result = execute_query(eir_uuid32s_query, values)
 
     # Query for LE_bdaddr_to_UUID32s table
-    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE device_bdaddr = %s"
+    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE bdaddr = %s"
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
@@ -40,7 +40,7 @@ def print_uuid32s(device_bdaddr):
 
         length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
         data = {"length": length, "UUID32List": UUID32List}
-        BTIDES_export_AdvData(device_bdaddr, 0, 50, list_type, data)
+        BTIDES_export_AdvData(bdaddr, 0, 50, list_type, data)
 
         # Then human UI output
         str_UUID32s_list = [token.strip() for token in str_UUID32s.split(',')]
@@ -78,7 +78,7 @@ def print_uuid32s(device_bdaddr):
                 UUID32List[i] = UUID32List[i].replace("0x","") # This won't be needed in the future after I change db import
         length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
         data = {"length": length, "UUID32List": UUID32List}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, list_type, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, list_type, data)
 
         # Then human UI output
         str_UUID32s_list = [token.strip() for token in str_UUID32s.split(',')]
@@ -107,15 +107,15 @@ def print_uuid32s(device_bdaddr):
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
-# Function to print UUID32s for a given device_bdaddr
-def print_service_solicit_uuid32s(device_bdaddr):
-    values = (device_bdaddr,)
-    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE device_bdaddr = %s"
+# Function to print UUID32s for a given bdaddr
+def print_service_solicit_uuid32s(bdaddr):
+    values = (bdaddr,)
+    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr = %s"
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(le_uuid32s_result) == 0):
@@ -151,15 +151,15 @@ def print_service_solicit_uuid32s(device_bdaddr):
             else:
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
-# Function to print UUID32s service data for a given device_bdaddr
-def print_uuid32_service_data(device_bdaddr):
-    values = (device_bdaddr,)
-    le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE device_bdaddr = %s"
+# Function to print UUID32s service data for a given bdaddr
+def print_uuid32_service_data(bdaddr):
+    values = (bdaddr,)
+    le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr = %s"
     le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query, values)
 
     if(len(le_uuid32_service_data_result) == 0):
@@ -172,7 +172,7 @@ def print_uuid32_service_data(device_bdaddr):
         # Export BTIDES data first
         length = 5 + int(len(service_data_hex_str) / 2) # 1 byte for opcode + 4 bytes for UUID32 + half as many bytes as there are hex nibble characters
         data = {"length": length, "UUID32": UUID32_hex_str, "service_data_hex_str": service_data_hex_str}
-        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID32ServiceData, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID32ServiceData, data)
 
         # Then human UI output
         qprint(f"\t\tUUID32 {UUID32_hex_str} (Unknown)")
@@ -197,7 +197,7 @@ def print_uuid32_service_data(device_bdaddr):
 
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(device_bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

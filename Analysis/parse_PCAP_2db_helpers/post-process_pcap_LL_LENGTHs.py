@@ -85,20 +85,20 @@ for key, value in result_dict_LENGTH_RSP.items():
 with open('/tmp/LL_LENGTHs_uniq_done.csv', 'w', newline='\n') as csvfile:
     csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
 
-    for device_bdaddr, device_bdaddr_type in result_dict_CONNECT.items():
-        if device_bdaddr in result_dict_LENGTH_REQ:
-            max_rx_octets, max_rx_time, max_tx_octets, max_tx_time = result_dict_LENGTH_REQ[device_bdaddr]
+    for bdaddr, bdaddr_random in result_dict_CONNECT.items():
+        if bdaddr in result_dict_LENGTH_REQ:
+            max_rx_octets, max_rx_time, max_tx_octets, max_tx_time = result_dict_LENGTH_REQ[bdaddr]
 
             # Print CSV line
-            #print(f'"{device_bdaddr_type}","{device_bdaddr}","20","{max_rx_octets}","{max_rx_time}","{max_tx_octets}","{max_tx_time}"')
+            #print(f'"{bdaddr_random}","{bdaddr}","20","{max_rx_octets}","{max_rx_time}","{max_tx_octets}","{max_tx_time}"')
 
-            csvwriter.writerow([device_bdaddr_type, device_bdaddr, 20, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time])
+            csvwriter.writerow([bdaddr_random, bdaddr, 20, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time])
 
-        if device_bdaddr in result_dict_LENGTH_RSP:
-            max_rx_octets, max_rx_time, max_tx_octets, max_tx_time = result_dict_LENGTH_RSP[device_bdaddr]
+        if bdaddr in result_dict_LENGTH_RSP:
+            max_rx_octets, max_rx_time, max_tx_octets, max_tx_time = result_dict_LENGTH_RSP[bdaddr]
 
             # Print CSV line
-            #print(f'"{device_bdaddr_type}","{device_bdaddr}","21","{max_rx_octets}","{max_rx_time}","{max_tx_octets}","{max_tx_time}"')
+            #print(f'"{bdaddr_random}","{bdaddr}","21","{max_rx_octets}","{max_rx_time}","{max_tx_octets}","{max_tx_time}"')
 
-            csvwriter.writerow([device_bdaddr_type, device_bdaddr, 21, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time])
+            csvwriter.writerow([bdaddr_random, bdaddr, 21, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time])
 

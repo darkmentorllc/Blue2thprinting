@@ -113,7 +113,7 @@ def is_characteristic_readable(number):
 
 def lookup_company_name_by_OUI(OUI):
     values = (OUI,)
-    query = "SELECT company_name FROM IEEE_bdaddr_to_company WHERE device_bdaddr = %s";
+    query = "SELECT company_name FROM IEEE_bdaddr_to_company WHERE bdaddr = %s";
     result = execute_query(query, values)
     if(len(result) >= 1):
         return result[0][0]
@@ -165,16 +165,16 @@ def characteristic_value_decoding(indent, UUID128, bytes):
 def device_has_GATT_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services WHERE device_bdaddr = %s";
+    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
 
-    query = "SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE device_bdaddr = %s";
+    query = "SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
 
-    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
+    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
 
-    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
+    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
 
     if(len(GATT_services_result) != 0 or len(GATT_attribute_handles_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
@@ -205,38 +205,38 @@ def print_associated_android_package_names(type, indent, UUID128):
 def print_GATT_info(bdaddr, hideBLEScopedata):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT device_bdaddr_type, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE device_bdaddr = %s";
+    query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
-    for device_bdaddr_type, service_type, begin_handle, end_handle, UUID in GATT_services_result:
+    for bdaddr_random, service_type, begin_handle, end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
-        BTIDES_export_GATT_Service(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+        BTIDES_export_GATT_Service(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT device_bdaddr_type, attribute_handle, UUID FROM GATT_attribute_handles WHERE device_bdaddr = %s";
+    query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     attribute_handles_dict = {}
-    for device_bdaddr_type, attribute_handle, UUID in GATT_attribute_handles_result:
+    for bdaddr_random, attribute_handle, UUID in GATT_attribute_handles_result:
         UUID = add_dashes_to_UUID128(UUID)
         attribute_handles_dict[attribute_handle] = UUID
         data = ff_ATT_handle_entry(attribute_handle, UUID)
-        BTIDES_export_ATT_handle(bdaddr=bdaddr, random=device_bdaddr_type, data=data)
+        BTIDES_export_ATT_handle(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE device_bdaddr = %s";
+    query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
-    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
-    for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
+    for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
-        BTIDES_export_GATT_Characteristic(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_GATT_Characteristic(bdaddr, bdaddr_random, data)
 
-    query = "SELECT device_bdaddr_type, read_handle, byte_values FROM GATT_characteristics_values WHERE device_bdaddr = %s";
+    query = "SELECT bdaddr_random, read_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
-    for device_bdaddr_type, read_handle, byte_values in GATT_characteristics_values_result:
+    for bdaddr_random, read_handle, byte_values in GATT_characteristics_values_result:
         data = {"value_handle": read_handle, "io_array": [ {"io_type": 0, "value_hex_str": byte_values.hex()} ] }
-        BTIDES_export_GATT_Characteristic_Value(bdaddr, device_bdaddr_type, data)
+        BTIDES_export_GATT_Characteristic_Value(bdaddr, bdaddr_random, data)
 
         if(read_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
@@ -253,19 +253,19 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     FROM (
         SELECT attribute_handle AS handle_value
         FROM GATT_attribute_handles
-        WHERE device_bdaddr = %s
+        WHERE bdaddr = %s
         UNION
         SELECT declaration_handle AS handle_value
         FROM GATT_characteristics
-        WHERE device_bdaddr = %s
+        WHERE bdaddr = %s
         UNION
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics
-        WHERE device_bdaddr = %s
+        WHERE bdaddr = %s
         UNION
         SELECT read_handle AS handle_value
         FROM GATT_characteristics_values
-        WHERE device_bdaddr = %s
+        WHERE bdaddr = %s
     ) AS combined_handles
     ORDER BY handle_value ASC;
     """
@@ -284,7 +284,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     unknown_UUID128_hash = {}
     # Print semantically-meaningful information
-    for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+    for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
         service_match_dict[svc_begin_handle] = 1
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
@@ -375,13 +375,13 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
         qprint(f"\n\t\tGATTPrint:")
-        for device_bdaddr_type, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+        for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
             UUID = add_dashes_to_UUID128(UUID)
             qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
-        for device_bdaddr_type, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+        for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
             UUID128_2 = add_dashes_to_UUID128(UUID128_2)
             qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
-        for device_bdaddr_type, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+        for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
             UUID = add_dashes_to_UUID128(UUID)
             qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
         qprint("")

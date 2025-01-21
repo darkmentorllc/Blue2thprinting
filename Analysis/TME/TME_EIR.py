@@ -14,7 +14,7 @@ from TME.TME_BTIDES_EIR import *
 def print_classic_EIR_CID_info(bdaddr):
 
     values = (bdaddr,)
-    eir_query = "SELECT vendor_id_source, vendor_id, product_id, product_version FROM EIR_bdaddr_to_DevID WHERE device_bdaddr = %s"
+    eir_query = "SELECT vendor_id_source, vendor_id, product_id, product_version FROM EIR_bdaddr_to_DevID WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
 
     if (len(eir_result) == 0):
@@ -47,7 +47,7 @@ def print_PSRM(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-    eir_query = "SELECT page_scan_rep_mode FROM EIR_bdaddr_to_PSRM WHERE device_bdaddr = %s"
+    eir_query = "SELECT page_scan_rep_mode FROM EIR_bdaddr_to_PSRM WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
 
     if (len(eir_result)== 0):
