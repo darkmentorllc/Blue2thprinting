@@ -419,6 +419,20 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_BroadcastName, data)
         return True
 
+    # type 0x3d
+    elif isinstance(entry.payload, EIR_3DInformation):
+        byte1 = (int(entry.factory_test_mode) << 7) | \
+                (int(entry.send_battery_level_on_startup) << 2) | \
+                (int(entry.battery_level_reporting) << 1) | \
+                int(entry.association_notification)
+        path_loss = entry.path_loss_threshold
+        length = 3 # 1 bytes for opcode + 2 bytes
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "byte1": byte1, "path_loss": path_loss}
+        vprint(f"{bdaddr}: {adv_type} 3D Info Byte1: {byte1}, Path Loss Threshold: {path_loss}dB")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_3DInfoData, data)
+        return True
+
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()

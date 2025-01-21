@@ -395,6 +395,64 @@ def print_role(bdaddr):
 
     qprint("")
 
+####################################################
+# 3D Information Data (used for 3D displays/glasses)
+####################################################
+
+def print_3d_info_bit_fields(indent, byte1):
+
+    if(byte1 & 1 == 1):
+        qprint(f"{indent}Association Notification: Supported")
+    else:
+        qprint(f"{indent}Association Notification: Not supported")
+
+    if((byte1 >> 1) & 1 == 1):
+        qprint(f"{indent}Battery Level Reporting: Supported")
+    else:
+        qprint(f"{indent}Battery Level Reporting: Not supported")
+
+    if((byte1 >> 2) & 1 == 1):
+        qprint(f"{indent}Send Battery Level Report on Start-up Synchronization: 3D Display requests 3D Glasses to send a 3D Glasses Connection Announcement Message with Battery Level Report on Start-up Synchronization.")
+    else:
+        qprint(f"{indent}Send Battery Level Report on Start-up Synchronization: 3D Display requests 3D Glasses to not send a 3D Glasses Connection Announcement Message with Battery Level Report on Start-up Synchronization.")
+
+
+def print_3DInfoData(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    eir_query = "SELECT byte1, path_loss FROM EIR_bdaddr_to_3d_info WHERE bdaddr = %s"
+    eir_result = execute_query(eir_query, values)
+    le_query = "SELECT bdaddr_random, le_evt_type, byte1, path_loss FROM LE_bdaddr_to_3d_info WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0 and len(eir_result) == 0):
+        vprint("\tNo 3D Info Data found.")
+        return
+    else:
+        qprint("\t3D Info Data found:")
+
+    for (byte1, path_loss) in eir_result:
+        qprint(f"\t\tPath Loss Threshold: {path_loss}dB")
+        print_3d_info_bit_fields("\t\t", byte1)
+        qprint(f"\t\tIn BLE Data (EIR_bdaddr_to_3d_info)")
+
+        # Export to BTIDES
+        data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
+        BTIDES_export_AdvData(bdaddr, 0, type_BTIDES_EIR, type_AdvData_3DInfoData, data)
+
+
+    for (bdaddr_random, le_evt_type, byte1, path_loss) in le_result:
+        qprint(f"\t\tPath Loss Threshold: {path_loss}dB")
+        print_3d_info_bit_fields("\t\t", byte1)
+        qprint(f"\t\tIn BLE Data (LE_bdaddr_to_3d_info)")
+
+        # Export to BTIDES
+        data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_3DInfoData, data)
+
+    qprint("")
+
 ########################################
 # Manufacturer-specific Data
 ########################################
@@ -578,3 +636,4 @@ def print_all_advdata(bdaddr, nametype):
     print_PSRM(bdaddr)                                  # Includes BTIDES export
     print_URI(bdaddr)                                   # Includes BTIDES export
     print_role(bdaddr)                                  # Includes BTIDES export
+    print_3DInfoData(bdaddr)                            # Includes BTIDES export

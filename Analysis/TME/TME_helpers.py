@@ -251,19 +251,34 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
+    FROM LE_bdaddr_to_UUID128_service_data
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
     FROM LE_bdaddr_to_UUID128s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID16_service_solicit
+    FROM LE_bdaddr_to_UUID32_service_solicit
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID16s_list
+    FROM LE_bdaddr_to_UUID32_service_data
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID32s_list
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1    FROM LE_bdaddr_to_UUID16_service_solicit
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
+    FROM LE_bdaddr_to_UUID16_service_data
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
+    FROM LE_bdaddr_to_UUID16s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -646,7 +661,7 @@ def print_device_names(bdaddr, nametype):
     for device_name_type, name_hex_str in eir_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        qprint(f"\tDeviceNameType: {name_type_translation[device_name]}")
+        qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
 
@@ -664,7 +679,7 @@ def print_device_names(bdaddr, nametype):
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        qprint(f"\tDeviceNameType: {name_type_translation[device_name]}")
+        qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")

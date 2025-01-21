@@ -456,6 +456,24 @@ def import_AdvData_URI(bdaddr, random, db_type, leaf):
 # handled up in import_AdvData_Names
 
 
+# type 0x3d
+def import_AdvData_3DInfoData(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_3DInfoData!")
+
+    byte1 = leaf["byte1"]
+    path_loss = leaf["path_loss"]
+
+    le_evt_type = db_type
+    if(db_type == 50):
+        values = (bdaddr, byte1, path_loss)
+        le_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_3d_info (bdaddr, byte1, path_loss) VALUES (%s, %s, %s);"
+        execute_insert(le_insert, values)
+    else:
+        values = (bdaddr, random, le_evt_type, byte1, path_loss)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_3d_info (bdaddr, bdaddr_random, le_evt_type, byte1, path_loss) VALUES (%s, %s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
+
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_MSD!")
@@ -577,6 +595,10 @@ def parse_AdvChanArray(entry):
                 # URI
                 if(has_known_AdvData_type(type_AdvData_URI, AdvData)):
                     import_AdvData_URI(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # 3DInfoData
+                if(has_known_AdvData_type(type_AdvData_3DInfoData, AdvData)):
+                    import_AdvData_3DInfoData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # Manufacturer-Specific Data
                 if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):

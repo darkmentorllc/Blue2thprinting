@@ -109,11 +109,23 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0 "
         "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = 0 "
+        "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0 "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0 "
         "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = 0 "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = 0 "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = 0 "
+        "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0 "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0 "
         "    UNION ALL "
@@ -130,6 +142,10 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    SELECT bdaddr FROM EIR_bdaddr_to_CoD "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_tx_power "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM EIR_bdaddr_to_URI "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_UUID128s "
         "    UNION ALL "
@@ -344,11 +360,23 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0
                 UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = 0
+                UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0
                 UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = 0
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_dataWHERE bdaddr_random = 0
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = 0
+                UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_dataWHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0
                 UNION ALL
@@ -365,6 +393,10 @@ def get_bdaddrs_by_company_regex(companyregex):
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_CoD
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_tx_power
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_URI
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_3d_info
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_UUID128s
                 UNION ALL
