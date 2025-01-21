@@ -345,7 +345,18 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "bdaddr_type": bdaddr_type, "le_bdaddr": le_bdaddr}
         vprint(f"{bdaddr}: {adv_type}, bdaddr_type: {bdaddr_type}, le_bdaddr: {le_bdaddr}")
-        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LEBDADDR, data)
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LE_BDADDR, data)
+        return True
+
+    # type 0x1C - According to the spec this should only occur in OOB data, but we've seen devices using it for OTA data
+    elif isinstance(entry.payload, EIR_LERole):
+        #entry.show()
+        role = entry.role
+        length = 2 # 1 byte for opcode, 1 byte for role
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "role": role}
+        vprint(f"{bdaddr}: {adv_type}, role: {role}")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LE_Role, data)
         return True
 
     # type 0x20

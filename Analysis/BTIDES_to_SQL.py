@@ -365,8 +365,8 @@ def import_AdvData_Appearance(bdaddr, random, db_type, leaf):
         execute_insert(le_insert, values)
 
 # type 0x1B
-def import_AdvData_LEBDADDR(bdaddr, random, db_type, leaf):
-    #vprint("import_AdvData_LEBDADDR!")
+def import_AdvData_LE_BDADDR(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_LE_BDADDR!")
     bdaddr_type = leaf["bdaddr_type"]
     le_bdaddr = leaf["le_bdaddr"]
 
@@ -378,6 +378,22 @@ def import_AdvData_LEBDADDR(bdaddr, random, db_type, leaf):
     else:
         values = (bdaddr, random, le_evt_type,le_bdaddr, bdaddr_type)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_other_le_bdaddr (bdaddr, bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random) VALUES (%s, %s, %s, %s, %s);"
+        execute_insert(le_insert, values)
+
+
+# type 0x1C - According to the spec this should only occur in OOB data, but we've seen devices using it for OTA data
+def import_AdvData_LE_Role(bdaddr, random, db_type, leaf):
+    #vprint("import_AdvData_LE_Role!")
+    role = leaf["role"]
+
+    le_evt_type = db_type
+    if(db_type == 50):
+        # EIR
+        # According to the spec this type shouldn't be able to appear in EIR, and consequently we don't have a table for it. Ignore it for now (reject it up front later?)
+        return
+    else:
+        values = (bdaddr, random, le_evt_type, role)
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_role (bdaddr, bdaddr_random, le_evt_type, role) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 
@@ -427,14 +443,13 @@ def import_AdvData_URI(bdaddr, random, db_type, leaf):
 
     le_evt_type = db_type
     if(db_type == 50):
-        values = (bdaddr, random, le_evt_type, uri_hex_str)
-        le_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_URI (bdaddr, bdaddr_random, le_evt_type, uri_hex_str) VALUES (%s, %s, %s, %s);"
+        values = (bdaddr, uri_hex_str)
+        le_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_URI (bdaddr, uri_hex_str) VALUES (%s, %s);"
         execute_insert(le_insert, values)
     else:
         values = (bdaddr, random, le_evt_type, uri_hex_str)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_URI (bdaddr, bdaddr_random, le_evt_type, uri_hex_str) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
-
 
 
 # type 0xFF
@@ -535,9 +550,13 @@ def parse_AdvChanArray(entry):
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
                     import_AdvData_Appearance(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
-                # LEBDADDR
-                if(has_known_AdvData_type(type_AdvData_LEBDADDR, AdvData)):
-                    import_AdvData_LEBDADDR(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                # LE_BDADDR
+                if(has_known_AdvData_type(type_AdvData_LE_BDADDR, AdvData)):
+                    import_AdvData_LE_BDADDR(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+
+                # LE_Role
+                if(has_known_AdvData_type(type_AdvData_LE_Role, AdvData)):
+                    import_AdvData_LE_Role(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # UUID16ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID16ServiceData, AdvData)):

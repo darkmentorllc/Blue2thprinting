@@ -6,11 +6,14 @@ mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';"
 mysql -u user -pa -e "create database bttest;"
 
 echo "Creating BT Classic tables"
+
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_PSRM (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, page_scan_rep_mode TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page_scan_rep_mode)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, device_name_type TINYINT NOT NULL, name_hex_str VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_name_type, name_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_DevID (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, vendor_id_source INT NOT NULL, vendor_id INT NOT NULL, product_id INT NOT NULL, product_version INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, vendor_id_source, vendor_id, product_id, product_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_tx_power (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, device_tx_power TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_tx_power)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_PSRM (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, page_scan_rep_mode TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page_scan_rep_mode)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
@@ -22,9 +25,9 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_UUID
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_flags (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, le_limited_discoverable_mode BOOLEAN NOT NULL, le_general_discoverable_mode BOOLEAN NOT NULL, bredr_not_supported BOOLEAN NOT NULL, le_bredr_support_controller BOOLEAN NOT NULL, le_bredr_support_host BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_BT_CID, manufacturer_specific_data)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_URI (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, uri_hex_str VARCHAR(512) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, uri_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, device_name_type TINYINT NOT NULL, name_hex_str VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_name_type, name_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE EIR_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_BT_CID, manufacturer_specific_data)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE RSP_bdaddr_to_name (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, status TINYINT NOT NULL, name_hex_str VARCHAR(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, status, name_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
@@ -41,9 +44,7 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_flags
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_tx_power (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, device_tx_power TINYINT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, device_tx_power)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_other_le_bdaddr (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, other_bdaddr VARCHAR(20), other_bdaddr_random BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_appearance (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, appearance SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, appearance)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
@@ -65,9 +66,13 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_publi
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_random_target_bdaddr (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, random_bdaddr VARCHAR(20) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, random_bdaddr)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_other_le_bdaddr (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, other_bdaddr VARCHAR(20), other_bdaddr_random BOOLEAN NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_role (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, role TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, role)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_URI (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, uri_hex_str VARCHAR(512) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, uri_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_MSD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, device_BT_CID INT NOT NULL, manufacturer_specific_data VARCHAR(480) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 echo "Creating GATT tables"
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE GATT_services (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, bdaddr_random BOOLEAN NOT NULL, service_type SMALLINT UNSIGNED NOT NULL, begin_handle SMALLINT UNSIGNED NOT NULL, end_handle SMALLINT UNSIGNED NOT NULL, UUID CHAR(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr_random, bdaddr, service_type, begin_handle, end_handle, UUID)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
