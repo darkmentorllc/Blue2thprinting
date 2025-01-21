@@ -72,8 +72,8 @@ echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_other_le_bdaddr.sh "$1"
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_public_target_bdaddr.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_public_target_bdaddr.sh "$1"
 
-echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_service_data.sh "$1"
-./parse_HCI_2db_helpers/fill_LE_bdaddr_to_service_data.sh "$1"
+echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_UUID16_service_data.sh "$1"
+./parse_HCI_2db_helpers/fill_LE_bdaddr_to_UUID16_service_data.sh "$1"
 
 echo ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_tx_power.sh "$1"
 ./parse_HCI_2db_helpers/fill_LE_bdaddr_to_tx_power.sh "$1"
