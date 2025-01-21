@@ -290,17 +290,16 @@ def export_AdvData(device_bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
         return True
 
-    # # type 0x17
-    # elif isinstance(entry.payload, EIR_PeripheralConnectionIntervalRange):
-    #     #entry.show()
-    #     conn_interval_min = entry.conn_interval_min
-    #     conn_interval_max = entry.conn_interval_max
-    #     length = 5 # 1 byte for opcode, 2*2 byte parameters
-    #     exit_on_len_mismatch(length, entry)
-    #     data = {"length": length, "conn_interval_min": conn_interval_min, "conn_interval_max": conn_interval_max}
-    #     vprint(f"{device_bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
-    #     BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
-    #     return True
+    # type 0x17
+    elif isinstance(entry.payload, EIR_PublicTargetAddress):
+        #entry.show()
+        bdaddr = entry.bd_addr
+        length = 7 # 1 byte for opcode, 6 bytes for BDADDR
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "public_bdaddr": bdaddr}
+        vprint(f"{device_bdaddr}: {adv_type} public_bdaddr: {bdaddr}")
+        BTIDES_export_AdvData(device_bdaddr, bdaddr_random, adv_type, type_AdvData_PublicTargetAddress, data)
+        return True
 
     # type 0x1A
     # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)

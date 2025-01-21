@@ -149,6 +149,13 @@ def ff_UUID16ServiceData(data):
         obj["type_str"] = "UUID16ServiceData"
     return obj
 
+# type 0x17
+def ff_PublicTargetAddress(data):
+    obj = {"type": type_AdvData_PublicTargetAddress, "length": data["length"], "public_bdaddr": data["public_bdaddr"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "PublicTargetAddress"
+    return obj
+
 # type 0x19
 def ff_Appearance(data):
     obj = {"type": type_AdvData_Appearance, "length": data["length"], "appearance_hex_str": data["appearance_hex_str"]}
@@ -283,6 +290,23 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_UUID16ListServiceSolicitation):
+        if(AdvDataArrayEntry["length"] == data["length"] and
+           AdvDataArrayEntry["UUID16List"] == data["UUID16List"]): # TODO: Can list equality be checked this way?
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_UUID128ListServiceSolicitation):
+        if(AdvDataArrayEntry["length"] == data["length"] and
+           AdvDataArrayEntry["UUID128List"] == data["UUID128List"]): # TODO: Can list equality be checked this way?
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_PublicTargetAddress):
+        if(AdvDataArrayEntry["public_bdaddr"] == data["public_bdaddr"]):
+            return True
+        else: return False
+
     if(adv_data_type == type_AdvData_MSD):
         if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and
@@ -367,6 +391,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_UUID128ListServiceSolicitation):
         return ff_UUID128ListServiceSolicitation(data)
+
+    if(adv_data_type == type_AdvData_PublicTargetAddress):
+        return ff_PublicTargetAddress(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)
