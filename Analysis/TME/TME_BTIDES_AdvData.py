@@ -314,7 +314,7 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
-    if(adv_data_type == type_AdvData_PublicTargetAddress):
+    if(adv_data_type == type_AdvData_RandomTargetAddress):
         if(AdvDataArrayEntry["random_bdaddr"] == data["random_bdaddr"]):
             return True
         else: return False
@@ -406,6 +406,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_PublicTargetAddress):
         return ff_PublicTargetAddress(data)
+
+    if(adv_data_type == type_AdvData_RandomTargetAddress):
+        return ff_RandomTargetAddress(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)
