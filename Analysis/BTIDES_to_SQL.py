@@ -138,7 +138,7 @@ def import_AdvData_UUID16s(bdaddr, random, db_type, leaf):
         execute_insert(eir_insert, values)
     else:
         values = (bdaddr, random, le_evt_type, list_type, str_UUID16s)
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES (%s, %s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID16s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 
@@ -156,7 +156,7 @@ def import_AdvData_UUID32s(bdaddr, random, db_type, leaf):
         execute_insert(eir_insert, values)
     else:
         values = (bdaddr, random, le_evt_type, list_type, str_UUID32s)
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32s (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID32s) VALUES (%s, %s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID32s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID32s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 
@@ -177,11 +177,11 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
         execute_insert(eir_insert, values)
     else:
         values = (bdaddr, random, le_evt_type, list_type, str_UUID128s)
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128s (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s) VALUES (%s, %s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID128s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 
-# types 0x08 & 0x09
+# types 0x08 & 0x09 & 0x30
 def import_AdvData_Names(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_Names!")
     device_name_type = leaf["type"]
@@ -452,6 +452,10 @@ def import_AdvData_URI(bdaddr, random, db_type, leaf):
         execute_insert(le_insert, values)
 
 
+# type 0x30
+# handled up in import_AdvData_Names
+
+
 # type 0xFF
 def import_AdvData_MSD(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_MSD!")
@@ -510,8 +514,8 @@ def parse_AdvChanArray(entry):
                 if(has_known_AdvData_type(type_AdvData_UUID128ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID128ListComplete, AdvData)):
                     import_AdvData_UUID128s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
-                # IncompleteName & CompleteName
-                if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData)):
+                # IncompleteName & CompleteName & BroadcastName
+                if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData) or has_known_AdvData_type(type_AdvData_BroadcastName, AdvData)):
                     import_AdvData_Names(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
 
                 # TxPower
@@ -736,7 +740,7 @@ def parse_LMPArray(entry):
 def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     device_name = hci_entry["remote_name_hex_str"]
     values = (bdaddr, device_name)
-    insert = f"INSERT IGNORE INTO RSP_bdaddr_to_name (bdaddr, name_hex_str) VALUES (%s, %s);"
+    insert = f"INSERT IGNORE INTO HCI_bdaddr_to_name (bdaddr, name_hex_str) VALUES (%s, %s);"
     execute_insert(insert, values)
 
 

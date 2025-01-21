@@ -140,33 +140,33 @@ def process_advertisements(p):
         data_exported = False
         adv_report = p.getlayer(HCI_LE_Meta_Extended_Advertising_Reports)
         for report in adv_report.fields['reports']:
-            #adv_event_type = report.fields['type']
-            if(report.fields['legacy']):
-                # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
-                # 0b0000 - ADV_NONCONN_IND
-                if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
-                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
-                        data_exported = True
-                        continue
-                # 0b0010 - ADV_SCAN_IND
-                elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
-                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
-                        data_exported = True
-                        continue
-                # 0b0011 - ADV_IND
-                if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
-                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND):
-                        data_exported = True
-                        continue
-                # 0b0101 - ADV_DIRECT_IND
-                elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
-                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND):
-                        data_exported = True
-                        continue
-                # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
-                elif report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable']:
-                    if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
-                        data_exported = True
+            # Only tested with one non-legacy sample so far...
+            #if(report.fields['legacy']):
+            # Per "Event_Type values for legacy PDUs" all of the below are legacy + the following:
+            # 0b0000 - ADV_NONCONN_IND
+            if not report.fields['scan_rsp'] and not report.fields['directed'] and not report.fields['scannable'] and not report.fields['connectable']:
+                if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_NONCONN_IND):
+                    data_exported = True
+                    continue
+            # 0b0010 - ADV_SCAN_IND
+            elif not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and not report.fields['connectable']:
+                if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_SCAN_IND):
+                    data_exported = True
+                    continue
+            # 0b0011 - ADV_IND
+            if not report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable'] and report.fields['connectable']:
+                if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_IND):
+                    data_exported = True
+                    continue
+            # 0b0101 - ADV_DIRECT_IND
+            elif not report.fields['scan_rsp'] and report.fields['directed'] and not report.fields['scannable'] and report.fields['connectable']:
+                if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_ADV_DIRECT_IND):
+                    data_exported = True
+                    continue
+            # 0b1011 - SCAN_RSP to ADV_IND or 0b1010 - SCAN_RSP to ADV_SCAN_IND
+            elif report.fields['scan_rsp'] and not report.fields['directed'] and report.fields['scannable']:
+                if export_AdvChannelData(p, HCI_LE_Meta_Extended_Advertising_Report, type_AdvChanPDU_SCAN_RSP):
+                    data_exported = True
         if (data_exported):
             return True
     elif p.haslayer(HCI_Event_Extended_Inquiry_Result):

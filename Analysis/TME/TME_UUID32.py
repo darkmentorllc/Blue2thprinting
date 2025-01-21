@@ -18,8 +18,8 @@ def print_uuid32s(bdaddr):
     eir_uuid32s_query = "SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE bdaddr = %s"
     eir_uuid32s_result = execute_query(eir_uuid32s_query, values)
 
-    # Query for LE_bdaddr_to_UUID32s table
-    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s WHERE bdaddr = %s"
+    # Query for LE_bdaddr_to_UUID32s_list table
+    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr = %s"
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
@@ -69,7 +69,7 @@ def print_uuid32s(bdaddr):
             '''
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID32s)")
 
-    # Process LE_bdaddr_to_UUID32s results
+    # Process LE_bdaddr_to_UUID32s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID32s in le_uuid32s_result:
         # Export BTIDES data first
         UUID32List = str_UUID32s.split(",")
@@ -107,7 +107,7 @@ def print_uuid32s(bdaddr):
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -124,7 +124,7 @@ def print_service_solicit_uuid32s(bdaddr):
     else:
         qprint("\tService solicit UUID32s found:")
 
-    # Process LE_bdaddr_to_UUID32s results
+    # Process LE_bdaddr_to_UUID32s_list results
     for bdaddr_random, le_evt_type, str_UUID32s in le_uuid32s_result:
         str_UUID32s_list = [token.strip() for token in str_UUID32s.split(',')]
         for uuid32 in str_UUID32s_list:

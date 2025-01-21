@@ -86,7 +86,7 @@ def ff_UUID128Lists(list_type, data):
             obj["type_str"] = "UUID128ListComplete"
     return obj
 
-# type 8 & 9
+# type 8 & 9 & 0x30
 def ff_Names(name_type, data):
     obj = {"type": name_type, "length":  data["length"], "name_hex_str": data["name_hex_str"]}
     if(TME.TME_glob.verbose_BTIDES):
@@ -94,6 +94,8 @@ def ff_Names(name_type, data):
             obj["type_str"] = "IncompleteName"
         elif(name_type == type_AdvData_CompleteName):
             obj["type_str"] = "CompleteName"
+        elif(name_type == type_AdvData_BroadcastName):
+            obj["type_str"] = "BroadcastName"
 
         if(data["utf8_name"]):
             obj["utf8_name"] = data["utf8_name"]
@@ -212,6 +214,8 @@ def ff_URI(data):
         obj["type_str"] = "URI"
     return obj
 
+# type 0x30 handled in ff_Names
+
 # type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
@@ -251,7 +255,7 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
-    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
+    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName or adv_data_type == type_AdvData_BroadcastName):
         if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["name_hex_str"] == data["name_hex_str"]):
             return True
@@ -404,7 +408,7 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
     if(adv_data_type == type_AdvData_UUID128ListIncomplete or adv_data_type == type_AdvData_UUID128ListComplete):
         return ff_UUID128Lists(adv_data_type, data)
 
-    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName):
+    if(adv_data_type == type_AdvData_IncompleteName or adv_data_type == type_AdvData_CompleteName or adv_data_type == type_AdvData_BroadcastName):
         return ff_Names(adv_data_type, data)
 
     if(adv_data_type == type_AdvData_TxPower):

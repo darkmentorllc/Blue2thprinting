@@ -53,7 +53,7 @@ def get_uuid16_stats(arg):
         # Get the data for LE devices from the database
         ################################################
 
-        le_uuid16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s"
+        le_uuid16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s_list"
         le_uuid16_result = execute_query(le_uuid16_query, ())
         if(len(le_uuid16_result) != 0):
             for (str_UUID16s,) in le_uuid16_result:
@@ -68,7 +68,7 @@ def get_uuid16_stats(arg):
         company_uuid_count = 0
         qprint()
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        qprint(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s")
+        qprint(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s_list")
         qprint(f"{len(seen_le_uuid16s_hash)} unique UUID16s found")
 #            qprint(seen_le_uuid16s_hash)
         sorted_items = sorted(seen_le_uuid16s_hash.items(), key=lambda item: item[1], reverse=True)
@@ -144,7 +144,7 @@ def get_uuid128_stats(arg):
         # Get the data for LE devices from the database
         ################################################
 
-        le_uuid128_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s"
+        le_uuid128_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s_list"
         le_uuid128_result = execute_query(le_uuid128_query, ())
         if(len(le_uuid128_result) != 0):
             for (str_UUID128s,) in le_uuid128_result:
@@ -160,7 +160,7 @@ def get_uuid128_stats(arg):
 
         qprint()
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        qprint(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s")
+        qprint(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s_list")
         qprint(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
 #            qprint(seen_le_uuid128s_hash)
         sorted_items = sorted(seen_le_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)

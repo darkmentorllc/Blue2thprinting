@@ -79,7 +79,7 @@ FROM (
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_UUID128s
+  FROM LE_bdaddr_to_UUID128s_list
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
@@ -87,11 +87,11 @@ FROM (
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_UUID16s
+  FROM LE_bdaddr_to_UUID16s_list
   WHERE bdaddr = '{bda}'
   UNION ALL
   SELECT bdaddr_random
-  FROM LE_bdaddr_to_UUID32s
+  FROM LE_bdaddr_to_UUID32s_list
   WHERE bdaddr = '{bda}'
 ) AS combined_results;
 """
