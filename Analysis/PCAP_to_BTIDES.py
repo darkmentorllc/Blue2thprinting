@@ -347,32 +347,42 @@ def read_pcap(file_path):
                     # Don't bother processing the packet if we've seen an LL_START_ENC_REQ in this connection already
                     continue
 
+                if packet.haslayer(BTLE_SCAN_REQ) or packet.haslayer(BTLE_ADV_DIRECT_IND):
+                    # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
+                    continue
+
                 # If a packet matches on any export function, move on to the next packet
 
                 # Connection requests
-                if packet.haslayer(BTLE_CONNECT_IND): # FIXME: Scapy is wrong here, it should be CONNECT_*IND*
+                if packet.haslayer(BTLE_CONNECT_IND):
                     if(export_CONNECT_IND(packet)): continue
 
                 # Advertisement channel packets
+                # Need to check this before ADV_IND since it's a sub-class
+                if packet.haslayer(BTLE_ADV_NONCONN_IND):
+                    if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)):
+                        continue
+                # Need to check this before ADV_IND since it's a sub-class
+                if packet.haslayer(BTLE_ADV_SCAN_IND):
+                    adv_hdr = packet.getlayer(BTLE_ADV)
+                    # Special case to ignore things which only have an AdvA, which isn't useful to us
+                    if(adv_hdr.Length <= 9): # 6 for AdvA + 3 for EIR_Hdr (2) + at least 1 byte of data
+                        continue
+                    else:
+                        if(export_AdvChannelData(packet, BTLE_ADV_SCAN_IND, type_AdvChanPDU_ADV_SCAN_IND)):
+                            continue
                 if packet.haslayer(BTLE_ADV_IND):
                     # It's rare, but some things advertise but then don't include any AdvData...
                     btle_adv = packet.getlayer(BTLE_ADV_IND)
                     if(len(btle_adv.data) == 0):
                         continue
                     if(export_AdvChannelData(packet, BTLE_ADV_IND, type_AdvChanPDU_ADV_IND)): continue
-                if packet.haslayer(BTLE_ADV_NONCONN_IND):
-                    if(export_AdvChannelData(packet, BTLE_ADV_NONCONN_IND, type_AdvChanPDU_ADV_NONCONN_IND)): continue
                 if packet.haslayer(BTLE_SCAN_RSP):
                     # Special case SCAN_RSP because Apple devices like to send back SCAN_RSP with no data in it,
                     # which causes it to return false and then continue to be processed above
                     btle_adv = packet.getlayer(BTLE_SCAN_RSP)
                     if(len(btle_adv.data) == 0): continue
                     if(export_AdvChannelData(packet, BTLE_SCAN_RSP, type_AdvChanPDU_SCAN_RSP)): continue
-                if packet.haslayer(BTLE_ADV_SCAN_IND):
-                    if(export_AdvChannelData(packet, BTLE_ADV_SCAN_IND, type_AdvChanPDU_ADV_SCAN_IND)): continue
-                if packet.haslayer(BTLE_SCAN_REQ) or packet.haslayer(BTLE_ADV_DIRECT_IND):
-                    # Ignore for now. I don't particularly care to import that information for now (though TODO later it should be in the interest of completeness)
-                    continue
                 if packet.haslayer(BTLE_ADV):
                     btle_adv = packet.getlayer(BTLE_ADV)
                     if(btle_adv.PDU_type == type_AdvChanPDU_ADV_DIRECT_IND): # for malformed packets that Scapy couldn't add a BTLE_ADV_DIRECT_IND layer to...

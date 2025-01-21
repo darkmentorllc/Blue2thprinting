@@ -312,16 +312,17 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_RandomTargetAddress, data)
         return True
 
-    # # type 0x19
-    # elif isinstance(entry.payload, EIR_Appearance):
-    #     #entry.show()
-    #     appearance = entry.appearance.value
-    #     length = 7 # 1 byte for opcode, 2 bytes for appearance
-    #     exit_on_len_mismatch(length, entry)
-    #     data = {"length": length, "appearance": appearance}
-    #     vprint(f"{bdaddr}: {adv_type} appearance: {appearance}")
-    #     BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_RandomTargetAddress, data)
-    #     return True
+    # type 0x19
+    elif isinstance(entry.payload, EIR_Appearance):
+        #entry.show()
+        appearance = entry.category << 6 | entry.subcategory
+        appearance_hex_str = f"{appearance:04x}"
+        length = 3 # 1 byte for opcode, 2 bytes for appearance
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "appearance_hex_str": appearance_hex_str}
+        vprint(f"{bdaddr}: {adv_type} appearance_hex_str: {appearance_hex_str}")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_Appearance, data)
+        return True
 
     # type 0x1A
     # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)
