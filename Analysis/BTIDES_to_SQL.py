@@ -610,7 +610,7 @@ def parse_AdvChanArray(entry):
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
     unknown_opcode = ll_entry["unknown_type"]
-    values = (random, bdaddr, unknown_opcode)
+    values = (bdaddr, random, unknown_opcode)
     insert = f"INSERT IGNORE INTO LL_UNKNOWN_RSP (bdaddr, bdaddr_random, unknown_opcode) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
@@ -619,7 +619,7 @@ def import_LL_VERSION_IND(bdaddr, random, ll_entry):
     ll_version = ll_entry["version"]
     device_BT_CID = ll_entry["company_id"]
     ll_sub_version = ll_entry["subversion"]
-    values = (random, bdaddr, ll_version, device_BT_CID, ll_sub_version)
+    values = (bdaddr, random, ll_version, device_BT_CID, ll_sub_version)
     insert = f"INSERT IGNORE INTO LL_VERSION_IND (bdaddr, bdaddr_random, ll_version, device_BT_CID, ll_sub_version) VALUES (%s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
@@ -628,17 +628,31 @@ def import_LL_VERSION_IND(bdaddr, random, ll_entry):
 def import_LL_FEATUREs(bdaddr, random, ll_entry):
     opcode = ll_entry["opcode"]
     features = int(ll_entry["le_features_hex_str"], 16)
-    values = (random, bdaddr, opcode, features)
+    values = (bdaddr, random, opcode, features)
     insert = f"INSERT IGNORE INTO LL_FEATUREs (bdaddr, bdaddr_random, opcode, features) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
 # This can be used for LL_PING_REQ or LL_PING_RSP since they're all going into the same table
-# TODO: I should really update the table to have the opcode field for differentiation of types
-def import_LL_PING_RSP(bdaddr, random, ll_entry):
-    #opcode = ll_entry["opcode"]
-    values = (random, bdaddr, 1)
-    insert = f"INSERT IGNORE INTO LL_PING_RSP (bdaddr, bdaddr_random, ping_rsp) VALUES (%s, %s, %s);"
+def import_LL_PINGs(bdaddr, random, ll_entry, entry):
+    direction = ll_entry["direction"]
+    opcode = ll_entry["opcode"]
+    if(direction == type_BTIDES_direction_C2P):
+        if (opcode == type_opcode_LL_PING_RSP):
+            # We can infer that if we see a C2P PING_RSP the P must have sent a PING_REQ.
+            # So we're going to create an entry for that fact even if we don't have the
+            # packet in the pcap (it could have got corrupted from Sniffle's vantage point)
+            opcode = type_opcode_LL_PING_REQ
+            direction = type_BTIDES_direction_P2C
+            bdaddr, random = get_bdaddr_peripheral(entry)
+        else:
+            # TODO: For now skip the pings *our* Central sends to the Peripheral.
+            # TODO: But ideally in the future we need to detect if the packet came
+            # TODO: from *our* Central (hardcode its BDADDR?), or one which we just happen to have overhead by chance with Sniffle.
+            # TODO: Because in the case of devices other than our own, we would want to capture the fact that a Central naturally sends pings
+            return
+    values = (bdaddr, random, opcode, direction)
+    insert = f"INSERT IGNORE INTO LL_PINGs (bdaddr, bdaddr_random, opcode, direction) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -649,19 +663,18 @@ def import_LL_LENGTHs(bdaddr, random, ll_entry):
     max_rx_time = ll_entry["max_rx_time"]
     max_tx_octets = ll_entry["max_tx_octets"]
     max_tx_time = ll_entry["max_tx_time"]
-    values = (random, bdaddr, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
+    values = (bdaddr, random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
     insert = f"INSERT IGNORE INTO LL_LENGTHs (bdaddr, bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
 # This can be used for LL_PHY_REQ, LL_PHY_RSP since they're all going into the same table
-# TODO: I should really update the table to have the opcode field for differentiation of types
 def import_LL_PHYs(bdaddr, random, ll_entry):
-    #opcode = ll_entry["opcode"]
+    opcode = ll_entry["opcode"]
     tx_phys = ll_entry["TX_PHYS"]
     rx_phys = ll_entry["RX_PHYS"]
-    values = (random, bdaddr, tx_phys, rx_phys)
-    insert = f"INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, tx_phys, rx_phys) VALUES (%s, %s, %s, %s);"
+    values = (bdaddr, random, opcode, tx_phys, rx_phys)
+    insert = f"INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, opcode, tx_phys, rx_phys) VALUES (%s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -692,7 +705,7 @@ def parse_LLArray(entry):
             has_known_LL_packet(type_opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
                 import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(type_opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(type_opcode_LL_PING_REQ, ll_entry)):
-            import_LL_PING_RSP(bdaddr, bdaddr_rand, ll_entry)
+            import_LL_PINGs(bdaddr, bdaddr_rand, ll_entry, entry)
         if(has_known_LL_packet(type_opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_LENGTH_RSP, ll_entry)):
             import_LL_LENGTHs(bdaddr, bdaddr_rand, ll_entry)
         if(has_known_LL_packet(type_opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_PHY_RSP, ll_entry)):

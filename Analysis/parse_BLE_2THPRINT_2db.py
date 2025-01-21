@@ -25,7 +25,7 @@ sql_LL_UNKNOWN_RSP = "INSERT IGNORE INTO LL_UNKNOWN_RSP (bdaddr, bdaddr_random, 
 sql_LL_FEATUREs    = "INSERT IGNORE INTO LL_FEATUREs (bdaddr, bdaddr_random, opcode, features) VALUES (%s, %s, %s, %s)"
 sql_LL_PHYs        = "INSERT IGNORE INTO LL_PHYs (bdaddr, bdaddr_random, tx_phys, rx_phys) VALUES (%s, %s, %s, %s)"
 sql_LL_LENGTHs     = "INSERT IGNORE INTO LL_LENGTHs (bdaddr, bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-sql_LL_PING_RSP    = "INSERT IGNORE INTO LL_PING_RSP (bdaddr, bdaddr_random, ping_rsp) VALUES (%s, %s, %s)"
+sql_LL_PING_RSP    = "INSERT IGNORE INTO LL_PINGs (bdaddr, bdaddr_random, opcode, direction) VALUES (%s, %s, %s, %s)"
 file_path = './BLE_2THPRINT_dedup.log'
 
 ll_versions = {

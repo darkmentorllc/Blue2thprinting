@@ -13,7 +13,7 @@ import TME.TME_glob
 
 ############################
 # Helper "factory functions"
-############################  
+############################
 
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
     obj = {"direction": direction, "opcode": type_opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
@@ -168,6 +168,15 @@ def BTIDES_export_LL_PING_RSP(bdaddr=None, random=None, connect_ind_obj=None, da
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
     else:
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
+
+def BTIDES_export_LL_PING_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
+    global BTIDES_JSON
+    ###print(BTIDES_JSON)
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
+
 
 def BTIDES_export_LL_PING_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
     global BTIDES_JSON
