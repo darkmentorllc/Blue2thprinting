@@ -336,6 +336,18 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     #     BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_AdvertisingInterval, data)
     #     return True
 
+    # type 0x1B
+    elif isinstance(entry.payload, EIR_LEBluetoothDeviceAddress):
+        #entry.show()
+        le_bdaddr = entry.bd_addr
+        bdaddr_type = entry.addr_type
+        length = 8 # 1 byte for opcode,1 byte for type, 6 bytes for BDADDR
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "bdaddr_type": bdaddr_type, "le_bdaddr": le_bdaddr}
+        vprint(f"{bdaddr}: {adv_type}, bdaddr_type: {bdaddr_type}, le_bdaddr: {le_bdaddr}")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LEBDADDR, data)
+        return True
+
     # type 0x20
     elif isinstance(entry.payload, EIR_ServiceData32BitUUID):
         #entry.show()
@@ -375,12 +387,12 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #entry.show()
         URI = entry.payload.getlayer(EIR_URI)
         url_bytes = entry.uri_hier_part
-        URI_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
-        URI_hex_str = f"{entry.scheme:02x}" + URI_hex_str
-        length = 1 + int(len(URI_hex_str) / 2) # 1 byte opcode + half the size due to it being hex_str with 2 characters per byte
+        uri_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
+        uri_hex_str = f"{entry.scheme:02x}" + uri_hex_str
+        length = 1 + int(len(uri_hex_str) / 2) # 1 byte opcode + half the size due to it being hex_str with 2 characters per byte
         exit_on_len_mismatch(length, entry)
-        data = {"length": length, "URI_hex_str": URI_hex_str}
-        vprint(f"{bdaddr}: {adv_type}  scheme: {entry.scheme} URI_hex_str: {URI_hex_str}")
+        data = {"length": length, "uri_hex_str": uri_hex_str}
+        vprint(f"{bdaddr}: {adv_type}  scheme: {entry.scheme} uri_hex_str: {uri_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
         return True
 

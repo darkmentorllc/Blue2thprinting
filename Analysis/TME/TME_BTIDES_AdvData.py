@@ -174,7 +174,14 @@ def ff_Appearance(data):
 def ff_AdvertisingInterval(data):
     obj = {"type": type_AdvData_AdvertisingInterval, "length": data["length"], "advertising_interval": data["advertising_interval"]}
     if(TME.TME_glob.verbose_BTIDES):
-        obj["type_str"] = "Appearance"
+        obj["type_str"] = "AdvertisingInterval"
+    return obj
+
+# type 0x1B
+def ff_LEBDADDR(data):
+    obj = {"type": type_AdvData_LEBDADDR, "length": data["length"], "bdaddr_type": data["bdaddr_type"], "le_bdaddr": data["le_bdaddr"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "LEBDADDR"
     return obj
 
 # type 0x20
@@ -193,7 +200,7 @@ def ff_UUID128ServiceData(data):
 
 # type 0x24
 def ff_URI(data):
-    obj = {"type": type_AdvData_URI, "length": data["length"], "URI_hex_str": data["URI_hex_str"]}
+    obj = {"type": type_AdvData_URI, "length": data["length"], "uri_hex_str": data["uri_hex_str"]}
     if(TME.TME_glob.verbose_BTIDES):
         obj["type_str"] = "URI"
     return obj
@@ -326,6 +333,16 @@ def adv_data_exact_match(AdvDataArrayEntry, adv_data_type, data):
             return True
         else: return False
 
+    if(adv_data_type == type_AdvData_LEBDADDR):
+        if(AdvDataArrayEntry["le_bdaddr"] == data["le_bdaddr"] and AdvDataArrayEntry["bdaddr_type"] == data["bdaddr_type"]):
+            return True
+        else: return False
+
+    if(adv_data_type == type_AdvData_URI):
+        if(AdvDataArrayEntry["uri_hex_str"] == data["uri_hex_str"]):
+            return True
+        else: return False
+
     if(adv_data_type == type_AdvData_MSD):
         if(AdvDataArrayEntry["length"] == data["length"] and
            AdvDataArrayEntry["company_id_hex_str"] == data["company_id_hex_str"] and
@@ -416,6 +433,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_RandomTargetAddress):
         return ff_RandomTargetAddress(data)
+
+    if(adv_data_type == type_AdvData_LEBDADDR):
+        return ff_LEBDADDR(data)
 
     if(adv_data_type == type_AdvData_URI):
         return ff_URI(data)

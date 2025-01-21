@@ -30,6 +30,7 @@ type_AdvData_PublicTargetAddress                = 0x17
 type_AdvData_RandomTargetAddress                = 0x18
 type_AdvData_Appearance                         = 0x19
 type_AdvData_AdvertisingInterval                = 0x1A
+type_AdvData_LEBDADDR                           = 0x1B
 type_AdvData_UUID32ListServiceSolicitation      = 0x1F
 type_AdvData_UUID32ServiceData                  = 0x20
 type_AdvData_UUID128ServiceData                 = 0x21
