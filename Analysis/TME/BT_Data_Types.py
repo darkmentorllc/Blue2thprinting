@@ -27,6 +27,7 @@ type_AdvData_UUID16ListServiceSolicitation      = 20
 type_AdvData_UUID128ListServiceSolicitation     = 21
 type_AdvData_UUID16ServiceData                  = 22
 type_AdvData_PublicTargetAddress                = 23
+type_AdvData_RandomTargetAddress                = 24
 type_AdvData_Appearance                         = 25
 type_AdvData_AdvertisingInterval                = 26
 type_AdvData_UUID32ListServiceSolicitation      = 31
