@@ -191,6 +191,13 @@ def ff_UUID128ServiceData(data):
         obj["type_str"] = "UUID128ServiceData"
     return obj
 
+# type 0x24
+def ff_URI(data):
+    obj = {"type": type_AdvData_URI, "length": data["length"], "URI_hex_str": data["URI_hex_str"]}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["type_str"] = "URI"
+    return obj
+
 # type 0xFF
 def ff_MSD(data):
     obj = {"type": type_AdvData_MSD, "length": data["length"], "company_id_hex_str": data["company_id_hex_str"], "msd_hex_str": data["msd_hex_str"]}
@@ -409,6 +416,9 @@ def ff_adv_data_type_specific_obj(adv_data_type, data):
 
     if(adv_data_type == type_AdvData_RandomTargetAddress):
         return ff_RandomTargetAddress(data)
+
+    if(adv_data_type == type_AdvData_URI):
+        return ff_URI(data)
 
     if(adv_data_type == type_AdvData_MSD):
         return ff_MSD(data)

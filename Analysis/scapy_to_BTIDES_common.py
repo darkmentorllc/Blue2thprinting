@@ -325,7 +325,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         return True
 
     # type 0x1A
-    # FIXME: untested for now due to definition error (only handling uint16 case, not uint24 or uint32)
+    # FIXME: not clear how to define for all of the uint16, uint24, and uint32 cases in Scapy
     # elif isinstance(entry.payload, EIR_AdvertisingInterval):
     #     entry.show()
     #     advertising_interval = f"{entry.advertising_interval:04x}"
@@ -370,24 +370,19 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
         return True
 
-    # # type 0x24
-    # elif isinstance(entry.payload, EIR_URI):
-    #     entry.show()
-    #     entry.payload.show()
-    #     URI = entry.payload.getlayer(EIR_URI)
-    #     length = entry.len  # Not clear if Scapy is using the original ACID len or their calculated and corrected len
-    #     try:
-    #         scheme = URI.uri_scheme
-    #         url_bytes = str(URI.uri_hier_part)
-    #         print(f"Type of url_bytes: {type(url_bytes)}")
-    #         URI_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
-    #     except Exception as e:
-    #         print(f"Exception occurred: {e}")
-    #     data = {"length": length, "URI_hex_str": URI_hex_str}
-    #     vprint(f"{bdaddr}: {adv_type}  scheme: {scheme} URI_hex_str: {URI_hex_str}")
-    #     #BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
-    #     return True
-
+    # type 0x24
+    elif isinstance(entry.payload, EIR_URI):
+        #entry.show()
+        URI = entry.payload.getlayer(EIR_URI)
+        url_bytes = entry.uri_hier_part
+        URI_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
+        URI_hex_str = f"{entry.scheme:02x}" + URI_hex_str
+        length = int(len(URI_hex_str) / 2)
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "URI_hex_str": URI_hex_str}
+        vprint(f"{bdaddr}: {adv_type}  scheme: {entry.scheme} URI_hex_str: {URI_hex_str}")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
+        return True
 
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):

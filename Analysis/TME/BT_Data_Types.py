@@ -10,31 +10,31 @@
 from TME.TME_BTIDES_base import *
 from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
-type_AdvData_Flags                              = 1
-type_AdvData_UUID16ListIncomplete               = 2
-type_AdvData_UUID16ListComplete                 = 3
-type_AdvData_UUID32ListIncomplete               = 4
-type_AdvData_UUID32ListComplete                 = 5
-type_AdvData_UUID128ListIncomplete              = 6
-type_AdvData_UUID128ListComplete                = 7
-type_AdvData_IncompleteName                     = 8
-type_AdvData_CompleteName                       = 9
-type_AdvData_TxPower                            = 10
-type_AdvData_ClassOfDevice                      = 13
-type_AdvData_DeviceID                           = 16
-type_AdvData_PeripheralConnectionIntervalRange  = 18
-type_AdvData_UUID16ListServiceSolicitation      = 20
-type_AdvData_UUID128ListServiceSolicitation     = 21
-type_AdvData_UUID16ServiceData                  = 22
-type_AdvData_PublicTargetAddress                = 23
-type_AdvData_RandomTargetAddress                = 24
-type_AdvData_Appearance                         = 25
-type_AdvData_AdvertisingInterval                = 26
-type_AdvData_UUID32ListServiceSolicitation      = 31
-type_AdvData_UUID32ServiceData                  = 32
-type_AdvData_UUID128ServiceData                 = 33
-type_AdvData_URI                                = 36
-type_AdvData_MSD                                = 255
+type_AdvData_Flags                              = 0x01
+type_AdvData_UUID16ListIncomplete               = 0x02
+type_AdvData_UUID16ListComplete                 = 0x03
+type_AdvData_UUID32ListIncomplete               = 0x04
+type_AdvData_UUID32ListComplete                 = 0x05
+type_AdvData_UUID128ListIncomplete              = 0x06
+type_AdvData_UUID128ListComplete                = 0x07
+type_AdvData_IncompleteName                     = 0x08
+type_AdvData_CompleteName                       = 0x09
+type_AdvData_TxPower                            = 0x0a
+type_AdvData_ClassOfDevice                      = 0x0d
+type_AdvData_DeviceID                           = 0x10
+type_AdvData_PeripheralConnectionIntervalRange  = 0x12
+type_AdvData_UUID16ListServiceSolicitation      = 0x14
+type_AdvData_UUID128ListServiceSolicitation     = 0x15
+type_AdvData_UUID16ServiceData                  = 0x16
+type_AdvData_PublicTargetAddress                = 0x17
+type_AdvData_RandomTargetAddress                = 0x18
+type_AdvData_Appearance                         = 0x19
+type_AdvData_AdvertisingInterval                = 0x1A
+type_AdvData_UUID32ListServiceSolicitation      = 0x1F
+type_AdvData_UUID32ServiceData                  = 0x20
+type_AdvData_UUID128ServiceData                 = 0x21
+type_AdvData_URI                                = 0x24
+type_AdvData_MSD                                = 0xff
 
 # Advertisement channel PDU types defined in BT spec
 type_AdvChanPDU_ADV_IND           = 0

@@ -67,7 +67,7 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_publi
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_random_target_bdaddr (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, random_bdaddr VARCHAR(20) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, random_bdaddr)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_URI (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, str_URI VARCHAR(240) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, str_URI)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_URI (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, URI_hex_str VARCHAR(512) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, URI_hex_str)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LE_bdaddr_to_CoD (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) NOT NULL, bdaddr_random BOOLEAN NOT NULL, le_evt_type TINYINT UNSIGNED NOT NULL, class_of_device INT NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, le_evt_type, class_of_device)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
