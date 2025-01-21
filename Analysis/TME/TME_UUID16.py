@@ -18,8 +18,8 @@ def print_uuid16s(bdaddr):
     eir_uuid16s_query = "SELECT list_type, str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
     eir_uuid16s_result = execute_query(eir_uuid16s_query, values)
 
-    # Query for LE_bdaddr_to_UUID16s table
-    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s WHERE bdaddr = %s"
+    # Query for LE_bdaddr_to_UUID16s_list table
+    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(eir_uuid16s_result) == 0 and len(le_uuid16s_result) == 0):
@@ -67,7 +67,7 @@ def print_uuid16s(bdaddr):
                     qprint(f"\t\tUUID16 {uuid16} (No matches)")
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID16s)")
 
-    # Process LE_bdaddr_to_UUID16s results
+    # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID16s in le_uuid16s_result:
         # Export BTIDES data first
         if(str_UUID16s != ""):
@@ -105,7 +105,7 @@ def print_uuid16s(bdaddr):
                     qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
                     qprint(f"\t\tUUID16 {uuid16} (No matches)")
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -122,7 +122,7 @@ def print_uuid16s_service_solicit(bdaddr):
     else:
         qprint("\tService solicit UUID16s found:")
 
-    # Process LE_bdaddr_to_UUID16s results
+    # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, str_UUID16s in le_uuid16s_result:
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
         for uuid16 in str_UUID16s_list:

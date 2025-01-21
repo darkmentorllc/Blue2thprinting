@@ -45,12 +45,12 @@ def get_bdaddrs_by_name_regex(nameregex):
     qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = "SELECT bdaddr FROM RSP_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
-    rsp_result = execute_query(rsp_query, values)
-    for (bdaddr,) in rsp_result:
+    # Query for HCI_bdaddr_to_name table
+    hci_query = "SELECT bdaddr FROM HCI_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    hci_result = execute_query(hci_query, values)
+    for (bdaddr,) in hci_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(rsp_result)} results found in RSP_bdaddr_to_name")
+    qprint(f"get_bdaddrs_by_name_regex: {len(hci_result)} results found in HCI_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
@@ -111,11 +111,11 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0 "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0 "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0 "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_DevID "
         "    UNION ALL "
@@ -288,11 +288,11 @@ def get_bdaddrs_by_company_regex(companyregex):
             qprint(f"{len(eir_uuid16_result)} results found in EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+            le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
             le_uuid16_result = execute_query(le_uuid16_query, values)
             for (bdaddr,) in le_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(le_uuid16_result)} results found in LE_bdaddr_to_UUID16s for key 0x{key:04x}")
+            qprint(f"{len(le_uuid16_result)} results found in LE_bdaddr_to_UUID16s_list for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
     if(enable_IEEE_OUI_lookup):
@@ -346,11 +346,11 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128s WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_DevID
                 UNION ALL
@@ -450,11 +450,11 @@ def get_bdaddrs_by_uuid128_regex(uuid128regex):
     qprint(f"get_bdaddrs_by_uuid128_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s")
+    qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s_list")
     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
@@ -530,11 +530,11 @@ def get_bdaddrs_by_uuid16_regex(uuid16regex):
     qprint(f"get_bdaddrs_by_uuid16_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s")
+    qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s_list")
     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"

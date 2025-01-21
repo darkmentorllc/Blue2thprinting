@@ -92,9 +92,9 @@ def print_UniqueIDReport(bdaddr):
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE bdaddr = %s"
-        rsp_result = execute_query(rsp_query, values)
-        for (name_hex_str,) in rsp_result:
+        hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
+        hci_result = execute_query(hci_query, values)
+        for (name_hex_str,) in hci_result:
             name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
             qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")

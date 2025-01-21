@@ -251,7 +251,7 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID128s
+    FROM LE_bdaddr_to_UUID128s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -259,11 +259,11 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID16s
+    FROM LE_bdaddr_to_UUID16s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID32s
+    FROM LE_bdaddr_to_UUID32s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -626,20 +626,27 @@ def print_device_names(bdaddr, nametype):
     # Query for EIR_bdaddr_to_name table
     eir_query = "SELECT device_name_type, name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE bdaddr = %s"
-    rsp_result = execute_query(rsp_query, values)
+    # Query for HCI_bdaddr_to_name table
+    hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
+    hci_result = execute_query(hci_query, values)
     # Query for LE_bdaddr_to_name table
     le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 
-    if(len(eir_result) == 0 and len(rsp_result) == 0 and len(le_result)== 0):
+    if(len(eir_result) == 0 and len(hci_result) == 0 and len(le_result)== 0):
         vprint("\tNo Names found.")
         return
+
+    name_type_translation = {
+        0x08: "Shortened Name",
+        0x09: "Complete Name",
+        0x30: "Broadcast Name",
+    }
 
     for device_name_type, name_hex_str in eir_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
+        qprint(f"\tDeviceNameType: {name_type_translation[device_name]}")
         qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
 
@@ -647,16 +654,17 @@ def print_device_names(bdaddr, nametype):
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, device_name_type, data)
 
-    for name_hex_str, in rsp_result:
+    for name_hex_str, in hci_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
-        qprint("\t\tIn BT Classic Data (RSP_bdaddr_to_name)")
+        qprint("\t\tIn BT Classic Data (HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
         qprint(f"\tDeviceName: {device_name}")
+        qprint(f"\tDeviceNameType: {name_type_translation[device_name]}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")

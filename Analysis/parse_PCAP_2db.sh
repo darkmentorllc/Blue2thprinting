@@ -39,14 +39,14 @@ echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_connect_interval.sh "$1"
 echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_appearance.sh "$1"
 ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_appearance.sh "$1"
 
-echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID16s.sh "$1"
-./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID16s.sh "$1"
+echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID16s_list.sh "$1"
+./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID16s_list.sh "$1"
 
-echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID32s.sh "$1"
-./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID32s.sh "$1"
+echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID32s_list.sh "$1"
+./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID32s_list.sh "$1"
 
-echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128s.sh "$1"
-./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128s.sh "$1"
+echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128s_list.sh "$1"
+./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128s_list.sh "$1"
 
 echo ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128_service_solicit.sh "$1"
 ./parse_PCAP_2db_helpers/pcap_fill_LE_bdaddr_to_UUID128_service_solicit.sh "$1"

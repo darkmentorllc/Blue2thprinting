@@ -36,10 +36,10 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     eir_result = execute_query(eir_query, values)
     if(len(eir_result) > 0): we_have_a_name = True
 
-    # Query for RSP_bdaddr_to_name table
-    rsp_query = "SELECT name_hex_str FROM RSP_bdaddr_to_name WHERE bdaddr = %s"
-    rsp_result = execute_query(rsp_query, values)
-    if(len(rsp_result) > 0): we_have_a_name = True
+    # Query for HCI_bdaddr_to_name table
+    hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
+    hci_result = execute_query(hci_query, values)
+    if(len(hci_result) > 0): we_have_a_name = True
 
     # Query for LE_bdaddr_to_name table
     le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
@@ -88,11 +88,11 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
-                if(len(rsp_result) > 0):
-                    for (name_hex_str,) in rsp_result:
+                if(len(hci_result) > 0):
+                    for (name_hex_str,) in hci_result:
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (RSP_bdaddr_to_name table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (HCI_bdaddr_to_name table)"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
@@ -185,7 +185,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_GATT = True
 
-    le_adv_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE bdaddr = %s"
+    le_adv_query = "SELECT str_UUID128s FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr = %s"
     le_adv_result = execute_query(le_adv_query, values)
     if(len(le_adv_result) > 0): we_have_GATT = True
 
@@ -243,7 +243,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                             str_list.append(f"\t\t{tmpstr} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (GATT_characteristics & GATT_characteristics_values tables)")
 
                     if(len(le_adv_result) > 0):
-                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
                         # NOTE! : While I don't believe it currently is, treat every str_UUID128s entry as if it could be a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output for UUID128s is)
                         for (str_UUID128s,) in le_adv_result:
                             UUID128_list = str_UUID128s.split(",")
@@ -252,10 +252,10 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s_list table)")
 
                     if(len(le_adv2_result) > 0):
-                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
                         # NOTE! : While I don't believe it currently is, treat every str_UUID128s entry as if it could be a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output for UUID128s is)
                         for (str_UUID128s,) in le_adv2_result:
                             UUID128_list = str_UUID128s.split(",")
@@ -267,7 +267,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                         str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128_service_solicit table)")
 
                     if(len(eir_adv_result) > 0):
-                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s database query
+                        # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
                         # NOTE! : Every str_UUID128s entry is a comma-deliminated list of UUID128s w/o dashes (because that's how some other wireshark output is)
                         for (str_UUID128s,) in eir_adv_result:
                             UUID128_list = str_UUID128s.split(",")

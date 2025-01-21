@@ -407,6 +407,18 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
         return True
 
+    # type 0x30
+    elif isinstance(entry.payload, EIR_BroadcastName):
+        broadcast_name = entry.broadcast_name
+        utf8_name = broadcast_name.decode('utf-8', 'ignore')
+        name_hex_str = ''.join(format(byte, '02x') for byte in broadcast_name)
+        length = int(1 + len(broadcast_name)) # 1 bytes for opcode + length of the string
+        exit_on_len_mismatch(length, entry)
+        data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
+        vprint(f"{bdaddr}: {adv_type} Broadcast Name: {utf8_name}")
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_BroadcastName, data)
+        return True
+
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()

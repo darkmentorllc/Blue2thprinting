@@ -36,6 +36,7 @@ type_AdvData_UUID32ListServiceSolicitation      = 0x1F
 type_AdvData_UUID32ServiceData                  = 0x20
 type_AdvData_UUID128ServiceData                 = 0x21
 type_AdvData_URI                                = 0x24
+type_AdvData_BroadcastName                      = 0x30
 type_AdvData_MSD                                = 0xff
 
 # Advertisement channel PDU types defined in BT spec

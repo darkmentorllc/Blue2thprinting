@@ -50,7 +50,7 @@ def print_uuid128s(bdaddr):
     eir_UUID128s_query = "SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE bdaddr = %s"
     eir_UUID128s_result = execute_query(eir_UUID128s_query, values)
 
-    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s WHERE bdaddr = %s"
+    le_UUID128s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID128s FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr = %s"
     le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(eir_UUID128s_result) == 0 and len(le_UUID128s_result) == 0):
@@ -83,7 +83,7 @@ def print_uuid128s(bdaddr):
                 qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID128s)")
 
-    # Process LE_bdaddr_to_UUID128s results
+    # Process LE_bdaddr_to_UUID128s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID128s in le_UUID128s_result:
         # Export BTIDES data first
         if(str_UUID128s != ""):
@@ -105,7 +105,7 @@ def print_uuid128s(bdaddr):
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
                 qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
-        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
