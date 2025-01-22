@@ -253,6 +253,7 @@ def export_to_ATTArray(packet):
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
 
+    packet.show()
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)
@@ -261,6 +262,10 @@ def export_to_ATTArray(packet):
     if(export_ATT_Exchange_MTU_Request(connect_ind_obj, packet)):
         return True
     if(export_ATT_Exchange_MTU_Response(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Read_By_Type_Request(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Read_By_Type_Response(connect_ind_obj, packet)):
         return True
     if(export_ATT_Read_Request(connect_ind_obj, packet)):
         return True

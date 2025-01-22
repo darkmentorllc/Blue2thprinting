@@ -11,7 +11,8 @@ import re
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
 import TME.TME_glob
-from TME.TME_UUID128 import add_dashes_to_UUID128
+#from TME.TME_UUID128 import add_dashes_to_UUID128
+from TME.TME_helpers import get_utf8_string_from_hex_string
 
 ############################
 # Helper "factory functions"
@@ -83,6 +84,24 @@ def ff_ATT_EXCHANGE_MTU_RSP(direction, server_rx_mtu):
     return obj
 
 
+def ff_ATT_READ_BY_TYPE_REQ(direction, start_handle, end_handle, attribute_uuid):
+    obj = {"direction": direction, "opcode": type_ATT_READ_BY_TYPE_REQ, "start_handle": start_handle, "end_handle": end_handle, "attribute_uuid": attribute_uuid}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_TYPE_REQ]
+    return obj
+
+def ff_ATT_READ_BY_TYPE_RSP_attribute_data_list_entry(attribute_handle=None, value_hex_str=None):
+    list_obj = {"attribute_handle": attribute_handle, "value_hex_str": value_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        list_obj["utf8_str"] = get_utf8_string_from_hex_string(value_hex_str)
+    return list_obj
+
+def ff_ATT_READ_BY_TYPE_RSP(direction, length, attribute_data_list):
+    obj = {"direction": direction, "opcode": type_ATT_READ_BY_TYPE_RSP, "length": length, "attribute_data_list": attribute_data_list}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_TYPE_RSP]
+    return obj
+
 def ff_ATT_READ_REQ(direction, handle):
     obj = {"direction": direction, "opcode": type_ATT_READ_REQ, "handle": handle}
     if(TME.TME_glob.verbose_BTIDES):
@@ -104,11 +123,11 @@ def ff_ATT_READ_BY_GROUP_TYPE_REQ(direction, start_handle, end_handle, group_typ
     return obj
 
 
-def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(attribute_handle=None, end_group_handle=None, UUID=None):
+def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry(attribute_handle=None, end_group_handle=None, UUID=None):
     list_obj = {"attribute_handle": attribute_handle, "end_group_handle": end_group_handle, "UUID": UUID}
     return list_obj
 
-# 3rd parameter should be created with def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list() above
+# 3rd parameter should be created with def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry() above
 def ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, length, attribute_data_list):
     obj = {"direction": direction, "opcode": type_ATT_READ_BY_GROUP_TYPE_RSP, "length": length, "attribute_data_list": attribute_data_list}
     if(TME.TME_glob.verbose_BTIDES):

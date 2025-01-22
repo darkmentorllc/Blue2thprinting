@@ -47,7 +47,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     if(len(le_result) > 0): we_have_a_name = True
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' AND cv.bdaddr = %s;"
+    chars_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' AND cv.bdaddr = %s;"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_a_name = True
 
@@ -69,7 +69,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
     ms_msd_result2 = execute_query(ms_msd_query2, values2)
     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
         try:
-            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
+            ms_msd_name2 = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
         except:
             ms_msd_name2 = ""
         if(len(ms_msd_name2) > 0):
@@ -85,17 +85,17 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                 regex_pattern = metadata['2thprint_NamePrint'].replace('\\\\\\', '\\')
                 if(len(eir_result) > 0):
                     for (name_hex_str,) in eir_result:
-                        name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+                        name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
                 if(len(hci_result) > 0):
                     for (name_hex_str,) in hci_result:
-                        name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+                        name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (HCI_bdaddr_to_name table)"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
-                        name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+                        name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
                             return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
@@ -112,7 +112,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                 if(ms_msd_name_present2):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
                         try:
-                            ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
+                            ms_msd_name2 = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
                         except:
                             ms_msd_name2 = ""
                         if(len(ms_msd_name2) > 0):
@@ -143,7 +143,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
             if( (check_if_UUIDs_match(UUID128_db_, "2a24") or check_if_UUIDs_match(UUID128_db_, "2a27")) and model_name_match == 0):
                 # If so, go lookup the actual data behind it, so we can see if the "Model Number String" is a Chip
                 values = (bdaddr, f"char_value_handle:03")
-                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and read_handle = %s"
+                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and char_value_handle = %s"
                 char_value_result = execute_query(char_value_query, values)
                 if(len(char_value_result) > 0):
                     for (byte_values,) in char_value_result:
@@ -231,7 +231,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
                                 # If so, go lookup the actual data behind it, so we can see if the "Manufacturer Name" is a ChipMaker
                                 values = (bdaddr, f"char_value_handle:03")
-                                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and read_handle = %s"
+                                char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and char_value_handle = %s"
                                 char_value_result = execute_query(char_value_query, values)
                                 if(len(char_value_result) > 0):
                                     for (byte_values,) in char_value_result:

@@ -62,7 +62,7 @@ def get_bdaddrs_by_name_regex(nameregex):
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00';"
+    chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00';"
     chars_result = execute_query(chars_query, ())
     if(len(chars_result) > 0):
         for (bdaddr, byte_values) in chars_result:

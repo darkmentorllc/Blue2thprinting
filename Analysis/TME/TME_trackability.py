@@ -87,7 +87,7 @@ def print_UniqueIDReport(bdaddr):
         eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
         eir_result = execute_query(eir_query, values)
         for (name_hex_str,) in eir_result:
-            name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+            name = get_utf8_string_from_hex_string(name_hex_str)
             qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
@@ -95,7 +95,7 @@ def print_UniqueIDReport(bdaddr):
         hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
         hci_result = execute_query(hci_query, values)
         for (name_hex_str,) in hci_result:
-            name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+            name = get_utf8_string_from_hex_string(name_hex_str)
             qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
@@ -103,12 +103,12 @@ def print_UniqueIDReport(bdaddr):
         le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
         for name_hex_str, le_evt_type in le_result:
-            name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+            name = get_utf8_string_from_hex_string(name_hex_str)
             qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
-        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.read_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
+        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
         chars_result = execute_query(chars_query, values)
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
@@ -132,7 +132,7 @@ def print_UniqueIDReport(bdaddr):
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
             try:
-                ms_msd_name2 = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8', 'ignore')
+                ms_msd_name2 = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
             except:
                 ms_msd_name2 = ""
             if(len(ms_msd_name2) > 0):

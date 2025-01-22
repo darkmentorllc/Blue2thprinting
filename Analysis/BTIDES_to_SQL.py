@@ -864,6 +864,7 @@ g_handle_to_UUID_map = {}
 def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
     global g_last_read_req_handle
 
+    operation = type_BTIDES_ATT_Read # TODO: once we handle other forms of ATT packets besides read, update the operation lower in the code
     if(att_entry["opcode"] == type_ATT_FIND_INFORMATION_RSP):
         # Fill in all the UUIDs for the handles we've seen so far
         for info_entry in att_entry["information_data"]:
@@ -877,11 +878,11 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
         if isinstance(handle, str):
             handle = int(handle, 16)
             if(handle == 0):
-                print("Error: read_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
+                print("Error: char_value_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
                 exit(-1)
         byte_values = bytes.fromhex(att_entry["value_hex_str"])
-        values = (bdaddr, bdaddr_random, handle, byte_values)
-        insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
+        values = (bdaddr, bdaddr_random, handle, operation, byte_values)
+        insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, operation, char_value_handle, byte_values) VALUES (%s, %s, %s, %s, %s);"
         execute_insert(insert, values)
 
         # Now check if the handle in question was a characteristic UUID (0x2800), and if so, interpret the raw data and insert into db
@@ -920,6 +921,7 @@ def parse_ATTArray(entry):
 ###################################
 
 def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
+
     # Skip inserting the service itself if it's designated a placeholder
     if("placeholder_entry" not in gatt_service_entry.keys()):
         if(gatt_service_entry["utype"] == "2800"):
@@ -954,6 +956,7 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
             if("char_value" in char.keys()):
                 char_value = char["char_value"]
                 for io_array_entry in char_value["io_array"]:
+                    operation = io_array_entry["io_type"]
                     byte_values = bytes.fromhex(io_array_entry["value_hex_str"])
                     # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
                     # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
@@ -961,10 +964,10 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                     if isinstance(handle, str):
                         handle = int(handle, 16)
                         if(handle == 0):
-                            print("Error: read_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
+                            print("Error: char_value_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
                             exit(-1)
-                    values = (bdaddr, bdaddr_random, handle, byte_values)
-                    insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, read_handle, byte_values) VALUES (%s, %s, %s, %s);"
+                    values = (bdaddr, bdaddr_random, handle, operation, byte_values)
+                    insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
                     execute_insert(insert, values)
 
 def parse_GATTArray(entry):

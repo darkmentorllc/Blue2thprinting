@@ -662,7 +662,7 @@ def print_device_names(bdaddr, nametype):
     }
 
     for device_name_type, name_hex_str in eir_result:
-        device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+        device_name = get_utf8_string_from_hex_string(name_hex_str)
         qprint(f"\tDeviceName: {device_name}")
         qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
@@ -673,14 +673,14 @@ def print_device_names(bdaddr, nametype):
         BTIDES_export_AdvData(bdaddr, 0, 50, device_name_type, data)
 
     for name_hex_str, in hci_result:
-        device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+        device_name = get_utf8_string_from_hex_string(name_hex_str)
         qprint(f"\tDeviceName: {device_name}")
         qprint("\t\tIn BT Classic Data (HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, device_name)
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
-        device_name = bytes.fromhex(name_hex_str).decode('utf-8', 'ignore')
+        device_name = get_utf8_string_from_hex_string(name_hex_str)
         qprint(f"\tDeviceName: {device_name}")
         qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")

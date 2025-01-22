@@ -348,7 +348,7 @@ def print_URI(bdaddr):
             # Print hex bytes out still for the invalid case, just to show what kind of invalid data it has
             uri_str = uri_scheme_prefixes[type_part] + uri_hex_str[2:]
         else:
-            uri_part = bytes.fromhex(uri_hex_str[2:]).decode('utf-8')
+            uri_part = get_utf8_string_from_hex_string(uri_hex_str[2:])
             uri_str = uri_scheme_prefixes[type_part] + uri_part
 
         qprint(f"\t\tURI: {uri_str}")
@@ -597,7 +597,7 @@ def print_manufacturer_data(bdaddr):
                 # This seems to only occur if(ExtendedDeviceStatus & 0x8). Found some if(ExtendedDeviceStatus & 0x4), data and confirmed it doesn't occur then
                 if(ExtendedDeviceStatus & 0x8):
                     try:
-                        Device_Hash_as_utf8_str = bytes.fromhex(manufacturer_specific_data[20:]).decode('utf-8')
+                        Device_Hash_as_utf8_str = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
                         qprint(f"\t\t\t\tNon-spec interpretation of 'Device Hash' as possible string: {Device_Hash_as_utf8_str}")
                         Device_Hash_unknown_bytes = bytes.fromhex(manufacturer_specific_data[16:20])
                         Device_Hash_unknown_bytes_little_endian_short = struct.unpack('<H', Device_Hash_unknown_bytes)[0]
