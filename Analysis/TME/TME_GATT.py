@@ -165,16 +165,16 @@ def characteristic_value_decoding(indent, UUID128, bytes):
 def device_has_GATT_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT begin_handle,end_handle,UUID FROM GATT_services WHERE bdaddr = %s";
+    query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
 
-    query = "SELECT attribute_handle,UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
+    query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
 
     query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
 
-    query = "SELECT read_handle,byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
 
     if(len(GATT_services_result) != 0 or len(GATT_attribute_handles_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
@@ -230,20 +230,20 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr, bdaddr_random, data)
 
-    query = "SELECT bdaddr_random, read_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
-    for bdaddr_random, read_handle, byte_values in GATT_characteristics_values_result:
-        data = {"value_handle": read_handle, "io_array": [ {"io_type": 0, "value_hex_str": byte_values.hex()} ] }
+    for bdaddr_random, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
+        data = {"value_handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr, bdaddr_random, data)
 
-        if(read_handle in char_value_handles_dict.keys()):
+        if(char_value_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
-            char_value_handles_dict[read_handle].append(byte_values)
+            char_value_handles_dict[char_value_handle].append(byte_values)
         else:
             # There wasn't already an entry, so insert a list of a single value")
-            char_value_handles_dict[read_handle] = [ byte_values ]
+            char_value_handles_dict[char_value_handle] = [ byte_values ]
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
@@ -263,7 +263,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         FROM GATT_characteristics
         WHERE bdaddr = %s
         UNION
-        SELECT read_handle AS handle_value
+        SELECT char_value_handle AS handle_value
         FROM GATT_characteristics_values
         WHERE bdaddr = %s
     ) AS combined_handles

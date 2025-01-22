@@ -69,6 +69,12 @@ def scapy_flags_to_hex_str(entry):
     #qprint(f"flags_hex_str = {flags_hex_str}")
     return flags_hex_str
 
+def bytes_to_hex_str(bytes):
+    return ''.join(format(byte, '02x') for byte in bytes)
+
+def bytes_to_utf8(hex_str):
+    return hex_str.decode('utf-8', 'ignore')
+
 # This is just a simple wrapper around insert_std_optional_fields to insert any
 # additional information that we may be able to glean from the packet
 def if_verbose_insert_std_optional_fields(obj, packet):
@@ -179,8 +185,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     # type 8
     elif isinstance(entry.payload, EIR_ShortenedLocalName):
         local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8', 'ignore')
-        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
+        utf8_name = bytes_to_utf8(local_name)
+        name_hex_str = bytes_to_hex_str(local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
@@ -191,8 +197,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     # type 9
     elif isinstance(entry.payload, EIR_CompleteLocalName):
         local_name = entry.local_name
-        utf8_name = local_name.decode('utf-8', 'ignore')
-        name_hex_str = ''.join(format(byte, '02x') for byte in local_name)
+        utf8_name = bytes_to_utf8(local_name)
+        name_hex_str = bytes_to_hex_str(local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
@@ -281,7 +287,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID16 before accessing .load
         if(length > 3): # 1 byte type + 2 byte UUID16
-            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+            service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
         exit_on_len_mismatch(length, entry)
@@ -367,7 +373,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID32 before accessing .load
         if(length > 5): # 1 byte type + 4 byte UUID32
-            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+            service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
         exit_on_len_mismatch(length, entry)
@@ -384,7 +390,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID128 before accessing .load
         if(length > 17): # 1 byte type + 16 byte UUID128
-            service_data_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+            service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
         exit_on_len_mismatch(length, entry)
@@ -398,7 +404,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #entry.show()
         URI = entry.payload.getlayer(EIR_URI)
         url_bytes = entry.uri_hier_part
-        uri_hex_str = ''.join(format(byte, '02x') for byte in url_bytes)
+        uri_hex_str = bytes_to_hex_str(url_bytes)
         uri_hex_str = f"{entry.scheme:02x}" + uri_hex_str
         length = 1 + int(len(uri_hex_str) / 2) # 1 byte opcode + half the size due to it being hex_str with 2 characters per byte
         exit_on_len_mismatch(length, entry)
@@ -410,8 +416,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     # type 0x30
     elif isinstance(entry.payload, EIR_BroadcastName):
         broadcast_name = entry.broadcast_name
-        utf8_name = broadcast_name.decode('utf-8', 'ignore')
-        name_hex_str = ''.join(format(byte, '02x') for byte in broadcast_name)
+        utf8_name = bytes_to_utf8(broadcast_name)
+        name_hex_str = bytes_to_hex_str(broadcast_name)
         length = int(1 + len(broadcast_name)) # 1 bytes for opcode + length of the string
         exit_on_len_mismatch(length, entry)
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
@@ -443,7 +449,7 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual MSD (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of MSD beyond the company_id before accessing .load
         if(length > 3):
-            msd_hex_str = ''.join(format(byte, '02x') for byte in entry.load)
+            msd_hex_str = bytes_to_hex_str(entry.load)
         data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": msd_hex_str}
         vprint(f"{bdaddr}: {adv_type} MSD: company_id = {company_id_hex_str}, data = {msd_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_MSD, data)
@@ -522,6 +528,59 @@ def export_ATT_Exchange_MTU_Response(connect_ind_obj, packet, direction=None):
     return False
 
 
+def export_ATT_Read_By_Type_Request(connect_ind_obj, packet, direction=None):
+    if(packet.haslayer(ATT_Read_By_Type_Request)):
+        att_data = get_ATT_data(packet, ATT_Read_By_Type_Request, type_ATT_READ_BY_TYPE_REQ)
+        attribute_uuid = att_data.uuid
+    elif(packet.haslayer(ATT_Read_By_Type_Request_128bit)):
+        att_data = get_ATT_data(packet, ATT_Read_By_Type_Request_128bit, type_ATT_READ_BY_TYPE_REQ)
+        uuid1 = att_data.uuid1 # FIXME: change Scapy definition to use a proper 16-byte UUID128!
+        uuid2 = att_data.uuid2
+        attribute_uuid = uuid1 + uuid2 # FIXME: untested, need to see value and debug to know what's in here currently
+    else:
+        return False
+    try:
+        if(direction == None):
+            direction = get_packet_direction(packet)
+        start_handle = att_data.start
+        end_handle = att_data.end
+    except Exception as e:
+        print(f"Error processing ATT_Read_By_Type_Request: {e}")
+        return False
+    #handle = f"{att_data.gatt_handle:04x}" # FIXME: I'm not sure why this was accepted as valid output and the Schema validation says its fine...possible implicit conversion happening?
+    data = ff_ATT_READ_BY_TYPE_REQ(direction, start_handle, end_handle, attribute_uuid)
+    if_verbose_insert_std_optional_fields(data, packet)
+    BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+    return True
+
+
+def export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=None):
+    att_data = get_ATT_data(packet, ATT_Read_By_Type_Response, type_ATT_READ_BY_TYPE_RSP)
+    if(att_data != None):
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+            # In this packet type, length is "The size of each attribute handle-value pair"
+            # So if there are multiple entries they must all be the same length
+            length = att_data.len
+            attribute_data_list = []
+            for entry in att_data.handles:
+                value_hex_str = bytes_to_hex_str(entry.value)
+                list_entry = ff_ATT_READ_BY_TYPE_RSP_attribute_data_list_entry(
+                                attribute_handle=entry.handle,
+                                value_hex_str=value_hex_str
+                                )
+                attribute_data_list.append(list_entry)
+        except Exception as e:
+            print(f"Error processing ATT_Read_By_Type_Response: {e}")
+            return False
+        data = ff_ATT_READ_BY_TYPE_RSP(direction, length, attribute_data_list)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
 def export_ATT_Read_Request(connect_ind_obj, packet, direction=None):
     att_data = get_ATT_data(packet, ATT_Read_Request, type_ATT_READ_REQ)
     if(att_data != None):
@@ -546,7 +605,7 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
         try:
             if(direction == None):
                 direction = get_packet_direction(packet)
-            value_hex_str = ''.join(format(byte, '02x') for byte in att_data.value)
+            value_hex_str = bytes_to_hex_str(att_data.value)
         except Exception as e:
             print(f"Error processing ATT_Read_Response: {e}")
             return False
@@ -648,6 +707,9 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=No
     att_data = get_ATT_data(packet, ATT_Read_By_Group_Type_Response, type_ATT_READ_BY_GROUP_TYPE_RSP)
     if att_data is not None:
         try:
+            if (att_data.length != 6 and att_data.length != 20):
+                print("Unexpected length in Read By Group Type Response. Can't parse further.")
+                return False
             if(direction == None):
                 direction = get_packet_direction(packet)
             attribute_data_list = []
@@ -658,12 +720,12 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=No
                     if i + 6 > data_len:
                         qprint("Not enough data left to process a 6-byte attribute data entry.")
                         break
-                    list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
+                    list_entry = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry(
                                     attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
                                     end_group_handle=int.from_bytes(att_data.data[i+2:i+4], byteorder='little'),
                                     UUID=f"{int.from_bytes(att_data.data[i+4:i+6], byteorder='little'):04x}"
                                     )
-                    attribute_data_list.append(list_obj)
+                    attribute_data_list.append(list_entry)
             elif(att_data.length == 20):
                 # 2 byte start handle, 2 byte end handle, 16 byte UUID128
                 data_len = len(att_data.data)
@@ -671,19 +733,15 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=No
                     if i + 20 > data_len:
                         qprint("Not enough data left to process a 20-byte attribute data entry.")
                         break
-                    list_obj = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list(
-                                attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
-                                end_group_handle=int.from_bytes(att_data.data[i+2:i+4], byteorder='little'),
-                                UUID=f"{int.from_bytes(att_data.data[i+4:i+20], byteorder='little'):032x}"
-                                )
-                    attribute_data_list.append(list_obj)
+                    list_entry = ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry(
+                                    attribute_handle=int.from_bytes(att_data.data[i:i+2], byteorder='little'),
+                                    end_group_handle=int.from_bytes(att_data.data[i+2:i+4], byteorder='little'),
+                                    UUID=f"{int.from_bytes(att_data.data[i+4:i+20], byteorder='little'):032x}"
+                                    )
+                    attribute_data_list.append(list_entry)
         except Exception as e:
             print(f"Error processing ATT_Read_By_Group_Type_Response: {e}")
             return False
-        if (att_data.length != 6 and att_data.length != 20):
-            print("Unexpected length in Read By Group Type Response. Can't parse further.")
-            return False
-        #attribute_data_list = ''.join(format(byte, '02x') for byte in att_data.data)
         data = ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, att_data.length, attribute_data_list)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
