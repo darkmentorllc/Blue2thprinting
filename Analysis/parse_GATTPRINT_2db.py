@@ -23,12 +23,11 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
-#sql_GATT_services = "INSERT IGNORE INTO GATT_services (bdaddr, bdaddr_random, begin_handle, end_handle, UUID128) VALUES (%s, %s, %s, %s, %s)"
 # Currently date from gatttool can only capture primary services, so hardcode service_type to 0 (for 0x2800, but to save space. 0x2801 would therefore be 1))
-sql_GATT_services2 = "INSERT IGNORE INTO GATT_services2 (bdaddr, bdaddr_random, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
+sql_GATT_services = "INSERT IGNORE INTO GATT_services (bdaddr, bdaddr_random, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
 sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (bdaddr, bdaddr_random, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
 sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
-sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, byte_values) VALUES (%s, %s, %s, %s)"
+sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, operation, char_value_handle, byte_values) VALUES (%s, %s, 0, %s, %s)"
 
 # Try to find the bdaddr that will be substituted for {}, in any of our BLE tables
 sql_lookup_bdaddr_type = """
@@ -231,7 +230,7 @@ def func_SERVICE(bdaddr_random, new, args):
     values = (bdaddr_random, bdaddr, begin_handle, end_handle, UUID128)
     #print("values = ", values)
     # Execute the SQL statement
-    cursor.execute(sql_GATT_services2, values)
+    cursor.execute(sql_GATT_services, values)
     # Commit the changes to the database
     db_connection.commit()
 

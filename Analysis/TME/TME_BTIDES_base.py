@@ -38,7 +38,7 @@ def write_BTIDES(out_filename):
         #exit(-1)
 
     all_schemas = []
-    required_version = "0.1.0"
+    required_version = "0.2.1"
 
     def version_tuple(v):
         return tuple(map(int, (v.split("."))))
