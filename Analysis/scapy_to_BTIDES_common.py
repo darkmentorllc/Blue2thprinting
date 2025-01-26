@@ -36,6 +36,15 @@ from TME.TME_BTIDES_LMP import *
 # in order to insert GATT service information into the BTIDES JSON
 g_last_ATT_group_type_requested = 0
 
+# We need to keep state between ATT_READ_REQ and ATT_READ_RSP
+# in order to know if a ATT_READ_RSP is for a handle that
+# corresponds to a GATT characteristic
+g_last_read_handle = 0
+
+# Keep state about the handle to UUID mappings with a per-BDADDR dictionary
+# i.e.
+g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data = {}
+
 # Saved text for printing fields
 #    for field in btle_adv.fields_desc:
 #        print(f"{field.name}: {field.__class__.__name__}")
@@ -75,6 +84,9 @@ def scapy_flags_to_hex_str(entry):
 
 def bytes_to_hex_str(bytes):
     return ''.join(format(byte, '02x') for byte in bytes)
+
+def bytes_reversed_to_hex_str(bytes):
+    return ''.join(format(byte, '02x') for byte in reversed(bytes))
 
 def bytes_to_utf8(hex_str):
     return hex_str.decode('utf-8', 'ignore')
@@ -616,6 +628,7 @@ def export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=None):
 
 
 def export_ATT_Read_Request(connect_ind_obj, packet, direction=None):
+    global g_last_read_handle
     att_data = get_ATT_data(packet, ATT_Read_Request, type_ATT_READ_REQ)
     if(att_data != None):
         try:
@@ -629,11 +642,13 @@ def export_ATT_Read_Request(connect_ind_obj, packet, direction=None):
         data = ff_ATT_READ_REQ(direction, handle)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+        g_last_read_handle = handle
         return True
     return False
 
 
 def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
+    global BTIDES_JSON
     att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
     if(att_data != None):
         try:
@@ -646,7 +661,33 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
         data = ff_ATT_READ_RSP(direction, value_hex_str)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+
+        # Now insert any characteristics into the BTIDES JSON
+        if(direction == type_BTIDES_direction_P2C):
+            bdaddr = connect_ind_obj["peripheral_bdaddr"]
+        elif(direction == type_BTIDES_direction_P2C):
+            bdaddr = connect_ind_obj["central_bdaddr"]
+        else:
+            print("New direction added. Updated code.")
+            exit(1)
+
+        if(bdaddr not in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data.keys()):
+            return True
+        for list_obj in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr]:
+            if(list_obj["handle"] == g_last_read_handle and list_obj["UUID"] == "2803"):
+                # Interpret the att_data.value as a Characteristic
+                properties, value_handle = struct.unpack("<BH", att_data.value[:3])
+                if(len(att_data.value) == 5 or len(att_data.value) == 19):
+                    value_uuid = bytes_reversed_to_hex_str(att_data.value[3:])
+                else:
+                    print("Unexpected length error.")
+                    return False
+                data = {"handle": list_obj["handle"], "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
+                char_obj = ff_GATT_Characteristic(data)
+                BTIDES_export_GATT_Characteristic(connect_ind_obj=connect_ind_obj, data=char_obj)
+
         return True
+
     return False
 
 
@@ -673,8 +714,16 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=None
     att_data = get_ATT_data(packet, ATT_Find_Information_Response, type_ATT_FIND_INFORMATION_RSP)
     if att_data is not None:
         try:
+            bdaddr = ""
             if(direction == None):
                 direction = get_packet_direction(packet)
+                if(direction == type_BTIDES_direction_P2C):
+                    bdaddr = connect_ind_obj["peripheral_bdaddr"]
+                elif(direction == type_BTIDES_direction_P2C):
+                    bdaddr = connect_ind_obj["central_bdaddr"]
+                else:
+                    print("New direction added. Updated code.")
+                    exit(1)
             format = att_data.format
             info_data_list = []
 
@@ -686,6 +735,10 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=None
                                     UUID=f"{handle_obj.value:04x}"
                                 )
                     info_data_list.append(list_obj)
+                    # Store this information for later, so we can do Characteristic inserts
+                    if(bdaddr not in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data.keys()):
+                        g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr] = []
+                    g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr].append(list_obj)
             elif format == 2:
                 # 2 byte handle, 16 byte UUID128
                 for handle_obj in att_data.handles:
@@ -694,6 +747,10 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=None
                                     UUID=str(handle_obj.value)
                                 )
                     info_data_list.append(list_obj)
+                    # Store this information for later, so we can do Characteristic inserts
+                    if(bdaddr not in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data.keys()):
+                        g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr] = []
+                    g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr].append(list_obj)
         except Exception as e:
             print(f"Error processing ATT_Find_Information_Response: {e}")
             return False
@@ -709,6 +766,8 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=None
         for entry in info_data_list:
             data = ff_ATT_handle_entry(entry["handle"], entry["UUID"])
             BTIDES_export_ATT_handle(connect_ind_obj=connect_ind_obj, data=data)
+
+        # We can't insert characteristics until we've seen an ATT_READ_RSP for their values (so we know their properties, etc)
 
         return True
 
