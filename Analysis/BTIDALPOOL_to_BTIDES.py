@@ -107,9 +107,9 @@ def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
         if(g_local_testing):
             # Suppress the InsecureRequestWarning
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            response = session.post("https://localhost:4443", json=data, verify=False) # for local testing
+            response = session.post("https://localhost:3567", json=data, verify=False) # for local testing
         else:
-            response = session.post("https://btidalpool.ddns.net:4443", json=data, verify='./btidalpool.ddns.net.crt')
+            response = session.post("https://btidalpool.ddns.net:3567", json=data, verify='./btidalpool.ddns.net.crt')
         if response.headers.get('Content-Type') == 'application/json':
             json_content = response.json()
             # Load the schemas and create a registry

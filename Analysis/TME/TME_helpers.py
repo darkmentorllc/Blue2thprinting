@@ -19,7 +19,7 @@ def execute_query(query, values):
     if(TME.TME_glob.use_test_db):
         database = 'bttest'
     else:
-        database = 'bt'
+        database = 'bt2'
 
     connection = mysql.connector.connect(
         host='localhost',
@@ -45,7 +45,7 @@ def execute_insert(query, values):
     if(TME.TME_glob.use_test_db):
         database = 'bttest'
     else:
-        database = 'bt'
+        database = 'bt2'
 
     connection = mysql.connector.connect(
         host='localhost',

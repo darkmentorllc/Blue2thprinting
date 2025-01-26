@@ -9,5 +9,5 @@ sed -E 's/^([0-9A-Fa-f]+)-([0-9A-Fa-f]+)-([0-9A-Fa-f]+)[[:space:]]+\(hex\)[[:spa
 # Somehow sed is inserting meta-characters into the file, at the end before the ". Remove them (^M is typed with ctrl-v, ctrl-m)
 sed 's/m//g' /tmp/fixme.txt > /tmp/d1.txt
 echo "Importing IEEE OUIs into IEEE_bdaddr_to_company"bdaddr
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/d1.txt'  IGNORE INTO TABLE IEEE_bdaddr_to_company FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, company_name);"
+mysql -u user -pa --database='bt2' --execute="LOAD DATA INFILE '/tmp/d1.txt'  IGNORE INTO TABLE IEEE_bdaddr_to_company FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, company_name);"
 mysql -u user -pa --database='bttest' --execute="LOAD DATA INFILE '/tmp/d1.txt'  IGNORE INTO TABLE IEEE_bdaddr_to_company FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr, company_name);"

@@ -15,6 +15,28 @@ class AuthClient:
         # BTIDALPOOL server's Google OAuth2 client ID
         self.client_id = '6849068466-3rhiutmh069m2tpg9a2o4m26qnomaqse.apps.googleusercontent.com'
 
+    # This is just a common flow that was seen repeatedly by the client users, where they had to
+    # use an existing token, and possibly refresh it, or maybe just show the SSO login prompt.
+    # So it was pulled into its own helper function.
+    def token_helper(self, token_file=None):
+        if token_file:
+            with open(token_file, 'r') as f:
+                token_data = json.load(f)
+            token = token_data['token']
+            refresh_token = token_data['refresh_token']
+            self.set_credentials(token, refresh_token, token_file=token_file)
+            if(not self.validate_credentials()):
+                print("Authentication failed.")
+                exit(1)
+        else:
+            try:
+                if(not self.google_SSO_authenticate() or not self.validate_credentials()):
+                    print("Authentication failed.")
+                    exit(1)
+            except ValueError as e:
+                print(f"Error: {e}")
+                exit(1)
+
     # Used by clients and server
     def set_credentials(self, token, refresh_token, token_file=None):
         # Store the token file name if it's given to us,

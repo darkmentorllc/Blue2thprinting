@@ -1,5 +1,5 @@
 # This file parses the BLEScope_extractedUUIDs.json file and inserts it into the MySQL database table BLEScope_UUID128s for use later by TellMeEverything.py
-# BLEScope_extractedUUIDs.json is the data extracted as part of the research paper 
+# BLEScope_extractedUUIDs.json is the data extracted as part of the research paper
 # "Automatic Fingerprinting of Vulnerable BLE IoT Devices with Static UUIDs from Mobile Apps"
 # by Chaoshun Zuo, Haohuang Wen, Zhiqiang Lin, and Yinqian Zhang from Ohio State University
 # Thanks to them for providing this data!
@@ -20,7 +20,7 @@ vendor_specific_characteristics = {}
 #         host='localhost',
 #         user='user',
 #         password='a',
-#         database='bt',
+#         database='bt2',
 #         auth_plugin='mysql_native_password'
 #     )
 
@@ -108,7 +108,7 @@ for key, value in data.items():
         continue
     pkg = value['pkg']
     uuids = value['uuids']
-    
+
     for uuid, details in uuids.items():
         uuid = uuid.lower()
         #define = details['define'][0]
@@ -144,7 +144,7 @@ db_connection = mysql.connector.connect(
     host='localhost',
     user='user',
     password='a',
-    database='bt',
+    database='bt2',
     auth_plugin='mysql_native_password'
 )
 
