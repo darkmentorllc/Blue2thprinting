@@ -672,6 +672,7 @@ def export_ATT_Read_Request(connect_ind_obj, packet, direction=None):
         return True
     return False
 
+
 def export_characteristic(list_obj, att_data, connect_ind_obj):
     global g_last_seen_characteristic_handle
     g_last_seen_characteristic_handle = g_last_read_handle
@@ -692,6 +693,14 @@ def export_characteristic(list_obj, att_data, connect_ind_obj):
     # so since we found it, we can return now
     return True
 
+
+def insert_descriptor_object(char_obj, desc_obj):
+    if("descriptors" not in char_obj.keys()):
+        char_obj["descriptors"] = [ desc_obj ]
+    else:
+        char_obj["descriptors"].append(desc_obj)
+
+
 def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
     char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, handle=g_last_seen_characteristic_handle)
     # If there's no entry already inserted for the last characteristic, we won't have anywhere to put the
@@ -700,6 +709,10 @@ def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
         return False
 
     if(list_obj["UUID"] == "2900"):
+        extended_properties, = struct.unpack("<H", att_data.value)
+        desc_obj = {"handle": list_obj["handle"], "UUID": "2900", "extended_properties": extended_properties}
+        desc_obj = ff_Descriptor(desc_obj)
+        insert_descriptor_object(char_obj, desc_obj)
         return True
 
     elif(list_obj["UUID"] == "2901"):
@@ -709,10 +722,7 @@ def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
         config_bits, = struct.unpack("<H", att_data.value)
         desc_obj = {"handle": list_obj["handle"], "UUID": "2902", "config_bits": config_bits}
         desc_obj = ff_Descriptor(desc_obj)
-        if("descriptors" not in char_obj.keys()):
-            char_obj["descriptors"] = [ desc_obj ]
-        else:
-            char_obj["descriptors"].append(desc_obj)
+        insert_descriptor_object(char_obj, desc_obj)
         return True
 
     elif(list_obj["UUID"] == "2903"):
@@ -723,16 +733,14 @@ def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
         desc_obj = {"handle": list_obj["handle"], "UUID": "2904", "format": format, \
                     "exponent": exponent, "unit": unit, "name_space": name_space, "description": description}
         desc_obj = ff_Descriptor(desc_obj)
-        if("descriptors" not in char_obj.keys()):
-            char_obj["descriptors"] = [ desc_obj ]
-        else:
-            char_obj["descriptors"].append(desc_obj)
+        insert_descriptor_object(char_obj, desc_obj)
         return True
 
     elif(list_obj["UUID"] == "2905"):
         return True
 
     return False
+
 
 def export_characteristic_values(list_obj, att_data, connect_ind_obj):
     char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, value_handle=list_obj["handle"])
@@ -750,6 +758,7 @@ def export_characteristic_values(list_obj, att_data, connect_ind_obj):
     else:
         char_obj["char_value"]["io_array"].extend(io_array)
     return True
+
 
 def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
     global g_last_seen_characteristic_handle
