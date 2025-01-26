@@ -41,6 +41,10 @@ g_last_ATT_group_type_requested = 0
 # corresponds to a GATT characteristic
 g_last_read_handle = 0
 
+# We need to keep state about the last characteristic we've seen,
+# in order to ensure characteristic descriptors are nested underneath it
+g_last_seen_characteristic_handle = 0
+
 # Keep state about the handle to UUID mappings with a per-BDADDR dictionary
 # i.e.
 g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data = {}
@@ -537,6 +541,9 @@ def export_ATT_Error_Response(connect_ind_obj, packet, direction=None):
         data = ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_error, error_code)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+
+        # TODO: capture error responses to ATT_READ_REQs
+
         return True
     return False
 
@@ -646,9 +653,88 @@ def export_ATT_Read_Request(connect_ind_obj, packet, direction=None):
         return True
     return False
 
+def export_characteristic(list_obj, att_data, connect_ind_obj):
+    global g_last_seen_characteristic_handle
+    g_last_seen_characteristic_handle = g_last_read_handle
+    # Interpret the att_data.value as a Characteristic
+    properties, value_handle = struct.unpack("<BH", att_data.value[:3])
+    if(len(att_data.value) == 5 or len(att_data.value) == 19):
+        value_uuid = bytes_reversed_to_hex_str(att_data.value[3:])
+    else:
+        print("Unexpected length error.")
+        return False
+    data = {"handle": list_obj["handle"], "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
+    char_obj = ff_GATT_Characteristic(data)
+    # Going to insert a "char_value" placeholder, and then can insert io_array stuff based on later reads/writes etc.
+    char_value_obj = {"handle": value_handle, "value_uuid": value_uuid}
+    char_obj["char_value"] = char_value_obj
+    BTIDES_export_GATT_Characteristic(connect_ind_obj=connect_ind_obj, data=char_obj)
+    # There can only be one entry out of all the entries that matches g_last_read_handle
+    # so since we found it, we can return now
+    return True
+
+def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
+    global BTIDES_JSON
+    char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, handle=g_last_seen_characteristic_handle)
+    # If there's no entry already inserted for the last characteristic, we won't have anywhere to put the
+    # characteristic descriptor, so we can just return None as failure
+    if(not char_obj):
+        return False
+
+    if(list_obj["UUID"] == "2900"):
+        return True
+
+    elif(list_obj["UUID"] == "2901"):
+        return True
+
+    elif(list_obj["UUID"] == "2902"):
+        config_bits, = struct.unpack("<H", att_data.value)
+        desc_obj = {"handle": list_obj["handle"], "UUID": "2902", "config_bits": config_bits}
+        desc_obj = ff_Descriptor(desc_obj)
+        if("descriptors" not in char_obj.keys()):
+            char_obj["descriptors"] = [ desc_obj ]
+        else:
+            char_obj["descriptors"].append(desc_obj)
+        return True
+
+    elif(list_obj["UUID"] == "2903"):
+        return True
+
+    elif(list_obj["UUID"] == "2904"):
+        format, exponent, unit, name_space, description = struct.unpack("<BBHBH", att_data.value)
+        desc_obj = {"handle": list_obj["handle"], "UUID": "2904", "format": format, \
+                    "exponent": exponent, "unit": unit, "name_space": name_space, "description": description}
+        desc_obj = ff_Descriptor(desc_obj)
+        if("descriptors" not in char_obj.keys()):
+            char_obj["descriptors"] = [ desc_obj ]
+        else:
+            char_obj["descriptors"].append(desc_obj)
+        return True
+
+    elif(list_obj["UUID"] == "2905"):
+        return True
+
+    return False
+
+def export_characteristic_values(list_obj, att_data, connect_ind_obj):
+    char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, value_handle=list_obj["handle"])
+    if(not char_obj):
+        # Couldn't find a match. Cut our losses and return success on the original ATT insertion at least
+        return True
+    # Just in case the value isn't there fore some reason (it should be from FOO
+    if("char_value" not in char_obj.keys()):
+        char_value_obj = {"handle": list_obj["handle"], "value_uuid": list_obj["UUID"]}
+        char_obj["char_value"] = char_value_obj
+    value_hex_str = bytes_to_hex_str(att_data.value)
+    io_array = [ {"io_type_str": ATT_type_to_BTIDES_io_type_str[type_ATT_READ_RSP], "io_type": type_ATT_READ_RSP, "value_hex_str": value_hex_str} ]
+    if("io_array" not in char_obj["char_value"].keys()):
+        char_obj["char_value"]["io_array"] = io_array
+    else:
+        char_obj["char_value"]["io_array"].extend(io_array)
+    return True
 
 def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
-    global BTIDES_JSON
+    global BTIDES_JSON, g_last_seen_characteristic_handle
     att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
     if(att_data != None):
         try:
@@ -662,7 +748,7 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
 
-        # Now insert any characteristics into the BTIDES JSON
+        # Now insert any characteristics/characteristic descriptors/characteristic values into the BTIDES JSON
         if(direction == type_BTIDES_direction_P2C):
             bdaddr = connect_ind_obj["peripheral_bdaddr"]
         elif(direction == type_BTIDES_direction_P2C):
@@ -672,20 +758,27 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
             exit(1)
 
         if(bdaddr not in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data.keys()):
+            # no match in the cache, so cut our losses and return True for the successful ATT export above
             return True
-        for list_obj in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr]:
-            if(list_obj["handle"] == g_last_read_handle and list_obj["UUID"] == "2803"):
-                # Interpret the att_data.value as a Characteristic
-                properties, value_handle = struct.unpack("<BH", att_data.value[:3])
-                if(len(att_data.value) == 5 or len(att_data.value) == 19):
-                    value_uuid = bytes_reversed_to_hex_str(att_data.value[3:])
-                else:
-                    print("Unexpected length error.")
-                    return False
-                data = {"handle": list_obj["handle"], "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
-                char_obj = ff_GATT_Characteristic(data)
-                BTIDES_export_GATT_Characteristic(connect_ind_obj=connect_ind_obj, data=char_obj)
 
+        for list_obj in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data[bdaddr]:
+            if(list_obj["handle"] != g_last_read_handle):
+                continue
+            if(list_obj["UUID"] == "2800" or list_obj["UUID"] == "2801" or list_obj["UUID"] == "2802"):
+                # We handle services elsewhere, nothing more to do with them here
+                continue
+            # Handle characteristic insertion
+            if(list_obj["UUID"] == "2803"):
+                if(export_characteristic(list_obj, att_data, connect_ind_obj)):
+                    return True
+
+            # Handle characteristic descriptors insertion
+            if(export_characteristic_descriptors(list_obj, att_data, connect_ind_obj)):
+                return True
+
+            # Handle characteristic value insertion
+            if(export_characteristic_values(list_obj, att_data, connect_ind_obj)):
+                return True
         return True
 
     return False

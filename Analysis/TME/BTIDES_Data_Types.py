@@ -10,6 +10,8 @@
 # Valid types defined in BTIDES schema. These are for things where we had to make our own values
 # because we couldn't use the values already defined in the spec
 
+from TME.BT_Data_Types import *
+
 # Advertisement channel types
 type_BTIDES_ADV_IND           = 0
 type_BTIDES_ADV_DIRECT_IND    = 1
@@ -41,11 +43,38 @@ type_BTIDES_direction_P2C =             1 # Peripheral to Central
 type_BTIDES_status_SUCCESS =            0
 
 # ATT IO types
-type_BTIDES_ATT_Read =                  0
-type_BTIDES_ATT_WriteWithResponse =     1
-type_BTIDES_ATT_WriteWithoutResponse =  2
-type_BTIDES_ATT_Notification =          3
-type_BTIDES_ATT_Indication =            4
+# type_BTIDES_ATT_Read =                  0
+# type_BTIDES_ATT_WriteWithResponse =     1
+# type_BTIDES_ATT_WriteWithoutResponse =  2
+# type_BTIDES_ATT_Notification =          3
+# type_BTIDES_ATT_Indication =            4
+ATT_type_to_BTIDES_io_type_str = {
+    type_ATT_ERROR_RSP:                     "Error - ATT_ERROR_RSP",
+    type_ATT_FIND_INFORMATION_RSP:          "Read - ATT_FIND_INFORMATION_RSP",
+    type_ATT_FIND_BY_TYPE_VALUE_RSP:        "Read - ATT_FIND_BY_TYPE_VALUE_RSP",
+    type_ATT_READ_BY_TYPE_RSP:              "Read - ATT_READ_BY_TYPE_RSP",
+    type_ATT_READ_RSP:                      "Read - ATT_READ_RSP",
+    type_ATT_READ_BLOB_RSP:                 "Read - ATT_READ_BLOB_RSP",
+    type_ATT_READ_MULTIPLE_RSP:             "Read - ATT_READ_MULTIPLE_RSP",
+    type_ATT_READ_BY_GROUP_TYPE_RSP:        "Read - ATT_READ_BY_GROUP_TYPE_RSP",
+    type_ATT_READ_MULTIPLE_VARIABLE_RSP:    "Read - ATT_READ_MULTIPLE_VARIABLE_RSP",
+    type_ATT_WRITE_REQ:                     "Write with response - ATT_WRITE_REQ",
+    type_ATT_PREPARE_WRITE_REQ:             "Write with response - ATT_PREPARE_WRITE_REQ",
+    type_ATT_WRITE_CMD:                     "Write without response - ATT_WRITE_CMD",
+    type_ATT_SIGNED_WRITE_CMD:              "Write without response - ATT_SIGNED_WRITE_CMD",
+    type_ATT_HANDLE_VALUE_NTF:              "Notification - ATT_HANDLE_VALUE_NTF",
+    type_ATT_MULTIPLE_HANDLE_VALUE_NTF:     "Notification - ATT_MULTIPLE_HANDLE_VALUE_NTF",
+    type_ATT_HANDLE_VALUE_IND:              "Indication - ATT_HANDLE_VALUE_IND"
+}
+
+UUIDs_to_characteristic_descriptor_type_str = {
+    "2900":                     "Characteristic Descriptor: Characteristic Extended Properties",
+    "2901":                     "Characteristic Descriptor: Characteristic User Description",
+    "2902":                     "Characteristic Descriptor: Client Characteristic Configuration",
+    "2903":                     "Characteristic Descriptor: Server Characteristic Configuration",
+    "2904":                     "Characteristic Descriptor: Characteristic Presentation Format",
+    "2905":                     "Characteristic Descriptor: Characteristic Aggregate Format"
+}
 
 # EIR types
 type_BTIDES_EIR_PSRM    = 1

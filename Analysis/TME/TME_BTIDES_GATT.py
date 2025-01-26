@@ -8,6 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import re
+from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_helpers import qprint
 from TME.TME_BTIDES_base import *
@@ -38,25 +39,25 @@ def ff_GATT_Characteristic(obj):
         obj["utype"] = "2803"
     return obj
 
+# The primary purpose of this is just to increase verbosity for an existing io_array
 def ff_GATT_IO(io_array):
     if(TME.TME_glob.verbose_BTIDES):
         for obj in io_array:
             if("io_type_str" not in obj.keys()):
-                if(obj["io_type"] == type_BTIDES_ATT_Read):
-                    obj["io_type_str"] = "Read"
-                elif(obj["io_type"] == type_BTIDES_ATT_WriteWithResponse):
-                    obj["io_type_str"] = "Write with response"
-                elif(obj["io_type"] == type_BTIDES_ATT_WriteWithoutResponse):
-                    obj["io_type_str"] = "Write without response"
-                elif(obj["io_type"] == type_BTIDES_ATT_Notification):
-                    obj["io_type_str"] = "Notification"
-                elif(obj["io_type"] == type_BTIDES_ATT_Indication):
-                    obj["io_type_str"] = "Indication"
+                if(obj["io_type"] in ATT_type_to_BTIDES_io_type_str.keys()):
+                    obj["io_type_str"] = ATT_type_to_BTIDES_io_type_str[obj["io_type"]]
     return io_array
 
 def ff_GATT_Characteristic_Value(obj):
     if("io_array" in obj.keys()):
         obj["io_array"] = ff_GATT_IO(obj["io_array"])
+    return obj
+
+# The primary purpose of this is just to increase verbosity for an existing descriptor object by adding the name
+def ff_Descriptor(obj):
+    if(TME.TME_glob.verbose_BTIDES):
+        if(obj["UUID"] in UUIDs_to_characteristic_descriptor_type_str.keys()):
+            obj["type_str"] = UUIDs_to_characteristic_descriptor_type_str[obj["UUID"]]
     return obj
 
 # TODO: Pretty sure this is where OO programming would save me a lot of copy-paste...
@@ -131,6 +132,38 @@ def find_matching_characteristic(characteristics, target_handle):
         if(char != None and "value_handle" in char.keys() and char["value_handle"] == target_handle):
             return char
     return None
+
+def find_characteristic_by_handle(connect_ind_obj=None, bdaddr=None, random=None, handle=None, value_handle=None):
+    if(connect_ind_obj):
+        base = lookup_DualBDADDR_base_entry(connect_ind_obj)
+    else:
+        base = lookup_SingleBDADDR_base_entry(bdaddr, random)
+    if("GATTArray" not in base.keys()):
+        return None
+    for service_entry in base["GATTArray"]:
+        # Check if the begin and end service handles enclose this characteristic value
+        if(service_entry != None and "characteristics" in service_entry.keys()):
+            for characteristic_entry in service_entry["characteristics"]:
+                if(characteristic_entry and handle and characteristic_entry["handle"] == handle):
+                    return characteristic_entry
+                if(characteristic_entry and value_handle and characteristic_entry["value_handle"] == value_handle):
+                    return characteristic_entry
+    return None
+
+# def find_characteristic_by_value_handle(connect_ind_obj=None, bdaddr=None, random=None, value_handle=None):
+#     if(connect_ind_obj):
+#         base = lookup_DualBDADDR_base_entry(connect_ind_obj)
+#     else:
+#         base = lookup_SingleBDADDR_base_entry(bdaddr, random)
+#     if("GATTArray" not in base.keys()):
+#         return None
+#     for service_entry in base["GATTArray"]:
+#         # Check if the begin and end service handles enclose this characteristic value
+#         if(service_entry != None and "characteristics" in service_entry.keys()):
+#             for characteristic_entry in service_entry["characteristics"]:
+#                 if(characteristic_entry and characteristic_entry["value_handle"] == value_handle):
+#                     return characteristic_entry
+#     return None
 
 '''
 def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
