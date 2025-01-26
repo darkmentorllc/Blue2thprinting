@@ -43,11 +43,6 @@ type_BTIDES_direction_P2C =             1 # Peripheral to Central
 type_BTIDES_status_SUCCESS =            0
 
 # ATT IO types
-# type_BTIDES_ATT_Read =                  0
-# type_BTIDES_ATT_WriteWithResponse =     1
-# type_BTIDES_ATT_WriteWithoutResponse =  2
-# type_BTIDES_ATT_Notification =          3
-# type_BTIDES_ATT_Indication =            4
 ATT_type_to_BTIDES_io_type_str = {
     type_ATT_ERROR_RSP:                     "Error - ATT_ERROR_RSP",
     type_ATT_FIND_INFORMATION_RSP:          "Read - ATT_FIND_INFORMATION_RSP",

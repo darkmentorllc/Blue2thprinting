@@ -543,7 +543,26 @@ def export_ATT_Error_Response(connect_ind_obj, packet, direction=None):
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
 
         # TODO: capture error responses to ATT_READ_REQs
+        # Check if this error is due to a failed ATT_READ_REQ,
+        # and if so, store the error in the io_array within the relevant Characteristic Value that we were trying to read
+        if(request_opcode_in_error == type_ATT_READ_REQ):
+            char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, value_handle=attribute_handle_in_error)
+            if(not char_obj):
+                # No match found. Cut our losses and return True for the above successful ATT export
+                return True
 
+            # TODO: arguably the value_hex_str should be all the stuff in an ERROR_RSP? I don't have a need for it yet but maybe I will eventually?
+            # NOTE-TO-SELF: If I change this, then I need to change the expectations in ff_GATT_IO() too.
+            value_hex_str = f"{att_data.ecode:02x}"
+            io_array = [ {"io_type": type_ATT_ERROR_RSP, "value_hex_str": value_hex_str} ]
+            io_array = ff_GATT_IO(io_array)
+            if("char_value" not in char_obj.keys()):
+                char_obj["char_value"] = {"value_handle": attribute_handle_in_error, "value_uuid": char_obj["value_uuid"], "io_array": io_array }
+            else:
+                if("io_array" not in char_obj["char_value"].keys()):
+                    char_obj["char_value"]["io_array"] = io_array
+                else:
+                    char_obj["char_value"]["io_array"].extend(io_array)
         return True
     return False
 
@@ -674,7 +693,6 @@ def export_characteristic(list_obj, att_data, connect_ind_obj):
     return True
 
 def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
-    global BTIDES_JSON
     char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, handle=g_last_seen_characteristic_handle)
     # If there's no entry already inserted for the last characteristic, we won't have anywhere to put the
     # characteristic descriptor, so we can just return None as failure
@@ -734,7 +752,7 @@ def export_characteristic_values(list_obj, att_data, connect_ind_obj):
     return True
 
 def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
-    global BTIDES_JSON, g_last_seen_characteristic_handle
+    global g_last_seen_characteristic_handle
     att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
     if(att_data != None):
         try:

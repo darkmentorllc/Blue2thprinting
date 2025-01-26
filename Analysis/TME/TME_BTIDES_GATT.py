@@ -46,6 +46,11 @@ def ff_GATT_IO(io_array):
             if("io_type_str" not in obj.keys()):
                 if(obj["io_type"] in ATT_type_to_BTIDES_io_type_str.keys()):
                     obj["io_type_str"] = ATT_type_to_BTIDES_io_type_str[obj["io_type"]]
+            if(obj["io_type"] == type_ATT_ERROR_RSP):
+                if("io_error_str" not in obj.keys()):
+                    error_code = int(obj["value_hex_str"], 16)
+                    if(error_code in att_error_strings.keys()):
+                        obj["io_error_str"] = att_error_strings[error_code]
     return io_array
 
 def ff_GATT_Characteristic_Value(obj):
