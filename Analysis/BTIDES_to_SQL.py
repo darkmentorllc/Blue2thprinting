@@ -519,90 +519,112 @@ def parse_AdvChanArray(entry):
                 # Flags
                 if(has_known_AdvData_type(type_AdvData_Flags, AdvData)):
                     import_AdvData_Flags(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
+
+                # Manufacturer-Specific Data - Optimization: put more-common data types earlier so they can continue sooner
+                if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
+                    import_AdvData_MSD(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID16ListIncomplete & UUID16ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID16ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID16ListComplete, AdvData)):
                     import_AdvData_UUID16s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID32ListIncomplete & UUID32ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID32ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID32ListComplete, AdvData)):
                     import_AdvData_UUID32s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID128ListIncomplete & UUID128ListComplete
                 if(has_known_AdvData_type(type_AdvData_UUID128ListIncomplete, AdvData) or has_known_AdvData_type(type_AdvData_UUID128ListComplete, AdvData)):
                     import_AdvData_UUID128s(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # IncompleteName & CompleteName & BroadcastName
                 if(has_known_AdvData_type(type_AdvData_IncompleteName, AdvData) or has_known_AdvData_type(type_AdvData_CompleteName, AdvData) or has_known_AdvData_type(type_AdvData_BroadcastName, AdvData)):
                     import_AdvData_Names(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # TxPower
                 if(has_known_AdvData_type(type_AdvData_TxPower, AdvData)):
                     import_AdvData_TxPower(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # ClassOfDevice
                 if(has_known_AdvData_type(type_AdvData_ClassOfDevice, AdvData)):
                     import_AdvData_ClassOfDevice(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # DeviceID
                 if(has_known_AdvData_type(type_AdvData_DeviceID, AdvData)):
                     import_AdvData_DeviceID(bdaddr, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # PeripheralConnectionIntervalRange
                 if(has_known_AdvData_type(type_AdvData_PeripheralConnectionIntervalRange, AdvData)):
                     import_AdvData_PeripheralConnectionIntervalRange(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID16ListServiceSolicitation
                 if(has_known_AdvData_type(type_AdvData_UUID16ListServiceSolicitation, AdvData)):
                     import_AdvData_UUID16ListServiceSolicit(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID128ListServiceSolicitation
                 if(has_known_AdvData_type(type_AdvData_UUID128ListServiceSolicitation, AdvData)):
                     import_AdvData_UUID128ListServiceSolicit(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # PublicTargetAddress
                 if(has_known_AdvData_type(type_AdvData_PublicTargetAddress, AdvData)):
                     import_AdvData_PublicTargetAddress(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # RandomTargetAddress
                 if(has_known_AdvData_type(type_AdvData_RandomTargetAddress, AdvData)):
                     import_AdvData_RandomTargetAddress(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # Appearance
                 if(has_known_AdvData_type(type_AdvData_Appearance, AdvData)):
                     import_AdvData_Appearance(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # LE_BDADDR
                 if(has_known_AdvData_type(type_AdvData_LE_BDADDR, AdvData)):
                     import_AdvData_LE_BDADDR(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # LE_Role
                 if(has_known_AdvData_type(type_AdvData_LE_Role, AdvData)):
                     import_AdvData_LE_Role(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID16ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID16ServiceData, AdvData)):
                     import_AdvData_UUID16ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID32ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID32ServiceData, AdvData)):
                     import_AdvData_UUID32ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # UUID128ServiceData
                 if(has_known_AdvData_type(type_AdvData_UUID128ServiceData, AdvData)):
                     import_AdvData_UUID128ServiceData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # URI
                 if(has_known_AdvData_type(type_AdvData_URI, AdvData)):
                     import_AdvData_URI(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
                 # 3DInfoData
                 if(has_known_AdvData_type(type_AdvData_3DInfoData, AdvData)):
                     import_AdvData_3DInfoData(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
-
-                # Manufacturer-Specific Data
-                if(has_known_AdvData_type(type_AdvData_MSD, AdvData)):
-                    import_AdvData_MSD(bdaddr, bdaddr_rand, BTIDES_types_to_le_evt_type(AdvChanEntry["type"]), AdvData)
+                    continue
 
 ###################################
 # BTIDES_LL.json information
@@ -1013,7 +1035,9 @@ def btides_to_sql(args):
     TME.TME_glob.use_test_db = args.use_test_db
     in_filename = args.input
     skip_invalid = args.skip_invalid
+    global last_printed_percentage
 
+    last_printed_percentage = 0
     with open(in_filename, 'r') as f:
         BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
         #qprint(json.dumps(BTIDES_JSON, indent=2))

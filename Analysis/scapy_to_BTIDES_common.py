@@ -48,7 +48,7 @@ def exit_on_len_mismatch(length, entry):
     if(length != entry.len):
         print("Interesting length mismatch. Check if it's a bug or if it's a malformed packet.")
         entry.show()
-        exit(-1)
+        #exit(-1)
 
 
 def scapy_flags_to_hex_str(entry):

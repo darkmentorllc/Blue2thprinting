@@ -33,4 +33,4 @@ echo "Post-processing raw tshark pcap output"
 python3 ./parse_PCAP_2db_helpers/post-process_pcap_LL_FEATUREs.py
 
 echo "mysql import"
-mysql -u user -pa --database='bt' --execute="LOAD DATA INFILE '/tmp/LL_FEATUREs_uniq_done.csv' IGNORE INTO TABLE LL_FEATUREs FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr_random, bdaddr, opcode, features);"
+mysql -u user -pa --database='bt2' --execute="LOAD DATA INFILE '/tmp/LL_FEATUREs_uniq_done.csv' IGNORE INTO TABLE LL_FEATUREs FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (bdaddr_random, bdaddr, opcode, features);"

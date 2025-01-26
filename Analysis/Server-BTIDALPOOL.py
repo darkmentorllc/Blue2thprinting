@@ -384,7 +384,7 @@ if(g_local_testing):
     hostname = 'localhost'
 else:
     hostname = '0.0.0.0'
-httpd = ThreadingHTTPServer((hostname, 4443), handler)
+httpd = ThreadingHTTPServer((hostname, 3567), handler)
 
 # Create an SSL context
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -393,5 +393,5 @@ context.load_cert_chain(certfile="./btidalpool.ddns.net.crt", keyfile="./btidalp
 # Wrap the server socket with SSL
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
-print(f"Serving on https://{hostname}:4443")
+print(f"Serving on https://{hostname}:3567")
 httpd.serve_forever()

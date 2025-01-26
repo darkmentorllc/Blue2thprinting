@@ -30,7 +30,7 @@ db_connection = mysql.connector.connect(
     host='localhost',
     user='user',
     password='a',
-    database='bt',
+    database='bt2',
     auth_plugin='mysql_native_password'
 )
 
