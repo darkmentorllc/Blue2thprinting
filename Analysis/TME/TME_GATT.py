@@ -10,6 +10,7 @@ import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_ATT import *
 from TME.TME_BTIDES_GATT import *
+from TME.TME_UUID128 import add_dashes_to_UUID128
 
 from colorama import Fore, Back, Style, init
 
@@ -228,7 +229,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
-        BTIDES_export_GATT_Characteristic(bdaddr, bdaddr_random, data)
+        BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
@@ -236,7 +237,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
     char_value_handles_dict = {}
     for bdaddr_random, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
         data = {"value_handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
-        BTIDES_export_GATT_Characteristic_Value(bdaddr, bdaddr_random, data)
+        BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
         if(char_value_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values

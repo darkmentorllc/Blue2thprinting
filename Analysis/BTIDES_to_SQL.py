@@ -45,29 +45,7 @@ from TME.TME_UUID128 import add_dashes_to_UUID128
 # Helper functions
 ###################################
 
-# FIXME: temporary situation to allow me to visualize the imported data w/ TellMeEverything.py
-# FIXME: Will probably need to make a new DB schema for dealing with CONNECT_IND-indexed stuff
-# FIXME: At which point I should probably update to start using foreign keys...
-def get_bdaddr_peripheral(entry):
-    if("CONNECT_IND" in entry.keys()):
-        bdaddr = entry["CONNECT_IND"]["peripheral_bdaddr"].lower()
-        bdaddr_rand = entry["CONNECT_IND"]["peripheral_bdaddr_rand"]
-    else:
-        bdaddr = entry["bdaddr"].lower()
-        bdaddr_rand = entry["bdaddr_rand"]
 
-    return bdaddr, bdaddr_rand
-
-
-def get_bdaddr_central(entry):
-    if("CONNECT_IND" in entry.keys()):
-        bdaddr = entry["CONNECT_IND"]["central_bdaddr"].lower()
-        bdaddr_rand = entry["CONNECT_IND"]["central_bdaddr_rand"]
-    else:
-        bdaddr = entry["bdaddr"].lower()
-        bdaddr_rand = entry["bdaddr_rand"]
-
-    return bdaddr, bdaddr_rand
 
 
 ###################################

@@ -97,8 +97,11 @@ def BTIDES_export_GATT_Service(connect_ind_obj=None, bdaddr=None, random=None, d
     else:
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
 
-def find_service_with_target_handle_in_range(bdaddr, random, target_handle):
-    base = lookup_SingleBDADDR_base_entry(bdaddr, random)
+def find_service_with_target_handle_in_range(connect_ind_obj=None, bdaddr=None, random=None, target_handle=None):
+    if(connect_ind_obj):
+        base = lookup_DualBDADDR_base_entry(connect_ind_obj)
+    else:
+        base = lookup_SingleBDADDR_base_entry(bdaddr, random)
     if("GATTArray" not in base.keys()):
         return None
     for service_entry in base["GATTArray"]:
@@ -108,13 +111,19 @@ def find_service_with_target_handle_in_range(bdaddr, random, target_handle):
             return service_entry
     return None
 
-def BTIDES_export_GATT_Characteristic(bdaddr, random, data):
+def BTIDES_export_GATT_Characteristic(connect_ind_obj=None, bdaddr=None, random=None, data=None):
     global BTIDES_JSON
-    service_entry = find_service_with_target_handle_in_range(bdaddr, random, data["handle"])
-    if(service_entry == None):
-        service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
 
-    generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, service_entry, "GATTArray", data, "characteristics")
+    if connect_ind_obj != None:
+        service_entry = find_service_with_target_handle_in_range(connect_ind_obj=connect_ind_obj, target_handle=data["handle"])
+        if(service_entry == None):
+            service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
+        generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, service_entry, "GATTArray", data, "characteristics")
+    else:
+        service_entry = find_service_with_target_handle_in_range(bdaddr=bdaddr, random=random, target_handle=data["handle"])
+        if(service_entry == None):
+            service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
+        generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, service_entry, "GATTArray", data, "characteristics")
 
 def find_matching_characteristic(characteristics, target_handle):
     for char in characteristics:
@@ -208,7 +217,7 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
             #qprint(json.dumps(entry, indent=2))
             return
         else:
-            service_entry = find_service_with_target_handle_in_range(bdaddr, random, data["value_handle"])
+            service_entry = find_service_with_target_handle_in_range(bdaddr=bdaddr, random=random, target_handle=data["value_handle"])
             if(service_entry != None):
                 if("characteristics" not in service_entry.keys()):
                     service_entry["characteristics"] = [ placeholder_char_obj ]

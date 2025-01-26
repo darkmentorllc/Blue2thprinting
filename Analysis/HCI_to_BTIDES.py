@@ -269,7 +269,6 @@ def process_names(p):
         if(event.fields['status'] == 0):
             name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
             remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
-            #remote_name_hex_str = ''.join(format(byte, '02x') for byte in event.fields['remote_name'])
             export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
             return True
 
