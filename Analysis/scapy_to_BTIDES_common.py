@@ -44,11 +44,15 @@ g_last_ATT_group_type_requested = 0
 # Helper "factory functions"
 ############################
 
+# Note: as a temporary measure while doing bulk imports, make this return False instead,
+# so that invalid data can just be bypassed and the overall process can continue
 def exit_on_len_mismatch(length, entry):
     if(length != entry.len):
         print("Interesting length mismatch. Check if it's a bug or if it's a malformed packet.")
         entry.show()
         #exit(-1)
+        return False
+    return True
 
 
 def scapy_flags_to_hex_str(entry):
@@ -106,7 +110,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     if isinstance(entry.payload, EIR_Flags):
         flags_hex_str = scapy_flags_to_hex_str(entry)
         length = 2 # 1 bytes for opcode + 1 byte for flags
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "flags_hex_str": flags_hex_str}
         vprint(f"{bdaddr}: {adv_type} Flags: {flags_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_Flags, data)
@@ -117,7 +122,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID16List": UUID16List}
         vprint(f"{bdaddr}: {adv_type} Incomplete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListIncomplete, data)
@@ -128,7 +134,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID16List": UUID16List}
         vprint(f"{bdaddr}: {adv_type} Complete UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListComplete, data)
@@ -140,7 +147,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID32List = [f"{uuid:08x}" for uuid in uuid_list]
         length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID32List": UUID32List}
         vprint(f"{bdaddr}: {adv_type} Incomplete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListIncomplete, data)
@@ -152,7 +160,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID32List = [f"{uuid:08x}" for uuid in uuid_list]
         length = 1 + 4 * len(UUID32List) # 1 byte for opcode, 4 bytes for each UUID32
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID32List": UUID32List}
         vprint(f"{bdaddr}: {adv_type} Complete UUID32 list: {','.join(UUID32List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ListComplete, data)
@@ -164,7 +173,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID128List = [str(uuid) for uuid in uuid_list]
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID128List": UUID128List}
         vprint(f"{bdaddr}: {adv_type} Incomplete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListIncomplete, data)
@@ -176,7 +186,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID128List = [str(uuid) for uuid in uuid_list]
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID128List": UUID128List}
         vprint(f"{bdaddr}: {adv_type} Complete UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListComplete, data)
@@ -188,7 +199,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         utf8_name = bytes_to_utf8(local_name)
         name_hex_str = bytes_to_hex_str(local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_IncompleteName, data)
         vprint(f"{bdaddr}: {adv_type} Incomplete Local Name: {utf8_name}")
@@ -200,7 +212,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         utf8_name = bytes_to_utf8(local_name)
         name_hex_str = bytes_to_hex_str(local_name)
         length = int(1 + len(local_name)) # 1 bytes for opcode + length of the string
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
         vprint(f"{bdaddr}: {adv_type} Complete Local Name: {utf8_name}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_CompleteName, data)
@@ -210,7 +223,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     elif isinstance(entry.payload, EIR_TX_Power_Level):
         device_tx_power = entry.level
         length = 2 # 1 byte for opcode, 1 byte power level
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "tx_power": device_tx_power}
         vprint(f"{bdaddr}: {adv_type} TxPower level: {device_tx_power}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_TxPower, data)
@@ -227,7 +241,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #qprint(f"{CoD_int:06x}")
         CoD_hex_str = f"{CoD_int:06x}"
         length = 4 # 1 byte for opcode, 3 byte CoD
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "CoD_hex_str": CoD_hex_str}
         vprint(f"{bdaddr}: {adv_type} Class of Device: {CoD_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_ClassOfDevice, data)
@@ -237,7 +252,12 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     # I don't think this can actually appear in BLE as opposed to EIR...so I'm not sure if this will get any testing...
     elif isinstance(entry.payload, EIR_Device_ID):
         length = 9 # 1 byte for opcode + 2 bytes * 4 fields
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
+        if(entry.vendor_id_source != 1 and entry.vendor_id_source != 2):
+            # This entry will fail schema validation and is *probably* a corrupt packet, so discard it for now
+            # TODO: should we make schema validation less strict so that we can capture corrupt packets?
+            return False
         data = {"length": length, "vendor_id_source": entry.vendor_id_source, "vendor_id": entry.vendor_id, "product_id": entry.product_id, "version": entry.version}
         vprint(f"{bdaddr}: {adv_type} Device ID: {data}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_DeviceID, data)
@@ -249,7 +269,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         conn_interval_min = entry.conn_interval_min
         conn_interval_max = entry.conn_interval_max
         length = 5 # 1 byte for opcode, 2*2 byte parameters
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "conn_interval_min": conn_interval_min, "conn_interval_max": conn_interval_max}
         vprint(f"{bdaddr}: {adv_type} conn_interval_min: {conn_interval_min}, conn_interval_max: {conn_interval_max}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_PeripheralConnectionIntervalRange, data)
@@ -261,7 +282,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID16List = [f"{uuid:04x}" for uuid in uuid_list]
         length = 1 + 2 * len(UUID16List) # 1 byte for opcode, 2 bytes for each UUID16
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID16List": UUID16List}
         vprint(f"{bdaddr}: {adv_type} Service Solicitiation UUID16 list: {','.join(UUID16List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ListServiceSolicitation, data)
@@ -273,7 +295,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uuid_list = entry.svc_uuids
         UUID128List = [str(uuid) for uuid in uuid_list]
         length = 1 + 16 * len(UUID128List) # 1 byte for opcode, 16 bytes for each UUID128
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID128List": UUID128List}
         vprint(f"{bdaddr}: {adv_type} Service Solicitiation UUID128 list: {','.join(UUID128List)}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ListServiceSolicitation, data)
@@ -290,7 +313,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
             service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID16: {UUID16_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
@@ -301,7 +325,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #entry.show()
         public_bdaddr = entry.bd_addr
         length = 7 # 1 byte for opcode, 6 bytes for BDADDR
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "public_bdaddr": public_bdaddr}
         vprint(f"{bdaddr}: {adv_type} public_bdaddr: {public_bdaddr}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_PublicTargetAddress, data)
@@ -312,7 +337,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #entry.show()
         random_bdaddr = entry.bd_addr
         length = 7 # 1 byte for opcode, 6 bytes for BDADDR
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "random_bdaddr": bdaddr}
         vprint(f"{bdaddr}: {adv_type} random_bdaddr: {random_bdaddr}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_RandomTargetAddress, data)
@@ -324,7 +350,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         appearance = entry.category << 6 | entry.subcategory
         appearance_hex_str = f"{appearance:04x}"
         length = 3 # 1 byte for opcode, 2 bytes for appearance
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "appearance_hex_str": appearance_hex_str}
         vprint(f"{bdaddr}: {adv_type} appearance_hex_str: {appearance_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_Appearance, data)
@@ -348,7 +375,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         le_bdaddr = entry.bd_addr
         bdaddr_type = entry.addr_type
         length = 8 # 1 byte for opcode,1 byte for type, 6 bytes for BDADDR
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "bdaddr_type": bdaddr_type, "le_bdaddr": le_bdaddr}
         vprint(f"{bdaddr}: {adv_type}, bdaddr_type: {bdaddr_type}, le_bdaddr: {le_bdaddr}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LE_BDADDR, data)
@@ -359,7 +387,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         #entry.show()
         role = entry.role
         length = 2 # 1 byte for opcode, 1 byte for role
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "role": role}
         vprint(f"{bdaddr}: {adv_type}, role: {role}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_LE_Role, data)
@@ -376,7 +405,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
             service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID32": UUID32_hex_str, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID32: {UUID32_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ServiceData, data)
@@ -393,7 +423,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
             service_data_hex_str = bytes_to_hex_str(entry.load)
         else:
             service_data_hex_str = ""
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "UUID128": UUID128, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID128: {UUID128}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
@@ -407,7 +438,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         uri_hex_str = bytes_to_hex_str(url_bytes)
         uri_hex_str = f"{entry.scheme:02x}" + uri_hex_str
         length = 1 + int(len(uri_hex_str) / 2) # 1 byte opcode + half the size due to it being hex_str with 2 characters per byte
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "uri_hex_str": uri_hex_str}
         vprint(f"{bdaddr}: {adv_type}  scheme: {entry.scheme} uri_hex_str: {uri_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_URI, data)
@@ -419,7 +451,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         utf8_name = bytes_to_utf8(broadcast_name)
         name_hex_str = bytes_to_hex_str(broadcast_name)
         length = int(1 + len(broadcast_name)) # 1 bytes for opcode + length of the string
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "utf8_name": utf8_name, "name_hex_str": name_hex_str}
         vprint(f"{bdaddr}: {adv_type} Broadcast Name: {utf8_name}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_BroadcastName, data)
@@ -433,7 +466,8 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
                 int(entry.association_notification)
         path_loss = entry.path_loss_threshold
         length = 3 # 1 bytes for opcode + 2 bytes
-        exit_on_len_mismatch(length, entry)
+        if(not exit_on_len_mismatch(length, entry)):
+            return False
         data = {"length": length, "byte1": byte1, "path_loss": path_loss}
         vprint(f"{bdaddr}: {adv_type} 3D Info Byte1: {byte1}, Path Loss Threshold: {path_loss}dB")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_3DInfoData, data)

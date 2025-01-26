@@ -117,7 +117,8 @@ def main():
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
                     if not os.path.exists(btides_file):
                         qprint(f"Reading all events from HCI log {file} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
-                        read_HCI(os.path.join(root, file))
+                        if(not read_HCI(os.path.join(root, file))):
+                            continue
                         write_BTIDES(btides_file)
                         qprint(f"Export {btides_file} completed with no errors.")
                         hci_file_export_count += 1
@@ -125,7 +126,8 @@ def main():
                     else:
                         if(args.overwrite_existing_BTIDES):
                             qprint(f"Reading all events from HCI log {file} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
-                            read_HCI(os.path.join(root, file))
+                            if(not read_HCI(os.path.join(root, file))):
+                                continue
                             write_BTIDES(btides_file)
                             qprint(f"Export {btides_file} completed with no errors.")
                             hci_file_export_count += 1

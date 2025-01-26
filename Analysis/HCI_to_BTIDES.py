@@ -294,7 +294,10 @@ def read_HCI(file_path):
             records = bts.parse(file_path)
         except Exception as e:
             print(f"Error reading HCI log file: {e}")
-            exit(1)
+            # Note: as a temporary measure while doing bulk imports, make this return False instead of exit(1),
+            # so that invalid data can just be bypassed and the overall process can continue
+            #exit(1)
+            return False
         total_records = len(records)
         # for record in records:
         for i, record in enumerate(records, start=0):
@@ -320,10 +323,13 @@ def read_HCI(file_path):
             elif(process_ATT(p, record)):
                 continue
 
+        return True
     except Exception as e:
         print(f"Caught unhandled exception: {e}")
-        #pass
-        exit(1)
+        # Note: as a temporary measure while doing bulk imports, make this return False instead of exit(1),
+        # so that invalid data can just be bypassed and the overall process can continue
+        #exit(1)
+        return False
 
 
 def main():
