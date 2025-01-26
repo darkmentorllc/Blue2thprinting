@@ -138,6 +138,7 @@ def find_matching_characteristic(characteristics, target_handle):
             return char
     return None
 
+# Pass either handle for the Characteristic itself's handle, or value_handle for the Characteristic's value_handle
 def find_characteristic_by_handle(connect_ind_obj=None, bdaddr=None, random=None, handle=None, value_handle=None):
     if(connect_ind_obj):
         base = lookup_DualBDADDR_base_entry(connect_ind_obj)

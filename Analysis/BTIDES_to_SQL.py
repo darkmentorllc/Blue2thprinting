@@ -864,15 +864,19 @@ g_handle_to_UUID_map = {}
 def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
     global g_last_read_req_handle
 
-    operation = type_BTIDES_ATT_Read # TODO: once we handle other forms of ATT packets besides read, update the operation lower in the code
+    #operation = type_BTIDES_ATT_Read # TODO: once we handle other forms of ATT packets besides read, update the operation lower in the code
     if(att_entry["opcode"] == type_ATT_FIND_INFORMATION_RSP):
+        operation = type_ATT_FIND_INFORMATION_RSP
         # Fill in all the UUIDs for the handles we've seen so far
         for info_entry in att_entry["information_data"]:
             g_handle_to_UUID_map[info_entry["handle"]] = info_entry["UUID"]
     elif(att_entry["opcode"] == type_ATT_READ_REQ):
         g_last_read_req_handle = att_entry["handle"]
+        operation = type_ATT_READ_REQ
     elif(att_entry["opcode"] == type_ATT_READ_RSP):
         handle = g_last_read_req_handle
+        operation = type_ATT_READ_RSP
+
         # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
         # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
         if isinstance(handle, str):
@@ -881,11 +885,7 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
                 print("Error: char_value_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
                 exit(-1)
         byte_values = bytes.fromhex(att_entry["value_hex_str"])
-        values = (bdaddr, bdaddr_random, handle, operation, byte_values)
-        insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, operation, char_value_handle, byte_values) VALUES (%s, %s, %s, %s, %s);"
-        execute_insert(insert, values)
-
-        # Now check if the handle in question was a characteristic UUID (0x2800), and if so, interpret the raw data and insert into db
+        # Now check if the handle in question was a characteristic UUID (0x2803), and if so, interpret the raw data and insert into db
         if(handle in g_handle_to_UUID_map.keys() and g_handle_to_UUID_map[handle] == "2803"):
             declaration_handle = handle
             char_properties = int(byte_values[0])
@@ -898,6 +898,12 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
             values = (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID)
             insert = f"INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
             execute_insert(insert, values)
+        else:
+            # We don't want characteristics to go into the GATT_characteristics_values table
+            values = (bdaddr, bdaddr_random, handle, operation, byte_values)
+            insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
+            execute_insert(insert, values)
+
 
 def parse_ATTArray(entry):
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
@@ -917,7 +923,7 @@ def parse_ATTArray(entry):
 
 
 ###################################
-# BTIDES_ATT.json information
+# BTIDES_GATT.json information
 ###################################
 
 def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
@@ -960,7 +966,7 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                     byte_values = bytes.fromhex(io_array_entry["value_hex_str"])
                     # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
                     # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
-                    handle = char_value["value_handle"]
+                    handle = char_value["handle"]
                     if isinstance(handle, str):
                         handle = int(handle, 16)
                         if(handle == 0):
