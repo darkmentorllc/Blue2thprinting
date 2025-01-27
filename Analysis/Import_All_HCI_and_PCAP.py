@@ -116,7 +116,7 @@ def main():
                     base_file_name = file[:-len(args.HCI_logs_suffix)]
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
                     if not os.path.exists(btides_file):
-                        qprint(f"Reading all events from HCI log {file} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
+                        qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
                         if(not read_HCI(os.path.join(root, file))):
                             continue
                         write_BTIDES(btides_file)
@@ -125,7 +125,7 @@ def main():
                         optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
                     else:
                         if(args.overwrite_existing_BTIDES):
-                            qprint(f"Reading all events from HCI log {file} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
+                            qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
                             if(not read_HCI(os.path.join(root, file))):
                                 continue
                             write_BTIDES(btides_file)
@@ -146,7 +146,7 @@ def main():
                     base_file_name = file[:-len(args.pcaps_suffix)]
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
                     if not os.path.exists(btides_file):
-                        qprint("Reading all packets from pcap {file} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
+                        qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
                         read_pcap(os.path.join(root, file))
                         write_BTIDES(btides_file)
                         qprint(f"Export {btides_file} completed with no errors.")
@@ -154,7 +154,7 @@ def main():
                         optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
                     else:
                         if(args.overwrite_existing_BTIDES):
-                            qprint("Reading all packets from pcap {file} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
+                            qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
                             read_pcap(os.path.join(root, file))
                             write_BTIDES(btides_file)
                             qprint(f"Export {btides_file} completed with no errors.")
