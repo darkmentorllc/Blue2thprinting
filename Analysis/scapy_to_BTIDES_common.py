@@ -778,10 +778,10 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
         # Now insert any characteristics/characteristic descriptors/characteristic values into the BTIDES JSON
         if(direction == type_BTIDES_direction_P2C):
             bdaddr = connect_ind_obj["peripheral_bdaddr"]
-        elif(direction == type_BTIDES_direction_P2C):
+        elif(direction == type_BTIDES_direction_C2P):
             bdaddr = connect_ind_obj["central_bdaddr"]
         else:
-            print("New direction added. Updated code.")
+            print(f"New direction added {direction}. Updated code.")
             exit(1)
 
         if(bdaddr not in g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data.keys()):
@@ -839,10 +839,10 @@ def export_ATT_Find_Information_Response(connect_ind_obj, packet, direction=None
                 direction = get_packet_direction(packet)
                 if(direction == type_BTIDES_direction_P2C):
                     bdaddr = connect_ind_obj["peripheral_bdaddr"]
-                elif(direction == type_BTIDES_direction_P2C):
+                elif(direction == type_BTIDES_direction_C2P):
                     bdaddr = connect_ind_obj["central_bdaddr"]
                 else:
-                    print("New direction added. Updated code.")
+                    print(f"New direction added {direction}. Updated code.")
                     exit(1)
             format = att_data.format
             info_data_list = []
