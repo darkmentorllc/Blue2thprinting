@@ -406,7 +406,7 @@ def read_pcap(file_path):
                 # TODO: export other packet types like LL or L2CAP or ATT
                 else:
                     if(TME.TME_glob.verbose_print):
-                        vprint("Unknown or unparsable packet type. Skipped")
+                        qprint("Unknown or unparsable packet type. Skipped")
                         packet.show()
 
         return
