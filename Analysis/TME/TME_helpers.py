@@ -360,6 +360,15 @@ def get_bdaddr_type(bdaddr, random):
     return bdaddr_type_str
 
 # Function to get the company name by UUID16 from UUID16_to_company table
+def get_custom_by_uuid16(uuid16):
+    uuid = uuid16.strip()
+    if(uuid in TME.TME_glob.clues.keys()):
+        entry = TME.TME_glob.clues[uuid]
+        return f"{entry["company"]}:{entry["UUID_name"]}"
+    else:
+        return "Unknown"
+
+# Function to get the company name by UUID16 from UUID16_to_company table
 def get_company_by_uuid16(uuid16):
     values = (f"0x{uuid16.strip()}",)
     company_query = "SELECT company_name FROM UUID16_to_company WHERE str_UUID16_CID = %s"

@@ -55,12 +55,15 @@ def print_uuid16s(bdaddr):
                 gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
                 protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
                 company_by_uuid16 = get_company_by_uuid16(uuid16)
+                custom_by_uuid16 = get_custom_by_uuid16(uuid16)
                 if(service_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
                 elif(gatt_service_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
                 elif(protocol_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+                elif(custom_by_uuid16 != "Unknown"):
+                    qprint(f"\t\tUUID16 {uuid16} (Company-specific Service UUID: {custom_by_uuid16})")
                 elif(company_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
@@ -94,6 +97,7 @@ def print_uuid16s(bdaddr):
                 gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
                 protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
                 company_by_uuid16 = get_company_by_uuid16(uuid16)
+                custom_by_uuid16 = get_custom_by_uuid16(uuid16)
                 # TODO: Create a function that looks up a more-specific name for a service given a company ID
                 if(service_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
@@ -101,6 +105,8 @@ def print_uuid16s(bdaddr):
                     qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
                 elif(protocol_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+                elif(custom_by_uuid16 != "Unknown"):
+                    qprint(f"\t\tUUID16 {uuid16} (Company-specific Service UUID: {custom_by_uuid16})")
                 elif(company_by_uuid16 != "Unknown"):
                     qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
                 else:
@@ -134,6 +140,7 @@ def print_uuid16s_service_solicit(bdaddr):
             gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
             protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
             company_by_uuid16 = get_company_by_uuid16(uuid16)
+            custom_by_uuid16 = get_custom_by_uuid16(uuid16)
             # TODO: Create a function that looks up a more-specific name for a service given a company ID
             if(service_by_uuid16 != "Unknown"):
                 qprint(f"\t\tUUID16 {uuid16} (Service ID: {service_by_uuid16})")
@@ -141,6 +148,8 @@ def print_uuid16s_service_solicit(bdaddr):
                 qprint(f"\t\tUUID16 {uuid16} (GATT Service ID: {gatt_service_by_uuid16})")
             elif(protocol_by_uuid16 != "Unknown"):
                 qprint(f"\t\tUUID16 {uuid16} (Protocol ID: {protocol_by_uuid16})")
+            elif(custom_by_uuid16 != "Unknown"):
+                qprint(f"\t\tUUID16 {uuid16} (Company-specific Service UUID: {custom_by_uuid16})")
             elif(company_by_uuid16 != "Unknown"):
                 qprint(f"\t\tUUID16 {uuid16} (Company ID: {company_by_uuid16})")
             else:
@@ -174,6 +183,7 @@ def print_uuid16_service_data(bdaddr):
         gatt_service_by_uuid16 = get_uuid16_gatt_service_string(UUID16_hex_str)
         protocol_by_uuid16 = get_uuid16_protocol_string(UUID16_hex_str)
         company_by_uuid16 = get_company_by_uuid16(UUID16_hex_str)
+        custom_by_uuid16 = get_custom_by_uuid16(UUID16_hex_str)
         # TODO: Create a function that looks up a more-specific name for a service given a company ID
         if(service_by_uuid16 != "Unknown"):
             qprint(f"\t\tUUID16 {UUID16_hex_str} (Service ID: {service_by_uuid16})")
@@ -181,6 +191,8 @@ def print_uuid16_service_data(bdaddr):
             qprint(f"\t\tUUID16 {UUID16_hex_str} (GATT Service ID: {gatt_service_by_uuid16})")
         elif(protocol_by_uuid16 != "Unknown"):
             qprint(f"\t\tUUID16 {UUID16_hex_str} (Protocol ID: {protocol_by_uuid16})")
+        elif(custom_by_uuid16 != "Unknown"):
+            qprint(f"\t\tUUID16 {UUID16_hex_str} (Company-specific Service UUID: {custom_by_uuid16})")
         elif(company_by_uuid16 != "Unknown"):
             qprint(f"\t\tUUID16 {UUID16_hex_str} (Company ID: {company_by_uuid16})")
         else:
