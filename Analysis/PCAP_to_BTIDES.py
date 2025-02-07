@@ -328,16 +328,20 @@ def export_CONNECT_IND(packet):
 
 def read_pcap(file_path):
     try:
-        # Read all the packets in to memory, so that we know how many total there are, and then can give progress updates
-        with PcapReader(file_path) as pcap_reader:
-            packets = [packet for packet in pcap_reader]
+        pcap_reader = PcapReader(file_path)
 
-        total_packets = len(packets)
-
-        for i, packet in enumerate(packets, start=0):
-            # Print progress every 10%
-            if total_packets > 0 and i % max(1, total_packets // 100) == 0:
-                qprint(f"Processed {i} out of {total_packets} packets ({(i / total_packets) * 100:.0f}%)")
+        i = 0
+        while True:
+            try:
+                packet = pcap_reader.read_packet()
+            except Exception as e:
+                print(f"Done processing pcap file: {i} packets processed.")
+                return
+            i+=1
+            if packet is None:
+                return
+            if i % 1000 == 0:
+                qprint(f"Processed {i} packets")
 
             # Confirm packet is BTLE
             if packet.haslayer(BTLE):

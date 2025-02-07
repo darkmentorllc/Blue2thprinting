@@ -187,7 +187,6 @@ def main():
                     TME.TME_glob.insert_count = 0
                     g_access_address_to_connect_ind_obj = {}
 
-
     print("File conversion to BTIDES completed.")
     if(args.HCI_logs_folder):
         print(f"Converted {hci_file_export_count} HCI files found in {args.HCI_logs_folder} with suffix {args.HCI_logs_suffix}.")
