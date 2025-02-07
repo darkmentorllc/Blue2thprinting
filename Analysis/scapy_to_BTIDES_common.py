@@ -34,7 +34,7 @@ from TME.TME_BTIDES_LMP import *
 
 # We need to keep state between ATT_READ_BY_GROUP_TYPE_REQ and ATT_READ_BY_GROUP_TYPE_RSP
 # in order to insert GATT service information into the BTIDES JSON
-g_last_ATT_group_type_requested = 0
+g_last_ATT_group_type_requested = "2800"
 
 # We need to keep state between ATT_READ_REQ and ATT_READ_RSP
 # in order to know if a ATT_READ_RSP is for a handle that
