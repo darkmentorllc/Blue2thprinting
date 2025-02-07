@@ -116,7 +116,7 @@ def main():
                     base_file_name = file[:-len(args.HCI_logs_suffix)]
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
                     if not os.path.exists(btides_file):
-                        qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
+                        qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory.")
                         if(not read_HCI(os.path.join(root, file))):
                             continue
                         write_BTIDES(btides_file)
@@ -125,7 +125,7 @@ def main():
                         optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
                     else:
                         if(args.overwrite_existing_BTIDES):
-                            qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
+                            qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory.")
                             if(not read_HCI(os.path.join(root, file))):
                                 continue
                             write_BTIDES(btides_file)
@@ -135,8 +135,12 @@ def main():
                         elif(args.read_existing_BTIDES):
                             optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
 
-                    # Reset the BTIDES_JSON global
+                    # Reset globals to not accumulate wasted memory
                     BTIDES_JSON = {}
+                    TME.TME_glob.BTIDES_JSON = {}
+                    TME.TME_glob.duplicate_count = 0
+                    TME.TME_glob.insert_count = 0
+                    g_last_handle_to_bdaddr = {}
 
     pcap_file_export_count = 0
     if(args.pcaps_folder):
@@ -163,8 +167,12 @@ def main():
                         elif(args.read_existing_BTIDES):
                             optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
 
-                    # Reset the BTIDES_JSON global
+                    # Reset globals to not accumulate wasted memory
                     BTIDES_JSON = {}
+                    TME.TME_glob.BTIDES_JSON = {}
+                    TME.TME_glob.duplicate_count = 0
+                    TME.TME_glob.insert_count = 0
+                    g_access_address_to_connect_ind_obj = {}
 
 
     print("File conversion to BTIDES completed.")

@@ -362,7 +362,7 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
-    qprint("Reading all events from HCI log into memory. (This can take a while for large logs. Assume a total time of FIXME.)")
+    qprint("Reading all events from HCI log into memory.")
     read_HCI(args.input)
 
     qprint("Writing BTIDES data to file.")
