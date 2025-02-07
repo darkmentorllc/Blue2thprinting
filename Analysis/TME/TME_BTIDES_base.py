@@ -8,8 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 import json, re
-#from TME.TME_helpers import qprint # Can't use circular imports
-from TME.TME_glob import BTIDES_JSON
+import TME.TME_glob
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
@@ -33,7 +32,7 @@ BTIDES_files = ["BTIDES_base.json",
 def write_BTIDES(out_filename):
     # Sanity check the BTIDES data against the schema before export, to not write garbage
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
-    if(len(BTIDES_JSON) == 0):
+    if(len(TME.TME_glob.BTIDES_JSON) == 0):
         print("BTIDES_JSON is empty. Nothing to write.")
         #exit(-1)
 
@@ -61,23 +60,23 @@ def write_BTIDES(out_filename):
         Draft202012Validator(
             {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json"},
             registry=registry,
-        ).validate(instance=BTIDES_JSON)
+        ).validate(instance=TME.TME_glob.BTIDES_JSON)
         #print("JSON is valid according to BTIDES Schema")
     except ValidationError as e:
         print(f"JSON data is invalid per BTIDES Schema version {required_version}. Check any changes to schema or code. Error:", e.message)
-        print(json.dumps(BTIDES_JSON, indent=2))
+        print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
         exit(-1)
 
     with open(out_filename, 'w') as f:
-        json.dump(BTIDES_JSON, fp=f) # For saving space
-        #json.dump(BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
+        json.dump(TME.TME_glob.BTIDES_JSON, fp=f) # For saving space
+        #json.dump(TME.TME_glob.BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
 
 
 # Find SingleBDADDR type entries which match the given bdaddr and random
 def lookup_SingleBDADDR_base_entry(bdaddr, random):
     bdaddr = bdaddr.lower()
     ###print("lookup_base_entry: ")
-    for item in BTIDES_JSON:
+    for item in TME.TME_glob.BTIDES_JSON:
         ###print(item)
         ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
         ###print(f"lookup_base_entry: random = {random}")
@@ -90,7 +89,7 @@ def lookup_SingleBDADDR_base_entry(bdaddr, random):
 
 # Find DualBDADDR type entries which match the given CONNECT_IND
 def lookup_DualBDADDR_base_entry(connect_ind_obj):
-    for item in BTIDES_JSON:
+    for item in TME.TME_glob.BTIDES_JSON:
         if "CONNECT_IND" in item.keys() and item["CONNECT_IND"] == connect_ind_obj:
             return item
     return None
@@ -129,7 +128,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random,
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ]
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_specific_entry.keys()):
@@ -155,15 +154,15 @@ def generic_DualBDADDR_insertion_into_BTIDES_zeroth_level(connect_ind_obj):
     global BTIDES_JSON
     bdaddr_pair_specific_entry = lookup_DualBDADDR_base_entry(connect_ind_obj)
     if (bdaddr_pair_specific_entry == None):
-        if(len(BTIDES_JSON) == 0):
+        if(len(TME.TME_glob.BTIDES_JSON) == 0):
             # If there's nothing in the BTIDES JSON, then we need to add the DualBDADDR entry as the first thing
             DualBDADDR_entry = ff_DualBDADDR_base(connect_ind_obj)
-            BTIDES_JSON = [ DualBDADDR_entry ]
+            TME.TME_glob.BTIDES_JSON = [ DualBDADDR_entry ]
             return True
         else:
             # If there's already stuff in the BTIDES JSON, append this new DualBDADDR entry to the end
             DualBDADDR_entry = ff_DualBDADDR_base(connect_ind_obj)
-            BTIDES_JSON.append(DualBDADDR_entry)
+            TME.TME_glob.BTIDES_JSON.append(DualBDADDR_entry)
             return True
     else:
         #print("CONNECT_IND already exists in the BTIDES JSON. Nothing to do.")
@@ -180,7 +179,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, 
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_DualBDADDR_base(connect_ind_obj)
         base[target_tier1_array_name] = [ tier1_data ]
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_pair_specific_entry.keys()):
@@ -235,7 +234,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random
         # There is no bdaddr_specific_entry yet for this BDADDR. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ]
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_specific_entry.keys()):
@@ -280,7 +279,7 @@ def generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj,
         # There is no bdaddr_pair_specific_entry yet for this BDADDR pair. Insert a brand new one with our tier1_data within the given target_tier1_array_name
         base = ff_DualBDADDR_base(connect_ind_obj)
         base[target_tier1_array_name] = [ tier1_data ]
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_pair_specific_entry.keys()):

@@ -35,10 +35,11 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 from HCI_to_BTIDES import *
 from PCAP_to_BTIDES import *
 
-def optionally_store_to_SQL(btides_file, to_SQL, to_BTIDALPOOL, token_file, use_test_db, quiet_print, verbose_print):
+def optionally_store_to_SQL(btides_file, to_SQL, to_BTIDALPOOL, token_file, use_test_db, quiet_print, verbose_print, rename):
+    btides_to_sql_succeeded = False
     if to_SQL:
         b2s_args = btides_to_sql_args(input=btides_file, use_test_db=use_test_db, quiet_print=quiet_print, verbose_print=verbose_print)
-        btides_to_sql(b2s_args)
+        btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if to_BTIDALPOOL:
         # If the token isn't given on the CLI, then redirect them to go login and get one
@@ -51,6 +52,11 @@ def optionally_store_to_SQL(btides_file, to_SQL, to_BTIDALPOOL, token_file, use_
             token=client.credentials.token,
             refresh_token=client.credentials.refresh_token
         )
+
+    if(btides_to_sql_succeeded and rename):
+        os.rename(btides_file, btides_file + ".processed")
+        vprint(f"Renamed to {btides_file}.processed")
+
 
 def main():
     global verbose_print, verbose_BTIDES
@@ -70,6 +76,7 @@ def main():
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
     sql.add_argument('--to-SQL', action='store_true', required=False, help='Store output BTIDES file to your local SQL database.')
+    sql.add_argument('--rename', action='store_true', required=False, help='Rename the output file to output.processed if used in conjunction with --to-SQL')
     sql.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
 
     # BTIDALPOOL arguments
@@ -115,14 +122,15 @@ def main():
                 if file.endswith(args.HCI_logs_suffix):
                     base_file_name = file[:-len(args.HCI_logs_suffix)]
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
-                    if not os.path.exists(btides_file):
+                    btides_processed_file = os.path.join(root, f"{base_file_name}.btides.processed")
+                    if (not os.path.exists(btides_file) and not os.path.exists(btides_processed_file)):
                         qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory.")
                         if(not read_HCI(os.path.join(root, file))):
                             continue
                         write_BTIDES(btides_file)
                         qprint(f"Export {btides_file} completed with no errors.")
                         hci_file_export_count += 1
-                        optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                        optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
                     else:
                         if(args.overwrite_existing_BTIDES):
                             qprint(f"Reading all events from HCI log {os.path.join(root, file)} into memory.")
@@ -131,13 +139,15 @@ def main():
                             write_BTIDES(btides_file)
                             qprint(f"Export {btides_file} completed with no errors.")
                             hci_file_export_count += 1
-                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
                         elif(args.read_existing_BTIDES):
-                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                            if(os.path.exists(btides_file)):
+                                # Don't re-process .processed files. If we need to do that, use the --overwrite-existing-BTIDES path
+                                # This path will just be for processing unprocessed .btides files
+                                optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
 
                     # Reset globals to not accumulate wasted memory
-                    BTIDES_JSON = {}
-                    TME.TME_glob.BTIDES_JSON = {}
+                    TME.TME_glob.BTIDES_JSON = []
                     TME.TME_glob.duplicate_count = 0
                     TME.TME_glob.insert_count = 0
                     g_last_handle_to_bdaddr = {}
@@ -149,13 +159,14 @@ def main():
                 if file.endswith(args.pcaps_suffix):
                     base_file_name = file[:-len(args.pcaps_suffix)]
                     btides_file = os.path.join(root, f"{base_file_name}.btides")
-                    if not os.path.exists(btides_file):
+                    btides_processed_file = os.path.join(root, f"{base_file_name}.btides.processed")
+                    if (not os.path.exists(btides_file) and not os.path.exists(btides_processed_file)):
                         qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
                         read_pcap(os.path.join(root, file))
                         write_BTIDES(btides_file)
                         qprint(f"Export {btides_file} completed with no errors.")
                         pcap_file_export_count += 1
-                        optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                        optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
                     else:
                         if(args.overwrite_existing_BTIDES):
                             qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 100 packets.)")
@@ -163,13 +174,15 @@ def main():
                             write_BTIDES(btides_file)
                             qprint(f"Export {btides_file} completed with no errors.")
                             pcap_file_export_count += 1
-                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
                         elif(args.read_existing_BTIDES):
-                            optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print)
+                            if(os.path.exists(btides_file)):
+                                # Don't re-process .processed files. If we need to do that, use the --overwrite-existing-BTIDES path
+                                # This path will just be for processing unprocessed .btides files
+                                optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
 
                     # Reset globals to not accumulate wasted memory
-                    BTIDES_JSON = {}
-                    TME.TME_glob.BTIDES_JSON = {}
+                    TME.TME_glob.BTIDES_JSON = []
                     TME.TME_glob.duplicate_count = 0
                     TME.TME_glob.insert_count = 0
                     g_access_address_to_connect_ind_obj = {}

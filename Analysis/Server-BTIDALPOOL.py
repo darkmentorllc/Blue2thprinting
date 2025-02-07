@@ -116,8 +116,8 @@ def run_btides_to_sql(filename):
     # Run the primary code from BTIDES_to_SQL.py script
     # TODO: make this run in a separate thread? (Need to check if it's already running in its own thread vs. other queries)
     b2s_args = btides_to_sql_args(input=filename, use_test_db=True)
-    btides_to_sql(b2s_args)
-
+    if(btides_to_sql(b2s_args)):
+        os.rename(filename, filename + ".processed")
 
 # args_array should be individual arguments to pass to the script
 def run_TellMeEverything(self, username, args_array, output_filename):

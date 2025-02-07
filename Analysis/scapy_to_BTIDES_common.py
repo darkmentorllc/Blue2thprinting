@@ -704,7 +704,7 @@ def insert_descriptor_object(char_obj, desc_obj):
 def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
     char_obj = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, handle=g_last_seen_characteristic_handle)
     # If there's no entry already inserted for the last characteristic, we won't have anywhere to put the
-    # characteristic descriptor, so we can just return None as failure
+    # characteristic descriptor, so we can just return False as failure
     if(not char_obj):
         return False
 
@@ -761,7 +761,6 @@ def export_characteristic_values(list_obj, att_data, connect_ind_obj):
 
 
 def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
-    global g_last_seen_characteristic_handle
     att_data = get_ATT_data(packet, ATT_Read_Response, type_ATT_READ_RSP)
     if(att_data != None):
         try:
