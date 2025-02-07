@@ -8,7 +8,7 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 from TME.TME_BTIDES_base import *
-from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
+#from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 type_AdvData_Flags                              = 0x01
 type_AdvData_UUID16ListIncomplete               = 0x02

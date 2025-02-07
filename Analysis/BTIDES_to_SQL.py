@@ -1021,10 +1021,11 @@ def btides_to_sql(args):
     in_filename = args.input
     skip_invalid = args.skip_invalid
     global last_printed_percentage
+    global BTIDES_JSON
 
     last_printed_percentage = 0
     with open(in_filename, 'r') as f:
-        BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
+        TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
         #qprint(json.dumps(BTIDES_JSON, indent=2))
 
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
@@ -1039,9 +1040,9 @@ def btides_to_sql(args):
 
     registry = Registry().with_resources( all_schemas )
 
-    total = len(BTIDES_JSON)
+    total = len(TME.TME_glob.BTIDES_JSON)
     count = 0;
-    for entry in BTIDES_JSON:
+    for entry in TME.TME_glob.BTIDES_JSON:
         # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
         try:
             Draft202012Validator(
@@ -1058,6 +1059,7 @@ def btides_to_sql(args):
                 continue
             else:
                 qprint(json.dumps(entry, indent=2))
+                #return False
                 exit(-1)
 
         parse_AdvChanArray(entry)
@@ -1079,6 +1081,7 @@ def btides_to_sql(args):
 
     qprint(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
     qprint(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
+    return True
 
 ###################################
 # MAIN
@@ -1108,12 +1111,15 @@ def main():
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
     parser.add_argument('--skip-invalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
+    parser.add_argument('--no-rename', action='store_true', required=False, help='Don\'t rename the input file to input.processed.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
     parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
     args = parser.parse_args()
 
-    btides_to_sql(args)
+    btides_to_sql_succeeded = btides_to_sql(args)
+    if(btides_to_sql_succeeded and args.rename):
+        os.rename(args.input, args.input + ".processed")
 
 if __name__ == "__main__":
     main()

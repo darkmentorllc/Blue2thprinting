@@ -187,7 +187,7 @@ def BTIDES_export_GATT_Characteristic_Descriptor(bdaddr, random, data):
         base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
         #qprint(json.dumps(base, indent=2))
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         #qprint(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
@@ -246,7 +246,7 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
         base = ff_SingleBDADDR_base(bdaddr, random)
         base["GATTArray"] = [ placeholder_svc_obj ]
         #qprint(json.dumps(base, indent=2))
-        BTIDES_JSON.append(base)
+        TME.TME_glob.BTIDES_JSON.append(base)
         #qprint(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
@@ -286,5 +286,5 @@ def BTIDES_export_GATT_Characteristic_Value(bdaddr, random, data):
             # If we get here, we exhaused all services without a match. So insert our new entry within the placeholder service & characteristic
             entry["GATTArray"].append(placeholder_svc_obj)
             #qprint(json.dumps(entry, indent=2))
-            ###qprint(json.dumps(BTIDES_JSON, indent=2))
+            ###qprint(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
             return

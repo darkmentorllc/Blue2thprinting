@@ -185,7 +185,7 @@ def process_advertisements(p):
                 export_AdvChannelData(p, HCI_Event_Extended_Inquiry_Result, type_BTIDES_EIR)
         return True
     elif p.haslayer(HCI_Event_Inquiry_Result):
-        p.show()
+        #p.show()
         inq_result = p.getlayer(HCI_Event_Inquiry_Result)
         export_Page_Scan_Repetition_Mode(inq_result.fields['addr'], inq_result.fields['page_scan_repetition_mode'])
         CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
@@ -344,6 +344,7 @@ def main():
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
     sql.add_argument('--to-SQL', action='store_true', required=False, help='Store output BTIDES file to your local SQL database.')
+    sql.add_argument('--rename', action='store_true', required=False, help='Rename the output file to output.processed if used in conjunction with --to-SQL')
     sql.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
 
     # BTIDALPOOL arguments
@@ -369,9 +370,10 @@ def main():
     write_BTIDES(out_BTIDES_filename)
     qprint("Export completed with no errors.")
 
+    btides_to_sql_succeeded = False
     if args.to_SQL:
         b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
-        btides_to_sql(b2s_args)
+        btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:
         # If the token isn't given on the CLI, then redirect them to go login and get one
@@ -400,6 +402,9 @@ def main():
             token=client.credentials.token,
             refresh_token=client.credentials.refresh_token
         )
+
+    if(btides_to_sql_succeeded and args.rename):
+        os.rename(out_BTIDES_filename, out_BTIDES_filename + ".processed")
 
 if __name__ == "__main__":
     main()

@@ -253,7 +253,7 @@ def export_to_ATTArray(packet):
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
 
-    packet.show()
+    #packet.show()
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)
@@ -284,7 +284,6 @@ def export_to_ATTArray(packet):
 
 
 def export_CONNECT_IND(packet):
-    global BTIDES_JSON
     global g_access_address_to_connect_ind_obj
 
     #packet.show()
@@ -292,7 +291,6 @@ def export_CONNECT_IND(packet):
     # Store the BDADDRs involved in the connection into a dictionary, queryable by access address
     # This dictionary will need to be used by all subsequent packets within the connection to figure out
     # which bdaddr to associate their data with
-    ble_fields = packet.getlayer(BTLE)
     ble_adv_fields = packet.getlayer(BTLE_ADV)
     central_bdaddr_rand = ble_adv_fields.TxAdd
     peripheral_bdaddr_rand = ble_adv_fields.RxAdd
@@ -427,6 +425,7 @@ def main():
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
     sql.add_argument('--to-SQL', action='store_true', required=False, help='Store output BTIDES file to your local SQL database.')
+    sql.add_argument('--rename', action='store_true', required=False, help='Rename the output file to output.processed if used in conjunction with --to-SQL')
     sql.add_argument('--use-test-db', action='store_true', required=False, help='This will utilize the alternative bttest database, used for testing.')
 
     # BTIDALPOOL arguments
@@ -453,9 +452,10 @@ def main():
     write_BTIDES(out_BTIDES_filename)
     qprint("Export completed with no errors.")
 
+    btides_to_sql_succeeded = False
     if args.to_SQL:
         b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
-        btides_to_sql(b2s_args)
+        btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:
         # If the token isn't given on the CLI, then redirect them to go login and get one
@@ -484,6 +484,10 @@ def main():
             token=client.credentials.token,
             refresh_token=client.credentials.refresh_token
         )
+
+    if(btides_to_sql_succeeded and args.rename):
+        os.rename(out_BTIDES_filename, out_BTIDES_filename + ".processed")
+
 
 if __name__ == "__main__":
     main()
