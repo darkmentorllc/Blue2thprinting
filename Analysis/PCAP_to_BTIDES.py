@@ -113,7 +113,36 @@ def export_BTLE_CTRL(packet):
             BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
-            print(f"Error processing LL_TERMINATE_IND: {e}")
+            print(f"Error processing LL_CHANNEL_MAP_IND: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_ENC_REQ:
+        try:
+            ll_ctrl.show()
+            data = ff_LL_ENC_REQ(
+                direction=get_packet_direction(packet),
+                rand=ll_ctrl.rand,
+                ediv=ll_ctrl.ediv,
+                skd_c=ll_ctrl.skdm,
+                iv_c=ll_ctrl.ivm
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_ENC_REQ: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_ENC_RSP:
+        try:
+            data = ff_LL_ENC_RSP(
+                direction=get_packet_direction(packet),
+                skd_p=ll_ctrl.skds,
+                iv_p=ll_ctrl.ivs
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_ENC_RSP: {e}")
             return False
     elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
         try:
