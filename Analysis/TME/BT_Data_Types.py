@@ -53,6 +53,7 @@ type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
 ## LL Control PDU types defined in BT spec
 type_opcode_LL_CONNECTION_UPDATE_IND     = 0
+type_opcode_LL_CHANNEL_MAP_IND           = 1
 type_opcode_LL_TERMINATE_IND             = 2
 type_opcode_LL_START_ENC_REQ             = 5
 type_opcode_LL_START_ENC_RSP             = 6
@@ -77,6 +78,7 @@ type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 
 ll_ctrl_pdu_opcodes_to_strings = {
     type_opcode_LL_CONNECTION_UPDATE_IND: "LL_CONNECTION_UPDATE_IND",
+    type_opcode_LL_CHANNEL_MAP_IND: "LL_CHANNEL_MAP_IND",
     type_opcode_LL_TERMINATE_IND: "LL_TERMINATE_IND",
     type_opcode_LL_START_ENC_REQ: "LL_START_ENC_REQ",
     type_opcode_LL_START_ENC_RSP: "LL_START_ENC_RSP",

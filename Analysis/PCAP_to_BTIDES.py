@@ -84,21 +84,36 @@ def export_BTLE_CTRL(packet):
 
     if ll_ctrl.opcode == type_opcode_LL_CONNECTION_UPDATE_IND:
         try:
-            ll_ctrl.show()
+            #ll_ctrl.show()
             data = ff_LL_CONNECTION_UPDATE_IND(
                 direction=get_packet_direction(packet),
-                winsize=ll_ctrl.win_size,
-                winoffset=ll_ctrl.win_offset,
+                win_size=ll_ctrl.win_size,
+                win_offset=ll_ctrl.win_offset,
                 interval=ll_ctrl.interval,
                 latency=ll_ctrl.latency,
                 timeout=ll_ctrl.timeout,
                 instant=ll_ctrl.instant
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_CONNECTION_UPDATE_IND(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_CONNECTION_UPDATE_IND: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_CHANNEL_MAP_IND:
+        try:
+            #ll_ctrl.show()
+            channel_map_hex_str = f"{ll_ctrl.chM:010x}" # ll_ctrl.chM stored as QWORD, but it's only 5 bytes, so pad to up to 10 zeros
+            data = ff_LL_CHANNEL_MAP_IND(
+                direction=get_packet_direction(packet),
+                channel_map_hex_str=channel_map_hex_str,
+                instant=ll_ctrl.instant
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_TERMINATE_IND: {e}")
             return False
     elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
         try:
@@ -107,7 +122,7 @@ def export_BTLE_CTRL(packet):
                 error_code=ll_ctrl.code
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_TERMINATE_IND(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_TERMINATE_IND: {e}")
@@ -123,7 +138,7 @@ def export_BTLE_CTRL(packet):
                 unknown_type=ll_ctrl.opcode
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_UNKNOWN_RSP(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_UNKNOWN_RSP: {e}")
@@ -135,7 +150,7 @@ def export_BTLE_CTRL(packet):
                 features=ll_ctrl.feature_set.value
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_FEATURE_REQ: {e}")
@@ -149,7 +164,7 @@ def export_BTLE_CTRL(packet):
                 subversion=ll_ctrl.subversion
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_VERSION_IND(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
@@ -161,7 +176,7 @@ def export_BTLE_CTRL(packet):
                 features=ll_ctrl.feature_set.value
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
@@ -173,7 +188,7 @@ def export_BTLE_CTRL(packet):
                 features=ll_ctrl.feature_set.value
             )
             if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LL_FEATURE_RSP(connect_ind_obj=connect_ind_obj, data=data)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
             return True
         except Exception as e:
             print(f"Error processing LL_FEATURE_RSP: {e}")
@@ -191,7 +206,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_LENGTH_REQ: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_LENGTH_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_LENGTH_RSP:
         try:
@@ -206,7 +221,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_LENGTH_RSP: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_LENGTH_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PHY_REQ:
         try:
@@ -219,7 +234,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_PHY_REQ: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_PHY_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PHY_RSP:
         try:
@@ -232,7 +247,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_PHY_RSP: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_PHY_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
         try:
@@ -243,7 +258,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_PING_REQ: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_PING_REQ(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
         try:
@@ -254,7 +269,7 @@ def export_BTLE_CTRL(packet):
             print(f"Error processing LL_PING_RSP: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LL_PING_RSP(connect_ind_obj=connect_ind_obj, data=data)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
     else:
         if(not TME.TME_glob.quiet_print):

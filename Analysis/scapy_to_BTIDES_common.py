@@ -22,7 +22,7 @@ from TME.TME_BTIDES_base import insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
 # Feature response
-from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LL_FEATURE_RSP
+from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
 # HCI (for Remote Name Request Complete)
 from TME.TME_BTIDES_HCI import *
 # ATT
@@ -989,7 +989,7 @@ def export_LE_Features(bdaddr, bdaddr_random, in_data):
             features=in_data['features']
         )
         if_verbose_insert_std_optional_fields(data, None)
-        BTIDES_export_LL_FEATURE_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         return True
     except Exception as e:
         print(f"Error processing LL_FEATURE_RSP: {e}")

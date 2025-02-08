@@ -15,10 +15,16 @@ import TME.TME_glob
 # Helper "factory functions"
 ############################
 
-def ff_LL_CONNECTION_UPDATE_IND(direction, winsize, winoffset, interval, latency, timeout, instant):
-    obj = {"direction": direction, "opcode": type_opcode_LL_CONNECTION_UPDATE_IND, "winsize": winsize, "winoffset": winoffset, "interval": interval, "latency": latency, "timeout": timeout, "instant": instant}
+def ff_LL_CONNECTION_UPDATE_IND(direction, win_size, win_offset, interval, latency, timeout, instant):
+    obj = {"direction": direction, "opcode": type_opcode_LL_CONNECTION_UPDATE_IND, "win_size": win_size, "win_offset": win_offset, "interval": interval, "latency": latency, "timeout": timeout, "instant": instant}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_CONNECTION_UPDATE_IND"
+    return obj
+
+def ff_LL_CHANNEL_MAP_IND(direction, channel_map_hex_str, instant):
+    obj = {"direction": direction, "opcode": type_opcode_LL_CHANNEL_MAP_IND, "channel_map_hex_str": channel_map_hex_str, "instant": instant}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_CHANNEL_MAP_IND"
     return obj
 
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
@@ -113,127 +119,10 @@ def ff_LL_TERMINATE_IND(direction, error_code):
 # JSON insertion functions
 ############################
 
-def BTIDES_export_LL_CONNECTION_UPDATE_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
+def BTIDES_export_LLArray_entry(bdaddr=None, random=None, connect_ind_obj=None, data=None):
     global BTIDES_JSON
     ###print(BTIDES_JSON)
     if connect_ind_obj is not None:
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
     else:
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_TERMINATE_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_UNKNOWN_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_FEATURE_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_FEATURE_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_VERSION_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_PING_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-def BTIDES_export_LL_PING_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_PING_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_LENGTH_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_LENGTH_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_PHY_REQ(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-
-
-def BTIDES_export_LL_PHY_RSP(bdaddr=None, random=None, connect_ind_obj=None, data=None):
-    global BTIDES_JSON
-    ###print(BTIDES_JSON)
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
-

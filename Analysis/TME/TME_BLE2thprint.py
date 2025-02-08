@@ -112,23 +112,23 @@ def print_BLE_2thprint(bdaddr):
         decode_BLE_features(features)
         data = ff_LL_FEATURE_RSP(direction, features)
         if(opcode == type_opcode_LL_FEATURE_REQ):
-            BTIDES_export_LL_FEATURE_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_FEATURE_RSP):
-            BTIDES_export_LL_FEATURE_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
-            BTIDES_export_LL_PERIPHERAL_FEATURE_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode, tx_phys, rx_phys in phys_result:
         if(opcode == type_opcode_LL_PHY_RSP):
             qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
             qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
             data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
-            BTIDES_export_LL_PHY_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_PHY_REQ):
             qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
             qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
             data = ff_LL_PHY_REQ(direction, tx_phys, rx_phys)
-            BTIDES_export_LL_PHY_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
         qprint(f"\t\tLL Ctrl Opcode: {opcode} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
@@ -138,25 +138,25 @@ def print_BLE_2thprint(bdaddr):
         qprint(f"\t\t\tMax TX time: {max_tx_time} microseconds")
         if(opcode == type_opcode_LL_LENGTH_REQ):
             data = ff_LL_LENGTH_REQ(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-            BTIDES_export_LL_LENGTH_REQ(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_LENGTH_RSP):
             data = ff_LL_LENGTH_RSP(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
-            BTIDES_export_LL_LENGTH_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, unknown_opcode in unknown_result:
         qprint(f"\t\tReturned 'Unknown Opcode' error for LL Ctrl Opcode: {unknown_opcode} ({ll_ctrl_pdu_opcodes_to_strings[unknown_opcode]})")
         data = ff_LL_UNKNOWN_RSP(direction, unknown_opcode)
-        BTIDES_export_LL_UNKNOWN_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode in ping_result:
         if(opcode == type_opcode_LL_PING_RSP):
             qprint(f"\t\tCentral received LL Ping Response from this device.")
             data = ff_LL_PING_RSP(direction)
-            BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
         elif(opcode == type_opcode_LL_PING_REQ):
             qprint(f"\t\tCentral received LL Ping Request from this device.")
             data = ff_LL_PING_REQ(direction)
-            BTIDES_export_LL_PING_RSP(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         vprint("\tRaw BLE 2thprint:")
