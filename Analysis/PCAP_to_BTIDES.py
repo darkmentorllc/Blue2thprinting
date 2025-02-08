@@ -181,6 +181,30 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_FEATURE_REQ: {e}")
             return False
+    elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
+        try:
+            data = ff_LL_PERIPHERAL_FEATURE_REQ(
+                direction=get_packet_direction(packet),
+                features=ll_ctrl.feature_set.value
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
+        try:
+            data = ff_LL_FEATURE_RSP(
+                direction=get_packet_direction(packet),
+                features=ll_ctrl.feature_set.value
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_FEATURE_RSP: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
         try:
             data = ff_LL_VERSION_IND(
@@ -194,18 +218,6 @@ def export_BTLE_CTRL(packet):
             return True
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
-            return False
-    elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
-        try:
-            data = ff_LL_PERIPHERAL_FEATURE_REQ(
-                direction=get_packet_direction(packet),
-                features=ll_ctrl.feature_set.value
-            )
-            if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
-            return True
-        except Exception as e:
-            print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
             return False
     elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_REQ:
         try:
@@ -232,7 +244,6 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_RSP:
         try:
-            #ll_ctrl.show()
             data = ff_LL_CONNECTION_PARAM_RSP(
                 direction=get_packet_direction(packet),
                 interval_min=ll_ctrl.interval_min,
@@ -254,18 +265,28 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CONNECTION_PARAM_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
+    elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
         try:
-            data = ff_LL_FEATURE_RSP(
-                direction=get_packet_direction(packet),
-                features=ll_ctrl.feature_set.value
+            data = ff_LL_PING_REQ(
+                direction=get_packet_direction(packet)
             )
-            if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
-            return True
         except Exception as e:
-            print(f"Error processing LL_FEATURE_RSP: {e}")
+            print(f"Error processing LL_PING_REQ: {e}")
             return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
+        try:
+            data = ff_LL_PING_RSP(
+                direction=get_packet_direction(packet)
+            )
+        except Exception as e:
+            print(f"Error processing LL_PING_RSP: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+        return True
     elif ll_ctrl.opcode == type_opcode_LL_LENGTH_REQ:
         try:
             data = ff_LL_LENGTH_REQ(
@@ -322,24 +343,17 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
+    elif ll_ctrl.opcode == type_opcode_LL_PHY_UPDATE_IND:
         try:
-            data = ff_LL_PING_REQ(
-                direction=get_packet_direction(packet)
+            #ll_ctrl.show()
+            data = ff_LL_PHY_UPDATE_IND(
+                direction=get_packet_direction(packet),
+                phy_c_to_p=ll_ctrl.tx_phy.value,
+                phy_p_to_c=ll_ctrl.rx_phy.value,
+                instant=ll_ctrl.instant
             )
         except Exception as e:
-            print(f"Error processing LL_PING_REQ: {e}")
-            return False
-        if_verbose_insert_std_optional_fields(data, packet)
-        BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
-        return True
-    elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
-        try:
-            data = ff_LL_PING_RSP(
-                direction=get_packet_direction(packet)
-            )
-        except Exception as e:
-            print(f"Error processing LL_PING_RSP: {e}")
+            print(f"Error processing LL_PHY_RSP: {e}")
             return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
