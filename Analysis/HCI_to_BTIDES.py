@@ -267,7 +267,11 @@ def process_names(p):
         # (FWIW the most common alt status is 0x04 which is timeout, but that doesn't feel useful to capture
         # because it could just mean that something was too far away and didn't hear us.)
         if(event.fields['status'] == 0):
-            name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
+            try:
+                name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
+            except UnicodeDecodeError as e:
+                print(f"Error decoding remote name: {e}")
+                return False
             remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
             export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
             return True

@@ -15,6 +15,12 @@ import TME.TME_glob
 # Helper "factory functions"
 ############################
 
+def ff_LL_CONNECTION_UPDATE_IND(direction, winsize, winoffset, interval, latency, timeout, instant):
+    obj = {"direction": direction, "opcode": type_opcode_LL_CONNECTION_UPDATE_IND, "winsize": winsize, "winoffset": winoffset, "interval": interval, "latency": latency, "timeout": timeout, "instant": instant}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_CONNECTION_UPDATE_IND"
+    return obj
+
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
     obj = {"direction": direction, "opcode": type_opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
     if(TME.TME_glob.verbose_BTIDES):
@@ -106,6 +112,15 @@ def ff_LL_TERMINATE_IND(direction, error_code):
 ############################
 # JSON insertion functions
 ############################
+
+def BTIDES_export_LL_CONNECTION_UPDATE_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
+    global BTIDES_JSON
+    ###print(BTIDES_JSON)
+    if connect_ind_obj is not None:
+        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
+    else:
+        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")
+
 
 def BTIDES_export_LL_TERMINATE_IND(bdaddr=None, random=None, connect_ind_obj=None, data=None):
     global BTIDES_JSON
