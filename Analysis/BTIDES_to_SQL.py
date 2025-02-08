@@ -1111,7 +1111,7 @@ def main():
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
     parser.add_argument('--skip-invalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
-    parser.add_argument('--no-rename', action='store_true', required=False, help='Don\'t rename the input file to input.processed.')
+    parser.add_argument('--rename', action='store_true', required=False, help='Rename the input file to add \'.processed.\' suffix')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
     parser.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output.')
     parser.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')

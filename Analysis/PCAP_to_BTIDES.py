@@ -117,7 +117,7 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_ENC_REQ:
         try:
-            ll_ctrl.show()
+            #ll_ctrl.show()
             data = ff_LL_ENC_REQ(
                 direction=get_packet_direction(packet),
                 rand=ll_ctrl.rand,
