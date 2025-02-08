@@ -577,3 +577,33 @@ def get_bdaddrs_by_uuid16_regex(uuid16regex):
     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
 
     return bdaddr_hash.keys()
+
+
+def get_bdaddrs_by_LL_VERSION_IND(version, company_id, subversion):
+    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
+    bdaddrs = []
+
+    values = (version, company_id, subversion)
+    le_query = "SELECT bdaddr FROM LL_VERSION_IND WHERE ll_version = %s AND device_BT_CID = %s AND ll_sub_version = %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_LL_VERSION_IND: {len(le_result)} results found in LL_VERSION_IND")
+    qprint(f"get_bdaddrs_by_LL_VERSION_IND: bdaddr_hash = {bdaddr_hash}")
+
+    return bdaddr_hash.keys()
+
+
+def get_bdaddrs_by_LMP_VERSION_RES(version, company_id, subversion):
+    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
+    bdaddrs = []
+
+    values = (version, company_id, subversion)
+    eir_query = "SELECT bdaddr FROM LMP_VERSION_RES WHERE ll_version = %s AND device_BT_CID = %s AND ll_sub_version = %s"
+    eir_result = execute_query(eir_query, values)
+    for (bdaddr,) in eir_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_LMP_VERSION_RES: {len(eir_result)} results found in LMP_VERSION_RES")
+    qprint(f"get_bdaddrs_by_LMP_VERSION_RES: bdaddr_hash = {bdaddr_hash}")
+
+    return bdaddr_hash.keys()

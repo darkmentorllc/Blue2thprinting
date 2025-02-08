@@ -243,7 +243,7 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_REJECT_IND:
         try:
-            ll_ctrl.show()
+            #ll_ctrl.show()
             data = ff_LL_REJECT_IND(
                 direction=get_packet_direction(packet),
                 error_code=ll_ctrl.code
@@ -302,7 +302,6 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_REJECT_EXT_IND:
         try:
-            ll_ctrl.show()
             data = ff_LL_REJECT_EXT_IND(
                 direction=get_packet_direction(packet),
                 reject_opcode=ll_ctrl.reject_opcode,
