@@ -141,6 +141,28 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_RSP: {e}")
             return False
+    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
+        try:
+            data = ff_LL_START_ENC_REQ(
+                direction=get_packet_direction(packet)
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_ENC_REQ: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_RSP:
+        try:
+            data = ff_LL_START_ENC_RSP(
+                direction=get_packet_direction(packet)
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_ENC_RSP: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
         try:
             data = ff_LL_TERMINATE_IND(

@@ -52,6 +52,20 @@ def ff_LL_ENC_RSP(direction, skd_p, iv_p):
     return obj
 
 
+def ff_LL_START_ENC_REQ(direction):
+    obj = {"direction": direction, "opcode": type_opcode_LL_START_ENC_REQ}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_START_ENC_REQ"
+    return obj
+
+
+def ff_LL_START_ENC_RSP(direction):
+    obj = {"direction": direction, "opcode": type_opcode_LL_START_ENC_RSP}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_START_ENC_RSP"
+    return obj
+
+
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
     obj = {"direction": direction, "opcode": type_opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
     if(TME.TME_glob.verbose_BTIDES):
