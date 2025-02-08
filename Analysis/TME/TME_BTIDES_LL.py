@@ -29,6 +29,15 @@ def ff_LL_CHANNEL_MAP_IND(direction, channel_map_hex_str, instant):
     return obj
 
 
+def ff_LL_TERMINATE_IND(direction, error_code):
+    obj = {"direction": direction, "opcode": type_opcode_LL_TERMINATE_IND, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_TERMINATE_IND"
+        if error_code in controller_error_strings:
+            obj["error_str"] = controller_error_strings[error_code]
+    return obj
+
+
 def ff_LL_ENC_REQ(direction, rand, ediv, skd_c, iv_c):
     obj = {"direction": direction, "opcode": type_opcode_LL_ENC_REQ, "rand": rand, "ediv": ediv, "skd_c": skd_c, "iv_c": iv_c}
     if(TME.TME_glob.verbose_BTIDES):
@@ -167,13 +176,12 @@ def ff_LL_PHY_RSP(direction, tx_phys, rx_phys):
     return obj
 
 
-def ff_LL_TERMINATE_IND(direction, error_code):
-    obj = {"direction": direction, "opcode": type_opcode_LL_TERMINATE_IND, "error_code": error_code}
+def ff_LL_PHY_UPDATE_IND(direction, phy_c_to_p, phy_p_to_c, instant):
+    obj = {"direction": direction, "opcode": type_opcode_LL_PHY_UPDATE_IND, "phy_c_to_p": phy_c_to_p, "phy_p_to_c": phy_p_to_c, "instant": instant}
     if(TME.TME_glob.verbose_BTIDES):
-        obj["opcode_str"] = "LL_TERMINATE_IND"
-        if error_code in controller_error_strings:
-            obj["error_str"] = controller_error_strings[error_code]
+        obj["opcode_str"] = "LL_PHY_UPDATE_IND"
     return obj
+
 
 ############################
 # JSON insertion functions

@@ -72,6 +72,7 @@ type_opcode_LL_LENGTH_REQ                = 20
 type_opcode_LL_LENGTH_RSP                = 21
 type_opcode_LL_PHY_REQ                   = 22
 type_opcode_LL_PHY_RSP                   = 23
+type_opcode_LL_PHY_UPDATE_IND            = 24
 
 ## LMP PDU types defined in BT spec
 type_opcode_LMP_VERSION_RES             = 38
@@ -100,7 +101,8 @@ ll_ctrl_pdu_opcodes_to_strings = {
     type_opcode_LL_LENGTH_REQ:              "LL_LENGTH_REQ",
     type_opcode_LL_LENGTH_RSP:              "LL_LENGTH_RSP",
     type_opcode_LL_PHY_REQ:                 "LL_PHY_REQ",
-    type_opcode_LL_PHY_RSP:                 "LL_PHY_RSP"
+    type_opcode_LL_PHY_RSP:                 "LL_PHY_RSP",
+    type_opcode_LL_PHY_UPDATE_IND:          "LL_PHY_UPDATE_IND"
 }
 
 # HCI Event codes defined in BT spec
