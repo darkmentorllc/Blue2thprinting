@@ -241,6 +241,19 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
             return False
+    elif ll_ctrl.opcode == type_opcode_LL_REJECT_IND:
+        try:
+            ll_ctrl.show()
+            data = ff_LL_REJECT_IND(
+                direction=get_packet_direction(packet),
+                error_code=ll_ctrl.code
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_VERSION_IND: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_REQ:
         try:
             data = ff_LL_CONNECTION_PARAM_REQ(
@@ -286,6 +299,20 @@ def export_BTLE_CTRL(packet):
             return True
         except Exception as e:
             print(f"Error processing LL_CONNECTION_PARAM_RSP: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_REJECT_EXT_IND:
+        try:
+            ll_ctrl.show()
+            data = ff_LL_REJECT_EXT_IND(
+                direction=get_packet_direction(packet),
+                reject_opcode=ll_ctrl.reject_opcode,
+                error_code=ll_ctrl.error_code
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_VERSION_IND: {e}")
             return False
     elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
         try:
@@ -367,7 +394,6 @@ def export_BTLE_CTRL(packet):
         return True
     elif ll_ctrl.opcode == type_opcode_LL_PHY_UPDATE_IND:
         try:
-            #ll_ctrl.show()
             data = ff_LL_PHY_UPDATE_IND(
                 direction=get_packet_direction(packet),
                 phy_c_to_p=ll_ctrl.tx_phy.value,

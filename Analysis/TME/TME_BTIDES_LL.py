@@ -72,6 +72,13 @@ def ff_LL_VERSION_IND(direction, version, company_id, subversion):
         obj["opcode_str"] = "LL_VERSION_IND"
     return obj
 
+def ff_LL_REJECT_IND(direction, error_code):
+    obj = {"direction": direction, "opcode": type_opcode_LL_REJECT_IND, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_REJECT_IND"
+        if error_code in controller_error_strings:
+            obj["error_str"] = controller_error_strings[error_code]
+    return obj
 
 def ff_LL_UNKNOWN_RSP(direction, unknown_type):
     obj = {"direction": direction, "opcode": type_opcode_LL_UNKNOWN_RSP, "unknown_type": unknown_type}
@@ -145,6 +152,15 @@ def ff_LL_CONNECTION_PARAM_RSP(direction, interval_min, interval_max, latency, t
     }
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_CONNECTION_PARAM_RSP"
+    return obj
+
+
+def ff_LL_REJECT_EXT_IND(direction, reject_opcode, error_code):
+    obj = {"direction": direction, "opcode": type_opcode_LL_REJECT_EXT_IND, "reject_opcode": reject_opcode, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_REJECT_EXT_IND"
+        if error_code in controller_error_strings:
+            obj["error_str"] = controller_error_strings[error_code]
     return obj
 
 
