@@ -27,6 +27,18 @@ def ff_LL_CHANNEL_MAP_IND(direction, channel_map_hex_str, instant):
         obj["opcode_str"] = "LL_CHANNEL_MAP_IND"
     return obj
 
+def ff_LL_ENC_REQ(direction, rand, ediv, skd_c, iv_c):
+    obj = {"direction": direction, "opcode": type_opcode_LL_ENC_REQ, "rand": rand, "ediv": ediv, "skd_c": skd_c, "iv_c": iv_c}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_ENC_REQ"
+    return obj
+
+def ff_LL_ENC_RSP(direction, skd_p, iv_p):
+    obj = {"direction": direction, "opcode": type_opcode_LL_ENC_RSP, "skd_p": skd_p, "iv_p": iv_p}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_ENC_RSP"
+    return obj
+
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
     obj = {"direction": direction, "opcode": type_opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
     if(TME.TME_glob.verbose_BTIDES):
