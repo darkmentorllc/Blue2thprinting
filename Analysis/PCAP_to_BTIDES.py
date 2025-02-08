@@ -84,7 +84,6 @@ def export_BTLE_CTRL(packet):
 
     if ll_ctrl.opcode == type_opcode_LL_CONNECTION_UPDATE_IND:
         try:
-            #ll_ctrl.show()
             data = ff_LL_CONNECTION_UPDATE_IND(
                 direction=get_packet_direction(packet),
                 win_size=ll_ctrl.win_size,
@@ -102,7 +101,6 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_CHANNEL_MAP_IND:
         try:
-            #ll_ctrl.show()
             channel_map_hex_str = f"{ll_ctrl.chM:010x}" # ll_ctrl.chM stored as QWORD, but it's only 5 bytes, so pad to up to 10 zeros
             data = ff_LL_CHANNEL_MAP_IND(
                 direction=get_packet_direction(packet),
@@ -117,7 +115,6 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_ENC_REQ:
         try:
-            #ll_ctrl.show()
             data = ff_LL_ENC_REQ(
                 direction=get_packet_direction(packet),
                 rand=ll_ctrl.rand,
@@ -209,6 +206,53 @@ def export_BTLE_CTRL(packet):
             return True
         except Exception as e:
             print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_REQ:
+        try:
+            data = ff_LL_CONNECTION_PARAM_REQ(
+                direction=get_packet_direction(packet),
+                interval_min=ll_ctrl.interval_min,
+                interval_max=ll_ctrl.interval_max,
+                latency=ll_ctrl.latency,
+                timeout=ll_ctrl.timeout,
+                preferred_periodicity=ll_ctrl.preferred_periodicity,
+                reference_conneventcount=ll_ctrl.reference_conn_evt_count,
+                offset0=ll_ctrl.offset0,
+                offset1=ll_ctrl.offset1,
+                offset2=ll_ctrl.offset2,
+                offset3=ll_ctrl.offset3,
+                offset4=ll_ctrl.offset4,
+                offset5=ll_ctrl.offset5
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_CONNECTION_PARAM_REQ: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_RSP:
+        try:
+            #ll_ctrl.show()
+            data = ff_LL_CONNECTION_PARAM_RSP(
+                direction=get_packet_direction(packet),
+                interval_min=ll_ctrl.interval_min,
+                interval_max=ll_ctrl.interval_max,
+                latency=ll_ctrl.latency,
+                timeout=ll_ctrl.timeout,
+                preferred_periodicity=ll_ctrl.preferred_periodicity,
+                reference_conneventcount=ll_ctrl.reference_conn_evt_count,
+                offset0=ll_ctrl.offset0,
+                offset1=ll_ctrl.offset1,
+                offset2=ll_ctrl.offset2,
+                offset3=ll_ctrl.offset3,
+                offset4=ll_ctrl.offset4,
+                offset5=ll_ctrl.offset5
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_CONNECTION_PARAM_RSP: {e}")
             return False
     elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
         try:
