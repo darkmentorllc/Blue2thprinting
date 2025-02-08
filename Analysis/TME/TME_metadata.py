@@ -325,7 +325,7 @@ def print_ChipMakerPrint(bdaddr):
             qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (LL_VERSION_IND)")
             # FIXME: For now all the data in the database is P2C, but we need to update the DB to capture this in the future
             data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, ll_version, device_BT_CID, ll_sub_version)
-            BTIDES_export_LL_VERSION_IND(bdaddr=bdaddr, random=bdaddr_random, data=data)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(time_profile): qprint(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#
