@@ -21,11 +21,13 @@ def ff_LL_CONNECTION_UPDATE_IND(direction, win_size, win_offset, interval, laten
         obj["opcode_str"] = "LL_CONNECTION_UPDATE_IND"
     return obj
 
+
 def ff_LL_CHANNEL_MAP_IND(direction, channel_map_hex_str, instant):
     obj = {"direction": direction, "opcode": type_opcode_LL_CHANNEL_MAP_IND, "channel_map_hex_str": channel_map_hex_str, "instant": instant}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_CHANNEL_MAP_IND"
     return obj
+
 
 def ff_LL_ENC_REQ(direction, rand, ediv, skd_c, iv_c):
     obj = {"direction": direction, "opcode": type_opcode_LL_ENC_REQ, "rand": rand, "ediv": ediv, "skd_c": skd_c, "iv_c": iv_c}
@@ -33,11 +35,13 @@ def ff_LL_ENC_REQ(direction, rand, ediv, skd_c, iv_c):
         obj["opcode_str"] = "LL_ENC_REQ"
     return obj
 
+
 def ff_LL_ENC_RSP(direction, skd_p, iv_p):
     obj = {"direction": direction, "opcode": type_opcode_LL_ENC_RSP, "skd_p": skd_p, "iv_p": iv_p}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_ENC_RSP"
     return obj
+
 
 def ff_LL_VERSION_IND(direction, version, company_id, subversion):
     obj = {"direction": direction, "opcode": type_opcode_LL_VERSION_IND, "version": version, "company_id": company_id, "subversion": subversion}
@@ -74,6 +78,50 @@ def ff_LL_PERIPHERAL_FEATURE_REQ(direction, features):
     obj = {"direction": direction, "opcode": type_opcode_LL_PERIPHERAL_FEATURE_REQ, "le_features_hex_str": le_features_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LL_PERIPHERAL_FEATURE_REQ"
+    return obj
+
+
+def ff_LL_CONNECTION_PARAM_REQ(direction, interval_min, interval_max, latency, timeout, preferred_periodicity, reference_conneventcount, offset0, offset1, offset2, offset3, offset4, offset5):
+    obj = {
+        "direction": direction,
+        "opcode": type_opcode_LL_CONNECTION_PARAM_REQ,
+        "interval_min": interval_min,
+        "interval_max": interval_max,
+        "latency": latency,
+        "timeout": timeout,
+        "preferred_periodicity": preferred_periodicity,
+        "reference_conneventcount": reference_conneventcount,
+        "offset0": offset0,
+        "offset1": offset1,
+        "offset2": offset2,
+        "offset3": offset3,
+        "offset4": offset4,
+        "offset5": offset5
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_CONNECTION_PARAM_REQ"
+    return obj
+
+
+def ff_LL_CONNECTION_PARAM_RSP(direction, interval_min, interval_max, latency, timeout, preferred_periodicity, reference_conneventcount, offset0, offset1, offset2, offset3, offset4, offset5):
+    obj = {
+        "direction": direction,
+        "opcode": type_opcode_LL_CONNECTION_PARAM_RSP,
+        "interval_min": interval_min,
+        "interval_max": interval_max,
+        "latency": latency,
+        "timeout": timeout,
+        "preferred_periodicity": preferred_periodicity,
+        "reference_conneventcount": reference_conneventcount,
+        "offset0": offset0,
+        "offset1": offset1,
+        "offset2": offset2,
+        "offset3": offset3,
+        "offset4": offset4,
+        "offset5": offset5
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_CONNECTION_PARAM_RSP"
     return obj
 
 

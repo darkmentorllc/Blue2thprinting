@@ -64,6 +64,8 @@ type_opcode_LL_FEATURE_REQ               = 8
 type_opcode_LL_FEATURE_RSP               = 9
 type_opcode_LL_VERSION_IND               = 12
 type_opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
+type_opcode_LL_CONNECTION_PARAM_REQ      = 15
+type_opcode_LL_CONNECTION_PARAM_RSP      = 16
 type_opcode_LL_PING_REQ                  = 18
 type_opcode_LL_PING_RSP                  = 19
 type_opcode_LL_LENGTH_REQ                = 20
@@ -91,6 +93,8 @@ ll_ctrl_pdu_opcodes_to_strings = {
     type_opcode_LL_FEATURE_RSP:             "LL_FEATURE_RSP",
     type_opcode_LL_VERSION_IND:             "LL_VERSION_IND",
     type_opcode_LL_PERIPHERAL_FEATURE_REQ:  "LL_PERIPHERAL_FEATURE_REQ",
+    type_opcode_LL_CONNECTION_PARAM_REQ:    "LL_CONNECTION_PARAM_REQ",
+    type_opcode_LL_CONNECTION_PARAM_RSP:    "LL_CONNECTION_PARAM_RSP",
     type_opcode_LL_PING_REQ:                "LL_PING_REQ",
     type_opcode_LL_PING_RSP:                "LL_PING_RSP",
     type_opcode_LL_LENGTH_REQ:              "LL_LENGTH_REQ",
