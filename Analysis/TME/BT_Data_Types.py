@@ -52,6 +52,7 @@ type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
 ## LL Control PDU types defined in BT spec
+type_opcode_LL_CONNECTION_UPDATE_IND     = 0
 type_opcode_LL_TERMINATE_IND             = 2
 type_opcode_LL_START_ENC_REQ             = 5
 type_opcode_LL_START_ENC_RSP             = 6
@@ -75,20 +76,21 @@ type_opcode_LMP_FEATURES_RES_EXT        = 127
 type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 
 ll_ctrl_pdu_opcodes_to_strings = {
-    2: "LL_TERMINATE_IND",
-    5: "LL_START_ENC_REQ",
-    6: "LL_START_ENC_RSP",
-    7: "LL_UNKNOWN_RSP",
-    8: "LL_FEATURE_REQ",
-    9: "LL_FEATURE_RSP",
-    12: "LL_VERSION_IND",
-    14: "LL_PERIPHERAL_FEATURE_REQ",
-    18: "LL_PING_REQ",
-    19: "LL_PING_RSP",
-    20: "LL_LENGTH_REQ",
-    21: "LL_LENGTH_RSP",
-    22: "LL_PHY_REQ",
-    23: "LL_PHY_RSP"
+    type_opcode_LL_CONNECTION_UPDATE_IND: "LL_CONNECTION_UPDATE_IND",
+    type_opcode_LL_TERMINATE_IND: "LL_TERMINATE_IND",
+    type_opcode_LL_START_ENC_REQ: "LL_START_ENC_REQ",
+    type_opcode_LL_START_ENC_RSP: "LL_START_ENC_RSP",
+    type_opcode_LL_UNKNOWN_RSP: "LL_UNKNOWN_RSP",
+    type_opcode_LL_FEATURE_REQ: "LL_FEATURE_REQ",
+    type_opcode_LL_FEATURE_RSP: "LL_FEATURE_RSP",
+    type_opcode_LL_VERSION_IND: "LL_VERSION_IND",
+    type_opcode_LL_PERIPHERAL_FEATURE_REQ: "LL_PERIPHERAL_FEATURE_REQ",
+    type_opcode_LL_PING_REQ: "LL_PING_REQ",
+    type_opcode_LL_PING_RSP: "LL_PING_RSP",
+    type_opcode_LL_LENGTH_REQ: "LL_LENGTH_REQ",
+    type_opcode_LL_LENGTH_RSP: "LL_LENGTH_RSP",
+    type_opcode_LL_PHY_REQ: "LL_PHY_REQ",
+    type_opcode_LL_PHY_RSP: "LL_PHY_RSP"
 }
 
 # HCI Event codes defined in BT spec

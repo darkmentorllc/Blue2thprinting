@@ -81,7 +81,26 @@ def export_BTLE_CTRL(packet):
     # Handle different LL Control packet types here
     # For example, LL_VERSION_IND
     ll_ctrl = packet.getlayer(BTLE_CTRL)
-    if ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
+
+    if ll_ctrl.opcode == type_opcode_LL_CONNECTION_UPDATE_IND:
+        try:
+            ll_ctrl.show()
+            data = ff_LL_CONNECTION_UPDATE_IND(
+                direction=get_packet_direction(packet),
+                winsize=ll_ctrl.win_size,
+                winoffset=ll_ctrl.win_offset,
+                interval=ll_ctrl.interval,
+                latency=ll_ctrl.latency,
+                timeout=ll_ctrl.timeout,
+                instant=ll_ctrl.instant
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LL_CONNECTION_UPDATE_IND(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_CONNECTION_UPDATE_IND: {e}")
+            return False
+    elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
         try:
             data = ff_LL_TERMINATE_IND(
                 direction=get_packet_direction(packet),
@@ -93,7 +112,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_TERMINATE_IND: {e}")
             return False
-    if ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
+    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
             # TODO: in the future add this to the DB for completeness
             g_stop_exporting_encrypted_packets_by_AA[access_address] = True
             return True
