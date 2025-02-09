@@ -507,6 +507,8 @@ def export_to_SMPArray(packet):
     #     return True
     if(export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet)):
         return True
+    if(export_SMP_Pairing_Keypress_Notification(connect_ind_obj, packet)):
+        return True
 
 
 def export_CONNECT_IND(packet):

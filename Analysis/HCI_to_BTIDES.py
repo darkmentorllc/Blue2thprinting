@@ -120,6 +120,8 @@ def export_to_SMPArray(packet, direction):
     #     return True
     if(export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet, direction=direction)):
         return True
+    if(export_SMP_Pairing_Keypress_Notification(connect_ind_obj, packet, direction=direction)):
+        return True
 
 def process_connections(p):
     # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,

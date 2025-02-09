@@ -340,3 +340,17 @@ smp_error_strings = {
     0x0e: "Cross-Transport Key Derivation/Generation not allowed",
     0x0f: "Key Rejected",
 }
+
+type_SMP_KeypressNotification_PasskeyEntryStarted        = 0
+type_SMP_KeypressNotification_PasskeyDigitEntered        = 1
+type_SMP_KeypressNotification_PasskeyDigitErased         = 2
+type_SMP_KeypressNotification_PasskeyCleared             = 3
+type_SMP_KeypressNotification_PasskeyEntryCompleted      = 4
+
+smp_keypress_notification_strings = {
+    type_SMP_KeypressNotification_PasskeyEntryStarted:       "Passkey entry started",
+    type_SMP_KeypressNotification_PasskeyDigitEntered:       "Passkey digit entered",
+    type_SMP_KeypressNotification_PasskeyDigitErased:        "Passkey digit erased",
+    type_SMP_KeypressNotification_PasskeyCleared:            "Passkey cleared",
+    type_SMP_KeypressNotification_PasskeyEntryCompleted:     "Passkey entry completed"
+}
