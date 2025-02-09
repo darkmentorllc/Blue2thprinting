@@ -8,7 +8,6 @@
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
 from TME.TME_BTIDES_base import *
-#from TME.TME_glob import verbose_BTIDES, BTIDES_JSON
 
 type_AdvData_Flags                              = 0x01
 type_AdvData_UUID16ListIncomplete               = 0x02
@@ -308,4 +307,18 @@ smp_opcode_strings = {
     type_opcode_SMP_Pairing_Public_Key:            "Pairing Public Key",
     type_opcode_SMP_Pairing_DHKey_Check:           "Pairing DHKey Check",
     type_opcode_SMP_Pairing_Keypress_Notification: "Pairing Keypress Notification"
+}
+
+type_SMP_IO_Capabilities_DisplayOnly        = 0
+type_SMP_IO_Capabilities_DisplayYesNo       = 1
+type_SMP_IO_Capabilities_KeyboardOnly       = 2
+type_SMP_IO_Capabilities_NoInputNoOutput    = 3
+type_SMP_IO_Capabilities_KeyboardDisplay    = 4
+
+smp_io_cap_strings = {
+    type_SMP_IO_Capabilities_DisplayOnly:       "Display Only",
+    type_SMP_IO_Capabilities_DisplayYesNo:      "Display Yes/No",
+    type_SMP_IO_Capabilities_KeyboardOnly:      "Keyboard Only",
+    type_SMP_IO_Capabilities_NoInputNoOutput:   "No Input, No Output",
+    type_SMP_IO_Capabilities_KeyboardDisplay:   "Keyboard & Display"
 }

@@ -487,7 +487,7 @@ def export_to_SMPArray(packet):
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
 
-    packet.show()
+    # packet.show()
     # The opcodes are mutually exclusive, so if one returns true, we're done
     if(export_SMP_Pairing_Request(connect_ind_obj, packet)):
         return True
