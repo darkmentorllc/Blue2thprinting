@@ -303,7 +303,7 @@ smp_opcode_strings = {
     type_opcode_SMP_Identity_Information:          "Identity Information",
     type_opcode_SMP_Identity_Address_Information:  "Identity Address Information",
     type_opcode_SMP_Signing_Information:           "Signing Information",
-    type_opcode_SMP_Security_Request:              "SecurityRequest",
+    type_opcode_SMP_Security_Request:              "Security Request",
     type_opcode_SMP_Pairing_Public_Key:            "Pairing Public Key",
     type_opcode_SMP_Pairing_DHKey_Check:           "Pairing DHKey Check",
     type_opcode_SMP_Pairing_Keypress_Notification: "Pairing Keypress Notification"
