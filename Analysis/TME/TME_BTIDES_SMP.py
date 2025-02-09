@@ -70,6 +70,18 @@ def ff_SMP_Pairing_Random(direction, value_hex_str):
         obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
     return obj
 
+
+def ff_SMP_Pairing_Failed(direction, reason):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_Failed,
+        "direction": direction,
+        "reason": reason
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+        obj["reason_str"] = smp_error_strings[obj["reason"]]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################

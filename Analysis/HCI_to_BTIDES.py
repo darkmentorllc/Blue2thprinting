@@ -110,6 +110,8 @@ def export_to_SMPArray(packet, direction):
         return True
     if(export_SMP_Pairing_Random(connect_ind_obj, packet, direction=direction)):
         return True
+    if(export_SMP_Pairing_Failed(connect_ind_obj, packet, direction=direction)):
+        return True
 
 
 def process_connections(p):
