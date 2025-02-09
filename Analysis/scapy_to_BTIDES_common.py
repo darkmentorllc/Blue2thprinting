@@ -27,6 +27,8 @@ from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
 from TME.TME_BTIDES_HCI import *
 # ATT
 from TME.TME_BTIDES_ATT import *
+# SMP
+from TME.TME_BTIDES_SMP import *
 # EIR
 from TME.TME_BTIDES_EIR import *
 # LMP
@@ -968,6 +970,70 @@ def export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=No
 
         return True
     return False
+
+######################################################################
+# SMP SECTION
+######################################################################
+
+# It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
+# But just doing it out of an abundance of caution
+def get_SMP_data(packet, scapy_type, packet_type):
+    smp_hdr = packet.getlayer(SM_Hdr)
+    if(smp_hdr == None):
+        return None
+    if(smp_hdr.sm_command != packet_type):
+        return None
+    if(packet.haslayer(scapy_type) == False):
+        return None
+    else:
+        return packet.getlayer(scapy_type)
+
+
+def export_SMP_Pairing_Request(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Pairing_Request, type_opcode_SMP_Pairing_Request)
+    if smp_data is not None:
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+        except AttributeError as e:
+            print(f"Error accessing ATT_Error_Response fields: {e}")
+            return False
+        smp_data.show()
+        data = ff_SMP_Pairing_Request(direction=direction,
+                                      io_cap=smp_data.iocap,
+                                      oob_data=smp_data.oob,
+                                      auth_req=smp_data.authentication,
+                                      max_key_size=smp_data.max_key_size,
+                                      initiator_key_dist=smp_data.initiator_key_distribution,
+                                      responder_key_dist=smp_data.responder_key_distribution)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Pairing_Response, type_opcode_SMP_Pairing_Response)
+    if smp_data is not None:
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+        except AttributeError as e:
+            print(f"Error accessing ATT_Error_Response fields: {e}")
+            return False
+        smp_data.show()
+        data = ff_SMP_Pairing_Response(direction=direction,
+                                      io_cap=smp_data.iocap,
+                                      oob_data=smp_data.oob,
+                                      auth_req=smp_data.authentication,
+                                      max_key_size=smp_data.max_key_size,
+                                      initiator_key_dist=smp_data.initiator_key_distribution,
+                                      responder_key_dist=smp_data.responder_key_distribution)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
 
 ######################################################################
 # HCI SECTION
