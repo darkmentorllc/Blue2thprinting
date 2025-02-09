@@ -104,6 +104,8 @@ def export_to_SMPArray(packet, direction):
     # The opcodes are mutually exclusive, so if one returns true, we're done
     if(export_SMP_Pairing_Request(connect_ind_obj, packet, direction=direction)):
         return True
+    if(export_SMP_Pairing_Response(connect_ind_obj, packet, direction=direction)):
+        return True
 
 
 def process_connections(p):
@@ -310,7 +312,7 @@ def process_ATT(p, record):
 
 
 def process_SMP(p, record):
-    if p.haslayer(ATT_Hdr):
+    if p.haslayer(SM_Hdr):
         #print(record)
         if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
             direction = type_BTIDES_direction_C2P
