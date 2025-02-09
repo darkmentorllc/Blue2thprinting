@@ -104,6 +104,17 @@ def ff_SMP_Pairing_Public_Key(direction, pub_key_x_hex_str, pub_key_y_hex_str):
         obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
     return obj
 
+
+def ff_SMP_Pairing_DHKey_Check(direction, value_hex_str):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_DHKey_Check,
+        "direction": direction,
+        "value_hex_str": value_hex_str
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################
