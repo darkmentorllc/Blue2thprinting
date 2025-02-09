@@ -109,7 +109,7 @@ def print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max
 
 
 def print_SMP_info(bdaddr):
-    # Query the database for all GATT services
+    # Query the database for all SMP data
     values = (bdaddr,)
     query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_Pairing_Req_Res_result = execute_query(query, values)

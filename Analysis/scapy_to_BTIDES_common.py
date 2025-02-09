@@ -25,10 +25,13 @@ from TME.TME_AdvChan import *
 from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
 # HCI (for Remote Name Request Complete)
 from TME.TME_BTIDES_HCI import *
+# L2CAP
+from TME.TME_BTIDES_L2CAP import *
 # ATT
 from TME.TME_BTIDES_ATT import *
 # SMP
 from TME.TME_BTIDES_SMP import *
+#### Classic-specific
 # EIR
 from TME.TME_BTIDES_EIR import *
 # LMP
@@ -1091,7 +1094,6 @@ def export_SMP_Security_Request(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            smp_data.show()
             data = ff_SMP_Security_Request(direction=direction, auth_req=smp_data.authentication)
         except AttributeError as e:
             print(f"Error accessing smp_data fields: {e}")
@@ -1154,6 +1156,72 @@ def export_SMP_Pairing_Keypress_Notification(connect_ind_obj, packet, direction=
             return False
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+######################################################################
+# L2CAP SECTION
+######################################################################
+
+# It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
+# But just doing it out of an abundance of caution
+def get_L2CAP_data(packet, scapy_type, packet_type):
+    l2cap_hdr = packet.getlayer(L2CAP_CmdHdr)
+    if(l2cap_hdr == None):
+        return None
+    if(l2cap_hdr.code != packet_type):
+        return None
+    if(packet.haslayer(scapy_type) == False):
+        return None
+    else:
+        return packet.getlayer(scapy_type)
+
+
+def export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_INFORMATION_REQ)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_InfoReq, type_L2CAP_INFORMATION_REQ)
+    if l2cap_data is not None:
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+            #packet.show()
+            data = ff_L2CAP_INFORMATION_REQ(direction=direction,
+                                            id=l2cap_hdr.id,
+                                            data_len=l2cap_hdr.len,
+                                            info_type=l2cap_data.info_type)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_INFORMATION_RSP)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_InfoResp, type_L2CAP_INFORMATION_RSP)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            #packet.show()
+            if(len(l2cap_data.info) > 0):
+                info_hex_str=bytes_to_hex_str(l2cap_data.info)
+            else:
+                info_hex_str=None
+            data = ff_L2CAP_INFORMATION_RSP(direction=direction,
+                                            id=l2cap_hdr.id,
+                                            data_len=l2cap_hdr.len,
+                                            info_type=l2cap_data.info_type,
+                                            result=l2cap_data.result,
+                                            info_hex_str=info_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
         return True
     return False
 

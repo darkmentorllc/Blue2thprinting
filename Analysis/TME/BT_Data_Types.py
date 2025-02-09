@@ -354,3 +354,8 @@ smp_keypress_notification_strings = {
     type_SMP_KeypressNotification_PasskeyCleared:            "Passkey cleared",
     type_SMP_KeypressNotification_PasskeyEntryCompleted:     "Passkey entry completed"
 }
+
+# L2CAP PDU types defined in BT spec
+type_L2CAP_INFORMATION_REQ = 0x0A
+type_L2CAP_INFORMATION_RSP = 0x0B
+

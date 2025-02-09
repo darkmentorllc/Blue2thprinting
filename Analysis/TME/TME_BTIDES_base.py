@@ -30,6 +30,7 @@ BTIDES_files = ["BTIDES_base.json",
                 ]
 
 def write_BTIDES(out_filename):
+    # print(json.dumps(TME.TME_glob.BTIDES_JSON, indent=2))
     # Sanity check the BTIDES data against the schema before export, to not write garbage
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
     if(len(TME.TME_glob.BTIDES_JSON) == 0):
