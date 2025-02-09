@@ -57,6 +57,25 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
         return False # This is known to fire for things not yet supported like unprovisioned mesh beacons
 
 
+def export_to_L2CAPArray(packet, direction):
+
+    acl = packet.getlayer(HCI_ACL_Hdr)
+
+    if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+        (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[acl.fields['handle']]
+        connect_ind_obj = ff_CONNECT_IND(peripheral_bdaddr=bdaddr, peripheral_bdaddr_rand=bdaddr_type)
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    # To convert ATT data into a GATT hierarchy requires us to statefully
+    # remember information between packets (i.e. which UUID corresponds to which handle)
+    if(export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=direction)):
+        return True
+
+
 def export_to_ATTArray(packet, direction):
 
     acl = packet.getlayer(HCI_ACL_Hdr)
@@ -142,7 +161,7 @@ def process_connections(p):
         if(event.fields['status'] == 0):
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
         return True
-
+    #HCI_Cmd_Create_Connection
     return False
 
 
@@ -314,6 +333,18 @@ def process_names(p):
     return False
 
 
+def process_L2CAP(p, record):
+    if p.haslayer(L2CAP_CmdHdr):
+        #print(record)
+        if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
+            direction = type_BTIDES_direction_C2P
+        else:
+            direction = type_BTIDES_direction_P2C
+        if(export_to_L2CAPArray(p, direction)):
+            return True
+    return False
+
+
 def process_ATT(p, record):
     if p.haslayer(ATT_Hdr):
         #print(record)
@@ -369,6 +400,8 @@ def read_HCI(file_path):
             elif(process_features(p)):
                 continue
             elif(process_names(p)):
+                continue
+            elif(process_L2CAP(p, record)):
                 continue
             elif(process_ATT(p, record)):
                 continue
