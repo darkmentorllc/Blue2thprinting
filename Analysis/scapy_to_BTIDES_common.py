@@ -998,7 +998,6 @@ def export_SMP_Pairing_Request(connect_ind_obj, packet, direction=None):
         except AttributeError as e:
             print(f"Error accessing ATT_Error_Response fields: {e}")
             return False
-        #smp_data.show()
         data = ff_SMP_Pairing_Request(direction=direction,
                                       io_cap=smp_data.iocap,
                                       oob_data=smp_data.oob,
@@ -1021,7 +1020,6 @@ def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
         except AttributeError as e:
             print(f"Error accessing ATT_Error_Response fields: {e}")
             return False
-        #smp_data.show()
         data = ff_SMP_Pairing_Response(direction=direction,
                                       io_cap=smp_data.iocap,
                                       oob_data=smp_data.oob,
@@ -1034,6 +1032,42 @@ def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
         return True
     return False
 
+
+def export_SMP_Pairing_Confirm(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Confirm, type_opcode_SMP_Pairing_Confirm)
+    if smp_data is not None:
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+        except AttributeError as e:
+            print(f"Error accessing ATT_Error_Response fields: {e}")
+            return False
+        value_hex_str = bytes_to_hex_str(smp_data.confirm)
+        data = ff_SMP_Pairing_Confirm(direction=direction,
+                                      value_hex_str=value_hex_str)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_SMP_Pairing_Random(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Random, type_opcode_SMP_Pairing_Random)
+    if smp_data is not None:
+        try:
+            if(direction == None):
+                direction = get_packet_direction(packet)
+        except AttributeError as e:
+            print(f"Error accessing ATT_Error_Response fields: {e}")
+            return False
+        #smp_data.show()
+        value_hex_str = bytes_to_hex_str(smp_data.random)
+        data = ff_SMP_Pairing_Random(direction=direction,
+                                      value_hex_str=value_hex_str)
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
 
 ######################################################################
 # HCI SECTION
