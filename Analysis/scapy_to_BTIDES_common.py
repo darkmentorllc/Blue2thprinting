@@ -998,7 +998,7 @@ def export_SMP_Pairing_Request(connect_ind_obj, packet, direction=None):
         except AttributeError as e:
             print(f"Error accessing ATT_Error_Response fields: {e}")
             return False
-        smp_data.show()
+        #smp_data.show()
         data = ff_SMP_Pairing_Request(direction=direction,
                                       io_cap=smp_data.iocap,
                                       oob_data=smp_data.oob,
@@ -1021,7 +1021,7 @@ def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
         except AttributeError as e:
             print(f"Error accessing ATT_Error_Response fields: {e}")
             return False
-        smp_data.show()
+        #smp_data.show()
         data = ff_SMP_Pairing_Response(direction=direction,
                                       io_cap=smp_data.iocap,
                                       oob_data=smp_data.oob,

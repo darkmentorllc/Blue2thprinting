@@ -916,6 +916,10 @@ def parse_ATTArray(entry):
         else:
             bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
 
+        if(bdaddr == "00:00:00:00:00:00"):
+            # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            continue
+
         if("ATT_handle_enumeration" in att_entry.keys() and att_entry["ATT_handle_enumeration"] != None):
             import_ATT_handle_enumeration(bdaddr, bdaddr_rand, att_entry)
         if("opcode" in att_entry.keys() and att_entry["opcode"] in att_opcode_strings.keys()):
@@ -986,6 +990,45 @@ def parse_GATTArray(entry):
 
     for gatt_service_entry in entry["GATTArray"]:
         import_GATT_service_entry(bdaddr, bdaddr_rand, gatt_service_entry)
+
+
+###################################
+# BTIDES_SMP.json information
+###################################
+
+def import_SMP_Pairing_Req_Res(bdaddr, bdaddr_random, smp_entry):
+    opcode = smp_entry["opcode"]
+    io_cap = smp_entry["io_cap"]
+    oob_data = smp_entry["oob_data"]
+    auth_req = smp_entry["auth_req"]
+    max_key_size = smp_entry["max_key_size"]
+    initiator_key_dist = smp_entry["initiator_key_dist"]
+    responder_key_dist = smp_entry["responder_key_dist"]
+    values = (bdaddr, bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
+    insert = f"INSERT IGNORE INTO SMP_Pairing_Req_Res (bdaddr, bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+def parse_SMPArray(entry):
+    if("SMPArray" not in entry.keys() or entry["SMPArray"] == None):
+        return # Entry not valid for this type
+
+    for smp_entry in entry["SMPArray"]:
+        # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
+        if("direction" in smp_entry.keys() and smp_entry["direction"] == type_BTIDES_direction_C2P):
+            bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+        else:
+            bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
+        if(bdaddr == "00:00:00:00:00:00"):
+            # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            continue
+
+        if("opcode" in smp_entry.keys() and smp_entry["opcode"] in smp_opcode_strings.keys()):
+            if(smp_entry["opcode"] == type_opcode_SMP_Pairing_Request):
+                import_SMP_Pairing_Req_Res(bdaddr, bdaddr_rand, smp_entry)
+            elif(smp_entry["opcode"] == type_opcode_SMP_Pairing_Response):
+                import_SMP_Pairing_Req_Res(bdaddr, bdaddr_rand, smp_entry)
+
 
 ###################################
 
@@ -1073,6 +1116,8 @@ def btides_to_sql(args):
         parse_ATTArray(entry)
 
         parse_GATTArray(entry)
+
+        parse_SMPArray(entry)
 
         parse_EIRArray(entry)
 

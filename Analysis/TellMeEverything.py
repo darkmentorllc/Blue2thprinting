@@ -19,6 +19,7 @@ from TME.TME_stats import *
 from TME.TME_AdvChan import *
 from TME.TME_EIR import *
 from TME.TME_GATT import *
+from TME.TME_SMP import *
 from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
@@ -297,8 +298,6 @@ def main():
             bdaddrs += bdaddrs_tmp
         qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
 
-
-
     if(args.NOT_UUID128_regex != ""):
         bdaddrs_to_remove = get_bdaddrs_by_uuid128_regex(args.UUID128_regex)
         qprint(bdaddrs_to_remove)
@@ -363,6 +362,7 @@ def main():
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
         print_all_advdata(bdaddr, args.bdaddr_type)
         print_GATT_info(bdaddr, args.hide_BLEScope_data)    # Includes BTIDES export
+        print_SMP_info(bdaddr)                              # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
         print_UniqueIDReport(bdaddr)

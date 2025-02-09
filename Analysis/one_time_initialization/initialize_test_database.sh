@@ -87,6 +87,9 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE GATT_characteristi
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE GATT_characteristics_values (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, bdaddr_random BOOLEAN NOT NULL, char_value_handle SMALLINT UNSIGNED NOT NULL, operation TINYINT UNSIGNED NOT NULL, byte_values BLOB  NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr_random, bdaddr, char_value_handle, operation, byte_values(1024))) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+echo "Creating SMP tables"
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE SMP_Pairing_Req_Res (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, bdaddr_random BOOLEAN NOT NULL, opcode TINYINT UNSIGNED NOT NULL, io_cap TINYINT UNSIGNED NOT NULL, oob_data TINYINT UNSIGNED NOT NULL, auth_req TINYINT UNSIGNED NOT NULL, max_key_size TINYINT UNSIGNED NOT NULL, initiator_key_dist TINYINT UNSIGNED NOT NULL, responder_key_dist TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr_random, bdaddr, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 echo "Creating BLE LL CTRL tables"
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LL_VERSION_IND (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, bdaddr_random BOOLEAN NOT NULL, ll_version TINYINT UNSIGNED NOT NULL, device_BT_CID SMALLINT UNSIGNED NOT NULL, ll_sub_version SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr_random, bdaddr, ll_version, device_BT_CID, ll_sub_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 

@@ -13,7 +13,6 @@ from TME.TME_BTIDES_GATT import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
 
 from colorama import Fore, Back, Style, init
-
 init(autoreset=True)
 
 def get_uuid16_gatt_service_string(uuid16):
@@ -168,20 +167,25 @@ def device_has_GATT_info(bdaddr):
     values = (bdaddr,)
     query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
+    if(len(GATT_services_result) != 0):
+        return 1;
 
     query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
+    if(len(GATT_attribute_handles_result) != 0):
+        return 1;
 
     query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
+    if(len(GATT_characteristics_result) != 0):
+        return 1;
 
     query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
-
-    if(len(GATT_services_result) != 0 or len(GATT_attribute_handles_result) != 0 or len(GATT_characteristics_result) != 0 or len(GATT_characteristics_values_result) !=0):
+    if(len(GATT_characteristics_values_result) != 0):
         return 1;
-    else:
-        return 0;
+
+    return 0;
 
 # Returns whether any matches were found
 def print_associated_android_package_names(type, indent, UUID128):
