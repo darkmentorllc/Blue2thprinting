@@ -48,6 +48,28 @@ def ff_SMP_Pairing_Response(direction, io_cap, oob_data, auth_req, max_key_size,
         obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
     return obj
 
+
+def ff_SMP_Pairing_Confirm(direction, value_hex_str):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_Confirm,
+        "direction": direction,
+        "value_hex_str": value_hex_str
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+    return obj
+
+
+def ff_SMP_Pairing_Random(direction, value_hex_str):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_Random,
+        "direction": direction,
+        "value_hex_str": value_hex_str
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################

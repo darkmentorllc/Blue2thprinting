@@ -493,6 +493,10 @@ def export_to_SMPArray(packet):
         return True
     if(export_SMP_Pairing_Response(connect_ind_obj, packet)):
         return True
+    if(export_SMP_Pairing_Confirm(connect_ind_obj, packet)):
+        return True
+    if(export_SMP_Pairing_Random(connect_ind_obj, packet)):
+        return True
 
     # TODO: handle ALL opcodes
 
