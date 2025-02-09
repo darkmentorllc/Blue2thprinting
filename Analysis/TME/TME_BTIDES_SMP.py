@@ -115,6 +115,19 @@ def ff_SMP_Pairing_DHKey_Check(direction, value_hex_str):
         obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
     return obj
 
+
+def ff_SMP_Pairing_Keypress_Notification(direction, notification_type):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_Keypress_Notification,
+        "direction": direction,
+        "notification_type": notification_type
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+        obj["notification_type_str"] = smp_keypress_notification_strings[obj["notification_type"]]
+    return obj
+
+
 ############################
 # JSON insertion functions
 ############################
