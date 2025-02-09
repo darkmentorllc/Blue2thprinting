@@ -322,3 +322,21 @@ smp_io_cap_strings = {
     type_SMP_IO_Capabilities_NoInputNoOutput:   "No Input, No Output",
     type_SMP_IO_Capabilities_KeyboardDisplay:   "Keyboard & Display"
 }
+
+smp_error_strings = {
+    0x01: "Passkey Entry Failed",
+    0x02: "OOB Not Available",
+    0x03: "Authentication Requirements",
+    0x04: "Confirm Value Failed",
+    0x05: "Pairing Not Supported",
+    0x06: "Encryption Key Size",
+    0x07: "Command Not Supported",
+    0x08: "Unspecified Reason",
+    0x09: "Repeated Attempts",
+    0x0a: "Invalid Parameters",
+    0x0b: "DHKey Check Failed",
+    0x0c: "Numeric Comparison Failed",
+    0x0d: "BR/EDR Pairing In Progress",
+    0x0e: "Cross-Transport Key Derivation/Generation not allowed",
+    0x0f: "Key Rejected",
+}

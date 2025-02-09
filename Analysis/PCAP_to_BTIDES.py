@@ -497,6 +497,8 @@ def export_to_SMPArray(packet):
         return True
     if(export_SMP_Pairing_Random(connect_ind_obj, packet)):
         return True
+    if(export_SMP_Pairing_Failed(connect_ind_obj, packet)):
+        return True
 
     # TODO: handle ALL opcodes
 
