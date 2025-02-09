@@ -100,7 +100,7 @@ def export_to_SMPArray(packet, direction):
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
 
-    packet.show()
+    #packet.show()
     # The opcodes are mutually exclusive, so if one returns true, we're done
     if(export_SMP_Pairing_Request(connect_ind_obj, packet, direction=direction)):
         return True
@@ -118,7 +118,8 @@ def export_to_SMPArray(packet, direction):
     # So we'll need to do this ourselves if we want to get this data
     # if(export_SMP_Pairing_Public_Key(connect_ind_obj, packet, direction=direction)):
     #     return True
-
+    if(export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet, direction=direction)):
+        return True
 
 def process_connections(p):
     # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,

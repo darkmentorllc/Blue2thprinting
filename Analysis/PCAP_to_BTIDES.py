@@ -505,8 +505,8 @@ def export_to_SMPArray(packet):
     # So we'll need to do this ourselves if we want to get this data
     # if(export_SMP_Pairing_Public_Key(connect_ind_obj, packet)):
     #     return True
-
-    # TODO: handle ALL opcodes
+    if(export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet)):
+        return True
 
 
 def export_CONNECT_IND(packet):
