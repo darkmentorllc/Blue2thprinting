@@ -599,7 +599,7 @@ def get_bdaddrs_by_LMP_VERSION_RES(version, company_id, subversion):
     bdaddrs = []
 
     values = (version, company_id, subversion)
-    eir_query = "SELECT bdaddr FROM LMP_VERSION_RES WHERE ll_version = %s AND device_BT_CID = %s AND ll_sub_version = %s"
+    eir_query = "SELECT bdaddr FROM LMP_VERSION_RES WHERE lmp_version = %s AND device_BT_CID = %s AND lmp_sub_version = %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1

@@ -213,6 +213,13 @@ def ff_LL_PHY_UPDATE_IND(direction, phy_c_to_p, phy_p_to_c, instant):
     return obj
 
 
+def ff_LL_UNKNOWN_CUSTOM(direction, full_pkt_hex_str):
+    obj = {"direction": direction, "opcode": type_opcode_LL_UNKNOWN_CUSTOM, "full_pkt_hex_str": full_pkt_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LL_UNKNOWN_CUSTOM"
+    return obj
+
+
 ############################
 # JSON insertion functions
 ############################

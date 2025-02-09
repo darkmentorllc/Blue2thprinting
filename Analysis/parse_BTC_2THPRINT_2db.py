@@ -23,6 +23,7 @@ lmp_versions = {
     11: '5.2',
     12: '5.3',
     13: '5.4',
+    14: '6.0',
 }
 
 # Establish connection to the MySQL database
