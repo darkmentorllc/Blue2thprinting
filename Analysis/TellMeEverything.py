@@ -72,6 +72,7 @@ def main():
     device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
     device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
+    device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
 
     # Statistics arguments
     stats_group = parser.add_argument_group('Database statistics arguments')
@@ -275,6 +276,27 @@ def main():
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
         qprint(f"{len(bdaddrs)} bdaddrs after --LL_VERSION_IND processing: {bdaddrs}")
+
+    if(args.LMP_VERSION_RES != ""):
+        (version, company_id, subversion) = args.LMP_VERSION_RES.split(":")
+        version = int(version, 16)
+        if(version < 0 or version > 255):
+            print("Version must be a single byte value (0-FF)")
+            exit(1)
+        company_id = int(company_id, 16)
+        if(version < 0 or company_id > 65535):
+            print("Company ID must be a two byte hex value (0000-FFFF)")
+            exit(1)
+        subversion = int(subversion, 16)
+        if(version < 0 or subversion > 65535):
+            print("Sub-version must be a two byte hex value (0000-FFFF)")
+            exit(1)
+        bdaddrs_tmp = get_bdaddrs_by_LMP_VERSION_RES(version, company_id, subversion)
+        qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
+        if(bdaddrs_tmp is not None):
+            bdaddrs += bdaddrs_tmp
+        qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
+
 
 
     if(args.NOT_UUID128_regex != ""):

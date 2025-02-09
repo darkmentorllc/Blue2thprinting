@@ -67,20 +67,33 @@ g_stop_exporting_encrypted_packets_by_AA = {}
 def export_BTLE_CTRL(packet):
     global g_stop_exporting_encrypted_packets_by_AA
 
+    # Handle different LL Control packet types here
+    # For example, LL_VERSION_IND
+    ll_ctrl = packet.getlayer(BTLE_CTRL)
+
     btle_hdr = packet.getlayer(BTLE)
     access_address = btle_hdr.access_addr
-    # Don't bother processing the packet if we've seen an LL_START_ENC_REQ in this connection already
+    # *Usually* ignore subsequent packets if we've seen an LL_ENC_RSP/LL_START_ENC_REQ in this connection already
     if(access_address in g_stop_exporting_encrypted_packets_by_AA.keys()):
-        return True
+        if(ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ):
+            # We somtimes miss this packet, so we're now setting g_stop_exporting_encrypted_packets_by_AA earlier
+            # This is just to let us to continue to capture the LL_START_ENC_REQ to the BTIDES file
+            pass
+        elif(ll_ctrl.opcode == type_opcode_LL_START_ENC_RSP):
+            # LL_START_ENC_RSP is normally sent back encrypted by the Peripheral
+            # If we see this, it means we're operating on a decrypted pcap,
+            # so we can continue to proceed with exporting packets
+            # NOTE: there is a small chance of false positives here due to encrypted data
+            # decoding as a LL_START_ENC_RSP. But there's not a lot of harm if that occurs
+            # If you want to avoid that entirely, you can remove this check.
+            g_stop_exporting_encrypted_packets_by_AA[access_address] = False
+        else:
+            return True
 
     if access_address in g_access_address_to_connect_ind_obj:
         connect_ind_obj = g_access_address_to_connect_ind_obj[access_address]
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
-
-    # Handle different LL Control packet types here
-    # For example, LL_VERSION_IND
-    ll_ctrl = packet.getlayer(BTLE_CTRL)
 
     if ll_ctrl.opcode == type_opcode_LL_CONNECTION_UPDATE_IND:
         try:
@@ -113,6 +126,18 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CHANNEL_MAP_IND: {e}")
             return False
+    elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
+        try:
+            data = ff_LL_TERMINATE_IND(
+                direction=get_packet_direction(packet),
+                error_code=ll_ctrl.code
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_TERMINATE_IND: {e}")
+            return False
     elif ll_ctrl.opcode == type_opcode_LL_ENC_REQ:
         try:
             data = ff_LL_ENC_REQ(
@@ -130,6 +155,9 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_ENC_RSP:
         try:
+            # LL_START_ENC_REQ is the proper place to set this, but sometime we miss that packet
+            # so we're setting it here just in case
+            g_stop_exporting_encrypted_packets_by_AA[access_address] = True
             data = ff_LL_ENC_RSP(
                 direction=get_packet_direction(packet),
                 skd_p=ll_ctrl.skds,
@@ -143,6 +171,8 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
         try:
+            # This is the proper place to set this, but sometime we miss this packet
+            g_stop_exporting_encrypted_packets_by_AA[access_address] = True
             data = ff_LL_START_ENC_REQ(
                 direction=get_packet_direction(packet)
             )
@@ -163,22 +193,6 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
-        try:
-            data = ff_LL_TERMINATE_IND(
-                direction=get_packet_direction(packet),
-                error_code=ll_ctrl.code
-            )
-            if_verbose_insert_std_optional_fields(data, packet)
-            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
-            return True
-        except Exception as e:
-            print(f"Error processing LL_TERMINATE_IND: {e}")
-            return False
-    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
-            # TODO: in the future add this to the DB for completeness
-            g_stop_exporting_encrypted_packets_by_AA[access_address] = True
-            return True
     elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
         try:
             data = ff_LL_UNKNOWN_RSP(
@@ -243,7 +257,6 @@ def export_BTLE_CTRL(packet):
             return False
     elif ll_ctrl.opcode == type_opcode_LL_REJECT_IND:
         try:
-            #ll_ctrl.show()
             data = ff_LL_REJECT_IND(
                 direction=get_packet_direction(packet),
                 error_code=ll_ctrl.code
@@ -405,6 +418,20 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
+    elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_CUSTOM:
+        try:
+            #ll_ctrl.show()
+            full_pkt_hex_str = bytes_to_hex_str(packet.load)
+            data = ff_LL_UNKNOWN_CUSTOM(
+                direction=get_packet_direction(packet),
+                full_pkt_hex_str=full_pkt_hex_str
+            )
+            if_verbose_insert_std_optional_fields(data, packet)
+            BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
+            return True
+        except Exception as e:
+            print(f"Error processing LL_UNKNOWN_CUSTOM: {e}")
+            return False
     else:
         if(not TME.TME_glob.quiet_print):
             packet.show()
