@@ -1075,7 +1075,6 @@ def export_SMP_Pairing_Failed(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            smp_data.show()
             data = ff_SMP_Pairing_Failed(direction=direction, reason=smp_data.reason)
         except AttributeError as e:
             print(f"Error accessing smp_data fields: {e}")
@@ -1085,6 +1084,43 @@ def export_SMP_Pairing_Failed(connect_ind_obj, packet, direction=None):
         return True
     return False
 
+
+def export_SMP_Security_Request(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Security_Request, type_opcode_SMP_Security_Request)
+    if smp_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            smp_data.show()
+            data = ff_SMP_Security_Request(direction=direction, auth_req=smp_data.authentication)
+        except AttributeError as e:
+            print(f"Error accessing smp_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_SMP_Pairing_Public_Key(connect_ind_obj, packet, direction=None):
+    smp_data = get_SMP_data(packet, SM_Public_Key, type_opcode_SMP_Pairing_Public_Key)
+    if smp_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            smp_data.show()
+            pub_key_x_hex_str = bytes_to_hex_str(smp_data.key_x)
+            pub_key_y_hex_str = bytes_to_hex_str(smp_data.key_y)
+            data = ff_SMP_Pairing_Public_Key(direction=direction,
+                                                pub_key_x_hex_str=pub_key_x_hex_str,
+                                                pub_key_y_hex_str=pub_key_y_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing smp_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SMP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
 
 ######################################################################
 # HCI SECTION

@@ -82,6 +82,28 @@ def ff_SMP_Pairing_Failed(direction, reason):
         obj["reason_str"] = smp_error_strings[obj["reason"]]
     return obj
 
+def ff_SMP_Security_Request(direction, auth_req):
+    obj = {
+        "opcode": type_opcode_SMP_Security_Request,
+        "direction": direction,
+        "auth_req": auth_req
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+    return obj
+
+
+def ff_SMP_Pairing_Public_Key(direction, pub_key_x_hex_str, pub_key_y_hex_str):
+    obj = {
+        "opcode": type_opcode_SMP_Pairing_Public_Key,
+        "direction": direction,
+        "pub_key_x_hex_str": pub_key_x_hex_str,
+        "pub_key_y_hex_str": pub_key_y_hex_str
+    }
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = smp_opcode_strings[obj["opcode"]]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################

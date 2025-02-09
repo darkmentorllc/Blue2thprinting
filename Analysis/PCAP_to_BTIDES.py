@@ -499,6 +499,12 @@ def export_to_SMPArray(packet):
         return True
     if(export_SMP_Pairing_Failed(connect_ind_obj, packet)):
         return True
+    if(export_SMP_Security_Request(connect_ind_obj, packet)):
+        return True
+    # FIXME! Apparently Scapy doesn't handle defragmentation :-/
+    # So we'll need to do this ourselves if we want to get this data
+    # if(export_SMP_Pairing_Public_Key(connect_ind_obj, packet)):
+    #     return True
 
     # TODO: handle ALL opcodes
 
