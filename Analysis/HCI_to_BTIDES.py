@@ -89,6 +89,23 @@ def export_to_ATTArray(packet, direction):
     if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet, direction=direction)):
         return True
 
+
+def export_to_SMPArray(packet, direction):
+
+    acl = packet.getlayer(HCI_ACL_Hdr)
+
+    if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+        (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[acl.fields['handle']]
+        connect_ind_obj = ff_CONNECT_IND(peripheral_bdaddr=bdaddr, peripheral_bdaddr_rand=bdaddr_type)
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    packet.show()
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    if(export_SMP_Pairing_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+
+
 def process_connections(p):
     # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
     # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
@@ -110,6 +127,7 @@ def process_connections(p):
         return True
 
     return False
+
 
 def process_advertisements(p):
     if p.haslayer(HCI_LE_Meta_Advertising_Reports):
@@ -214,9 +232,8 @@ def process_advertisements(p):
         CoD_hex_str = f"{connection_req.fields['device_class']:06x}"
         export_Class_of_Device(connection_req.fields['bd_addr'], CoD_hex_str)
         return True
-
-
     return False
+
 
 def process_features(p):
     if p.haslayer(HCI_LE_Meta_LE_Read_Remote_Features_Complete):
@@ -259,6 +276,7 @@ def process_features(p):
 
     return False
 
+
 def process_names(p):
     if p.haslayer(HCI_Event_Remote_Name_Request_Complete):
         #p.show()
@@ -278,6 +296,7 @@ def process_names(p):
 
     return False
 
+
 def process_ATT(p, record):
     if p.haslayer(ATT_Hdr):
         #print(record)
@@ -289,7 +308,18 @@ def process_ATT(p, record):
             return True
     return False
 
-# TODO: for the future when we add process_SMP we should look for bthci_evt.code == 0x32
+
+def process_SMP(p, record):
+    if p.haslayer(ATT_Hdr):
+        #print(record)
+        if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
+            direction = type_BTIDES_direction_C2P
+        else:
+            direction = type_BTIDES_direction_P2C
+        if(export_to_SMPArray(p, direction)):
+            return True
+    return False
+
 
 def read_HCI(file_path):
     try:
@@ -324,6 +354,8 @@ def read_HCI(file_path):
             elif(process_names(p)):
                 continue
             elif(process_ATT(p, record)):
+                continue
+            elif(process_SMP(p, record)):
                 continue
 
         return True

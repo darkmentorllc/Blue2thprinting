@@ -478,6 +478,25 @@ def export_to_ATTArray(packet):
     # TODO: handle ALL opcodes
 
 
+def export_to_SMPArray(packet):
+    ble_fields = packet.getlayer(BTLE)
+    access_address = ble_fields.access_addr
+
+    if access_address in g_access_address_to_connect_ind_obj:
+        connect_ind_obj = g_access_address_to_connect_ind_obj[access_address]
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    packet.show()
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    if(export_SMP_Pairing_Request(connect_ind_obj, packet)):
+        return True
+    if(export_SMP_Pairing_Response(connect_ind_obj, packet)):
+        return True
+
+    # TODO: handle ALL opcodes
+
+
 def export_CONNECT_IND(packet):
     global g_access_address_to_connect_ind_obj
 
@@ -600,12 +619,14 @@ def read_pcap(file_path):
                 # ATT packets
                 if packet.haslayer(ATT_Hdr):
                     if(export_to_ATTArray(packet)): continue
-                # TODO: export other packet types like LL or L2CAP or ATT
+
+                # SMP packets
+                if packet.haslayer(SM_Hdr):
+                    if(export_to_SMPArray(packet)): continue
                 else:
                     if(TME.TME_glob.verbose_print):
                         qprint("Unknown or unparsable packet type. Skipped")
                         packet.show()
-
         return
     except Exception as e:
         print(f"Error reading pcap file: {e}")

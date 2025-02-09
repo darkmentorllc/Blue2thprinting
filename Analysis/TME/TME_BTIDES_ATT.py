@@ -11,7 +11,6 @@ import re
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
 import TME.TME_glob
-#from TME.TME_UUID128 import add_dashes_to_UUID128
 from TME.TME_helpers import get_utf8_string_from_hex_string
 
 ############################
@@ -145,8 +144,6 @@ def BTIDES_export_ATT_handle(connect_ind_obj=None, bdaddr=None, random=None, dat
     else:
         generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
-# TODO: For now since we only are importing from PCAP only export to DualBDADDR
-# TODO: may need to update this in the future to handle export from database to SingleBDADDR data types
 def BTIDES_export_ATT_packet(connect_ind_obj=None, bdaddr=None, random=None, data=None):
     if connect_ind_obj is not None:
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")
