@@ -358,6 +358,8 @@ smp_keypress_notification_strings = {
 # L2CAP PDU types defined in BT spec
 type_L2CAP_CONNECTION_REQ = 0x02
 type_L2CAP_CONNECTION_RSP = 0x03
+type_L2CAP_CONFIGURATION_REQ = 0x04
+type_L2CAP_CONFIGURATION_RSP = 0x05
 type_L2CAP_INFORMATION_REQ = 0x0A
 type_L2CAP_INFORMATION_RSP = 0x0B
 
@@ -423,4 +425,13 @@ type_L2CAP_CONNECTION_RSP_status_strings = {
     0x0000: "No further information available",
     0x0001: "Authentication pending",
     0x0002: "Authorization pending"
+}
+
+type_L2CAP_CONFIGURATION_RSP_result_strings = {
+    0x0000: "Success",
+    0x0001: "Failure – unacceptable parameters",
+    0x0002: "Failure – rejected (no reason provided)",
+    0x0003: "Failure – unknown options",
+    0x0004: "Pending",
+    0x0005: "Failure - flow spec rejected"
 }
