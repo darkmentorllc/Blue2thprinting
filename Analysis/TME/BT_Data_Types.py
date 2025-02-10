@@ -9,6 +9,10 @@
 
 from TME.TME_BTIDES_base import *
 
+######################################################
+# AdvData (Advertisement Data) types
+######################################################
+
 type_AdvData_Flags                              = 0x01
 type_AdvData_UUID16ListIncomplete               = 0x02
 type_AdvData_UUID16ListComplete                 = 0x03
@@ -50,6 +54,11 @@ type_AdvChanPDU_ADV_SCAN_IND      = 6
 type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
+
+######################################################
+# Link Layer Control types
+######################################################
+
 ## LL Control PDU types defined in BT spec
 type_LL_CONNECTION_UPDATE_IND     = 0
 type_LL_CHANNEL_MAP_IND           = 1
@@ -75,13 +84,6 @@ type_LL_PHY_REQ                   = 22
 type_LL_PHY_RSP                   = 23
 type_LL_PHY_UPDATE_IND            = 24
 type_LL_UNKNOWN_CUSTOM            = 255 # Invalid per the spec, but seems to be in use by Apple?
-
-## LMP PDU types defined in BT spec
-type_LMP_VERSION_RES             = 38
-type_LMP_FEATURES_RES            = 40
-type_LMP_FEATURES_RES_EXT        = 127
-
-type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 
 ll_ctrl_pdu_opcodes_to_strings = {
     type_LL_CONNECTION_UPDATE_IND:   "LL_CONNECTION_UPDATE_IND",
@@ -109,6 +111,21 @@ ll_ctrl_pdu_opcodes_to_strings = {
     type_LL_PHY_UPDATE_IND:          "LL_PHY_UPDATE_IND",
     type_LL_UNKNOWN_CUSTOM:          "LL_UNKNOWN_CUSTOM"
 }
+
+##################################################################
+# Link Manager Protocol (LMP) types
+##################################################################
+
+## LMP PDU types defined in BT spec
+type_LMP_VERSION_RES             = 38
+type_LMP_FEATURES_RES            = 40
+type_LMP_FEATURES_RES_EXT        = 127
+
+type_extended_opcode_LMP_FEATURES_RES_EXT = 4
+
+######################################################
+# Host/Controller Interface (HCI) types
+######################################################
 
 # HCI Event codes defined in BT spec
 event_code_HCI_Remote_Name_Request_Complete     = 7
@@ -186,6 +203,10 @@ controller_error_strings = {
     68: "Operation Cancelled by Host",
     69: "Packet Too Long"
 }
+
+######################################################
+# Attribute Protocol (ATT) types
+######################################################
 
 # ATT PDU types defined in BT spec
 type_ATT_ERROR_RSP                  = 0x01
@@ -276,6 +297,10 @@ att_error_strings = {
     19: "Value Not Allowed"
 }
 
+######################################################
+# Security Manager Protocol (SMP) types
+######################################################
+
 # SMP PDU types defined in BT spec
 type_SMP_Pairing_Request                 = 1
 type_SMP_Pairing_Response                = 2
@@ -355,6 +380,10 @@ smp_keypress_notification_strings = {
     type_SMP_KeypressNotification_PasskeyEntryCompleted:     "Passkey entry completed"
 }
 
+##################################################################
+# Logical Link Control and Adaptation Layer Protocol (L2CAP) types
+##################################################################
+
 # L2CAP PDU types defined in BT spec
 type_L2CAP_CONNECTION_REQ = 0x02
 type_L2CAP_CONNECTION_RSP = 0x03
@@ -403,8 +432,6 @@ type_PSM_strings = {
     type_PSM_EATT: "Enhanced ATT (EATT)"
 }
 
-
-
 type_L2CAP_CONNECTION_RSP_result_success = 0x0000
 type_L2CAP_CONNECTION_RSP_result_pending = 0x0001
 type_L2CAP_CONNECTION_RSP_result_refused_psm_not_supported = 0x0002
@@ -437,6 +464,10 @@ type_L2CAP_CONFIGURATION_RSP_result_strings = {
     0x0004: "Pending",
     0x0005: "Failure - flow spec rejected"
 }
+
+##################################################################
+# Service Discovery Protocol (SDP) types
+##################################################################
 
 # SDP PDU types defined in BT spec
 type_SDP_ERROR_RSP                      = 0x01
