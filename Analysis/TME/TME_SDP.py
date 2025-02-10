@@ -11,8 +11,8 @@ from TME.TME_helpers import *
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_SDP import *
-
 from TME.TME_UUID128 import add_dashes_to_UUID128
+from TME.TME_GATT import match_known_GATT_UUID_or_custom_UUID
 
 from colorama import Fore, Back, Style, init
 from scapy_to_BTIDES_common import bytes_to_hex_str, bytes_reversed_to_hex_str, bytes_to_utf8
@@ -70,7 +70,10 @@ def parse_SDP_data_element(indent, byte_values, i):
         elif(actual_size == 2):
             integer_2b, = struct.unpack(">H", byte_values[i:i+2])
             i+=2
-            print(f"{indent}Found integer: 0x{integer_2b:04x}")
+            if(integer_2b in TME.TME_glob.SDP_universal_attribute_names.keys()):
+                print(f"{indent}Found integer: 0x{integer_2b:04x} ({TME.TME_glob.SDP_universal_attribute_names[integer_2b]})")
+            else:
+                print(f"{indent}Found integer: 0x{integer_2b:04x}")
         elif(actual_size == 4):
             integer_4b, = struct.unpack(">I", byte_values[i:i+4])
             i+=4
@@ -79,15 +82,25 @@ def parse_SDP_data_element(indent, byte_values, i):
         if(actual_size == 2):
             UUID16, = struct.unpack(">H", byte_values[i:i+2])
             i+=2
-            print(f"{indent}Found UUID16: 0x{UUID16:04x}")
+            UUID_str = f"{UUID16:04x}"
+            # TODO: need to make this smarter so that it knows it's inside a type 0x0004 (ProtocolDescriptorList)
+            if(UUID16 in TME.TME_glob.SDP_protocol_identifiers.keys()):
+                UUID_name = TME.TME_glob.SDP_protocol_identifiers[UUID16]
+            else:
+                UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
+            print(f"{indent}Found UUID16: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 4):
             UUID32 = bytes_to_hex_str(byte_values[i:i+4])
             i+=4
-            print(f"{indent}Found UUID32: 0x{UUID32:08x}")
+            UUID_str = f"{UUID32:08x}"
+            UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
+            print(f"{indent}Found UUID32: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 16):
             UUID128 = bytes_to_hex_str(byte_values[i:i+16])
             i+=16
-            print(f"{indent}Found UUID128: 0x{add_dashes_to_UUID128(UUID128)}")
+            UUID_str = add_dashes_to_UUID128(UUID128)
+            UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
+            print(f"{indent}Found UUID128: 0x{UUID_str} ({UUID_name})")
     elif(data_element_type == 4):
         string = bytes_to_utf8(byte_values[i:i+actual_size])
         i+= actual_size

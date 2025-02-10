@@ -191,6 +191,8 @@ def main():
     import_gatt_descriptors_uuid16_names()
     import_gatt_characteristic_uuid16_names()
     import_appearance_yaml_data()
+    import_SDP_universal_attribute_names()
+    import_SDP_protocol_identifiers()
 
     # It could be argued that the ChipMaker_OUI_hash should be pulled out and made static and just read from file.
     # But I'd consider that premature optimization for now.
