@@ -75,6 +75,24 @@ uuid16_protocol_names = {}
 uuid16_service_names = {}
 
 #########################################
+# Data from universal_attributes.yaml
+#########################################
+# Global dictionary to store SDP uuid16 to
+# to attribute name mappings
+# (I love the term "Universal Attribute",
+# which is also used in the spec...
+# as if these UUIDs will be used throughout
+# the universe...)
+SDP_universal_attribute_names = {}
+
+#########################################
+# Data from universal_attributes.yaml
+#########################################
+# Global dictionary to store SDP uuid16 to
+# to protocol identifiers mappings
+SDP_protocol_identifiers = {}
+
+#########################################
 # BTIDES JSON data to export
 #########################################
 BTIDES_JSON = []

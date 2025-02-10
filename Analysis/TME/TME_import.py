@@ -297,3 +297,41 @@ def import_uuid16_service_names():
         TME.TME_glob.uuid16_service_names[uuid] = name
 
     #qprint(TME.TME_glob.uuid16_service_names)
+
+#########################################
+# Get data from universal_attributes.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+# (I love the term "Universal Attribute", which is also used in the spec...
+# as if these UUIDs will be used throughout the universe...)
+def import_SDP_universal_attribute_names():
+    global SDP_universal_attribute_names
+    with open('./public/assigned_numbers/service_discovery/attribute_ids/universal_attributes.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['attribute_ids']:
+        name = entry['name']
+        value = entry['value']
+        TME.TME_glob.SDP_universal_attribute_names[value] = name
+
+    #qprint(TME.TME_glob.SDP_universal_attribute_names)
+
+#########################################
+# Get data from protocol_identifiers.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def import_SDP_protocol_identifiers():
+    global SDP_protocol_identifiers
+    with open('./public/assigned_numbers/uuids/protocol_identifiers.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['uuids']:
+        name = entry['name']
+        uuid = entry['uuid']
+        TME.TME_glob.SDP_protocol_identifiers[uuid] = name
+
+    #qprint(TME.TME_glob.SDP_universal_attribute_names)
