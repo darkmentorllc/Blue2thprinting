@@ -437,3 +437,31 @@ type_L2CAP_CONFIGURATION_RSP_result_strings = {
     0x0004: "Pending",
     0x0005: "Failure - flow spec rejected"
 }
+
+# SDP PDU types defined in BT spec
+type_SDP_ERROR_RSP                      = 0x01
+type_SDP_SERVICE_SEARCH_REQ             = 0x02
+type_SDP_SERVICE_SEARCH_RSP             = 0x03
+type_SDP_SERVICE_ATTR_REQ               = 0x04
+type_SDP_SERVICE_ATTR_RSP               = 0x05
+type_SDP_SERVICE_SEARCH_ATTR_REQ        = 0x06
+type_SDP_SERVICE_SEARCH_ATTR_RSP        = 0x07
+
+sdp_pdu_strings = {
+    type_SDP_ERROR_RSP:                 "SDP_ERROR_RSP",
+    type_SDP_SERVICE_SEARCH_REQ:        "SDP_SERVICE_SEARCH_REQ",
+    type_SDP_SERVICE_SEARCH_RSP:        "SDP_SERVICE_SEARCH_RSP",
+    type_SDP_SERVICE_ATTR_REQ:          "SDP_SERVICE_ATTR_REQ",
+    type_SDP_SERVICE_ATTR_RSP:          "SDP_SERVICE_ATTR_RSP",
+    type_SDP_SERVICE_SEARCH_ATTR_REQ:   "SDP_SERVICE_SEARCH_ATTR_REQ",
+    type_SDP_SERVICE_SEARCH_ATTR_RSP:   "SDP_SERVICE_SEARCH_ATTR_RSP"
+}
+
+sdp_error_strings = {
+    0x0001: "Invalid/unsupported Service Search Pattern",
+    0x0002: "Invalid Service Record Handle",
+    0x0003: "Invalid request syntax",
+    0x0004: "Invalid PDU size",
+    0x0005: "Invalid continuation state",
+    0x0006: "Insufficient resources to satisfy request"
+}
