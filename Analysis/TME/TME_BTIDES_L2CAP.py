@@ -87,6 +87,33 @@ def ff_L2CAP_CONFIGURATION_RSP(direction, id, data_len, source_cid, flags, resul
             obj["result_str"] = type_L2CAP_CONFIGURATION_RSP_result_strings[result]
     return obj
 
+def ff_L2CAP_DISCONNECTION_REQ(direction, id, data_len, destination_cid, source_cid):
+    obj = {
+        "code": type_L2CAP_DISCONNECTION_REQ,
+        "direction": direction,
+        "id": id,
+        "data_len": data_len,
+        "destination_cid": destination_cid,
+        "source_cid": source_cid
+    }
+    if TME.TME_glob.verbose_BTIDES:
+        obj["code_str"] = "L2CAP_DISCONNECTION_REQ"
+    return obj
+
+
+def ff_L2CAP_DISCONNECTION_RSP(direction, id, data_len, destination_cid, source_cid):
+    obj = {
+        "code": type_L2CAP_DISCONNECTION_RSP,
+        "direction": direction,
+        "id": id,
+        "data_len": data_len,
+        "destination_cid": destination_cid,
+        "source_cid": source_cid
+    }
+    if TME.TME_glob.verbose_BTIDES:
+        obj["code_str"] = "L2CAP_DISCONNECTION_RSP"
+    return obj
+
 
 def ff_L2CAP_INFORMATION_REQ(direction, id, data_len, info_type):
     obj = {
