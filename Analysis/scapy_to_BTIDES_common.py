@@ -1277,6 +1277,50 @@ def export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet, direction=None):
     return False
 
 
+def export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_DISCONNECTION_REQ)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_DisconnReq, type_L2CAP_DISCONNECTION_REQ)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            packet.show()
+            data = ff_L2CAP_DISCONNECTION_REQ(direction=direction,
+                                                id=l2cap_hdr.id,
+                                                data_len=l2cap_hdr.len,
+                                                destination_cid=l2cap_data.dcid,
+                                                source_cid=l2cap_data.scid)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_L2CAP_DISCONNECTION_RSP(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_DISCONNECTION_RSP)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_DisconnResp, type_L2CAP_DISCONNECTION_RSP)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            packet.show()
+            data = ff_L2CAP_DISCONNECTION_RSP(direction=direction,
+                                                id=l2cap_hdr.id,
+                                                data_len=l2cap_hdr.len,
+                                                destination_cid=l2cap_data.dcid,
+                                                source_cid=l2cap_data.scid)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
 def export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=None):
     l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_INFORMATION_REQ)
     l2cap_data = get_L2CAP_data(packet, L2CAP_InfoReq, type_L2CAP_INFORMATION_REQ)

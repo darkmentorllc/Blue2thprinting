@@ -78,6 +78,10 @@ def export_to_L2CAPArray(packet, direction):
         return True
     if(export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet, direction=direction)):
         return True
+    if(export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_L2CAP_DISCONNECTION_RSP(connect_ind_obj, packet, direction=direction)):
+        return True
     if(export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=direction)):
