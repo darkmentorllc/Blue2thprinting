@@ -88,6 +88,29 @@ def export_to_L2CAPArray(packet, direction):
         return True
 
 
+def export_to_SDPArray(packet, direction):
+    packet.show()
+    acl = packet.getlayer(HCI_ACL_Hdr)
+
+    if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
+        (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[acl.fields['handle']]
+        connect_ind_obj = ff_CONNECT_IND(peripheral_bdaddr=bdaddr, peripheral_bdaddr_rand=bdaddr_type)
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    l2cap_hdr = packet.getlayer(L2CAP_Hdr)
+    # See if we've seen a connection with PSM == SDP, and see if the CID for this packet matches that one
+    if(CID_in_CIDs_used_for_SDP(connect_ind_obj, l2cap_hdr.cid)):
+        # If this matched, then this is an SDP packet
+
+        # The opcodes are mutually exclusive, so if one returns true, we're done
+        # To convert ATT data into a GATT hierarchy requires us to statefully
+        # remember information between packets (i.e. which UUID corresponds to which handle)
+        if(export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=direction)):
+            return True
+        if(export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=direction)):
+            return True
+
 def export_to_ATTArray(packet, direction):
 
     acl = packet.getlayer(HCI_ACL_Hdr)
@@ -357,6 +380,17 @@ def process_L2CAP(p, record):
     return False
 
 
+def process_SDP(p, record):
+    if p.haslayer(L2CAP_Hdr):
+        #print(record)
+        if(record.flags == 0): # AFAICT 0 = C2P and 1 = P2C
+            direction = type_BTIDES_direction_C2P
+        else:
+            direction = type_BTIDES_direction_P2C
+        if(export_to_SDPArray(p, direction)):
+            return True
+    return False
+
 def process_ATT(p, record):
     if p.haslayer(ATT_Hdr):
         #print(record)
@@ -414,6 +448,8 @@ def read_HCI(file_path):
             elif(process_names(p)):
                 continue
             elif(process_L2CAP(p, record)):
+                continue
+            elif(process_SDP(p, record)):
                 continue
             elif(process_ATT(p, record)):
                 continue

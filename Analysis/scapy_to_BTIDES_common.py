@@ -27,6 +27,8 @@ from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
 from TME.TME_BTIDES_HCI import *
 # L2CAP
 from TME.TME_BTIDES_L2CAP import *
+# SDP
+from TME.TME_BTIDES_SDP import *
 # ATT
 from TME.TME_BTIDES_ATT import *
 # SMP
@@ -53,6 +55,10 @@ g_last_seen_characteristic_handle = 0
 # Keep state about the handle to UUID mappings with a per-BDADDR dictionary
 # i.e.
 g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data = {}
+
+# Keep state about which (source CID) combos currently map to an SDP channel
+# so that we can identify it in incoming L2CAP packets
+g_CIDs_used_for_SDP = {}
 
 # Saved text for printing fields
 #    for field in btle_adv.fields_desc:
@@ -1178,6 +1184,35 @@ def get_L2CAP_data(packet, scapy_type, packet_type):
         return packet.getlayer(scapy_type)
 
 
+def make_SDP_id_tuple(connect_ind_obj, CID):
+    return (connect_ind_obj["central_bdaddr"],
+            connect_ind_obj["central_bdaddr_rand"],
+            connect_ind_obj["peripheral_bdaddr"],
+            connect_ind_obj["peripheral_bdaddr_rand"],
+            CID)
+
+
+def insert_SDP_CID(connect_ind_obj, CID):
+    global g_CIDs_used_for_SDP
+    id_tuple = make_SDP_id_tuple(connect_ind_obj, CID)
+    g_CIDs_used_for_SDP[id_tuple] = 1
+
+
+def CID_in_CIDs_used_for_SDP(connect_ind_obj, CID):
+    id_tuple = make_SDP_id_tuple(connect_ind_obj, CID)
+    if(id_tuple in g_CIDs_used_for_SDP.keys()):
+        return True
+    else:
+        return False
+
+
+def delete_SDP_CID(connect_ind_obj, CID):
+    global g_CIDs_used_for_SDP
+    id_tuple = make_SDP_id_tuple(connect_ind_obj, CID)
+    if(CID_in_CIDs_used_for_SDP(connect_ind_obj, CID)):
+        del g_CIDs_used_for_SDP[id_tuple]
+
+
 def export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=None):
     l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_CONNECTION_REQ)
     l2cap_data = get_L2CAP_data(packet, L2CAP_ConnReq, type_L2CAP_CONNECTION_REQ)
@@ -1190,6 +1225,9 @@ def export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=None):
                                             data_len=l2cap_hdr.len,
                                             psm=l2cap_data.psm,
                                             source_cid=l2cap_data.scid)
+            if(l2cap_data.psm == type_PSM_SDP):
+                insert_SDP_CID(connect_ind_obj, l2cap_data.scid)
+
         except AttributeError as e:
             print(f"Error accessing l2cap_data fields: {e}")
             return False
@@ -1213,6 +1251,11 @@ def export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=None):
                                             source_cid=l2cap_data.scid,
                                             result=l2cap_data.result,
                                             status=l2cap_data.status)
+            # Both the source CID and the dst CID are part of SDP so we need
+            # them both in the global
+            id_tuple = make_SDP_id_tuple(connect_ind_obj, l2cap_data.scid)
+            if(id_tuple in g_CIDs_used_for_SDP.keys()):
+                insert_SDP_CID(connect_ind_obj, l2cap_data.dcid)
         except AttributeError as e:
             print(f"Error accessing l2cap_data fields: {e}")
             return False
@@ -1278,6 +1321,7 @@ def export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet, direction=None):
 
 
 def export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=None):
+    global g_CIDs_used_for_SDP
     l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_DISCONNECTION_REQ)
     l2cap_data = get_L2CAP_data(packet, L2CAP_DisconnReq, type_L2CAP_DISCONNECTION_REQ)
     if l2cap_data is not None:
@@ -1290,6 +1334,8 @@ def export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=None):
                                                 data_len=l2cap_hdr.len,
                                                 destination_cid=l2cap_data.dcid,
                                                 source_cid=l2cap_data.scid)
+            delete_SDP_CID(connect_ind_obj, l2cap_data.dcid)
+            delete_SDP_CID(connect_ind_obj, l2cap_data.scid)
         except AttributeError as e:
             print(f"Error accessing l2cap_data fields: {e}")
             return False
@@ -1367,6 +1413,67 @@ def export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=None):
     return False
 
 
+######################################################################
+# SDP SECTION
+######################################################################
+
+# It shouldn't be necessary to check the opcode if Scapy knows about the packet type layer
+# But just doing it out of an abundance of caution
+def get_SDP_data(packet, scapy_type, packet_type):
+    sdp_hdr = packet.getlayer(SDP_Hdr)
+    if(sdp_hdr == None):
+        return None
+    if(sdp_hdr.pdu_id != packet_type):
+        return None
+    else:
+        return packet.getlayer(scapy_type)
+
+
+def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
+    # packet.show()
+    l2cap_hdr = packet.getlayer(L2CAP_Hdr)
+    sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_REQ)
+    if l2cap_hdr != None and sdp_hdr != None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            raw_data_hex_str = bytes_to_hex_str(sdp_hdr.load) # This is all the data after the header
+            data = ff_SDP_SERVICE_SEARCH_ATTR_REQ(direction=direction,
+                                                  l2cap_len=l2cap_hdr.len,
+                                                  l2cap_cid=l2cap_hdr.cid,
+                                                  transaction_id=sdp_hdr.transaction_id,
+                                                  param_len=sdp_hdr.param_len,
+                                                  raw_data_hex_str=raw_data_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing sdp_hdr fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SDP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+def export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=None):
+    # packet.show()
+    l2cap_hdr = packet.getlayer(L2CAP_Hdr)
+    sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_RSP)
+    if l2cap_hdr != None and sdp_hdr != None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            raw_data_hex_str = bytes_to_hex_str(sdp_hdr.load) # This is all the data after the header
+            data = ff_SDP_SERVICE_SEARCH_ATTR_RSP(direction=direction,
+                                                  l2cap_len=l2cap_hdr.len,
+                                                  l2cap_cid=l2cap_hdr.cid,
+                                                  transaction_id=sdp_hdr.transaction_id,
+                                                  param_len=sdp_hdr.param_len,
+                                                  raw_data_hex_str=raw_data_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing sdp_hdr fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SDP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
 
 ######################################################################
 # HCI SECTION
