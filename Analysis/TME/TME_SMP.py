@@ -47,9 +47,9 @@ def key_dist_print(who, key_dist):
 
 
 def print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist):
-    if(opcode == type_opcode_SMP_Pairing_Request):
+    if(opcode == type_SMP_Pairing_Request):
         qprint("\t\tPairing Request:")
-    elif(opcode == type_opcode_SMP_Pairing_Response):
+    elif(opcode == type_SMP_Pairing_Response):
         qprint("\t\tPairing Response:")
 
     qprint(f"\t\t\tInput/Output Capabilities: {smp_io_cap_strings[io_cap]}")
@@ -115,7 +115,7 @@ def print_SMP_info(bdaddr):
     SMP_Pairing_Req_Res_result = execute_query(query, values)
     for bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist in SMP_Pairing_Req_Res_result:
         # First export BTIDES
-        if(opcode == type_opcode_SMP_Pairing_Request):
+        if(opcode == type_SMP_Pairing_Request):
             data = ff_SMP_Pairing_Request(type_BTIDES_direction_C2P, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
         else:
             data = ff_SMP_Pairing_Response(type_BTIDES_direction_P2C, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
@@ -128,9 +128,9 @@ def print_SMP_info(bdaddr):
         else:
             qprint("\tSecurity Manager Protocol (SMP) data found:")
 
-        if(opcode == type_opcode_SMP_Pairing_Request):
+        if(opcode == type_SMP_Pairing_Request):
             print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
-        elif(opcode == type_opcode_SMP_Pairing_Response):
+        elif(opcode == type_SMP_Pairing_Response):
             print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
 
     qprint("")

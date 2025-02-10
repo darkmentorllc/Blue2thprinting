@@ -19,7 +19,7 @@ from TME.TME_helpers import get_utf8_string_from_hex_string
 
 def ff_SMP_Pairing_Request(direction, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Request,
+        "opcode": type_SMP_Pairing_Request,
         "direction": direction,
         "io_cap": io_cap,
         "oob_data": oob_data,
@@ -35,7 +35,7 @@ def ff_SMP_Pairing_Request(direction, io_cap, oob_data, auth_req, max_key_size, 
 
 def ff_SMP_Pairing_Response(direction, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Response,
+        "opcode": type_SMP_Pairing_Response,
         "direction": direction,
         "io_cap": io_cap,
         "oob_data": oob_data,
@@ -51,7 +51,7 @@ def ff_SMP_Pairing_Response(direction, io_cap, oob_data, auth_req, max_key_size,
 
 def ff_SMP_Pairing_Confirm(direction, value_hex_str):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Confirm,
+        "opcode": type_SMP_Pairing_Confirm,
         "direction": direction,
         "value_hex_str": value_hex_str
     }
@@ -62,7 +62,7 @@ def ff_SMP_Pairing_Confirm(direction, value_hex_str):
 
 def ff_SMP_Pairing_Random(direction, value_hex_str):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Random,
+        "opcode": type_SMP_Pairing_Random,
         "direction": direction,
         "value_hex_str": value_hex_str
     }
@@ -73,7 +73,7 @@ def ff_SMP_Pairing_Random(direction, value_hex_str):
 
 def ff_SMP_Pairing_Failed(direction, reason):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Failed,
+        "opcode": type_SMP_Pairing_Failed,
         "direction": direction,
         "reason": reason
     }
@@ -84,7 +84,7 @@ def ff_SMP_Pairing_Failed(direction, reason):
 
 def ff_SMP_Security_Request(direction, auth_req):
     obj = {
-        "opcode": type_opcode_SMP_Security_Request,
+        "opcode": type_SMP_Security_Request,
         "direction": direction,
         "auth_req": auth_req
     }
@@ -95,7 +95,7 @@ def ff_SMP_Security_Request(direction, auth_req):
 
 def ff_SMP_Pairing_Public_Key(direction, pub_key_x_hex_str, pub_key_y_hex_str):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Public_Key,
+        "opcode": type_SMP_Pairing_Public_Key,
         "direction": direction,
         "pub_key_x_hex_str": pub_key_x_hex_str,
         "pub_key_y_hex_str": pub_key_y_hex_str
@@ -107,7 +107,7 @@ def ff_SMP_Pairing_Public_Key(direction, pub_key_x_hex_str, pub_key_y_hex_str):
 
 def ff_SMP_Pairing_DHKey_Check(direction, value_hex_str):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_DHKey_Check,
+        "opcode": type_SMP_Pairing_DHKey_Check,
         "direction": direction,
         "value_hex_str": value_hex_str
     }
@@ -118,7 +118,7 @@ def ff_SMP_Pairing_DHKey_Check(direction, value_hex_str):
 
 def ff_SMP_Pairing_Keypress_Notification(direction, notification_type):
     obj = {
-        "opcode": type_opcode_SMP_Pairing_Keypress_Notification,
+        "opcode": type_SMP_Pairing_Keypress_Notification,
         "direction": direction,
         "notification_type": notification_type
     }

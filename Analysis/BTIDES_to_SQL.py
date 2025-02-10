@@ -1024,9 +1024,9 @@ def parse_SMPArray(entry):
             continue
 
         if("opcode" in smp_entry.keys() and smp_entry["opcode"] in smp_opcode_strings.keys()):
-            if(smp_entry["opcode"] == type_opcode_SMP_Pairing_Request):
+            if(smp_entry["opcode"] == type_SMP_Pairing_Request):
                 import_SMP_Pairing_Req_Res(bdaddr, bdaddr_rand, smp_entry)
-            elif(smp_entry["opcode"] == type_opcode_SMP_Pairing_Response):
+            elif(smp_entry["opcode"] == type_SMP_Pairing_Response):
                 import_SMP_Pairing_Req_Res(bdaddr, bdaddr_rand, smp_entry)
 
 

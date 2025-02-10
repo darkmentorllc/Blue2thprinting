@@ -999,7 +999,7 @@ def get_SMP_data(packet, scapy_type, packet_type):
 
 
 def export_SMP_Pairing_Request(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Pairing_Request, type_opcode_SMP_Pairing_Request)
+    smp_data = get_SMP_data(packet, SM_Pairing_Request, type_SMP_Pairing_Request)
     if smp_data is not None:
         try:
             if(direction == None):
@@ -1021,7 +1021,7 @@ def export_SMP_Pairing_Request(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Pairing_Response, type_opcode_SMP_Pairing_Response)
+    smp_data = get_SMP_data(packet, SM_Pairing_Response, type_SMP_Pairing_Response)
     if smp_data is not None:
         try:
             if(direction == None):
@@ -1043,7 +1043,7 @@ def export_SMP_Pairing_Response(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Confirm(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Confirm, type_opcode_SMP_Pairing_Confirm)
+    smp_data = get_SMP_data(packet, SM_Confirm, type_SMP_Pairing_Confirm)
     if smp_data is not None:
         try:
             if(direction == None):
@@ -1061,7 +1061,7 @@ def export_SMP_Pairing_Confirm(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Random(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Random, type_opcode_SMP_Pairing_Random)
+    smp_data = get_SMP_data(packet, SM_Random, type_SMP_Pairing_Random)
     if smp_data is not None:
         try:
             if(direction == None):
@@ -1079,7 +1079,7 @@ def export_SMP_Pairing_Random(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Failed(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Failed, type_opcode_SMP_Pairing_Failed)
+    smp_data = get_SMP_data(packet, SM_Failed, type_SMP_Pairing_Failed)
     if smp_data is not None:
         try:
             if direction is None:
@@ -1095,7 +1095,7 @@ def export_SMP_Pairing_Failed(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Security_Request(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Security_Request, type_opcode_SMP_Security_Request)
+    smp_data = get_SMP_data(packet, SM_Security_Request, type_SMP_Security_Request)
     if smp_data is not None:
         try:
             if direction is None:
@@ -1111,7 +1111,7 @@ def export_SMP_Security_Request(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Public_Key(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Public_Key, type_opcode_SMP_Pairing_Public_Key)
+    smp_data = get_SMP_data(packet, SM_Public_Key, type_SMP_Pairing_Public_Key)
     if smp_data is not None:
         try:
             if direction is None:
@@ -1132,7 +1132,7 @@ def export_SMP_Pairing_Public_Key(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_DHKey_Check, type_opcode_SMP_Pairing_DHKey_Check)
+    smp_data = get_SMP_data(packet, SM_DHKey_Check, type_SMP_Pairing_DHKey_Check)
     if smp_data is not None:
         try:
             if(direction == None):
@@ -1150,7 +1150,7 @@ def export_SMP_Pairing_DHKey_Check(connect_ind_obj, packet, direction=None):
 
 
 def export_SMP_Pairing_Keypress_Notification(connect_ind_obj, packet, direction=None):
-    smp_data = get_SMP_data(packet, SM_Keypress_Notification, type_opcode_SMP_Pairing_Keypress_Notification)
+    smp_data = get_SMP_data(packet, SM_Keypress_Notification, type_SMP_Pairing_Keypress_Notification)
     if smp_data is not None:
         try:
             if direction is None:

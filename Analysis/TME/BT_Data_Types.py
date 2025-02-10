@@ -277,36 +277,36 @@ att_error_strings = {
 }
 
 # SMP PDU types defined in BT spec
-type_opcode_SMP_Pairing_Request                 = 1
-type_opcode_SMP_Pairing_Response                = 2
-type_opcode_SMP_Pairing_Confirm                 = 3
-type_opcode_SMP_Pairing_Random                  = 4
-type_opcode_SMP_Pairing_Failed                  = 5
-type_opcode_SMP_Encryption_Information          = 6
-type_opcode_SMP_Central_Identification          = 7
-type_opcode_SMP_Identity_Information            = 8
-type_opcode_SMP_Identity_Address_Information    = 9
-type_opcode_SMP_Signing_Information             = 10
-type_opcode_SMP_Security_Request                = 11
-type_opcode_SMP_Pairing_Public_Key              = 12
-type_opcode_SMP_Pairing_DHKey_Check             = 13
-type_opcode_SMP_Pairing_Keypress_Notification   = 14
+type_SMP_Pairing_Request                 = 1
+type_SMP_Pairing_Response                = 2
+type_SMP_Pairing_Confirm                 = 3
+type_SMP_Pairing_Random                  = 4
+type_SMP_Pairing_Failed                  = 5
+type_SMP_Encryption_Information          = 6
+type_SMP_Central_Identification          = 7
+type_SMP_Identity_Information            = 8
+type_SMP_Identity_Address_Information    = 9
+type_SMP_Signing_Information             = 10
+type_SMP_Security_Request                = 11
+type_SMP_Pairing_Public_Key              = 12
+type_SMP_Pairing_DHKey_Check             = 13
+type_SMP_Pairing_Keypress_Notification   = 14
 
 smp_opcode_strings = {
-    type_opcode_SMP_Pairing_Request:               "Pairing Request",
-    type_opcode_SMP_Pairing_Response:              "Pairing Response",
-    type_opcode_SMP_Pairing_Confirm:               "Pairing Confirm",
-    type_opcode_SMP_Pairing_Random:                "Pairing Random",
-    type_opcode_SMP_Pairing_Failed:                "Pairing Failed",
-    type_opcode_SMP_Encryption_Information:        "Encryption Information",
-    type_opcode_SMP_Central_Identification:        "Central Identification",
-    type_opcode_SMP_Identity_Information:          "Identity Information",
-    type_opcode_SMP_Identity_Address_Information:  "Identity Address Information",
-    type_opcode_SMP_Signing_Information:           "Signing Information",
-    type_opcode_SMP_Security_Request:              "Security Request",
-    type_opcode_SMP_Pairing_Public_Key:            "Pairing Public Key",
-    type_opcode_SMP_Pairing_DHKey_Check:           "Pairing DHKey Check",
-    type_opcode_SMP_Pairing_Keypress_Notification: "Pairing Keypress Notification"
+    type_SMP_Pairing_Request:               "Pairing Request",
+    type_SMP_Pairing_Response:              "Pairing Response",
+    type_SMP_Pairing_Confirm:               "Pairing Confirm",
+    type_SMP_Pairing_Random:                "Pairing Random",
+    type_SMP_Pairing_Failed:                "Pairing Failed",
+    type_SMP_Encryption_Information:        "Encryption Information",
+    type_SMP_Central_Identification:        "Central Identification",
+    type_SMP_Identity_Information:          "Identity Information",
+    type_SMP_Identity_Address_Information:  "Identity Address Information",
+    type_SMP_Signing_Information:           "Signing Information",
+    type_SMP_Security_Request:              "Security Request",
+    type_SMP_Pairing_Public_Key:            "Pairing Public Key",
+    type_SMP_Pairing_DHKey_Check:           "Pairing DHKey Check",
+    type_SMP_Pairing_Keypress_Notification: "Pairing Keypress Notification"
 }
 
 type_SMP_IO_Capabilities_DisplayOnly        = 0
