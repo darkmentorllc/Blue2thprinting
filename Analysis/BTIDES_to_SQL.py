@@ -638,11 +638,11 @@ def import_LL_PINGs(bdaddr, random, ll_entry, entry):
     direction = ll_entry["direction"]
     opcode = ll_entry["opcode"]
     if(direction == type_BTIDES_direction_C2P):
-        if (opcode == type_opcode_LL_PING_RSP):
+        if (opcode == type_LL_PING_RSP):
             # We can infer that if we see a C2P PING_RSP the P must have sent a PING_REQ.
             # So we're going to create an entry for that fact even if we don't have the
             # packet in the pcap (it could have got corrupted from Sniffle's vantage point)
-            opcode = type_opcode_LL_PING_REQ
+            opcode = type_LL_PING_REQ
             direction = type_BTIDES_direction_P2C
             bdaddr, random = get_bdaddr_peripheral(entry)
         else:
@@ -705,19 +705,19 @@ def parse_LLArray(entry):
         else:
             bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
 
-        if(has_known_LL_packet(type_opcode_LL_UNKNOWN_RSP, ll_entry)):
+        if(has_known_LL_packet(type_LL_UNKNOWN_RSP, ll_entry)):
             import_LL_UNKNOWN_RSP(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(type_opcode_LL_VERSION_IND, ll_entry)):
+        if(has_known_LL_packet(type_LL_VERSION_IND, ll_entry)):
             import_LL_VERSION_IND(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(type_opcode_LL_FEATURE_REQ, ll_entry) or
-            has_known_LL_packet(type_opcode_LL_FEATURE_RSP, ll_entry) or
-            has_known_LL_packet(type_opcode_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
+        if(has_known_LL_packet(type_LL_FEATURE_REQ, ll_entry) or
+            has_known_LL_packet(type_LL_FEATURE_RSP, ll_entry) or
+            has_known_LL_packet(type_LL_PERIPHERAL_FEATURE_REQ, ll_entry)):
                 import_LL_FEATUREs(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(type_opcode_LL_PING_RSP, ll_entry) or has_known_LL_packet(type_opcode_LL_PING_REQ, ll_entry)):
+        if(has_known_LL_packet(type_LL_PING_RSP, ll_entry) or has_known_LL_packet(type_LL_PING_REQ, ll_entry)):
             import_LL_PINGs(bdaddr, bdaddr_rand, ll_entry, entry)
-        if(has_known_LL_packet(type_opcode_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_LENGTH_RSP, ll_entry)):
+        if(has_known_LL_packet(type_LL_LENGTH_REQ, ll_entry) or has_known_LL_packet(type_LL_LENGTH_RSP, ll_entry)):
             import_LL_LENGTHs(bdaddr, bdaddr_rand, ll_entry)
-        if(has_known_LL_packet(type_opcode_LL_PHY_REQ, ll_entry) or has_known_LL_packet(type_opcode_LL_PHY_RSP, ll_entry)):
+        if(has_known_LL_packet(type_LL_PHY_REQ, ll_entry) or has_known_LL_packet(type_LL_PHY_RSP, ll_entry)):
             import_LL_PHYs(bdaddr, bdaddr_rand, ll_entry, entry)
 
 ###################################

@@ -51,30 +51,30 @@ type_AdvChanPDU_AUX_ADV_IND       = 7
 type_AdvChanPDU_AUX_SCAN_RSP      = 7
 
 ## LL Control PDU types defined in BT spec
-type_opcode_LL_CONNECTION_UPDATE_IND     = 0
-type_opcode_LL_CHANNEL_MAP_IND           = 1
-type_opcode_LL_TERMINATE_IND             = 2
-type_opcode_LL_ENC_REQ                   = 3
-type_opcode_LL_ENC_RSP                   = 4
-type_opcode_LL_START_ENC_REQ             = 5
-type_opcode_LL_START_ENC_RSP             = 6
-type_opcode_LL_UNKNOWN_RSP               = 7
-type_opcode_LL_FEATURE_REQ               = 8
-type_opcode_LL_FEATURE_RSP               = 9
-type_opcode_LL_VERSION_IND               = 12
-type_opcode_LL_REJECT_IND                = 13
-type_opcode_LL_PERIPHERAL_FEATURE_REQ    = 14
-type_opcode_LL_CONNECTION_PARAM_REQ      = 15
-type_opcode_LL_CONNECTION_PARAM_RSP      = 16
-type_opcode_LL_REJECT_EXT_IND            = 17
-type_opcode_LL_PING_REQ                  = 18
-type_opcode_LL_PING_RSP                  = 19
-type_opcode_LL_LENGTH_REQ                = 20
-type_opcode_LL_LENGTH_RSP                = 21
-type_opcode_LL_PHY_REQ                   = 22
-type_opcode_LL_PHY_RSP                   = 23
-type_opcode_LL_PHY_UPDATE_IND            = 24
-type_opcode_LL_UNKNOWN_CUSTOM            = 255 # Invalid per the spec, but seems to be in use by Apple?
+type_LL_CONNECTION_UPDATE_IND     = 0
+type_LL_CHANNEL_MAP_IND           = 1
+type_LL_TERMINATE_IND             = 2
+type_LL_ENC_REQ                   = 3
+type_LL_ENC_RSP                   = 4
+type_LL_START_ENC_REQ             = 5
+type_LL_START_ENC_RSP             = 6
+type_LL_UNKNOWN_RSP               = 7
+type_LL_FEATURE_REQ               = 8
+type_LL_FEATURE_RSP               = 9
+type_LL_VERSION_IND               = 12
+type_LL_REJECT_IND                = 13
+type_LL_PERIPHERAL_FEATURE_REQ    = 14
+type_LL_CONNECTION_PARAM_REQ      = 15
+type_LL_CONNECTION_PARAM_RSP      = 16
+type_LL_REJECT_EXT_IND            = 17
+type_LL_PING_REQ                  = 18
+type_LL_PING_RSP                  = 19
+type_LL_LENGTH_REQ                = 20
+type_LL_LENGTH_RSP                = 21
+type_LL_PHY_REQ                   = 22
+type_LL_PHY_RSP                   = 23
+type_LL_PHY_UPDATE_IND            = 24
+type_LL_UNKNOWN_CUSTOM            = 255 # Invalid per the spec, but seems to be in use by Apple?
 
 ## LMP PDU types defined in BT spec
 type_opcode_LMP_VERSION_RES             = 38
@@ -84,30 +84,30 @@ type_opcode_LMP_FEATURES_RES_EXT        = 127
 type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 
 ll_ctrl_pdu_opcodes_to_strings = {
-    type_opcode_LL_CONNECTION_UPDATE_IND:   "LL_CONNECTION_UPDATE_IND",
-    type_opcode_LL_CHANNEL_MAP_IND:         "LL_CHANNEL_MAP_IND",
-    type_opcode_LL_TERMINATE_IND:           "LL_TERMINATE_IND",
-    type_opcode_LL_ENC_REQ:                 "LL_ENC_REQ",
-    type_opcode_LL_ENC_RSP:                 "LL_ENC_RSP",
-    type_opcode_LL_START_ENC_REQ:           "LL_START_ENC_REQ",
-    type_opcode_LL_START_ENC_RSP:           "LL_START_ENC_RSP",
-    type_opcode_LL_UNKNOWN_RSP:             "LL_UNKNOWN_RSP",
-    type_opcode_LL_FEATURE_REQ:             "LL_FEATURE_REQ",
-    type_opcode_LL_FEATURE_RSP:             "LL_FEATURE_RSP",
-    type_opcode_LL_VERSION_IND:             "LL_VERSION_IND",
-    type_opcode_LL_REJECT_IND:              "LL_REJECT_IND",
-    type_opcode_LL_PERIPHERAL_FEATURE_REQ:  "LL_PERIPHERAL_FEATURE_REQ",
-    type_opcode_LL_CONNECTION_PARAM_REQ:    "LL_CONNECTION_PARAM_REQ",
-    type_opcode_LL_CONNECTION_PARAM_RSP:    "LL_CONNECTION_PARAM_RSP",
-    type_opcode_LL_REJECT_EXT_IND:          "LL_REJECT_EXT_IND",
-    type_opcode_LL_PING_REQ:                "LL_PING_REQ",
-    type_opcode_LL_PING_RSP:                "LL_PING_RSP",
-    type_opcode_LL_LENGTH_REQ:              "LL_LENGTH_REQ",
-    type_opcode_LL_LENGTH_RSP:              "LL_LENGTH_RSP",
-    type_opcode_LL_PHY_REQ:                 "LL_PHY_REQ",
-    type_opcode_LL_PHY_RSP:                 "LL_PHY_RSP",
-    type_opcode_LL_PHY_UPDATE_IND:          "LL_PHY_UPDATE_IND",
-    type_opcode_LL_UNKNOWN_CUSTOM:          "LL_UNKNOWN_CUSTOM"
+    type_LL_CONNECTION_UPDATE_IND:   "LL_CONNECTION_UPDATE_IND",
+    type_LL_CHANNEL_MAP_IND:         "LL_CHANNEL_MAP_IND",
+    type_LL_TERMINATE_IND:           "LL_TERMINATE_IND",
+    type_LL_ENC_REQ:                 "LL_ENC_REQ",
+    type_LL_ENC_RSP:                 "LL_ENC_RSP",
+    type_LL_START_ENC_REQ:           "LL_START_ENC_REQ",
+    type_LL_START_ENC_RSP:           "LL_START_ENC_RSP",
+    type_LL_UNKNOWN_RSP:             "LL_UNKNOWN_RSP",
+    type_LL_FEATURE_REQ:             "LL_FEATURE_REQ",
+    type_LL_FEATURE_RSP:             "LL_FEATURE_RSP",
+    type_LL_VERSION_IND:             "LL_VERSION_IND",
+    type_LL_REJECT_IND:              "LL_REJECT_IND",
+    type_LL_PERIPHERAL_FEATURE_REQ:  "LL_PERIPHERAL_FEATURE_REQ",
+    type_LL_CONNECTION_PARAM_REQ:    "LL_CONNECTION_PARAM_REQ",
+    type_LL_CONNECTION_PARAM_RSP:    "LL_CONNECTION_PARAM_RSP",
+    type_LL_REJECT_EXT_IND:          "LL_REJECT_EXT_IND",
+    type_LL_PING_REQ:                "LL_PING_REQ",
+    type_LL_PING_RSP:                "LL_PING_RSP",
+    type_LL_LENGTH_REQ:              "LL_LENGTH_REQ",
+    type_LL_LENGTH_RSP:              "LL_LENGTH_RSP",
+    type_LL_PHY_REQ:                 "LL_PHY_REQ",
+    type_LL_PHY_RSP:                 "LL_PHY_RSP",
+    type_LL_PHY_UPDATE_IND:          "LL_PHY_UPDATE_IND",
+    type_LL_UNKNOWN_CUSTOM:          "LL_UNKNOWN_CUSTOM"
 }
 
 # HCI Event codes defined in BT spec
