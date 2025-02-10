@@ -111,20 +111,20 @@ def print_BLE_2thprint(bdaddr):
         qprint("\t\t\tBLE LL Features: 0x%016x" % features)
         decode_BLE_features(features)
         data = ff_LL_FEATURE_RSP(direction, features)
-        if(opcode == type_opcode_LL_FEATURE_REQ):
+        if(opcode == type_LL_FEATURE_REQ):
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
-        elif(opcode == type_opcode_LL_FEATURE_RSP):
+        elif(opcode == type_LL_FEATURE_RSP):
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
-        elif(opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ):
+        elif(opcode == type_LL_PERIPHERAL_FEATURE_REQ):
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode, tx_phys, rx_phys in phys_result:
-        if(opcode == type_opcode_LL_PHY_RSP):
+        if(opcode == type_LL_PHY_RSP):
             qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
             qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
             data = ff_LL_PHY_RSP(direction, tx_phys, rx_phys)
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
-        elif(opcode == type_opcode_LL_PHY_REQ):
+        elif(opcode == type_LL_PHY_REQ):
             qprint(f"\t\tSender TX PHY Preference: {tx_phys} ({phy_prefs_to_string(tx_phys)})")
             qprint(f"\t\tSender RX PHY Preference: {rx_phys} ({phy_prefs_to_string(rx_phys)})")
             data = ff_LL_PHY_REQ(direction, tx_phys, rx_phys)
@@ -136,10 +136,10 @@ def print_BLE_2thprint(bdaddr):
         qprint(f"\t\t\tMax RX time: {max_rx_time} microseconds")
         qprint(f"\t\t\tMax TX octets: {max_tx_octets}")
         qprint(f"\t\t\tMax TX time: {max_tx_time} microseconds")
-        if(opcode == type_opcode_LL_LENGTH_REQ):
+        if(opcode == type_LL_LENGTH_REQ):
             data = ff_LL_LENGTH_REQ(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
-        elif(opcode == type_opcode_LL_LENGTH_RSP):
+        elif(opcode == type_LL_LENGTH_RSP):
             data = ff_LL_LENGTH_RSP(direction, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time)
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
@@ -149,11 +149,11 @@ def print_BLE_2thprint(bdaddr):
         BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode in ping_result:
-        if(opcode == type_opcode_LL_PING_RSP):
+        if(opcode == type_LL_PING_RSP):
             qprint(f"\t\tCentral received LL Ping Response from this device.")
             data = ff_LL_PING_RSP(direction)
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
-        elif(opcode == type_opcode_LL_PING_REQ):
+        elif(opcode == type_LL_PING_REQ):
             qprint(f"\t\tCentral received LL Ping Request from this device.")
             data = ff_LL_PING_REQ(direction)
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
@@ -171,10 +171,10 @@ def print_BLE_2thprint(bdaddr):
             vprint(f"\t\t\"LL_FEATURE* opcode\",\"0x%02x\",\"features\",\"0x%016x\"" % (opcode, features))
 
         for bdaddr_random, opcode, tx_phys, rx_phys in phys_result:
-            if(opcode == type_opcode_LL_PHY_RSP):
+            if(opcode == type_LL_PHY_RSP):
                 vprint(f"\t\t\"LL_PHY_RSP:tx_phys\",\"0x%02x\"" % tx_phys)
                 vprint(f"\t\t\"LL_PHY_RSP:rx_phys\",\"0x%02x\"" % rx_phys)
-            elif(opcode == type_opcode_LL_PHY_REQ):
+            elif(opcode == type_LL_PHY_REQ):
                 vprint(f"\t\t\"LL_PHY_REQ:tx_phys\",\"0x%02x\"" % tx_phys)
                 vprint(f"\t\t\"LL_PHY_REQ:rx_phys\",\"0x%02x\"" % rx_phys)
 
@@ -185,8 +185,8 @@ def print_BLE_2thprint(bdaddr):
             vprint(f"\t\t\"LL_UNKNOWN_RSP to opcode\",\"0x%02x\"" % unknown_opcode)
 
         for bdaddr_random, opcode in ping_result:
-            if(opcode == type_opcode_LL_PING_RSP):
+            if(opcode == type_LL_PING_RSP):
                 vprint(f"\t\t\"LL_PING_RSP\",\"P2C\"")
-            elif(opcode == type_opcode_LL_PING_REQ):
+            elif(opcode == type_LL_PING_REQ):
                 vprint(f"\t\t\"LL_PING_REQ\",\"P2C\"")
     qprint("")

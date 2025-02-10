@@ -75,11 +75,11 @@ def export_BTLE_CTRL(packet):
     access_address = btle_hdr.access_addr
     # *Usually* ignore subsequent packets if we've seen an LL_ENC_RSP/LL_START_ENC_REQ in this connection already
     if(access_address in g_stop_exporting_encrypted_packets_by_AA.keys()):
-        if(ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ):
+        if(ll_ctrl.opcode == type_LL_START_ENC_REQ):
             # We somtimes miss this packet, so we're now setting g_stop_exporting_encrypted_packets_by_AA earlier
             # This is just to let us to continue to capture the LL_START_ENC_REQ to the BTIDES file
             pass
-        elif(ll_ctrl.opcode == type_opcode_LL_START_ENC_RSP):
+        elif(ll_ctrl.opcode == type_LL_START_ENC_RSP):
             # LL_START_ENC_RSP is normally sent back encrypted by the Peripheral
             # If we see this, it means we're operating on a decrypted pcap,
             # so we can continue to proceed with exporting packets
@@ -95,7 +95,7 @@ def export_BTLE_CTRL(packet):
     else:
         connect_ind_obj = ff_CONNECT_IND_placeholder()
 
-    if ll_ctrl.opcode == type_opcode_LL_CONNECTION_UPDATE_IND:
+    if ll_ctrl.opcode == type_LL_CONNECTION_UPDATE_IND:
         try:
             data = ff_LL_CONNECTION_UPDATE_IND(
                 direction=get_packet_direction(packet),
@@ -112,7 +112,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CONNECTION_UPDATE_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_CHANNEL_MAP_IND:
+    elif ll_ctrl.opcode == type_LL_CHANNEL_MAP_IND:
         try:
             channel_map_hex_str = f"{ll_ctrl.chM:010x}" # ll_ctrl.chM stored as QWORD, but it's only 5 bytes, so pad to up to 10 zeros
             data = ff_LL_CHANNEL_MAP_IND(
@@ -126,7 +126,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CHANNEL_MAP_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_TERMINATE_IND:
+    elif ll_ctrl.opcode == type_LL_TERMINATE_IND:
         try:
             data = ff_LL_TERMINATE_IND(
                 direction=get_packet_direction(packet),
@@ -138,7 +138,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_TERMINATE_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_ENC_REQ:
+    elif ll_ctrl.opcode == type_LL_ENC_REQ:
         try:
             data = ff_LL_ENC_REQ(
                 direction=get_packet_direction(packet),
@@ -153,7 +153,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_REQ: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_ENC_RSP:
+    elif ll_ctrl.opcode == type_LL_ENC_RSP:
         try:
             # LL_START_ENC_REQ is the proper place to set this, but sometime we miss that packet
             # so we're setting it here just in case
@@ -169,7 +169,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_REQ:
+    elif ll_ctrl.opcode == type_LL_START_ENC_REQ:
         try:
             # This is the proper place to set this, but sometime we miss this packet
             g_stop_exporting_encrypted_packets_by_AA[access_address] = True
@@ -182,7 +182,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_REQ: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_START_ENC_RSP:
+    elif ll_ctrl.opcode == type_LL_START_ENC_RSP:
         try:
             data = ff_LL_START_ENC_RSP(
                 direction=get_packet_direction(packet)
@@ -193,7 +193,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_ENC_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_RSP:
+    elif ll_ctrl.opcode == type_LL_UNKNOWN_RSP:
         try:
             data = ff_LL_UNKNOWN_RSP(
                 direction=get_packet_direction(packet),
@@ -205,7 +205,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_UNKNOWN_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_REQ:
+    elif ll_ctrl.opcode == type_LL_FEATURE_REQ:
         try:
             data = ff_LL_FEATURE_REQ(
                 direction=get_packet_direction(packet),
@@ -217,7 +217,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_FEATURE_REQ: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_PERIPHERAL_FEATURE_REQ:
+    elif ll_ctrl.opcode == type_LL_PERIPHERAL_FEATURE_REQ:
         try:
             data = ff_LL_PERIPHERAL_FEATURE_REQ(
                 direction=get_packet_direction(packet),
@@ -229,7 +229,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_PERIPHERAL_FEATURE_REQ: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_FEATURE_RSP:
+    elif ll_ctrl.opcode == type_LL_FEATURE_RSP:
         try:
             data = ff_LL_FEATURE_RSP(
                 direction=get_packet_direction(packet),
@@ -241,7 +241,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_FEATURE_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_VERSION_IND:
+    elif ll_ctrl.opcode == type_LL_VERSION_IND:
         try:
             data = ff_LL_VERSION_IND(
                 direction=get_packet_direction(packet),
@@ -255,7 +255,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_REJECT_IND:
+    elif ll_ctrl.opcode == type_LL_REJECT_IND:
         try:
             data = ff_LL_REJECT_IND(
                 direction=get_packet_direction(packet),
@@ -267,7 +267,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_REQ:
+    elif ll_ctrl.opcode == type_LL_CONNECTION_PARAM_REQ:
         try:
             data = ff_LL_CONNECTION_PARAM_REQ(
                 direction=get_packet_direction(packet),
@@ -290,7 +290,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CONNECTION_PARAM_REQ: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_CONNECTION_PARAM_RSP:
+    elif ll_ctrl.opcode == type_LL_CONNECTION_PARAM_RSP:
         try:
             data = ff_LL_CONNECTION_PARAM_RSP(
                 direction=get_packet_direction(packet),
@@ -313,7 +313,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_CONNECTION_PARAM_RSP: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_REJECT_EXT_IND:
+    elif ll_ctrl.opcode == type_LL_REJECT_EXT_IND:
         try:
             data = ff_LL_REJECT_EXT_IND(
                 direction=get_packet_direction(packet),
@@ -326,7 +326,7 @@ def export_BTLE_CTRL(packet):
         except Exception as e:
             print(f"Error processing LL_VERSION_IND: {e}")
             return False
-    elif ll_ctrl.opcode == type_opcode_LL_PING_REQ:
+    elif ll_ctrl.opcode == type_LL_PING_REQ:
         try:
             data = ff_LL_PING_REQ(
                 direction=get_packet_direction(packet)
@@ -337,7 +337,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_PING_RSP:
+    elif ll_ctrl.opcode == type_LL_PING_RSP:
         try:
             data = ff_LL_PING_RSP(
                 direction=get_packet_direction(packet)
@@ -348,7 +348,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_LENGTH_REQ:
+    elif ll_ctrl.opcode == type_LL_LENGTH_REQ:
         try:
             data = ff_LL_LENGTH_REQ(
                 direction=get_packet_direction(packet),
@@ -363,7 +363,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_LENGTH_RSP:
+    elif ll_ctrl.opcode == type_LL_LENGTH_RSP:
         try:
             data = ff_LL_LENGTH_RSP(
                 direction=get_packet_direction(packet),
@@ -378,7 +378,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_PHY_REQ:
+    elif ll_ctrl.opcode == type_LL_PHY_REQ:
         try:
             data = ff_LL_PHY_REQ(
                 direction=get_packet_direction(packet),
@@ -391,7 +391,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_PHY_RSP:
+    elif ll_ctrl.opcode == type_LL_PHY_RSP:
         try:
             data = ff_LL_PHY_RSP(
                 direction=get_packet_direction(packet),
@@ -404,7 +404,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_PHY_UPDATE_IND:
+    elif ll_ctrl.opcode == type_LL_PHY_UPDATE_IND:
         try:
             data = ff_LL_PHY_UPDATE_IND(
                 direction=get_packet_direction(packet),
@@ -418,7 +418,7 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
-    elif ll_ctrl.opcode == type_opcode_LL_UNKNOWN_CUSTOM:
+    elif ll_ctrl.opcode == type_LL_UNKNOWN_CUSTOM:
         try:
             #ll_ctrl.show()
             full_pkt_hex_str = bytes_to_hex_str(packet.load)
