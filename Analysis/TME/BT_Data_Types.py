@@ -356,6 +356,71 @@ smp_keypress_notification_strings = {
 }
 
 # L2CAP PDU types defined in BT spec
+type_L2CAP_CONNECTION_REQ = 0x02
+type_L2CAP_CONNECTION_RSP = 0x03
 type_L2CAP_INFORMATION_REQ = 0x0A
 type_L2CAP_INFORMATION_RSP = 0x0B
 
+type_PSM_SDP = 0x0001
+type_PSM_RFCOMM = 0x0003
+type_PSM_TCS_BIN = 0x0005
+type_PSM_TCS_BIN_CORDLESS = 0x0007
+type_PSM_BNEP = 0x000F
+type_PSM_HID_Control = 0x0011
+type_PSM_HID_Interrupt = 0x0013
+type_PSM_UPnP = 0x0015
+type_PSM_AVCTP = 0x0017
+type_PSM_AVDTP = 0x0019
+type_PSM_AVCTP_Browsing = 0x001B
+type_PSM_UDI_C_Plane = 0x001D
+type_PSM_ATT = 0x001F
+type_PSM_3DSP = 0x0021
+type_PSM_LE_PSM_IPSP = 0x0023
+type_PSM_OTS = 0x0025
+type_PSM_EATT = 0x0027
+
+type_PSM_strings = {
+    type_PSM_SDP: "Service Discovery Protocol (SDP)",
+    type_PSM_RFCOMM: "RFCOMM (Serial emulation over Bluetooth)",
+    type_PSM_TCS_BIN: "Telephony Control Specification (TCS) Binary",
+    type_PSM_TCS_BIN_CORDLESS: "Telephony Control Protocol (TCS) Binary (CORDLESS)",
+    type_PSM_BNEP: "Bluetooth Network Encapsulation Protocol (BNEP)",
+    type_PSM_HID_Control: "Human Interface Device (HID) Control",
+    type_PSM_HID_Interrupt: "Human Interface Device (HID) Interrupt",
+    type_PSM_UPnP: "Universal Plug and Play (UPnP)",
+    type_PSM_AVCTP: "Audio/Video Control Transport Protocol (AVCTP)",
+    type_PSM_AVDTP: "Audio/Video Distribution Transport Protocol (AVDTP)",
+    type_PSM_AVCTP_Browsing: "Audio/Video Control Transport Protocol (AVCTP) Browsing",
+    type_PSM_UDI_C_Plane: "Unrestricted Digital Information (UDI) Profile Control Plane",
+    type_PSM_ATT: "Attribute Protocol (ATT)",
+    type_PSM_3DSP: "3D Synchronization Profile (3DSP)",
+    type_PSM_LE_PSM_IPSP: "Internet Protocol Support Profile (IPSP)",
+    type_PSM_OTS: "Object Transfer Service (OTS)",
+    type_PSM_EATT: "Enhanced ATT (EATT)"
+}
+
+
+
+type_L2CAP_CONNECTION_RSP_result_success = 0x0000
+type_L2CAP_CONNECTION_RSP_result_pending = 0x0001
+type_L2CAP_CONNECTION_RSP_result_refused_psm_not_supported = 0x0002
+type_L2CAP_CONNECTION_RSP_result_refused_security_block = 0x0003
+type_L2CAP_CONNECTION_RSP_result_refused_no_resources = 0x0004
+type_L2CAP_CONNECTION_RSP_result_refused_invalid_scid= 0x0006
+type_L2CAP_CONNECTION_RSP_result_refused_scid_already_allocated= 0x0006
+
+type_L2CAP_CONNECTION_RSP_result_strings = {
+    type_L2CAP_CONNECTION_RSP_result_success: "Success",
+    type_L2CAP_CONNECTION_RSP_result_pending: "Pending",
+    type_L2CAP_CONNECTION_RSP_result_refused_psm_not_supported: "Refused: PSM not supported",
+    type_L2CAP_CONNECTION_RSP_result_refused_security_block: "Refused: Security block",
+    type_L2CAP_CONNECTION_RSP_result_refused_no_resources: "Refused: No resources available",
+    type_L2CAP_CONNECTION_RSP_result_refused_invalid_scid: "Refused: Invalid Source CID",
+    type_L2CAP_CONNECTION_RSP_result_refused_scid_already_allocated: "Refused: Source CID already allocated"
+}
+
+type_L2CAP_CONNECTION_RSP_status_strings = {
+    0x0000: "No further information available",
+    0x0001: "Authentication pending",
+    0x0002: "Authorization pending"
+}
