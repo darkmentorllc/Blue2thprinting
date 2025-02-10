@@ -70,6 +70,10 @@ def export_to_L2CAPArray(packet, direction):
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)
+    if(export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=direction)):
+        return True
     if(export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=direction)):
