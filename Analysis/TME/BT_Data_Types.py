@@ -77,9 +77,9 @@ type_LL_PHY_UPDATE_IND            = 24
 type_LL_UNKNOWN_CUSTOM            = 255 # Invalid per the spec, but seems to be in use by Apple?
 
 ## LMP PDU types defined in BT spec
-type_opcode_LMP_VERSION_RES             = 38
-type_opcode_LMP_FEATURES_RES            = 40
-type_opcode_LMP_FEATURES_RES_EXT        = 127
+type_LMP_VERSION_RES             = 38
+type_LMP_FEATURES_RES            = 40
+type_LMP_FEATURES_RES_EXT        = 127
 
 type_extended_opcode_LMP_FEATURES_RES_EXT = 4
 

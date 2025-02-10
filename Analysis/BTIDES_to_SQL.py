@@ -768,13 +768,13 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
-        if(has_known_LMP_packet(type_opcode_LMP_VERSION_RES, lmp_entry)):
+        if(has_known_LMP_packet(type_LMP_VERSION_RES, lmp_entry)):
             import_LMP_VERSION_RES(bdaddr, lmp_entry)
             continue
-        if(has_known_LMP_packet(type_opcode_LMP_FEATURES_RES, lmp_entry)):
+        if(has_known_LMP_packet(type_LMP_FEATURES_RES, lmp_entry)):
             import_LMP_FEATURES_RES(bdaddr, lmp_entry)
             continue
-        if(has_known_LMP_packet(type_opcode_LMP_FEATURES_RES_EXT, lmp_entry, extended_opcode=type_extended_opcode_LMP_FEATURES_RES_EXT)):
+        if(has_known_LMP_packet(type_LMP_FEATURES_RES_EXT, lmp_entry, extended_opcode=type_extended_opcode_LMP_FEATURES_RES_EXT)):
             import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
 
 ###################################
