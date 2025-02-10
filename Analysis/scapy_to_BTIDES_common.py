@@ -1185,7 +1185,6 @@ def export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet, direction=None):
         try:
             if(direction == None):
                 direction = get_packet_direction(packet)
-            #packet.show()
             data = ff_L2CAP_INFORMATION_REQ(direction=direction,
                                             id=l2cap_hdr.id,
                                             data_len=l2cap_hdr.len,
@@ -1206,7 +1205,6 @@ def export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            #packet.show()
             if(len(l2cap_data.info) > 0):
                 info_hex_str=bytes_to_hex_str(l2cap_data.info)
             else:
@@ -1233,7 +1231,6 @@ def export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            #packet.show()
             data = ff_L2CAP_CONNECTION_REQ(direction=direction,
                                             id=l2cap_hdr.id,
                                             data_len=l2cap_hdr.len,
@@ -1255,7 +1252,6 @@ def export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            #packet.show()
             data = ff_L2CAP_CONNECTION_RSP(direction=direction,
                                             id=l2cap_hdr.id,
                                             data_len=l2cap_hdr.len,
@@ -1271,6 +1267,60 @@ def export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=None):
         return True
     return False
 
+
+def export_L2CAP_CONFIGURATION_REQ(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_CONFIGURATION_REQ)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_ConfReq, type_L2CAP_CONFIGURATION_REQ)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            #packet.show()
+            if(len(l2cap_data.config_options) > 0):
+                config_options_hex_str=bytes_to_hex_str(l2cap_data.config_options)
+            else:
+                config_options_hex_str=None
+            data = ff_L2CAP_CONFIGURATION_REQ(direction=direction,
+                                                id=l2cap_hdr.id,
+                                                data_len=l2cap_hdr.len,
+                                                destination_cid=l2cap_data.dcid,
+                                                flags=l2cap_data.flags,
+                                                config_options_hex_str=config_options_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+
+def export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_CONFIGURATION_RSP)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_ConfResp, type_L2CAP_CONFIGURATION_RSP)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            #packet.show()
+            if(len(l2cap_data.config_options) > 0):
+                config_options_hex_str=bytes_to_hex_str(l2cap_data.config_options)
+            else:
+                config_options_hex_str=None
+            data = ff_L2CAP_CONFIGURATION_RSP(direction=direction,
+                                                id=l2cap_hdr.id,
+                                                data_len=l2cap_hdr.len,
+                                                source_cid=l2cap_data.scid,
+                                                flags=l2cap_data.flags,
+                                                result=l2cap_data.result,
+                                                config_options_hex_str=config_options_hex_str)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
 
 ######################################################################
 # HCI SECTION
