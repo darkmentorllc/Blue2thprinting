@@ -20,6 +20,7 @@ from TME.TME_AdvChan import *
 from TME.TME_EIR import *
 from TME.TME_GATT import *
 from TME.TME_SMP import *
+from TME.TME_SDP import *
 from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
@@ -365,6 +366,7 @@ def main():
         print_SMP_info(bdaddr)                              # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
+        print_SDP_info(bdaddr)                              # Includes BTIDES export
         print_UniqueIDReport(bdaddr)
 
     if(out_filename != None and out_filename != ""):
