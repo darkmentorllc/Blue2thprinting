@@ -1031,6 +1031,43 @@ def parse_SMPArray(entry):
 
 
 ###################################
+# BTIDES_SDP.json information
+###################################
+
+def import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry):
+    l2cap_len = sdp_entry["l2cap_len"]
+    l2cap_cid = sdp_entry["l2cap_cid"]
+    direction = sdp_entry["direction"]
+    pdu_id = sdp_entry["pdu_id"]
+    transaction_id = sdp_entry["transaction_id"]
+    param_len = sdp_entry["param_len"]
+    byte_values = bytes.fromhex(sdp_entry["raw_data_hex_str"])
+    values = (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+    insert = f"INSERT IGNORE INTO SDP_SERVICE_SEARCH_ATTR_REQ_RSP (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+def parse_SDPArray(entry):
+    if("SDPArray" not in entry.keys() or entry["SDPArray"] == None):
+        return # Entry not valid for this type
+
+    for sdp_entry in entry["SDPArray"]:
+        # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
+        if("direction" in sdp_entry.keys() and sdp_entry["direction"] == type_BTIDES_direction_C2P):
+            bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+        else:
+            bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
+        if(bdaddr == "00:00:00:00:00:00"):
+            # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            continue
+
+        if("pdu_id" in sdp_entry.keys() and sdp_entry["pdu_id"] in sdp_pdu_strings.keys()):
+            if(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_REQ):
+                import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
+            elif(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_RSP):
+                import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
+
+###################################
 
 class btides_to_sql_args:
     def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
@@ -1120,6 +1157,8 @@ def btides_to_sql(args):
         parse_SMPArray(entry)
 
         parse_EIRArray(entry)
+
+        parse_SDPArray(entry)
 
         count += 1
         progress_update(total, count)
