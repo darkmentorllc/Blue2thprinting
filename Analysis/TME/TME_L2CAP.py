@@ -34,7 +34,7 @@ def print_L2CAP_info(bdaddr):
     SMP_Pairing_Req_Res_result = execute_query(query, values)
     for bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist in SMP_Pairing_Req_Res_result:
         # First export BTIDES
-        # if(opcode == type_opcode_SMP_Pairing_Request):
+        # if(opcode == type_SMP_Pairing_Request):
         #     data = ff_SMP_Pairing_Request(type_BTIDES_direction_C2P, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
         # else:
         #     data = ff_SMP_Pairing_Response(type_BTIDES_direction_P2C, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
