@@ -438,6 +438,44 @@ def export_BTLE_CTRL(packet):
 
     return False
 
+def export_to_L2CAPArray(packet):
+    ble_fields = packet.getlayer(BTLE)
+    access_address = ble_fields.access_addr
+
+    if access_address in g_access_address_to_connect_ind_obj:
+        connect_ind_obj = g_access_address_to_connect_ind_obj[access_address]
+    else:
+        connect_ind_obj = ff_CONNECT_IND_placeholder()
+
+    #packet.show()
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    # To convert ATT data into a GATT hierarchy requires us to statefully
+    # remember information between packets (i.e. which UUID corresponds to which handle)
+    # BTC stuff we don't have pcaps for right now. Tested only via HCI logs
+    if(export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_CONFIGURATION_REQ(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_DISCONNECTION_RSP(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_INFORMATION_REQ(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet)):
+        return True
+    # BTC stuff we do have pcaps for right now. Tested via pcap and HCI logs
+    if(export_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(connect_ind_obj, packet)):
+        return True
+    if(export_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(connect_ind_obj, packet)):
+        return True
+
+    # TODO: handle ALL opcodes
+
 
 def export_to_ATTArray(packet):
     ble_fields = packet.getlayer(BTLE)
@@ -633,6 +671,10 @@ def read_pcap(file_path):
                 # ATT packets
                 if packet.haslayer(ATT_Hdr):
                     if(export_to_ATTArray(packet)): continue
+
+                # L2CAP signal channel packets
+                if packet.haslayer(L2CAP_CmdHdr):
+                    if(export_to_L2CAPArray(packet)): continue
 
                 # SMP packets
                 if packet.haslayer(SM_Hdr):

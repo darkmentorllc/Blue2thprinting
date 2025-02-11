@@ -18,6 +18,7 @@ from TME.TME_lookup import *
 from TME.TME_stats import *
 from TME.TME_AdvChan import *
 from TME.TME_EIR import *
+from TME.TME_L2CAP import *
 from TME.TME_GATT import *
 from TME.TME_SMP import *
 from TME.TME_SDP import *
@@ -369,6 +370,7 @@ def main():
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
         print_SDP_info(bdaddr)                              # Includes BTIDES export
+        print_L2CAP_info(bdaddr)                            # Includes BTIDES export
         print_UniqueIDReport(bdaddr)
 
     if(out_filename != None and out_filename != ""):

@@ -1413,6 +1413,49 @@ def export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=None):
     return False
 
 
+def export_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_Connection_Parameter_Update_Request, type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            #packet.show()
+            data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(direction=direction,
+                                                            id=l2cap_hdr.id,
+                                                            data_len=l2cap_hdr.len,
+                                                            interval_min=l2cap_data.min_interval,
+                                                            interval_max=l2cap_data.max_interval,
+                                                            latency=l2cap_data.latency,
+                                                            timeout=l2cap_data.timeout)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
+def export_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = get_L2CAP_data(packet, L2CAP_CmdHdr, type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP)
+    l2cap_data = get_L2CAP_data(packet, L2CAP_Connection_Parameter_Update_Response, type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP)
+    if l2cap_data is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            #packet.show()
+            data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(direction=direction,
+                                                            id=l2cap_hdr.id,
+                                                            data_len=l2cap_hdr.len,
+                                                            result=l2cap_data.result)
+        except AttributeError as e:
+            print(f"Error accessing l2cap_data fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_L2CAP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
+
 ######################################################################
 # SDP SECTION
 ######################################################################
@@ -1430,7 +1473,7 @@ def get_SDP_data(packet, scapy_type, packet_type):
 
 
 def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
-    packet.show()
+    #packet.show()
     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_REQ)
     if l2cap_hdr != None and sdp_hdr != None:
@@ -1453,7 +1496,7 @@ def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
     return False
 
 def export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=None):
-    packet.show()
+    #packet.show()
     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_RSP)
     if l2cap_hdr != None and sdp_hdr != None:
