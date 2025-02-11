@@ -784,7 +784,7 @@ def parse_LMPArray(entry):
 def import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry):
     device_name = hci_entry["remote_name_hex_str"]
     values = (bdaddr, device_name)
-    insert = f"INSERT IGNORE INTO HCI_bdaddr_to_name (bdaddr, name_hex_str) VALUES (%s, %s);"
+    insert = f"INSERT IGNORE INTO HCI_bdaddr_to_name (bdaddr, status, name_hex_str) VALUES (%s, 0, %s);"
     execute_insert(insert, values)
 
 
@@ -1098,7 +1098,7 @@ def import_SDP_ERROR_RSP(bdaddr, sdp_entry):
     execute_insert(insert, values)
 
 
-def import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry):
+def import_SDP_Common(bdaddr, sdp_entry):
     l2cap_len = sdp_entry["l2cap_len"]
     l2cap_cid = sdp_entry["l2cap_cid"]
     direction = sdp_entry["direction"]
@@ -1107,7 +1107,7 @@ def import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry):
     param_len = sdp_entry["param_len"]
     byte_values = bytes.fromhex(sdp_entry["raw_data_hex_str"])
     values = (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-    insert = f"INSERT IGNORE INTO SDP_SERVICE_SEARCH_ATTR_REQ_RSP (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
+    insert = f"INSERT IGNORE INTO SDP_Common (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -1129,10 +1129,8 @@ def parse_SDPArray(entry):
         if("pdu_id" in sdp_entry.keys() and sdp_entry["pdu_id"] in sdp_pdu_strings.keys()):
             if(sdp_entry["pdu_id"] == type_SDP_ERROR_RSP):
                 import_SDP_ERROR_RSP(bdaddr, sdp_entry)
-            elif(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-                import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
-            elif(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_RSP):
-                import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
+            else:
+                import_SDP_Common(bdaddr, sdp_entry)
 
 ###################################
 

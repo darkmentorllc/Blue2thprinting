@@ -34,35 +34,54 @@ def ff_SDP_ERROR_RSP(direction, l2cap_len, l2cap_cid, transaction_id, param_len,
 
     return obj
 
-
-def ff_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
+# Can be used for:
+# SDP_SERVICE_SEARCH_REQ
+# SDP_SERVICE_SEARCH_RSP
+# SDP_SERVICE_SEARCH_ATTR_REQ
+# SDP_SERVICE_SEARCH_ATTR_RSP
+def ff_SDP_Common(pdu_id, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
     obj = {
         "direction": direction,
         "l2cap_len": l2cap_len,
         "l2cap_cid": l2cap_cid,
-        "pdu_id": type_SDP_SERVICE_SEARCH_ATTR_REQ,
+        "pdu_id": pdu_id,
         "transaction_id": transaction_id,
         "param_len": param_len,
         "raw_data_hex_str": raw_data_hex_str
     }
     if TME.TME_glob.verbose_BTIDES:
-        obj["pdu_id_str"] = "SDP_SERVICE_SEARCH_ATTR_REQ"
+        obj["pdu_id_str"] = sdp_pdu_strings[pdu_id]
     return obj
 
 
-def ff_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
-    obj = {
-        "direction": direction,
-        "l2cap_len": l2cap_len,
-        "l2cap_cid": l2cap_cid,
-        "pdu_id": type_SDP_SERVICE_SEARCH_ATTR_RSP,
-        "transaction_id": transaction_id,
-        "param_len": param_len,
-        "raw_data_hex_str": raw_data_hex_str
-    }
-    if TME.TME_glob.verbose_BTIDES:
-        obj["pdu_id_str"] = "SDP_SERVICE_SEARCH_ATTR_RSP"
-    return obj
+# def ff_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
+#     obj = {
+#         "direction": direction,
+#         "l2cap_len": l2cap_len,
+#         "l2cap_cid": l2cap_cid,
+#         "pdu_id": type_SDP_SERVICE_SEARCH_ATTR_REQ,
+#         "transaction_id": transaction_id,
+#         "param_len": param_len,
+#         "raw_data_hex_str": raw_data_hex_str
+#     }
+#     if TME.TME_glob.verbose_BTIDES:
+#         obj["pdu_id_str"] = "SDP_SERVICE_SEARCH_ATTR_REQ"
+#     return obj
+
+
+# def ff_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
+#     obj = {
+#         "direction": direction,
+#         "l2cap_len": l2cap_len,
+#         "l2cap_cid": l2cap_cid,
+#         "pdu_id": type_SDP_SERVICE_SEARCH_ATTR_RSP,
+#         "transaction_id": transaction_id,
+#         "param_len": param_len,
+#         "raw_data_hex_str": raw_data_hex_str
+#     }
+#     if TME.TME_glob.verbose_BTIDES:
+#         obj["pdu_id_str"] = "SDP_SERVICE_SEARCH_ATTR_RSP"
+#     return obj
 
 ############################
 # JSON insertion functions

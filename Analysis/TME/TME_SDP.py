@@ -22,7 +22,7 @@ init(autoreset=True)
 def device_has_SDP_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
-    query = "SELECT bdaddr FROM SDP_SERVICE_SEARCH_ATTR_REQ_RSP WHERE bdaddr = %s";
+    query = "SELECT bdaddr FROM SDP_Common WHERE bdaddr = %s";
     SDP_result = execute_query(query, values)
     if(len(SDP_result) != 0):
         return 1;
@@ -197,15 +197,15 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, pdu_id, t
 def print_SDP_info(bdaddr):
     # Query the database for all SDP data
     values = (bdaddr,)
-    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_SERVICE_SEARCH_ATTR_REQ_RSP WHERE bdaddr = %s";
+    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s";
     SDP_result = execute_query(query, values)
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:
         raw_data_hex_str = bytes_to_hex_str(byte_values)
         # First export BTIDES
         if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-            data = ff_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
         else:
-            data = ff_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
         BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
 
         # Now print what we want users to see
