@@ -70,6 +70,15 @@ def parse_SDP_data_element(indent, byte_values, i):
             integer_4b, = struct.unpack(">I", byte_values[i:i+4])
             i+=actual_size
             print(f"{indent}Found integer: 0x{integer_4b:08x}")
+        elif(actual_size == 8):
+            integer_8b, = struct.unpack(">Q", byte_values[i:i+8])
+            i+=actual_size
+            print(f"{indent}Found integer: 0x{integer_8b:16x}")
+        elif(actual_size == 16):
+            high_bytes, low_bytes = struct.unpack(">QQ", byte_values[i:i+16])
+            integer_16b = (high_bytes << 64) | low_bytes
+            i+=actual_size
+            print(f"{indent}Found integer: 0x{integer_16b:32x}")
     elif(data_element_type == 3):
         if(actual_size == 2):
             UUID16, = struct.unpack(">H", byte_values[i:i+2])
@@ -118,8 +127,17 @@ def parse_SDP_data_element(indent, byte_values, i):
             diff = new_i - i_before
             j+= diff
             i = new_i
+    elif(data_element_type == 7):
+        # FIXME: handle this type now that you have a sample!
+        exit(-1)
+    elif(data_element_type == 0):
+        # FIXME: handle this type now that you maybe have a sample! (Or possibly your parser's broken...)
+        exit(-1)
+    elif(data_element_type == 2):
+        # FIXME: handle this type now that you have a sample!
+        exit(-1)
     else:
-        # FIXME: handle this type
+        # FIXME: invalid type, probably an error in the code
         exit(-1)
 
     return data_element_type, actual_size, byte_values[i:], i
@@ -214,18 +232,45 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, p
 
     return
 
+def defrag_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+
+    raw_byte_len = len(byte_values)
+    AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
+    #vprint(f"AttributeListsByteCount: 0x{AttributeListsByteCount:04x}")
+    fragment_bytes = byte_values[2:2+AttributeListsByteCount]
+
+    i = 2+AttributeListsByteCount
+    # Looping until AttributeListsByteCount because that's all the nested data
+    # while (i < AttributeListsByteCount):
+    #     (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}\t\t", byte_values, i)
+
+    ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
+    i+=1
+    #qprint(f"{indent}\t\tContinuationState: 0x{ContinuationState:02x}")
+
+    ContinuationStateBytes = 0
+    if(ContinuationState > 0):
+        ContinuationStateBytes = byte_values[i:i+ContinuationState]
+        #qprint(f"{indent}\t\tContinuationStateBytes: {ContinuationStateBytes}")
+
+    return fragment_bytes, True
+
 def print_SDP_info(bdaddr):
     # Query the database for all SDP data
     values = (bdaddr,)
-    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s";
+    # This is the query which hopefully has no fragments...
+    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s and pdu_id != 7";
     SDP_result = execute_query(query, values)
+    # This query will most likely have fragments that need to be reassembled
+    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s and pdu_id = 7 order by transaction_id asc";
+    SDP_result2 = execute_query(query, values)
 
     # Now print what we want users to see
-    if (not SDP_result):
+    if (SDP_result or SDP_result2):
+        qprint("\tService Discovery Protocol (SDP) data found:")
+    else:
         vprint("\tNo SDP data found.")
         return
-    else:
-        qprint("\tService Discovery Protocol (SDP) data found:")
 
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:
         raw_data_hex_str = bytes_to_hex_str(byte_values)
@@ -251,5 +296,28 @@ def print_SDP_info(bdaddr):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
             print_SDP_SERVICE_SEARCH_ATTR_RSP("\t\t", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+
+    reassembly_buffer = b''
+    for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result2:
+        i = 0
+        AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
+        i+=2
+        fragment_bytes = byte_values[2:2+AttributeListsByteCount]
+        reassembly_buffer += fragment_bytes
+        i+=AttributeListsByteCount
+        ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
+
+        if(ContinuationState):
+            continue
+        else:
+            # Export first
+            raw_data_hex_str = bytes_to_hex_str(reassembly_buffer)
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            # Then parse
+            # print_SDP_SERVICE_SEARCH_ATTR_RSP("\t\t", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, reassembly_buffer)
+            i = 0
+            while (i < len(reassembly_buffer)):
+                (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"\t\t", reassembly_buffer, i)
 
     qprint("")
