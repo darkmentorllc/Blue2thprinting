@@ -54,18 +54,46 @@ def execute_insert(query, values):
         database=database,
         charset='utf8mb4',
         collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
+        auth_plugin='mysql_native_password',
+        get_warnings=True,
+        raise_on_warnings=True
     )
 
     cursor = connection.cursor()
+    # TODO: FIXME: I can't find a way around the
+    # "1300: Invalid utf8mb4 character string:..."
+    # warning for use of the BLOB or VARBINARY type of byte_values in the SDP_Common table
+    # so for now I just have to be more specific in looking at warnings
+    # and using them to infer when insertions are duplicates or not
     try:
         cursor.execute(query, values)
-        connection.commit()
-
-        if cursor._warning_count > 0:
+        connection.commit()  # Commit the transaction
+        TME.TME_glob.insert_count += 1  # Increment insert_count if no exception is raised
+    except Exception as e:
+        # Be more specific and only count it as a duplicate if the warning->error code is 1062
+        if e.errno == 1062:
+            #vprint(f"Duplicate entry error: {e}")
             TME.TME_glob.duplicate_count += 1
         else:
-            TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+            TME.TME_glob.insert_count += 1
+
+    # OLD CODE: leaving it here for now though...
+    # try:
+    #     cursor.execute(query, values)
+    #     connection.commit()
+
+        # if cursor._warning_count > 0:
+        #     warnings_tuples = cursor.fetchwarnings()
+        #     if warnings_tuples:
+        #         for warning_tuple in warnings_tuples:
+        #             # Be more specific and only count it as a duplicate if the warning code is 1062
+        #             if(warning_tuple[1] == 1062):
+        #                 vprint(f"Warning: {warning_tuple}")
+        #                 TME.TME_glob.duplicate_count += 1
+        #             else:
+        #                 TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+        # else:
+        #     TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
 
     except mysql.connector.Error as err:
         print(f"Error: {err}")

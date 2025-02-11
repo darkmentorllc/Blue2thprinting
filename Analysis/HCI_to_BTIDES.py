@@ -111,9 +111,17 @@ def export_to_SDPArray(packet, direction):
         # remember information between packets (i.e. which UUID corresponds to which handle)
         if(export_SDP_ERROR_RSP(connect_ind_obj, packet, direction=direction)):
             return True
-        if(export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=direction)):
+        if(export_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, connect_ind_obj, packet, direction=direction)):
             return True
-        if(export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=direction)):
+        if(export_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, connect_ind_obj, packet, direction=direction)):
+            return True
+        if(export_SDP_Common(type_SDP_SERVICE_ATTR_REQ, connect_ind_obj, packet, direction=direction)):
+            return True
+        if(export_SDP_Common(type_SDP_SERVICE_ATTR_RSP, connect_ind_obj, packet, direction=direction)):
+            return True
+        if(export_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, connect_ind_obj, packet, direction=direction)):
+            return True
+        if(export_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, connect_ind_obj, packet, direction=direction)):
             return True
 
 def export_to_ATTArray(packet, direction):
