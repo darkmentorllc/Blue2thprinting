@@ -136,6 +136,33 @@ def print_SDP_Common(indent, direction, l2cap_len, l2cap_cid, transaction_id, pa
     qprint(f"{indent}transaction_id: 0x{transaction_id:04x}")
     qprint(f"{indent}param_len: 0x{param_len:04x}")
 
+def print_SDP_SERVICE_SEARCH_REQ(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+    if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
+        qprint(f"{indent}SDP_SERVICE_SEARCH_REQ:")
+    else:
+        return
+    print(f"raw bytes: {byte_values}")
+
+    print_SDP_Common(f"{indent}\t", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
+
+    qprint(f"{indent}\tParsed Raw Data:")
+    raw_byte_len = len(byte_values)
+    i = 0
+    # ServiceSearchPattern
+    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}\t\t", byte_values, i)
+    MaximumServiceRecordCount, = struct.unpack(">H", byte_values[i:i+2])
+    i+=2
+    qprint(f"{indent}\t\tMaximumServiceRecordCount: 0x{MaximumServiceRecordCount:04x}")
+    # ContinuationState
+    ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
+    i+=1
+    qprint(f"{indent}\t\tContinuationState: 0x{ContinuationState:02x}")
+
+    if(ContinuationState > 0):
+        ContinuationStateBytes, = byte_values[i:i+ContinuationState]
+        qprint(f"{indent}\t\tContinuationStateBytes: {ContinuationStateBytes}")
+
+
 def print_SDP_SERVICE_SEARCH_ATTR_REQ(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
     if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
         qprint(f"{indent}SDP_SERVICE_SEARCH_ATTR_REQ:")
@@ -145,8 +172,6 @@ def print_SDP_SERVICE_SEARCH_ATTR_REQ(indent, direction, l2cap_len, l2cap_cid, p
 
     print_SDP_Common(f"{indent}\t", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
 
-    # print(f"raw bytes: {byte_values}")
-    # qprint(f"{indent}\traw_byte_len: {raw_byte_len:04x}")
     qprint(f"{indent}\tParsed Raw Data:")
     raw_byte_len = len(byte_values)
     i = 0
@@ -170,7 +195,6 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, p
         return
 
     print_SDP_Common(f"{indent}\t", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
-
 
     # print(f"raw bytes: {byte_values}")
     raw_byte_len = len(byte_values)
@@ -209,6 +233,7 @@ def print_SDP_info(bdaddr):
         if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            print_SDP_SERVICE_SEARCH_REQ("\t\t", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
         elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
