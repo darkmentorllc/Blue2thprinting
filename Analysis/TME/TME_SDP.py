@@ -29,14 +29,6 @@ def device_has_SDP_info(bdaddr):
 
     return 0;
 
-
-def print_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
-    if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-        qprint("\t\tSDP_SERVICE_SEARCH_ATTR_REQ:")
-    else:
-        return
-    print(f"raw bytes: {byte_values}")
-
 data_element_size_to_actual_size = {
     0: 1,
     1: 2,
@@ -61,50 +53,60 @@ def parse_SDP_data_element(indent, byte_values, i):
     elif(data_element_size == 7):
         actual_size, = struct.unpack(">I", byte_values[i:i+4])
         i+=4
-    # print(f"{indent}Size of element of type {data_element_type} is {actual_size}")
+    print(f"{indent}Size of element of type {data_element_type} is {actual_size}")
     if(data_element_type == 1):
         if(actual_size == 1):
             integer_1b, = struct.unpack(">B", byte_values[i:i+1])
-            i+=1
+            i+=actual_size
             print(f"{indent}Found integer: 0x{integer_1b:02x}")
         elif(actual_size == 2):
             integer_2b, = struct.unpack(">H", byte_values[i:i+2])
-            i+=2
+            i+=actual_size
             if(integer_2b in TME.TME_glob.SDP_universal_attribute_names.keys()):
                 print(f"{indent}Found integer: 0x{integer_2b:04x} ({TME.TME_glob.SDP_universal_attribute_names[integer_2b]})")
             else:
                 print(f"{indent}Found integer: 0x{integer_2b:04x}")
         elif(actual_size == 4):
             integer_4b, = struct.unpack(">I", byte_values[i:i+4])
-            i+=4
+            i+=actual_size
             print(f"{indent}Found integer: 0x{integer_4b:08x}")
     elif(data_element_type == 3):
         if(actual_size == 2):
             UUID16, = struct.unpack(">H", byte_values[i:i+2])
-            i+=2
+            i+=actual_size
             UUID_str = f"{UUID16:04x}"
             # TODO: need to make this smarter so that it knows it's inside a type 0x0004 (ProtocolDescriptorList)
             if(UUID16 in TME.TME_glob.SDP_protocol_identifiers.keys()):
                 UUID_name = TME.TME_glob.SDP_protocol_identifiers[UUID16]
+            elif(UUID16 in TME.TME_glob.uuid16_service_names.keys()):
+                UUID_name = TME.TME_glob.uuid16_service_names[UUID16]
             else:
                 UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
             print(f"{indent}Found UUID16: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 4):
             UUID32 = bytes_to_hex_str(byte_values[i:i+4])
-            i+=4
+            i+=actual_size
             UUID_str = f"{UUID32:08x}"
             UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
             print(f"{indent}Found UUID32: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 16):
             UUID128 = bytes_to_hex_str(byte_values[i:i+16])
-            i+=16
+            i+=actual_size
             UUID_str = add_dashes_to_UUID128(UUID128)
             UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
             print(f"{indent}Found UUID128: 0x{UUID_str} ({UUID_name})")
     elif(data_element_type == 4):
         string = bytes_to_utf8(byte_values[i:i+actual_size])
-        i+= actual_size
+        i+=actual_size
         print(f"{indent}Found string: {string}")
+    elif(data_element_type == 5):
+        boolean = struct.unpack(">B", byte_values[i:i+1])
+        i+=actual_size
+        print(f"{indent}Found boolean: {"True" if boolean else "False"}")
+    elif(data_element_type == 8):
+        URL = bytes_to_utf8(byte_values[i:i+actual_size])
+        i+=actual_size
+        print(f"{indent}Found URL: {URL}")
 
     # If the data element is a sequence, recursively parse until we find normal data?
     elif(data_element_type == 6):
@@ -122,11 +124,48 @@ def parse_SDP_data_element(indent, byte_values, i):
 
     return data_element_type, actual_size, byte_values[i:], i
 
+
+def print_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+    if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
+        qprint("\t\tSDP_SERVICE_SEARCH_ATTR_REQ:")
+    else:
+        return
+    print(f"raw bytes: {byte_values}")
+
+    if(direction == type_BTIDES_direction_C2P):
+        qprint("\t\t\tdirection: Central to Peripheral")
+    else:
+        qprint("\t\t\tdirection: Peripheral to Central")
+
+    qprint(f"\t\t\tl2cap_len: {l2cap_len}")
+    qprint(f"\t\t\tl2cap_cid: {l2cap_cid}")
+    qprint(f"\t\t\ttransaction_id: 0x{transaction_id:04x}")
+    qprint(f"\t\t\tparam_len: 0x{param_len:04x}")
+
+    # print(f"raw bytes: {byte_values}")
+    # qprint(f"\t\t\traw_byte_len: {raw_byte_len:04x}")
+    qprint(f"\t\t\tParsed Raw Data:")
+    raw_byte_len = len(byte_values)
+    i = 0
+    # ServiceSearchPattern
+    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+    MaximumAttributeByteCount, = struct.unpack(">H", byte_values[i:i+2])
+    i+=2
+    qprint(f"\t\t\t\tMaximumAttributeByteCount: 0x{MaximumAttributeByteCount:04x}")
+    # AttributeIDList
+    while (i < raw_byte_len-1):
+        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+
+    if(len(byte_values_new) == 1):
+        ContinuationState, = struct.unpack(">B", byte_values_new)
+        qprint(f"\t\t\t\tContinuationState: 0x{ContinuationState:02x}")
+
 def print_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
     if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
         qprint("\t\tSDP_SERVICE_SEARCH_ATTR_RSP:")
     else:
         return
+
     if(direction == type_BTIDES_direction_C2P):
         qprint("\t\t\tdirection: Central to Peripheral")
     else:
@@ -147,7 +186,7 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, pdu_id, t
     i = 2
     # Looping until raw_byte_len - 1 because the last byte will be the "Continuation State"
     while (i < raw_byte_len-1):
-        (data_element_type, actual_size, byte_values, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
 
     if(len(byte_values) == 1):
         ContinuationState, = struct.unpack(">B", byte_values)
