@@ -393,6 +393,21 @@ type_L2CAP_DISCONNECTION_REQ = 0x06
 type_L2CAP_DISCONNECTION_RSP = 0x07
 type_L2CAP_INFORMATION_REQ = 0x0A
 type_L2CAP_INFORMATION_RSP = 0x0B
+type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ = 0x12
+type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP = 0x13
+
+l2cap_code_strings = {
+    type_L2CAP_CONNECTION_REQ:                      "L2CAP_CONNECTION_REQ",
+    type_L2CAP_CONNECTION_RSP:                      "L2CAP_CONNECTION_RSP",
+    type_L2CAP_CONFIGURATION_REQ:                   "L2CAP_CONFIGURATION_REQ",
+    type_L2CAP_CONFIGURATION_RSP:                   "L2CAP_CONFIGURATION_RSP",
+    type_L2CAP_DISCONNECTION_REQ:                   "L2CAP_DISCONNECTION_REQ",
+    type_L2CAP_DISCONNECTION_RSP:                   "L2CAP_DISCONNECTION_RSP",
+    type_L2CAP_INFORMATION_REQ:                     "L2CAP_INFORMATION_REQ",
+    type_L2CAP_INFORMATION_RSP:                     "L2CAP_INFORMATION_RSP",
+    type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ:     "L2CAP_CONNECTION_PARAMETER_UPDATE_REQ",
+    type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP:     "L2CAP_CONNECTION_PARAMETER_UPDATE_RSP"
+}
 
 type_PSM_SDP = 0x0001
 type_PSM_RFCOMM = 0x0003
@@ -463,6 +478,14 @@ type_L2CAP_CONFIGURATION_RSP_result_strings = {
     0x0003: "Failure – unknown options",
     0x0004: "Pending",
     0x0005: "Failure - flow spec rejected"
+}
+
+type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_success = 0x0000
+type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_rejected = 0x0001
+
+type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings = {
+    type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_success: "Success",
+    type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_rejected: "Rejected"
 }
 
 ##################################################################

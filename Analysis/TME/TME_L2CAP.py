@@ -26,25 +26,61 @@ def device_has_L2CAP_info(bdaddr):
 
     return 0;
 
+def print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(indent, direction, pkt_id, data_len, interval_min, interval_max, latency, timeout):
+    print(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_REQ:")
+    if(direction == type_BTIDES_direction_C2P):
+        qprint(f"{indent}\tDirection: Central to Peripheral")
+    else:
+        qprint(f"{indent}\tDirection: Peripheral to Central")
+    qprint(f"{indent}\tPacket command/response association ID: {pkt_id}")
+    qprint(f"{indent}\tData Length: {data_len}")
+    qprint(f"{indent}\tRequested minimum connection interval (in units of 1.25ms): {interval_min}")
+    qprint(f"{indent}\tRequested maximum connection interval (in units of 1.25ms): {interval_max}")
+    qprint(f"{indent}\tRequested Peripheral Latency (number of connection events Peripheral can skip responding): {latency}")
+    qprint(f"{indent}\tRequested timeout (in units of 10ms): {timeout}")
+
+
+def print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(indent, direction, pkt_id, data_len, result):
+    print(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_RSP:")
+    if(direction == type_BTIDES_direction_C2P):
+        qprint(f"{indent}\tDirection: Central to Peripheral")
+    else:
+        qprint(f"{indent}\tDirection: Peripheral to Central")
+    qprint(f"{indent}\tPacket command/response association ID: {pkt_id}")
+    qprint(f"{indent}\tData Length: {data_len}")
+    qprint(f"{indent}\tResult: {result} ({type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings[result]})")
+
 
 def print_L2CAP_info(bdaddr):
     # Query the database for all L2CAP data
     values = (bdaddr,)
-    query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
-    SMP_Pairing_Req_Res_result = execute_query(query, values)
-    for bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist in SMP_Pairing_Req_Res_result:
-        # First export BTIDES
-        # if(opcode == type_SMP_Pairing_Request):
-        #     data = ff_SMP_Pairing_Request(type_BTIDES_direction_C2P, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
-        # else:
-        #     data = ff_SMP_Pairing_Response(type_BTIDES_direction_P2C, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
-        # BTIDES_export_SMP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
+    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr = %s";
+    l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result = execute_query(query, values)
+    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr = %s";
+    l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result = execute_query(query, values)
 
-        # Now print what we want users to see
-        if (len(SMP_Pairing_Req_Res_result) == 0):
-            vprint("\tNo L2CAP data found.")
-            return
-        else:
-            qprint("\tL2CAP data found:")
+    if (l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result or l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):
+        qprint("\tL2CAP data found:")
+    else:
+        vprint("\tNo L2CAP data found.")
+        return
+
+    if(l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result):
+        for bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout in l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result:
+            # First export BTIDES
+            if(code == type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ):
+                data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(direction, pkt_id, data_len, interval_min, interval_max, latency, timeout)
+                BTIDES_export_L2CAP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
+                # Then print UI
+                print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ("\t\t", direction, pkt_id, data_len, interval_min, interval_max, latency, timeout)
+
+    if(l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):
+        for bdaddr_random, direction, code, pkt_id, data_len, result in l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result:
+            # First export BTIDES
+            if(code == type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP):
+                data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(direction, pkt_id, data_len, result)
+                BTIDES_export_L2CAP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
+                # Then print UI
+                print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP("\t\t", direction, pkt_id, data_len, result)
 
     qprint("")

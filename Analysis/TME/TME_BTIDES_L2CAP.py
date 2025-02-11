@@ -143,6 +143,35 @@ def ff_L2CAP_INFORMATION_RSP(direction, id, data_len, info_type, result, info_he
         obj["code_str"] = "L2CAP_INFORMATION_RSP"
     return obj
 
+def ff_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(direction, id, data_len, interval_min, interval_max, latency, timeout):
+    obj = {
+        "code": type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ,
+        "direction": direction,
+        "id": id,
+        "data_len": data_len,
+        "interval_min": interval_min,
+        "interval_max": interval_max,
+        "latency": latency,
+        "timeout": timeout
+    }
+    if TME.TME_glob.verbose_BTIDES:
+        obj["code_str"] = "L2CAP_CONNECTION_PARAMETER_UPDATE_REQ"
+    return obj
+
+def ff_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(direction, id, data_len, result):
+    obj = {
+        "code": type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP,
+        "direction": direction,
+        "id": id,
+        "data_len": data_len,
+        "result": result
+    }
+    if TME.TME_glob.verbose_BTIDES:
+        obj["code_str"] = "L2CAP_CONNECTION_PARAMETER_UPDATE_RSP"
+        if result in type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings:
+            obj["result_str"] = type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings[result]
+    return obj
+
 ############################
 # JSON insertion functions
 ############################

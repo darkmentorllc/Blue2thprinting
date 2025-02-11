@@ -804,6 +804,58 @@ def parse_HCIArray(entry):
         if(has_known_HCI_entry(event_code_HCI_Remote_Name_Request_Complete, hci_entry)):
             import_HCI_Remote_Name_Request_Complete(bdaddr, hci_entry)
 
+
+###################################
+# BTIDES_L2CAP.json information
+###################################
+
+def import_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(bdaddr, bdaddr_random, l2cap_entry):
+    direction = l2cap_entry["direction"]
+    code = l2cap_entry["code"]
+    pkt_id = l2cap_entry["id"]
+    data_len = l2cap_entry["data_len"]
+    interval_min = l2cap_entry["interval_min"]
+    interval_max = l2cap_entry["interval_max"]
+    latency = l2cap_entry["latency"]
+    timeout = l2cap_entry["timeout"]
+    values = (bdaddr, bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout)
+    insert = f"INSERT IGNORE INTO L2CAP_CONNECTION_PARAMETER_UPDATE_REQ (bdaddr, bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(bdaddr, bdaddr_random, l2cap_entry):
+    direction = l2cap_entry["direction"]
+    code = l2cap_entry["code"]
+    id = l2cap_entry["id"]
+    data_len = l2cap_entry["data_len"]
+    result = l2cap_entry["result"]
+    values = (bdaddr, bdaddr_random, direction, code, id, data_len, result)
+    insert = f"INSERT IGNORE INTO L2CAP_CONNECTION_PARAMETER_UPDATE_RSP (bdaddr, bdaddr_random, direction, code, id, data_len, result) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def parse_L2CAPArray(entry):
+    if("L2CAPArray" not in entry.keys() or entry["L2CAPArray"] == None):
+        return # Entry not valid for this type
+
+    for l2cap_entry in entry["L2CAPArray"]:
+        # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
+        if("direction" in l2cap_entry.keys() and l2cap_entry["direction"] == type_BTIDES_direction_C2P):
+            bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+        else:
+            bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+
+        if(bdaddr == "00:00:00:00:00:00"):
+            # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            continue
+
+        if("code" in l2cap_entry.keys() and l2cap_entry["code"] in l2cap_code_strings.keys()):
+            if(l2cap_entry["code"] == type_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ):
+                import_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(bdaddr, bdaddr_rand, l2cap_entry)
+            elif(l2cap_entry["code"] == type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP):
+                import_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(bdaddr, bdaddr_rand, l2cap_entry)
+
+
 ###################################
 # BTIDES_EIR.json information
 ###################################
@@ -1149,6 +1201,8 @@ def btides_to_sql(args):
         parse_LMPArray(entry)
 
         parse_HCIArray(entry)
+
+        parse_L2CAPArray(entry)
 
         parse_ATTArray(entry)
 

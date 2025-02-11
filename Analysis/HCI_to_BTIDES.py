@@ -86,6 +86,10 @@ def export_to_L2CAPArray(packet, direction):
         return True
     if(export_L2CAP_INFORMATION_RSP(connect_ind_obj, packet, direction=direction)):
         return True
+    if(export_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(connect_ind_obj, packet, direction=direction)):
+        return True
 
 
 def export_to_SDPArray(packet, direction):
