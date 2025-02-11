@@ -1430,7 +1430,7 @@ def get_SDP_data(packet, scapy_type, packet_type):
 
 
 def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
-    # packet.show()
+    packet.show()
     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_REQ)
     if l2cap_hdr != None and sdp_hdr != None:
@@ -1453,7 +1453,7 @@ def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
     return False
 
 def export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=None):
-    # packet.show()
+    packet.show()
     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_RSP)
     if l2cap_hdr != None and sdp_hdr != None:
