@@ -93,7 +93,6 @@ def export_to_L2CAPArray(packet, direction):
 
 
 def export_to_SDPArray(packet, direction):
-    packet.show()
     acl = packet.getlayer(HCI_ACL_Hdr)
 
     if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
@@ -106,10 +105,12 @@ def export_to_SDPArray(packet, direction):
     # See if we've seen a connection with PSM == SDP, and see if the CID for this packet matches that one
     if(CID_in_CIDs_used_for_SDP(connect_ind_obj, l2cap_hdr.cid)):
         # If this matched, then this is an SDP packet
-
+        packet.show()
         # The opcodes are mutually exclusive, so if one returns true, we're done
         # To convert ATT data into a GATT hierarchy requires us to statefully
         # remember information between packets (i.e. which UUID corresponds to which handle)
+        if(export_SDP_ERROR_RSP(connect_ind_obj, packet, direction=direction)):
+            return True
         if(export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=direction)):
             return True
         if(export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=direction)):

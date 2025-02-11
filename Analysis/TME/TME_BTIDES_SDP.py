@@ -17,6 +17,24 @@ from TME.TME_helpers import get_utf8_string_from_hex_string
 # Helper "factory functions"
 ############################
 
+def ff_SDP_ERROR_RSP(direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code):
+    obj = {
+        "direction": direction,
+        "l2cap_len": l2cap_len,
+        "l2cap_cid": l2cap_cid,
+        "pdu_id": type_SDP_ERROR_RSP,
+        "transaction_id": transaction_id,
+        "param_len": param_len,
+        "error_code": error_code
+    }
+    if TME.TME_glob.verbose_BTIDES:
+        obj["pdu_id_str"] = "SDP_ERROR_RSP"
+        if error_code in sdp_error_strings.keys():
+            obj["error_code_str"] = sdp_error_strings[error_code]
+
+    return obj
+
+
 def ff_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str):
     obj = {
         "direction": direction,

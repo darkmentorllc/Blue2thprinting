@@ -1328,7 +1328,7 @@ def export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            packet.show()
+            #packet.show()
             data = ff_L2CAP_DISCONNECTION_REQ(direction=direction,
                                                 id=l2cap_hdr.id,
                                                 data_len=l2cap_hdr.len,
@@ -1352,7 +1352,7 @@ def export_L2CAP_DISCONNECTION_RSP(connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            packet.show()
+            #packet.show()
             data = ff_L2CAP_DISCONNECTION_RSP(direction=direction,
                                                 id=l2cap_hdr.id,
                                                 data_len=l2cap_hdr.len,
@@ -1470,6 +1470,29 @@ def get_SDP_data(packet, scapy_type, packet_type):
         return None
     else:
         return packet.getlayer(scapy_type)
+
+
+def export_SDP_ERROR_RSP(connect_ind_obj, packet, direction=None):
+    l2cap_hdr = packet.getlayer(L2CAP_Hdr)
+    sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_ERROR_RSP)
+    if l2cap_hdr is not None and sdp_hdr is not None:
+        try:
+            if direction is None:
+                direction = get_packet_direction(packet)
+            error_code, = struct.unpack(">H", sdp_hdr.load)
+            data = ff_SDP_ERROR_RSP(direction=direction,
+                                    l2cap_len=l2cap_hdr.len,
+                                    l2cap_cid=l2cap_hdr.cid,
+                                    transaction_id=sdp_hdr.transaction_id,
+                                    param_len=sdp_hdr.param_len,
+                                    error_code=error_code)
+        except AttributeError as e:
+            print(f"Error accessing sdp_hdr fields: {e}")
+            return False
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_SDP_packet(connect_ind_obj=connect_ind_obj, data=data)
+        return True
+    return False
 
 
 def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):

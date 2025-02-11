@@ -1086,6 +1086,18 @@ def parse_SMPArray(entry):
 # BTIDES_SDP.json information
 ###################################
 
+def import_SDP_ERROR_RSP(bdaddr, sdp_entry):
+    l2cap_len = sdp_entry["l2cap_len"]
+    l2cap_cid = sdp_entry["l2cap_cid"]
+    direction = sdp_entry["direction"]
+    transaction_id = sdp_entry["transaction_id"]
+    param_len = sdp_entry["param_len"]
+    error_code = sdp_entry["error_code"]
+    values = (bdaddr, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code)
+    insert = f"INSERT IGNORE INTO SDP_ERROR_RSP (bdaddr, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
 def import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry):
     l2cap_len = sdp_entry["l2cap_len"]
     l2cap_cid = sdp_entry["l2cap_cid"]
@@ -1097,6 +1109,7 @@ def import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry):
     values = (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
     insert = f"INSERT IGNORE INTO SDP_SERVICE_SEARCH_ATTR_REQ_RSP (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
+
 
 def parse_SDPArray(entry):
     if("SDPArray" not in entry.keys() or entry["SDPArray"] == None):
@@ -1114,7 +1127,9 @@ def parse_SDPArray(entry):
             continue
 
         if("pdu_id" in sdp_entry.keys() and sdp_entry["pdu_id"] in sdp_pdu_strings.keys()):
-            if(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_REQ):
+            if(sdp_entry["pdu_id"] == type_SDP_ERROR_RSP):
+                import_SDP_ERROR_RSP(bdaddr, sdp_entry)
+            elif(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_REQ):
                 import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
             elif(sdp_entry["pdu_id"] == type_SDP_SERVICE_SEARCH_ATTR_RSP):
                 import_SDP_SERVICE_SEARCH_ATTR_REQ_RSP(bdaddr, sdp_entry)
