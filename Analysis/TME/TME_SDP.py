@@ -125,68 +125,64 @@ def parse_SDP_data_element(indent, byte_values, i):
     return data_element_type, actual_size, byte_values[i:], i
 
 
-def print_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+def print_SDP_Common(indent, direction, l2cap_len, l2cap_cid, transaction_id, param_len):
+    if(direction == type_BTIDES_direction_C2P):
+        qprint(f"{indent}Direction: Central to Peripheral")
+    else:
+        qprint(f"{indent}Direction: Peripheral to Central")
+
+    qprint(f"{indent}l2cap_len: {l2cap_len}")
+    qprint(f"{indent}l2cap_cid: {l2cap_cid}")
+    qprint(f"{indent}transaction_id: 0x{transaction_id:04x}")
+    qprint(f"{indent}param_len: 0x{param_len:04x}")
+
+def print_SDP_SERVICE_SEARCH_ATTR_REQ(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
     if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-        qprint("\t\tSDP_SERVICE_SEARCH_ATTR_REQ:")
+        qprint(f"{indent}SDP_SERVICE_SEARCH_ATTR_REQ:")
     else:
         return
     print(f"raw bytes: {byte_values}")
 
-    if(direction == type_BTIDES_direction_C2P):
-        qprint("\t\t\tdirection: Central to Peripheral")
-    else:
-        qprint("\t\t\tdirection: Peripheral to Central")
-
-    qprint(f"\t\t\tl2cap_len: {l2cap_len}")
-    qprint(f"\t\t\tl2cap_cid: {l2cap_cid}")
-    qprint(f"\t\t\ttransaction_id: 0x{transaction_id:04x}")
-    qprint(f"\t\t\tparam_len: 0x{param_len:04x}")
+    print_SDP_Common(f"{indent}\t", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
 
     # print(f"raw bytes: {byte_values}")
-    # qprint(f"\t\t\traw_byte_len: {raw_byte_len:04x}")
-    qprint(f"\t\t\tParsed Raw Data:")
+    # qprint(f"{indent}\traw_byte_len: {raw_byte_len:04x}")
+    qprint(f"{indent}\tParsed Raw Data:")
     raw_byte_len = len(byte_values)
     i = 0
     # ServiceSearchPattern
-    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}\t\t", byte_values, i)
     MaximumAttributeByteCount, = struct.unpack(">H", byte_values[i:i+2])
     i+=2
-    qprint(f"\t\t\t\tMaximumAttributeByteCount: 0x{MaximumAttributeByteCount:04x}")
+    qprint(f"{indent}\t\tMaximumAttributeByteCount: 0x{MaximumAttributeByteCount:04x}")
     # AttributeIDList
     while (i < raw_byte_len-1):
-        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}\t\t\t", byte_values, i)
 
     if(len(byte_values_new) == 1):
         ContinuationState, = struct.unpack(">B", byte_values_new)
-        qprint(f"\t\t\t\tContinuationState: 0x{ContinuationState:02x}")
+        qprint(f"{indent}\t\tContinuationState: 0x{ContinuationState:02x}")
 
-def print_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
     if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
-        qprint("\t\tSDP_SERVICE_SEARCH_ATTR_RSP:")
+        qprint(f"{indent}SDP_SERVICE_SEARCH_ATTR_RSP:")
     else:
         return
 
-    if(direction == type_BTIDES_direction_C2P):
-        qprint("\t\t\tdirection: Central to Peripheral")
-    else:
-        qprint("\t\t\tdirection: Peripheral to Central")
+    print_SDP_Common(f"{indent}\t", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
 
-    qprint(f"\t\t\tl2cap_len: {l2cap_len}")
-    qprint(f"\t\t\tl2cap_cid: {l2cap_cid}")
-    qprint(f"\t\t\ttransaction_id: 0x{transaction_id:04x}")
-    qprint(f"\t\t\tparam_len: 0x{param_len:04x}")
 
     # print(f"raw bytes: {byte_values}")
     raw_byte_len = len(byte_values)
     AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
-    # qprint(f"\t\t\traw_byte_len: {raw_byte_len:04x}")
-    qprint(f"\t\t\tParsed Raw Data:")
-    qprint(f"\t\t\t\tAttributeListsByteCount: 0x{AttributeListsByteCount:04x}")
+    # qprint(f"{indent}\traw_byte_len: {raw_byte_len:04x}")
+    qprint(f"{indent}\tParsed Raw Data:")
+    qprint(f"{indent}\t\tAttributeListsByteCount: 0x{AttributeListsByteCount:04x}")
 
     i = 2
     # Looping until raw_byte_len - 1 because the last byte will be the "Continuation State"
     while (i < raw_byte_len-1):
-        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element("\t\t\t\t", byte_values, i)
+        (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}\t\t", byte_values, i)
 
     if(len(byte_values) == 1):
         ContinuationState, = struct.unpack(">B", byte_values)
@@ -199,25 +195,36 @@ def print_SDP_info(bdaddr):
     values = (bdaddr,)
     query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s";
     SDP_result = execute_query(query, values)
+
+    # Now print what we want users to see
+    if (not SDP_result):
+        vprint("\tNo SDP data found.")
+        return
+    else:
+        qprint("\tService Discovery Protocol (SDP) data found:")
+
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:
         raw_data_hex_str = bytes_to_hex_str(byte_values)
         # First export BTIDES
-        if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
+        if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_ATTR_REQ):
+            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_ATTR_RSP):
+            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-        else:
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-        BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-
-        # Now print what we want users to see
-        if (len(SDP_result) == 0):
-            vprint("\tNo SDP data found.")
-            return
-        else:
-            qprint("\tService Discovery Protocol (SDP) data found:")
-
-        if(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-            print_SDP_SERVICE_SEARCH_ATTR_REQ(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            print_SDP_SERVICE_SEARCH_ATTR_REQ("\t\t", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
         elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
-            print_SDP_SERVICE_SEARCH_ATTR_RSP(direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            print_SDP_SERVICE_SEARCH_ATTR_RSP("\t\t", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
 
     qprint("")

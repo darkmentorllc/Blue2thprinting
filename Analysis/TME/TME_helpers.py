@@ -71,29 +71,46 @@ def execute_insert(query, values):
         TME.TME_glob.insert_count += 1  # Increment insert_count if no exception is raised
     except Exception as e:
         # Be more specific and only count it as a duplicate if the warning->error code is 1062
-        if e.errno == 1062:
-            #vprint(f"Duplicate entry error: {e}")
-            TME.TME_glob.duplicate_count += 1
-        else:
-            TME.TME_glob.insert_count += 1
+        duplicate = False
+        warnings_tuples = cursor.fetchwarnings()
+        if warnings_tuples:
+            for warning_tuple in warnings_tuples:
+                # Be more specific and only count it as a duplicate if the warning code is 1062
+                if(warning_tuple[1] == 1062):
+                    #vprint(f"Warning: {warning_tuple}")
+                    TME.TME_glob.duplicate_count += 1
+                    duplicate = True
+                    break
+            # If we get through all of the warnings (there could be multiple, like 1300 and 1062)
+            # and none of them are 1062, then go ahead and increment the insert count
+            if(not duplicate):
+                # Wasn't a duplicate, just a warning (i.e. the non-utf8 byte_values in SDP_Commone)
+                connection.commit()
+                TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+
 
     # OLD CODE: leaving it here for now though...
     # try:
     #     cursor.execute(query, values)
     #     connection.commit()
 
-        # if cursor._warning_count > 0:
-        #     warnings_tuples = cursor.fetchwarnings()
-        #     if warnings_tuples:
-        #         for warning_tuple in warnings_tuples:
-        #             # Be more specific and only count it as a duplicate if the warning code is 1062
-        #             if(warning_tuple[1] == 1062):
-        #                 vprint(f"Warning: {warning_tuple}")
-        #                 TME.TME_glob.duplicate_count += 1
-        #             else:
-        #                 TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
-        # else:
-        #     TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+    #     duplicate = False
+    #     if cursor._warning_count > 0:
+    #         warnings_tuples = cursor.fetchwarnings()
+    #         if warnings_tuples:
+    #             for warning_tuple in warnings_tuples:
+    #                 # Be more specific and only count it as a duplicate if the warning code is 1062
+    #                 if(warning_tuple[1] == 1062):
+    #                     #vprint(f"Warning: {warning_tuple}")
+    #                     TME.TME_glob.duplicate_count += 1
+    #                     duplicate = True
+    #                     break
+    #             # If we get through all of the warnings (there could be multiple, like 1300 and 1062)
+    #             # and none of them are 1062, then go ahead and increment the insert count
+    #             if(not duplicate):
+    #                 TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
+    #     else:
+    #         TME.TME_glob.insert_count += 1  # Increment insert_count only if no duplicates
 
     except mysql.connector.Error as err:
         print(f"Error: {err}")

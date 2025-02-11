@@ -1508,7 +1508,7 @@ def export_SDP_Common(pdu_id, connect_ind_obj, packet, direction=None):
         try:
             if direction is None:
                 direction = get_packet_direction(packet)
-            packet.show()
+            # packet.show()
             raw_data_hex_str = bytes_to_hex_str(sdp_hdr.load) # This is all the data after the header
             data = ff_SDP_Common(pdu_id=pdu_id,
                                  direction=direction,

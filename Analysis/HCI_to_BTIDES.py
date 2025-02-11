@@ -105,7 +105,7 @@ def export_to_SDPArray(packet, direction):
     # See if we've seen a connection with PSM == SDP, and see if the CID for this packet matches that one
     if(CID_in_CIDs_used_for_SDP(connect_ind_obj, l2cap_hdr.cid)):
         # If this matched, then this is an SDP packet
-        packet.show()
+        # packet.show()
         # The opcodes are mutually exclusive, so if one returns true, we're done
         # To convert ATT data into a GATT hierarchy requires us to statefully
         # remember information between packets (i.e. which UUID corresponds to which handle)
