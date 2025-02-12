@@ -29,6 +29,7 @@ def device_has_SDP_info(bdaddr):
 
     return 0;
 
+# Per spec "DATA ELEMENT SIZE DESCRIPTOR" section
 data_element_size_to_actual_size = {
     0: 1,
     1: 2,
