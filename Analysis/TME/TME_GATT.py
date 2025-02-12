@@ -47,7 +47,7 @@ def match_known_GATT_UUID_or_custom_UUID(UUID):
             uuid16 = common_part[4:8]
 
     if match:
-        # Try to see if it's a known Service
+        # Try to see if it's a known GATT Service
         str_name = get_uuid16_gatt_service_string(uuid16)
         if(str_name != "Unknown"):
             return f"Service: {str_name}"
