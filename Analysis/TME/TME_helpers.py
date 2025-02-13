@@ -409,7 +409,11 @@ def get_custom_by_uuid16(uuid16):
     uuid = uuid16.strip()
     if(uuid in TME.TME_glob.clues.keys()):
         entry = TME.TME_glob.clues[uuid]
-        return f"{entry["company"]}:{entry["UUID_name"]}"
+        if("UUID_name" not in entry.keys()):
+            name = "Unknown"
+        else:
+            name = entry["UUID_name"]
+        return f"{entry["company"]}:{name}"
     else:
         return "Unknown"
 
