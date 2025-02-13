@@ -735,7 +735,8 @@ def print_device_names(bdaddr, nametype):
         qprint(f"\tDeviceName: {device_name}")
         qprint("\t\tIn BT Classic Data (HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
-        BTIDES_export_HCI_Name_Response(bdaddr, device_name)
+        remote_name_hex_str = device_name.encode('utf-8').hex()
+        BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)

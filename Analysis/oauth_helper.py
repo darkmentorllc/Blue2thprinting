@@ -109,7 +109,8 @@ class AuthClient:
         try:
             self.user_info = service.userinfo().get().execute()
         except Exception as e:
-            print(f"Failed to get user info (this is usually due to out of date token): {e}")
+            print(f"Failed to get user info (this is usually due to an expired token): {e}")
+            print(f"Attempting token refresh...")
             self.user_info = None
             # Try refreshing the token
             try:

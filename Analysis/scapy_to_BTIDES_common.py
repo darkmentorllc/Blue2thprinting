@@ -1526,54 +1526,6 @@ def export_SDP_Common(pdu_id, connect_ind_obj, packet, direction=None):
     return False
 
 
-# def export_SDP_SERVICE_SEARCH_ATTR_REQ(connect_ind_obj, packet, direction=None):
-#     #packet.show()
-#     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
-#     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_REQ)
-#     if l2cap_hdr != None and sdp_hdr != None:
-#         try:
-#             if direction is None:
-#                 direction = get_packet_direction(packet)
-#             raw_data_hex_str = bytes_to_hex_str(sdp_hdr.load) # This is all the data after the header
-#             data = ff_SDP_Common(pdu_id=type_SDP_SERVICE_SEARCH_ATTR_REQ,
-#                                  direction=direction,
-#                                 l2cap_len=l2cap_hdr.len,
-#                                 l2cap_cid=l2cap_hdr.cid,
-#                                 transaction_id=sdp_hdr.transaction_id,
-#                                 param_len=sdp_hdr.param_len,
-#                                 raw_data_hex_str=raw_data_hex_str)
-#         except AttributeError as e:
-#             print(f"Error accessing sdp_hdr fields: {e}")
-#             return False
-#         if_verbose_insert_std_optional_fields(data, packet)
-#         BTIDES_export_SDP_packet(connect_ind_obj=connect_ind_obj, data=data)
-#         return True
-#     return False
-
-# def export_SDP_SERVICE_SEARCH_ATTR_RSP(connect_ind_obj, packet, direction=None):
-#     #packet.show()
-#     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
-#     sdp_hdr = get_SDP_data(packet, SDP_Hdr, type_SDP_SERVICE_SEARCH_ATTR_RSP)
-#     if l2cap_hdr != None and sdp_hdr != None:
-#         try:
-#             if direction is None:
-#                 direction = get_packet_direction(packet)
-#             raw_data_hex_str = bytes_to_hex_str(sdp_hdr.load) # This is all the data after the header
-#             data = ff_SDP_Common(pdu_id=type_SDP_SERVICE_SEARCH_ATTR_RSP,
-#                                  direction=direction,
-#                                 l2cap_len=l2cap_hdr.len,
-#                                 l2cap_cid=l2cap_hdr.cid,
-#                                 transaction_id=sdp_hdr.transaction_id,
-#                                 param_len=sdp_hdr.param_len,
-#                                 raw_data_hex_str=raw_data_hex_str)
-#         except AttributeError as e:
-#             print(f"Error accessing sdp_hdr fields: {e}")
-#             return False
-#         if_verbose_insert_std_optional_fields(data, packet)
-#         BTIDES_export_SDP_packet(connect_ind_obj=connect_ind_obj, data=data)
-#         return True
-#     return False
-
 ######################################################################
 # HCI SECTION
 ######################################################################
