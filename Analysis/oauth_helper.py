@@ -6,14 +6,14 @@ from googleapiclient.discovery import build
 
 class AuthClient:
     def __init__(self):
-        self.scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+        self.scopes = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
         self.auth_uri = "https://accounts.google.com/o/oauth2/auth"
         self.token_uri = "https://oauth2.googleapis.com/token"
         self.redirect_uri = 'https://btidalpool.ddns.net:7653/oauth2callback'
         self.token_file = None
 
         # BTIDALPOOL server's Google OAuth2 client ID
-        self.client_id = '6849068466-3rhiutmh069m2tpg9a2o4m26qnomaqse.apps.googleusercontent.com'
+        self.client_id = '934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com'
 
     # This is just a common flow that was seen repeatedly by the client users, where they had to
     # use an existing token, and possibly refresh it, or maybe just show the SSO login prompt.

@@ -31,7 +31,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
-g_local_testing = False
+g_local_testing = True
 
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
