@@ -33,6 +33,9 @@ from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
 g_local_testing = False
 
+# Maximum file size, in MB
+g_max_file_size = 10
+
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
 g_max_simultaneous_connections = 10
@@ -193,7 +196,7 @@ def handle_btides_data(self, username, json_content):
         json_content_str = json.dumps(json_content, sort_keys=True)
 
         # Check the size of the JSON content
-        if len(json_content_str.encode('utf-8')) > 10 * 1024 * 1024:  # 10 megabytes
+        if len(json_content_str.encode('utf-8')) > g_max_file_size * 1024 * 1024:
             send_back_response(self, username, 400, 'text/plain', b'File size too big.')
             return
 
