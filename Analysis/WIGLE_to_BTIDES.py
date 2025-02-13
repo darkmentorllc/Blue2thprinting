@@ -41,54 +41,55 @@ def BTIDES_export_GPS_coordinate(connect_ind_obj=None, bdaddr=None, random=None,
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GPSArray")
 
 def find_bdaddr_rand(bdaddr):
-    # if(TME.TME_glob.use_test_db):
-    #     database = 'bttest'
-    # else:
-    #     database = 'bt2'
+    if(TME.TME_glob.use_test_db):
+        database = 'bttest'
+    else:
+        database = 'bt2'
 
-    # conn = mysql.connector.connect(
-    #     host='localhost',
-    #     user='user',
-    #     password='a',
-    #     database=database,
-    #     charset='utf8mb4',
-    #     collation='utf8mb4_unicode_ci',
-    #     auth_plugin='mysql_native_password'
-    # )
-    # cursor = conn.cursor()
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='user',
+        password='a',
+        database=database,
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
+        auth_plugin='mysql_native_password'
+    )
+    cursor = conn.cursor()
 
-    # cursor.execute("SHOW TABLES")
-    # tables = cursor.fetchall()
+    cursor.execute("SHOW TABLES")
+    tables = cursor.fetchall()
 
-    # bdaddr_rand_count = {0: 0, 1: 0}
+    bdaddr_rand_count = {0: 0, 1: 0}
 
-    # for table in tables:
-    #     table_name = table[0]
-    #     cursor.execute(f"SHOW COLUMNS FROM {table_name}")
-    #     columns = cursor.fetchall()
+    # TODO: change to a union statement across all tables, to cut down on DB connection traffic
+    for table in tables:
+        table_name = table[0]
+        cursor.execute(f"SHOW COLUMNS FROM {table_name}")
+        columns = cursor.fetchall()
 
-    #     if any(column[0] == "bdaddr_random" for column in columns):
-    #         values = (bdaddr,)
-    #         # table_name is not ACID, so it's OK to interpolate it directly in
-    #         # (because otherwise there's a syntax error due to the prepared statement
-    #         # wrapping the table name in single quotes...
-    #         query = f"SELECT bdaddr_random FROM {table_name} where bdaddr = %s LIMIT 1"
-    #         cursor.execute(query, values)
-    #         rows = cursor.fetchall()
-    #         for row in rows:
-    #             bdaddr_rand = row[0]
-    #             if bdaddr_rand in bdaddr_rand_count:
-    #                 bdaddr_rand_count[bdaddr_rand] += 1
+        if any(column[0] == "bdaddr_random" for column in columns):
+            values = (bdaddr,)
+            # table_name is not ACID, so it's OK to interpolate it directly in
+            # (because otherwise there's a syntax error due to the prepared statement
+            # wrapping the table name in single quotes...
+            query = f"SELECT bdaddr_random FROM {table_name} where bdaddr = %s LIMIT 1"
+            cursor.execute(query, values)
+            rows = cursor.fetchall()
+            for row in rows:
+                bdaddr_rand = row[0]
+                if bdaddr_rand in bdaddr_rand_count:
+                    bdaddr_rand_count[bdaddr_rand] += 1
 
-    # conn.close()
+    conn.close()
 
-    # if(bdaddr_rand_count[0] == bdaddr_rand_count[1]):
-    #     most_common_bdaddr_rand = 1 # If there's no results in our DB, just say it's a random address, since that's statistically most likely
-    # else:
-    #     most_common_bdaddr_rand = max(bdaddr_rand_count, key=bdaddr_rand_count.get)
-    # return most_common_bdaddr_rand
+    if(bdaddr_rand_count[0] == bdaddr_rand_count[1]):
+        most_common_bdaddr_rand = 1 # If there's no results in our DB, just say it's a random address, since that's statistically most likely
+    else:
+        most_common_bdaddr_rand = max(bdaddr_rand_count, key=bdaddr_rand_count.get)
+    return most_common_bdaddr_rand
 
-    return 1
+    # return 1
 
 def read_WiGLE_DB(input):
     try:
@@ -108,8 +109,8 @@ def read_WiGLE_DB(input):
         if i % max(1, len(rows) // 100) == 0:
             qprint(f"Processed {i} out of {len(rows)} records ({(i / len(rows)) * 100:.0f}%)")
         i+=1
-        if(i == 1000):
-            return
+        # if(i == 1000):
+        #     return
 
         # TODO: how to extract these directly from the schema in case it changes?
         bssid_ACID = row[0]
@@ -150,17 +151,17 @@ def read_WiGLE_DB(input):
 
         # TODO: look up RSSI in location table, by matching on bssid?
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
-        query = "SELECT * FROM location WHERE bssid = ?"
-        values = (bssid_ACID,)
-        sqlite_cursor.execute(query, values)
-        locations = sqlite_cursor.fetchall()
-        for location in locations:
-            rssi = location[2]
-            lat = location[3]
-            lon = location[4]
-            time = location[7]
-            data = {"time": {"unix_time_milli": time}, "rssi": rssi, "lat": lat, "lon": lon}
-            BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
+        # query = "SELECT * FROM location WHERE bssid = ?"
+        # values = (bssid_ACID,)
+        # sqlite_cursor.execute(query, values)
+        # locations = sqlite_cursor.fetchall()
+        # for location in locations:
+        #     rssi = location[2]
+        #     lat = location[3]
+        #     lon = location[4]
+        #     time = location[7]
+        #     data = {"time": {"unix_time_milli": time}, "rssi": rssi, "lat": lat, "lon": lon}
+        #     BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
 
     sqlite_conn.close()
 
