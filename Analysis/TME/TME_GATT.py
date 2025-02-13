@@ -245,10 +245,10 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
         if(char_value_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
-            char_value_handles_dict[char_value_handle].append(byte_values)
+            char_value_handles_dict[(char_value_handle, operation)].append(byte_values)
         else:
             # There wasn't already an entry, so insert a list of a single value")
-            char_value_handles_dict[char_value_handle] = [ byte_values ]
+            char_value_handles_dict[(char_value_handle, operation)] = [ byte_values ]
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
@@ -325,19 +325,27 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     qprint(f"\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})\n\t\t\t\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}")
                     if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
-                    if(char_value_handle not in char_value_handles_dict.keys() and (char_properties & 0x2 == 0x02)):
+                    if(not any(key[0] == char_value_handle for key in char_value_handles_dict.keys()) and (char_properties & 0x2 == 0x02)):
                         qprint(f"\t\t\t\tGATT Characteristic Value not successfully read, despite having readable permissions.")
 
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
-            if(handle in char_value_handles_dict.keys()):
+            if any(key[0] == handle for key in char_value_handles_dict.keys()):
                 char_value_handle = handle
-                for byte_values in char_value_handles_dict[handle]:
-                    if(handle <= svc_end_handle and handle >= svc_begin_handle):
-                        service_match_dict[handle] = 1
-                        fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
-                        qprint(f"\t\t\t\tGATT Characteristic Value read as {fmt_byte_values}")
-                        if(handle in attribute_handles_dict.keys()):
-                            characteristic_value_decoding("\t\t\t\t\t", attribute_handles_dict[handle], byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+                if any(key[0] == handle and key[1] == type_ATT_ERROR_RSP for key in char_value_handles_dict.keys()):
+                    for byte_values in char_value_handles_dict[(handle, type_ATT_ERROR_RSP)]:
+                        if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                            service_match_dict[handle] = 1
+                            error_code = int.from_bytes(byte_values)
+                            fmt_byte_values = Fore.RED + Style.BRIGHT + f"{att_error_strings[error_code]}"
+                            qprint(f"\t\t\t\tGATT error received when attempting read: {fmt_byte_values}")
+                if any(key[0] == handle and key[1] == type_ATT_READ_RSP for key in char_value_handles_dict.keys()):
+                    for byte_values in char_value_handles_dict[(handle, type_ATT_READ_RSP)]:
+                        if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                            service_match_dict[handle] = 1
+                            fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
+                            qprint(f"\t\t\t\tGATT Characteristic Value read as {fmt_byte_values}")
+                            if(handle in attribute_handles_dict.keys()):
+                                characteristic_value_decoding("\t\t\t\t\t", attribute_handles_dict[handle], byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
 
     # Second pass:
     # Iterate through all known handles, printing only information about handles which never matched any service

@@ -669,12 +669,16 @@ def read_pcap(file_path):
                     if(export_BTLE_CTRL(packet)): continue
 
                 # ATT packets
+                # packet.show()
                 if packet.haslayer(ATT_Hdr):
                     if(export_to_ATTArray(packet)): continue
 
                 # L2CAP signal channel packets
                 if packet.haslayer(L2CAP_CmdHdr):
                     if(export_to_L2CAPArray(packet)): continue
+
+                # Skipping SDP for now, even though we have the capability for it,
+                # because it'd be untested since I have no pcaps w/ SDP...
 
                 # SMP packets
                 if packet.haslayer(SM_Hdr):
