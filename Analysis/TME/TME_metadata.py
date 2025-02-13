@@ -422,6 +422,10 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if there are multiple distinct data blobs seen or multiple event types
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data) in MSD_result:
+            # Apple iBeacons are too common in other devices, and Find My network uses the Apple ID too
+            # So we're excluding that from being a valid consideration for Chip Maker
+            if(device_BT_CID == 0x004C or device_BT_CID == 0x4C00):
+                continue
             company_id_hex_str = f"{device_BT_CID:04x}"
             length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
             data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
@@ -433,8 +437,8 @@ def print_ChipMakerPrint(bdaddr):
                 if(device_BT_CID in BT_CID_list):
                     no_results_found = False
                     qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Low Energy Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
-                    if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
-                        qprint(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
+                    # if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
+                    #     qprint(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
     if(time_profile): qprint(f"End = {time.time()}")
     if(no_results_found):
