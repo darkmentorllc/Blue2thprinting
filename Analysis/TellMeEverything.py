@@ -28,6 +28,7 @@ from TME.TME_metadata import *
 from TME.TME_trackability import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
+from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
@@ -58,10 +59,11 @@ def main():
 
     # BTIDALPOOL arguments
     btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
-    btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will query from the remote BTIDALPOOL croudsourced database.')
+    btidalpool_group.add_argument('--to-BTIDALPOOL', action='store_true', required=False, help='The output BTIDES file from --output will also be sent to the remote BTIDALPOOL croudsourced database.')
+    btidalpool_group.add_argument('--query-BTIDALPOOL', action='store_true', required=False, help='This will send the same search arguments to the remote BTIDALPOOL croudsourced database.')
     btidalpool_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
 
-    # Device arguments
+    # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
     device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
@@ -375,6 +377,35 @@ def main():
 
     if(out_filename != None and out_filename != ""):
         write_BTIDES(out_filename)
+
+        # We can only send the out_filename if --output was passed
+        if args.to_BTIDALPOOL:
+            # If the token isn't given on the CLI, then redirect them to go login and get one
+            client = AuthClient()
+            if args.token_file:
+                with open(args.token_file, 'r') as f:
+                    token_data = json.load(f)
+                token = token_data['token']
+                refresh_token = token_data['refresh_token']
+                client.set_credentials(token, refresh_token, token_file=args.token_file)
+                if(not client.validate_credentials()):
+                    print("Authentication failed.")
+                    exit(1)
+            else:
+                try:
+                    if(not client.google_SSO_authenticate() or not client.validate_credentials()):
+                        print("Authentication failed.")
+                        exit(1)
+                except ValueError as e:
+                    print(f"Error: {e}")
+                    exit(1)
+
+            # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
+            send_btides_to_btidalpool(
+                input_file=out_filename,
+                token=client.credentials.token,
+                refresh_token=client.credentials.refresh_token
+            )
 
 if __name__ == "__main__":
     main()
