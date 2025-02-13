@@ -31,7 +31,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 
-g_local_testing = True
+g_local_testing = False
 
 # Global variables used for rate limiting
 g_max_connections_per_day = 100
@@ -115,7 +115,9 @@ def validate_json_content(json_content, registry):
 def run_btides_to_sql(filename):
     # Run the primary code from BTIDES_to_SQL.py script
     # TODO: make this run in a separate thread? (Need to check if it's already running in its own thread vs. other queries)
-    b2s_args = btides_to_sql_args(input=filename, use_test_db=True)
+    b2s_args = btides_to_sql_args(input=filename, use_test_db=False)
+    # Turn on hardcoded test DB usage...
+    # b2s_args = btides_to_sql_args(input=filename, use_test_db=True)
     if(btides_to_sql(b2s_args)):
         os.rename(filename, filename + ".processed")
 
@@ -235,7 +237,10 @@ def handle_query(self, username, query_object):
     print(query_object)
 
     # Arguments we always want to pass to TellMeEverything.py
-    args_array = ["--use-test-db", "--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
+    args_array = ["--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
+
+    # Turn on hardcoded test DB usage...
+    #args_array = ["--use-test-db", "--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
 
     # Can't just loop through and use everything we're handed in query_object,
     # only use arguments which we are expecting, and ignore everything else

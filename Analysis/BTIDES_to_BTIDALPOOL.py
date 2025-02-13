@@ -22,6 +22,8 @@ from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 from oauth_helper import AuthClient
+from TME.TME_helpers import vprint
+import TME.TME_glob
 
 g_local_testing = False
 
@@ -82,6 +84,7 @@ def validate_json_content(json_content, registry):
 
 # Import this function to call from external code without invoking via the CLI
 def send_btides_to_btidalpool(input_file, token, refresh_token):
+    vprint(f"Sending BTIDES file {input_file}")
     # Load the JSON content from the file
     try:
         with open(input_file, 'r') as f:
@@ -150,11 +153,13 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
     parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
 
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
     auth_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
-
     args = parser.parse_args()
+
+    TME.TME_glob.verbose_print = args.verbose_print
 
     # If the token isn't given on the CLI, then redirect them to go login and get one
     client = AuthClient()
