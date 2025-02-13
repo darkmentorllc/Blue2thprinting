@@ -169,6 +169,8 @@ def main():
             if output_filename:
                 b2s_args = btides_to_sql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
                 btides_to_sql(b2s_args)
+            # For debugging
+            write_BTIDES("/tmp/a.btides")
 
     # Import metadata v2
     import_metadata_v2()
