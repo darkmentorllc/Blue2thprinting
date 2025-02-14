@@ -337,11 +337,14 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID16 before accessing .load
         if(length > 3): # 1 byte type + 2 byte UUID16
-            service_data_hex_str = bytes_to_hex_str(entry.load)
+            try:
+                service_data_hex_str = bytes_to_hex_str(entry.load)
+            except Exception as e:
+                vprint(f"Service data is missing.")
+                service_data_hex_str = ""
+                pass
         else:
             service_data_hex_str = ""
-        if(not exit_on_len_mismatch(length, entry)):
-            return False
         data = {"length": length, "UUID16": UUID16_hex_str, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID16: {UUID16_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID16ServiceData, data)
@@ -429,11 +432,14 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID32 before accessing .load
         if(length > 5): # 1 byte type + 4 byte UUID32
-            service_data_hex_str = bytes_to_hex_str(entry.load)
+            try:
+                service_data_hex_str = bytes_to_hex_str(entry.load)
+            except Exception as e:
+                vprint(f"Service data is missing.")
+                service_data_hex_str = ""
+                pass
         else:
             service_data_hex_str = ""
-        if(not exit_on_len_mismatch(length, entry)):
-            return False
         data = {"length": length, "UUID32": UUID32_hex_str, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID32: {UUID32_hex_str}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID32ServiceData, data)
@@ -447,11 +453,14 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
         # Some devices don't include any actual service data (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of service data beyond the UUID128 before accessing .load
         if(length > 17): # 1 byte type + 16 byte UUID128
-            service_data_hex_str = bytes_to_hex_str(entry.load)
+            try:
+                service_data_hex_str = bytes_to_hex_str(entry.load)
+            except Exception as e:
+                vprint(f"Service data is missing.")
+                service_data_hex_str = ""
+                pass
         else:
             service_data_hex_str = ""
-        if(not exit_on_len_mismatch(length, entry)):
-            return False
         data = {"length": length, "UUID128": UUID128, "service_data_hex_str": service_data_hex_str}
         vprint(f"{bdaddr}: {adv_type} UUID128: {UUID128}, service_data_hex_str: {service_data_hex_str}")
         BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_UUID128ServiceData, data)
@@ -503,18 +512,22 @@ def export_AdvData(bdaddr, bdaddr_random, adv_type, entry):
     # type 0xFF
     elif isinstance(entry.payload, EIR_Manufacturer_Specific_Data):
         #entry.show()
-        #qprint(f"{bdaddr}")
-        company_id_hex_str = f"{entry.company_id:04x}"
         length = entry.len # Not clear if Scapy is using the original ACID len or their calculated and corrected len
         msd_hex_str = ""
         # Some devices don't include any actual MSD (whether that's because they ran out of space in the advertisement,
         # or just choose to, I don't know. But this ensures we have at least 1 byte of MSD beyond the company_id before accessing .load
         if(length > 3):
-            msd_hex_str = bytes_to_hex_str(entry.load)
-        data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": msd_hex_str}
-        vprint(f"{bdaddr}: {adv_type} MSD: company_id = {company_id_hex_str}, data = {msd_hex_str}")
-        BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_MSD, data)
-        return True
+            try:
+                msd_hex_str = bytes_to_hex_str(entry.load)
+            except Exception as e:
+                vprint(f"Manufacturer-specific data is missing.")
+                msd_hex_str = ""
+                pass
+            company_id_hex_str = f"{entry.company_id:04x}"
+            data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": msd_hex_str}
+            vprint(f"{bdaddr}: {adv_type} MSD: company_id = {company_id_hex_str}, data = {msd_hex_str}")
+            BTIDES_export_AdvData(bdaddr, bdaddr_random, adv_type, type_AdvData_MSD, data)
+            return True
 
     return False
 

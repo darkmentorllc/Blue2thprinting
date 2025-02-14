@@ -97,9 +97,11 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
     registry = load_schemas()
 
     # Validate the JSON content
+    vprint("Validating BTIDES Schema on input file...")
     if not validate_json_content(json_content, registry):
         print("Invalid JSON data according to schema")
         sys.exit(1)
+    vprint("Validating passed!")
 
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-client.crt"
