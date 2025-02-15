@@ -177,7 +177,7 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
         print("Invalid JSON data according to schema")
         return False
         #sys.exit(1)
-    vprint("Validating passed!")
+    vprint(f"Validating passed! Uploading file with hash {sha1_hash}")
 
     ########################
     # SEND DATA THIRD
