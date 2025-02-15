@@ -10,6 +10,7 @@ from pathlib import Path
 from handle_venv import activate_venv
 activate_venv()
 
+import hashlib
 import ssl
 import argparse
 import json
@@ -82,27 +83,8 @@ def validate_json_content(json_content, registry):
         print(f"JSON data is invalid per BTIDES Schema. Error: {e.message}")
         return False
 
-# Import this function to call from external code without invoking via the CLI
-def send_btides_to_btidalpool(input_file, token, refresh_token):
-    vprint(f"Sending BTIDES file {input_file}")
-    # Load the JSON content from the file
-    try:
-        with open(input_file, 'r') as f:
-            json_content = json.load(f)
-    except Exception as e:
-        print(f"Error reading JSON file: {e}")
-        sys.exit(1)
 
-    # Load the schemas and create a registry
-    registry = load_schemas()
-
-    # Validate the JSON content
-    vprint("Validating BTIDES Schema on input file...")
-    if not validate_json_content(json_content, registry):
-        print("Invalid JSON data according to schema")
-        sys.exit(1)
-    vprint("Validating passed!")
-
+def send_data(data):
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-client.crt"
     key_path = "BTIDALPOOL-client.key"
@@ -111,24 +93,20 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
     session = requests.Session()
     session.mount('https://', SSLAdapter(certfile=cert_path, keyfile=key_path))
 
-    # Prepare the data to send
-    data = {
-        "command": 'upload',
-        "btides_content": json_content,
-        "token": token,
-        "refresh_token": refresh_token
-    }
-
     # Make a request to the server
     try:
         if(g_local_testing):
-            # Suppress the InsecureRequestWarning
+            # Suppress the InsecureRequestWarning due to cert mismatch when not running off btidalpool.ddns.net
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             response = session.post("https://localhost:3567", json=data, verify=False)
         else:
             response = session.post("https://btidalpool.ddns.net:3567", json=data, verify='./btidalpool.ddns.net.crt')
         if response.headers.get('Content-Type') == 'text/plain':
             print(response.text)
+            if(response.status_code == 200):
+                return True
+            else:
+                return False
         else:
             print("Response content is not plain text")
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
@@ -136,9 +114,11 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
         if e.response.status_code == 400 or e.response.status_code == 429:
             #print("Expected HTTP error code received")
             pass
+            return True
         else:
             print(f"Unexpected HTTP error occurred: {e}")
-            sys.exit(1)
+            return False
+            #sys.exit(1)
     except requests.exceptions.ChunkedEncodingError as e:
         print("The connection was most likely reset due to exceeding rate limits.")
         # Due to optimization on the server side this is the exception case that will occur.
@@ -151,6 +131,70 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
     except requests.exceptions.RequestException as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
+
+# Import this function to call from external code without invoking via the CLI
+# Returns True on success and False on failure (or exits on fatal error)
+def send_btides_to_btidalpool(input_file, token, refresh_token):
+    vprint(f"Sending BTIDES file {input_file}")
+    # Load the JSON content from the file
+    try:
+        with open(input_file, 'r') as f:
+            json_content = json.load(f)
+    except Exception as e:
+        print(f"Error reading JSON file: {e}")
+        return False
+        #sys.exit(1)
+
+    ########################
+    # CHECK HASH FIRST
+    ########################
+    # Don't even bother validating the schema yet if the server's just going to reject it
+
+    # Generate the SHA1 hash of the json_content
+    json_content_str = json.dumps(json_content, sort_keys=True)
+    sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
+
+    # Send hash check
+    data = {
+        "command": 'check_hash',
+        "hash": sha1_hash,
+        "token": token,
+        "refresh_token": refresh_token
+    }
+    if(not send_data(data)):
+        return False
+
+    ########################
+    # VALIDATE SCHEMA SECOND
+    ########################
+
+    # Load the schemas and create a registry
+    registry = load_schemas()
+
+    # Validate the JSON content
+    vprint("Validating BTIDES Schema on input file...")
+    if not validate_json_content(json_content, registry):
+        print("Invalid JSON data according to schema")
+        return False
+        #sys.exit(1)
+    vprint("Validating passed!")
+
+    ########################
+    # SEND DATA THIRD
+    ########################
+
+    # Send actual data upload
+    data = {
+        "command": 'upload',
+        "btides_content": json_content,
+        "token": token,
+        "refresh_token": refresh_token
+    }
+
+    if(not send_data(data)):
+        return False
+    else:
+        return True
 
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
@@ -184,11 +228,16 @@ def main():
             exit(1)
 
     # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
-    send_btides_to_btidalpool(
+    ret = send_btides_to_btidalpool(
         input_file=args.input,
         token=client.credentials.token,
         refresh_token=client.credentials.refresh_token
     )
+    if(ret):
+        print(f"Upload succeeded for {args.input}")
+    else:
+        print(f"Upload failed for {args.input}")
+
 
 if __name__ == "__main__":
     main()

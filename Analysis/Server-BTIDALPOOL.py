@@ -72,7 +72,7 @@ def initialize_unique_files(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
     for filename in os.listdir(directory):
-        if filename.endswith(".json"):
+        if filename.endswith(".json") or filename.endswith(".processed"):
             sha1_hash = filename.split('-')[0]
             g_unique_files[sha1_hash] = True
 
@@ -368,6 +368,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         if post_json_data['command'] == "upload" and 'btides_content' in post_json_data and 'query' not in post_json_data:
             json_content = post_json_data.get('btides_content')
             handle_btides_data(self, username, json_content)
+        elif post_json_data['command'] == "check_hash" and 'hash' in post_json_data:
+            if(post_json_data["hash"] in g_unique_files):
+                send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server.')
+            else:
+                send_back_response(self, username, 200, 'text/plain', b'File does not yet exist on server.')
         elif post_json_data['command'] == "query" and 'query' in post_json_data and 'btides_content' not in post_json_data:
             query_object = post_json_data.get('query')
             handle_query(self, username, query_object)
