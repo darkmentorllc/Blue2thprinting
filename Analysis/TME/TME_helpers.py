@@ -143,7 +143,7 @@ def get_bt_spec_version_numbers_to_names(number):
     return TME.TME_glob.bt_spec_version_numbers_to_names.get(number, "Unknown")
 
 def get_utf8_string_from_hex_string(hex_str):
-    return bytes.fromhex(hex_str).decode('utf8')
+    return bytes.fromhex(hex_str).decode('utf-8', 'ignore')
 
 # Function to get the string representation of le_evt_type
 def get_le_event_type_string(le_evt_type):
