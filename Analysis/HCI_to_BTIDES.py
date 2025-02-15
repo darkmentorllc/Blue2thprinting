@@ -370,7 +370,7 @@ def process_names(p):
         # because it could just mean that something was too far away and didn't hear us.)
         if(event.fields['status'] == 0):
             try:
-                name_str = event.fields['remote_name'].decode('utf-8').rstrip('\x00') # This will remove all the null bytes at the end
+                name_str = event.fields['remote_name'].decode('utf-8','ignore').rstrip('\x00') # This will remove all the null bytes at the end
             except UnicodeDecodeError as e:
                 print(f"Error decoding remote name: {e}")
                 return False
