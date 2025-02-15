@@ -369,7 +369,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         if(service_match_dict[handle] == 1):
             service_handle_count += 1
             continue
-    if (len(GATT_all_known_handles_result) != service_handle_count):
+    if (len(GATT_all_known_handles_result) != (service_handle_count)):
         qprint(f"\t\tGATT Service Unknown! Handle does not match any Service ranges that we received from the device!")
         for handle, in GATT_all_known_handles_result:
             if(service_match_dict[handle] == 1):
