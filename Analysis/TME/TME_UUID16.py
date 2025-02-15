@@ -11,7 +11,7 @@ from TME.TME_BTIDES_AdvData import *
 # UUID16s
 ########################################
 
-def print_name_for_UUID16(uuid16):
+def colored_print_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)
     gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
     protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
@@ -34,6 +34,7 @@ def print_name_for_UUID16(uuid16):
         qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
     else:
         qprint(f"\t\tUUID16 {uuid16} (No matches)")
+
 # Function to print UUID16s for a given bdaddr
 def print_uuid16s(bdaddr):
     # Query for EIR_bdaddr_to_UUID16s table
@@ -74,7 +75,7 @@ def print_uuid16s(bdaddr):
                 if(uuid16 == ''):
                     qprint("\t\tEmpty entry present")
                     continue
-                print_name_for_UUID16(uuid16)
+                colored_print_name_for_UUID16(uuid16)
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID16s)")
 
     # Process LE_bdaddr_to_UUID16s_list results
@@ -100,7 +101,7 @@ def print_uuid16s(bdaddr):
                 if(uuid16 == ''):
                     qprint("\t\tEmpty entry present")
                     continue
-                print_name_for_UUID16(uuid16)
+                colored_print_name_for_UUID16(uuid16)
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
@@ -126,7 +127,7 @@ def print_uuid16s_service_solicit(bdaddr):
             if(uuid16 == ''):
                 qprint("\t\tEmpty list present")
                 continue
-            print_name_for_UUID16(uuid16)
+            colored_print_name_for_UUID16(uuid16)
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
@@ -152,7 +153,7 @@ def print_uuid16_service_data(bdaddr):
 
         # Then human UI output
         # Lookup the UUID16 and see if it matches any well-known UUID16s
-        print_name_for_UUID16(UUID16_hex_str)
+        colored_print_name_for_UUID16(UUID16_hex_str)
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
         vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")

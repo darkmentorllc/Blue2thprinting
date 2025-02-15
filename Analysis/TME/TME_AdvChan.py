@@ -649,7 +649,7 @@ def print_all_advdata(bdaddr, nametype):
     print_uuid32s(bdaddr)                               # Includes BTIDES export
     print_uuid32_service_data(bdaddr)                   # Includes BTIDES export
     print_uuid128s(bdaddr)                              # Includes BTIDES export
-    print_uuid128_service_data(bdaddr)                   # Includes BTIDES export
+    print_uuid128_service_data(bdaddr)                  # Includes BTIDES export
     print_uuid128s_service_solicit(bdaddr)
     print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
     print_flags(bdaddr)                                 # Includes BTIDES export
