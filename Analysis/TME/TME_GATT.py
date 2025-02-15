@@ -293,7 +293,8 @@ def print_GATT_info(bdaddr):
         UUID = add_dashes_to_UUID128(UUID)
         service_match_dict[svc_begin_handle] = 1
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-        qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({UUID128_description})")
+        qprint(f"\t\t{UUID128_description} {UUID}:")
+        qprint(f"\t\tBegin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID] = ("Service","\t\t\t")
@@ -396,7 +397,9 @@ def print_GATT_info(bdaddr):
             qprint(f"\n\t\tGATTPrint:")
             for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
                 UUID = add_dashes_to_UUID128(UUID)
-                qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
+                qprint(f"\t\t{UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)}:")
+                qprint(f"\t\tBegin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
+                #qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
             for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
                 UUID128_2 = add_dashes_to_UUID128(UUID128_2)
                 qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
