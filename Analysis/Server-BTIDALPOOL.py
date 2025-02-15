@@ -188,7 +188,7 @@ def send_back_response(self, username, type, header, text):
     self.wfile.write(text)
     self.wfile.flush()  # Ensure the response is sent
 
-
+# TODO: this entire function should be handled in a separate thread
 def handle_btides_data(self, username, json_content):
     # Parse the JSON data
     try:
@@ -200,11 +200,6 @@ def handle_btides_data(self, username, json_content):
             send_back_response(self, username, 400, 'text/plain', b'File size too big.')
             return
 
-        # Validate the JSON content
-        if not validate_json_content(json_content, registry):
-            send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
-            return
-
         # Create the directory if it doesn't exist
         os.makedirs('./pool_files', exist_ok=True)
 
@@ -213,7 +208,12 @@ def handle_btides_data(self, username, json_content):
 
         # Check if the file already exists
         if sha1_hash in g_unique_files:
-            send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server.')
+            send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server. No need to upload.')
+            return
+
+        # Validate the JSON content if we don't have this file already
+        if not validate_json_content(json_content, registry):
+            send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
             return
 
         # Generate the filename
@@ -370,7 +370,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             handle_btides_data(self, username, json_content)
         elif post_json_data['command'] == "check_hash" and 'hash' in post_json_data:
             if(post_json_data["hash"] in g_unique_files):
-                send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server.')
+                send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server. No need to upload.')
             else:
                 send_back_response(self, username, 200, 'text/plain', b'File does not yet exist on server.')
         elif post_json_data['command'] == "query" and 'query' in post_json_data and 'btides_content' not in post_json_data:
