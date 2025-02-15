@@ -405,7 +405,7 @@ def print_GATT_info(bdaddr):
                 qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
             qprint("")
 
-        if(not TME.TME_glob.hideBLEScopedata):
+        if(not TME.TME_glob.hideBLEScopedata and len(unknown_UUID128_hash) > 0):
             match_found = False
             qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
             for UUID in unknown_UUID128_hash.keys():

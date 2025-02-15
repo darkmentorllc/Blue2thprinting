@@ -137,7 +137,7 @@ def print_uuid128s(bdaddr):
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
 
-    if(not TME.TME_glob.hideBLEScopedata):
+    if(not TME.TME_glob.hideBLEScopedata and len(unknown_UUID128_hash) > 0):
         match_found = False
         qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
         for UUID in unknown_UUID128_hash.keys():
