@@ -317,7 +317,12 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
                     service_match_dict[handle] = 1
                     # TODO: handle 2802 (include) eventually
-                    if(UUID128_2 == "00002800-0000-1000-8000-00805f9b34fb" or UUID128_2 == "00002801-0000-1000-8000-00805f9b34fb" or UUID128_2 == "00002803-0000-1000-8000-00805f9b34fb"):
+                    if(UUID128_2 == "00002800-0000-1000-8000-00805f9b34fb" \
+                       or UUID128_2 == "2800" \
+                       or UUID128_2 == "00002801-0000-1000-8000-00805f9b34fb" \
+                       or UUID128_2 == "2801" \
+                       or UUID128_2 == "00002803-0000-1000-8000-00805f9b34fb" \
+                       or UUID128_2 == "2803" ):
                         indent = "\t\t\t"
                     else:
                         indent = "\t\t\t\t"
