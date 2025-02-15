@@ -50,29 +50,38 @@ def match_known_GATT_UUID_or_custom_UUID(UUID):
         # Try to see if it's a known GATT Service
         str_name = get_uuid16_gatt_service_string(uuid16)
         if(str_name != "Unknown"):
-            return f"Service: {str_name}"
+            colored_str = Fore.CYAN + Style.BRIGHT + f"Service: {str_name}" + Style.RESET_ALL
+            return colored_str
         else:
             # Try to see if it's a known Characteristic
             str_name = get_uuid16_gatt_characteristic_string(uuid16)
             if(str_name != "Unknown"):
-                return f"Characteristic Value: {str_name}"
+                colored_str = Fore.CYAN + Style.BRIGHT + f"Characteristic Value: {str_name}" + Style.RESET_ALL
+                return colored_str
+                # return f"Characteristic Value: {str_name}"
             else:
                 # Try to see if it's a known Declaration
                 str_name = get_uuid16_gatt_declaration_string(uuid16)
                 if(str_name != "Unknown"):
+                    # colored_str = Fore.CYAN + Style.BRIGHT + f"Declaration: {str_name}"
+                    # return colored_str
                     return f"Declaration: {str_name}"
                 else:
                     # Try to see if it's a known Descriptor
                     str_name = get_uuid16_gatt_descriptor_string(uuid16)
                     if(str_name != "Unknown"):
-                        return f"Descriptor: {str_name}"
+                        colored_str = Fore.CYAN + Style.BRIGHT + f"Descriptor: {str_name}" + Style.RESET_ALL
+                        return colored_str
+                        # return f"Descriptor: {str_name}"
                     else:
                         if(UUID_no_dash != ""):
                             str = get_custom_uuid128_string(UUID_no_dash)
                             if(str == "Unknown UUID128"):
-                                return "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml"
+                                colored_str = Fore.RED + Style.BRIGHT + "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml" + Style.RESET_ALL
+                                return colored_str
                             else:
-                                return str
+                                colored_str = Fore.CYAN + Style.BRIGHT + str + Style.RESET_ALL
+                                return colored_str
     else:
         return get_custom_uuid128_string(UUID_no_dash)
 #    elif(uuid128_no_dash in custom_uuid128_hash):
@@ -387,17 +396,18 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
-        qprint(f"\n\t\tGATTPrint:")
-        for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
-            UUID = add_dashes_to_UUID128(UUID)
-            qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
-        for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
-            UUID128_2 = add_dashes_to_UUID128(UUID128_2)
-            qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
-        for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
-            UUID = add_dashes_to_UUID128(UUID)
-            qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
-        qprint("")
+        if(TME.TME_glob.verbose_print):
+            qprint(f"\n\t\tGATTPrint:")
+            for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+                UUID = add_dashes_to_UUID128(UUID)
+                qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
+            for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+                UUID128_2 = add_dashes_to_UUID128(UUID128_2)
+                qprint(f"\t\tGATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
+            for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+                UUID = add_dashes_to_UUID128(UUID)
+                qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
+            qprint("")
 
         if(not hideBLEScopedata):
             match_found = False

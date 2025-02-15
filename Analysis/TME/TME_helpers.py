@@ -9,6 +9,9 @@ import TME.TME_glob
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_BTIDES_HCI import *
 
+from colorama import Fore, Back, Style, init
+init(autoreset=True)
+
 ########################################
 # MYSQL specific
 ########################################
@@ -577,9 +580,11 @@ def get_custom_uuid128_string(uuid128):
             name = entry['UUID_name']
         else:
             name = "Unknown"
-        return f"Custom UUID128: company: {entry['company']}, name: {name}"
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Custom UUID128: company: {entry['company']}, name: {name}" + Style.RESET_ALL
+        return colored_str
     elif(uuid128_no_dash in TME.TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
-        return f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}"
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}" + Style.RESET_ALL
+        return colored_str
     else:
         for UUID_regex in TME.TME_glob.clues_regexed.keys():
             replaced_UUID_regex = UUID_regex.replace('-','').replace('x','[0-9a-fA-F]')
@@ -589,11 +594,13 @@ def get_custom_uuid128_string(uuid128):
                     name = entry['UUID_name']
                 else:
                     name = "Unknown"
-                return f"Custom UUID128: company: {entry['company']}, name: {name}"
+                colored_str = Fore.CYAN + Style.BRIGHT + f"Custom UUID128: company: {entry['company']}, name: {name}" + Style.RESET_ALL
+                return colored_str
 
     # TODO: Add lookup in Metadata_v2
 
-    return f"Unknown UUID128"
+    colored_str = Fore.RED + Style.BRIGHT + f"Unknown UUID128" + Style.RESET_ALL
+    return colored_str
 
 ################################################################################
 # Class of Device (This is in here because it comes up in both BLE and BTC)
@@ -721,7 +728,8 @@ def print_device_names(bdaddr, nametype):
 
     for device_name_type, name_hex_str in eir_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        qprint(f"\tDeviceName: {device_name}")
+        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        qprint(f"\tDeviceName: {color_name}")
         qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
@@ -732,7 +740,8 @@ def print_device_names(bdaddr, nametype):
 
     for name_hex_str, in hci_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        qprint(f"\tDeviceName: {device_name}")
+        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        qprint(f"\tDeviceName: {color_name}")
         qprint("\t\tIn BT Classic Data (HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
         remote_name_hex_str = device_name.encode('utf-8').hex()
@@ -740,7 +749,8 @@ def print_device_names(bdaddr, nametype):
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        qprint(f"\tDeviceName: {device_name}")
+        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        qprint(f"\tDeviceName: {color_name}")
         qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"\t\tIn BT LE Data (LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)

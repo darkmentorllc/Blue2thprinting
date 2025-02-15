@@ -72,9 +72,8 @@ def main():
     device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
     device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
-    device_group.add_argument('--UUID128-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s')
-    device_group.add_argument('--NOT-UUID128-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID128-regex, and then remove them from the final results.')
-    device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s')
+    device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID, in any location UUIDs can appear.')
+    device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID-regex, and then remove them from the final results.')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
     device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
     device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
@@ -252,19 +251,12 @@ def main():
             bdaddrs += bdaddrs_tmp
         qprint(f"{len(bdaddrs)} bdaddrs after --MSD-regex processing: {bdaddrs}")
 
-    if(args.UUID128_regex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_uuid128_regex(args.UUID128_regex)
+    if(args.UUID_regex != ""):
+        bdaddrs_tmp = get_bdaddrs_by_uuid_regex(args.UUID_regex)
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after --UUID128-regex processing: {bdaddrs}")
-
-    if(args.UUID16_regex != ""):
-        bdaddrs_tmp = get_bdaddrs_by_uuid16_regex(args.UUID16_regex)
-        qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
-        if(bdaddrs_tmp is not None):
-            bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after --UUID16-regex processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --UUID-regex processing: {bdaddrs}")
 
     if(args.LL_VERSION_IND != ""):
         (version, company_id, subversion) = args.LL_VERSION_IND.split(":")
@@ -306,8 +298,8 @@ def main():
             bdaddrs += bdaddrs_tmp
         qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
 
-    if(args.NOT_UUID128_regex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_uuid128_regex(args.UUID128_regex)
+    if(args.NOT_UUID_regex != ""):
+        bdaddrs_to_remove = get_bdaddrs_by_uuid_regex(args.UUID_regex)
         qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
