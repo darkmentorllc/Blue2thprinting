@@ -10,6 +10,26 @@ from TME.TME_BTIDES_AdvData import *
 # UUID128s
 ########################################
 
+# Returns whether any matches were found
+def print_associated_android_package_names(type, indent, UUID128):
+    values = (UUID128,)
+    if(type == "Service"):
+        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 1";
+    elif(type == "Characteristic"):
+        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 2";
+
+    match_found = False
+    android_pkgs_result = execute_query(query, values)
+    if(len(android_pkgs_result) > 0):
+        match_found = True
+        qprint(f"{indent}{type} {UUID128}:")
+        qprint(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
+        for (pkg,) in android_pkgs_result:
+            qprint(f"{indent}\t{pkg}")
+        qprint("")
+
+    return match_found
+
 def expand_UUID16_or_UUID32_to_UUID128(UUID):
     if(len(UUID) == 4): # UUID16
         return "0000" + UUID + "-0000-1000-8000-00805f9b34fb"
@@ -46,6 +66,7 @@ def check_if_UUIDs_match(UUID1, UUID2):
 
 # Function to print UUID128s for a given bdaddr
 def print_uuid128s(bdaddr):
+    unknown_UUID128_hash = {}
     values = (bdaddr,)
     eir_UUID128s_query = "SELECT list_type, str_UUID128s FROM EIR_bdaddr_to_UUID128s WHERE bdaddr = %s"
     eir_UUID128s_result = execute_query(eir_UUID128s_query, values)
@@ -80,7 +101,10 @@ def print_uuid128s(bdaddr):
             for uuid128 in str_UUID128s_list:
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
-                qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
+                uuid_str = f"{get_custom_uuid128_string(uuid128)}"
+                qprint(f"\t\tUUID128 {dashed_uuid128} ({uuid_str})")
+                if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
+                    unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
         vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID128s)")
 
     # Process LE_bdaddr_to_UUID128s_list results
@@ -104,9 +128,26 @@ def print_uuid128s(bdaddr):
             for uuid128 in str_UUID128s_list:
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
-                qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
+                uuid_str = f"{get_custom_uuid128_string(uuid128)}"
+                qprint(f"\t\tUUID128 {dashed_uuid128} ({uuid_str})")
+                if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
+                    # In general the UUIDs in advertisements should be services, not characteristics, so set the type to 1
+                    unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
         qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+
+    if(not TME.TME_glob.hideBLEScopedata):
+        match_found = False
+        qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
+        for UUID in unknown_UUID128_hash.keys():
+            (type, indent) = unknown_UUID128_hash[UUID]
+            match_found = print_associated_android_package_names(type, indent, UUID)
+        if(not match_found):
+            qprint("\t\t\tNo matches found\n")
+        else:
+            qprint("")
+
 
     qprint("")
 

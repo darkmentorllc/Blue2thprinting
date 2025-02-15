@@ -14,24 +14,6 @@ vendor_specific_characteristics = {}
 
 ### BEGIN CODE BORROWED FROM TellMeEverything.py ###
 
-# # Function to execute a MySQL query and fetch results
-# def execute_query(query, values):
-#     connection = mysql.connector.connect(
-#         host='localhost',
-#         user='user',
-#         password='a',
-#         database='bt2',
-#         auth_plugin='mysql_native_password'
-#     )
-
-#     cursor = connection.cursor()
-#     cursor.execute(query, values)
-#     result = cursor.fetchall()
-
-#     cursor.close()
-#     connection.close()
-#     return result
-
 # NOTE: The below code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
 # repository has been cloned one directory up from this file.
 # All paths are written under that assumption
@@ -48,7 +30,7 @@ def create_preassigned_GATT_services():
 
     for entry in data['uuids']:
         uuid = entry['uuid']
-        uuid128 = f"0000{uuid:04x}-0000-1000-8000-00805f9b34fb".lower()
+        uuid128 = f"0000{uuid:04x}00001000800000805f9b34fb".lower()
         #name = entry['name']
         preassigned_GATT_services[uuid128] = 1 #name
     #print(f"\n preassigned_GATT_services: \n{preassigned_GATT_services}\n")
@@ -60,7 +42,7 @@ def create_preassigned_GATT_declarations():
 
     for entry in data['uuids']:
         uuid = entry['uuid']
-        uuid128 = f"0000{uuid:04x}-0000-1000-8000-00805f9b34fb".lower()
+        uuid128 = f"0000{uuid:04x}00001000800000805f9b34fb".lower()
         #name = entry['name']
         preassigned_GATT_declarations[uuid128] = 1 #name
     #print(f"\n preassigned_GATT_declarations: \n{preassigned_GATT_declarations}\n")
@@ -72,7 +54,7 @@ def create_preassigned_GATT_descriptors():
 
     for entry in data['uuids']:
         uuid = entry['uuid']
-        uuid128 = f"0000{uuid:04x}-0000-1000-8000-00805f9b34fb".lower()
+        uuid128 = f"0000{uuid:04x}00001000800000805f9b34fb".lower()
         #name = entry['name']
         preassigned_GATT_descriptors[uuid128] = 1 #name
     #print(f"\n preassigned_GATT_descriptors: \n{preassigned_GATT_descriptors}\n")
@@ -84,7 +66,7 @@ def create_preassigned_GATT_characteristics():
 
     for entry in data['uuids']:
         uuid = entry['uuid']
-        uuid128 = f"0000{uuid:04x}-0000-1000-8000-00805f9b34fb".lower()
+        uuid128 = f"0000{uuid:04x}00001000800000805f9b34fb".lower()
         #name = entry['name']
         preassigned_GATT_characteristics[uuid128] = 1 #name
     #print(f"\n preassigned_GATT_characteristics: \n{preassigned_GATT_characteristics}\n")
@@ -110,7 +92,7 @@ for key, value in data.items():
     uuids = value['uuids']
 
     for uuid, details in uuids.items():
-        uuid = uuid.lower()
+        uuid = uuid.lower().replace('-','')
         #define = details['define'][0]
         # Need to loop through all entries under define, because in reality a single entry could look like *both* a service or a characteristic according to the json data
         define_list = details['define']
@@ -147,9 +129,17 @@ db_connection = mysql.connector.connect(
     database='bt2',
     auth_plugin='mysql_native_password'
 )
+db_connection2 = mysql.connector.connect(
+    host='localhost',
+    user='user',
+    password='a',
+    database='bttest',
+    auth_plugin='mysql_native_password'
+)
 
 # Create a cursor to interact with the database
 cursor = db_connection.cursor()
+cursor2 = db_connection2.cursor()
 
 sql_BLEScope_UUID128s = "INSERT IGNORE INTO BLEScope_UUID128s (android_pkg_name, uuid_type, str_UUID128) VALUES (%s, %s, %s)"
 
@@ -159,19 +149,27 @@ for uuid, pkg_dict in vendor_specific_services.items():
     print(uuid + ":")
     for pkg, value in pkg_dict.items():
         print(f"\t{pkg}: {value}")
+        uuid = uuid.replace('-','')
         values = (pkg, 1, uuid)
         cursor.execute(sql_BLEScope_UUID128s, values)
         db_connection.commit()
+        cursor2.execute(sql_BLEScope_UUID128s, values)
+        db_connection2.commit()
 
 print("\nUnknown Characteristics:")
 for uuid, pkg_dict in vendor_specific_characteristics.items():
     print(uuid + ":")
     for pkg, value in pkg_dict.items():
         print(f"\t{pkg}: {value}")
+        uuid = uuid.replace('-','')
         values = (pkg, 2, uuid)
         cursor.execute(sql_BLEScope_UUID128s, values)
         db_connection.commit()
+        cursor2.execute(sql_BLEScope_UUID128s, values)
+        db_connection2.commit()
 
 # Close the cursor and database connection
 cursor.close()
 db_connection.close()
+cursor2.close()
+db_connection2.close()

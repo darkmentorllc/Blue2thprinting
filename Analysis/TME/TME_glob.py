@@ -110,3 +110,9 @@ quiet_print = False
 use_test_db = False
 insert_count = 0
 duplicate_count = 0
+
+
+###############################################
+# For making the output more terse
+###############################################
+hideBLEScopedata = False

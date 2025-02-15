@@ -74,20 +74,21 @@ def main():
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
     device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID, in any location UUIDs can appear.')
     device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID-regex, and then remove them from the final results.')
-    device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD)')
+    device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD).')
     device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
     device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
 
     # Statistics arguments
     stats_group = parser.add_argument_group('Database statistics arguments')
-    stats_group.add_argument('--UUID128-stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
-    stats_group.add_argument('--UUID16-stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data)')
+    stats_group.add_argument('--UUID128-stats', action='store_true', help='Parse the UUID128 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data).')
+    stats_group.add_argument('--UUID16-stats', action='store_true', help='Parse the UUID16 data, and output statistics about the most common entries (Only shows local database statistics, not BTIDALPOOL data).')
 
     # Requirement arguments
     requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
-    requirement_group.add_argument('--require-GATT', action='store_true', help='Pass this argument to only print out information for devices which have GATT info')
-    requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data')
-    requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data')
+    requirement_group.add_argument('--require-GATT-any', action='store_true', help='Pass this argument to only print out information for devices which have *some* GATT info.')
+    requirement_group.add_argument('--require-GATT-values', action='store_true', help='Pass this argument to only print out information for devices which successfully read some GATT values.')
+    requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
+    requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data.')
 
     # Testing arguments
     testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
@@ -99,7 +100,7 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
-    hideBLEScopedata = args.hide_BLEScope_data
+    TME.TME_glob.hideBLEScopedata = args.hide_BLEScope_data
 
     #######################################################
     # If querying the BTIDALPOOL, collect that information,
@@ -127,8 +128,10 @@ def main():
             query_object["UUID16_regex"] = args.UUID16_regex
         if args.MSD_regex:
             query_object["MSD_regex"] = args.MSD_regex
-        if args.require_GATT:
-            query_object["require_GATT"] = True
+        if args.require_GATT_any:
+            query_object["require_GATT_any"] = True
+        if args.require_GATT_values:
+            query_object["require_GATT_values"] = True
         if args.require_LL_VERSION_IND:
             query_object["require_LL_VERSION_IND"] = True
         if args.require_LMP_VERSION_RES:
@@ -345,8 +348,11 @@ def main():
         bdaddrs = bdaddrs[:args.max_records_output]
 
     for bdaddr in bdaddrs:
-        if(args.require_GATT):
-            if(device_has_GATT_info(bdaddr) != 1):
+        if(args.require_GATT_any):
+            if(device_has_GATT_any(bdaddr) != 1):
+                continue
+        if(args.require_GATT_values):
+            if(device_has_GATT_values(bdaddr) != 1):
                 continue
         if(args.require_LL_VERSION_IND):
             if(device_has_LL_VERSION_IND_info(bdaddr) != 1):
@@ -361,7 +367,7 @@ def main():
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
         print_all_advdata(bdaddr, args.bdaddr_type)
-        print_GATT_info(bdaddr, args.hide_BLEScope_data)    # Includes BTIDES export
+        print_GATT_info(bdaddr)    # Includes BTIDES export
         print_SMP_info(bdaddr)                              # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export

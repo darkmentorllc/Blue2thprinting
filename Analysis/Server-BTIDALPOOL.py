@@ -277,8 +277,10 @@ def handle_query(self, username, query_object):
     if("MSD_regex" in query_object):
         args_array.append(f"--MSD-regex")
         args_array.append(f"{query_object['MSD_regex']}")
-    if("require_GATT" in query_object):
-        args_array.append(f"--require-GATT")
+    if("require_GATT_any" in query_object):
+        args_array.append(f"--require-GATT-any")
+    if("require_GATT_values" in query_object):
+        args_array.append(f"--require-GATT-values")
     if("require_LL_VERSION_IND" in query_object):
         args_array.append(f"--require-LL_VERSION_IND")
     if("require_LMP_VERSION_RES" in query_object):

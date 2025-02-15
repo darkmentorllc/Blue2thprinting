@@ -10,7 +10,7 @@ import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_ATT import *
 from TME.TME_BTIDES_GATT import *
-from TME.TME_UUID128 import add_dashes_to_UUID128
+from TME.TME_UUID128 import add_dashes_to_UUID128, print_associated_android_package_names
 
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
@@ -171,52 +171,43 @@ def characteristic_value_decoding(indent, UUID128, bytes):
     #    qprint("") # basically just force a newline so next line isn't double-indented
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
-def device_has_GATT_info(bdaddr):
+def device_has_GATT_any(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
     query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
     if(len(GATT_services_result) != 0):
-        return 1;
+        return 1
 
     query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     if(len(GATT_attribute_handles_result) != 0):
-        return 1;
+        return 1
 
     query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
     if(len(GATT_characteristics_result) != 0):
-        return 1;
+        return 1
 
     query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     if(len(GATT_characteristics_values_result) != 0):
-        return 1;
+        return 1
 
-    return 0;
+    return 0
 
-# Returns whether any matches were found
-def print_associated_android_package_names(type, indent, UUID128):
-    values = (UUID128,)
-    if(type == "Service"):
-        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 1";
-    if(type == "Characteristic"):
-        query = "SELECT android_pkg_name FROM BLEScope_UUID128s WHERE str_UUID128 = %s and uuid_type = 2";
+# Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
+def device_has_GATT_values(bdaddr):
+    # Query the database for all GATT services
+    values = (bdaddr,)
+    query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    GATT_characteristics_values_result = execute_query(query, values)
+    if(len(GATT_characteristics_values_result) != 0):
+        return 1
 
-    match_found = False
-    android_pkgs_result = execute_query(query, values)
-    if(len(android_pkgs_result) > 0):
-        match_found = True
-        qprint(f"{indent}{type} {UUID128}:")
-        qprint(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
-        for (pkg,) in android_pkgs_result:
-            qprint(f"{indent}\t{pkg}")
-        qprint("")
+    return 0
 
-    return match_found
-
-def print_GATT_info(bdaddr, hideBLEScopedata):
+def print_GATT_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
     query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
@@ -304,7 +295,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
         qprint(f"\t\tGATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({UUID128_description})")
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
-        if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+        if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID] = ("Service","\t\t\t")
 
         # Iterate through all known handles, so nothing gets missed
@@ -337,7 +328,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
                     qprint(f"\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})\n\t\t\t\tCharacteristic Value UUID: {UUID} ({UUID128_description})\n\t\t\t\tCharacteristic Value Handle: {char_value_handle:03}")
-                    if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+                    if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
                     if(not any(key[0] == char_value_handle for key in char_value_handles_dict.keys()) and (char_properties & 0x2 == 0x02)):
                         qprint(f"\t\t\t\tGATT Characteristic Value not successfully read, despite having readable permissions.")
@@ -388,7 +379,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 UUID = add_dashes_to_UUID128(UUID)
                 UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
                 qprint(f"\t\t\t\tGATT Characteristic declaration:\t{UUID} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
-                if(not hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
+                if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                     unknown_UUID128_hash[UUID] = ("Characteristic","\t\t\t")
 
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
@@ -414,7 +405,7 @@ def print_GATT_info(bdaddr, hideBLEScopedata):
                 qprint(f"\t\tGATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
             qprint("")
 
-        if(not hideBLEScopedata):
+        if(not TME.TME_glob.hideBLEScopedata):
             match_found = False
             qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
             for UUID in unknown_UUID128_hash.keys():
