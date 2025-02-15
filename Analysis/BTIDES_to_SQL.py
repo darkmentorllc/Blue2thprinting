@@ -145,6 +145,7 @@ def import_AdvData_UUID128s(bdaddr, random, db_type, leaf):
     for i in range(len(UUID128List)):
         UUID128List[i] = UUID128List[i].replace('-','')
     str_UUID128s = ",".join(UUID128List)
+    str_UUID128s.replace("-","")
     list_type = leaf["type"]
 
     le_evt_type = db_type
@@ -264,6 +265,7 @@ def import_AdvData_UUID16ListServiceSolicit(bdaddr, random, db_type, leaf):
 def import_AdvData_UUID128ListServiceSolicit(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_UUID128ListServiceSolicit!")
     str_UUID128s = ",".join(leaf["UUID128List"])
+    str_UUID128s.replace("-","")
 
     le_evt_type = db_type
     if(le_evt_type == 50):

@@ -370,13 +370,13 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_dataWHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_dataWHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = 0
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0
                 UNION ALL
@@ -464,119 +464,289 @@ def get_bdaddrs_by_msd_regex(msdregex):
 
     return bdaddr_hash.keys()
 
-# FIXME: need to get rid of the 128/16 distinction...
-def get_bdaddrs_by_uuid128_regex(uuid128regex):
 
-    # To make my life easier when searching for things I've already removed the - from
-    try_with_dashes = True
+def get_bdaddrs_by_uuid_regex(uuid_regex):
 
-    qprint(f"{uuid128regex} in get_bdaddrs_by_uuid128_regex")
+    qprint(f"{uuid_regex} in get_bdaddrs_by_uuid_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
 
-    values = (uuid128regex,)
+    # We probably shouldn't remove - since it can change the meaning of things like [1-4]...
+    #uuid_regex.replace("-", "")
+
+    # It could be argued that I could skip some UUID16 tables if the regex is guaranteed to be
+    # > 4 characters, but that would require fully interpolating the regex.
+    # So I'm just going to do it the simple but inefficient way, and look at all the tables
+    # which contain a UUID, regardless of length.
+
+    values = (uuid_regex,)
+
+    ###################################
+    # Start with UUID128 tables
+    ###################################
+
+    # BR/EDR advertisements
 
     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    # LE advertisements
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s_list")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
-    gatt_service_result = execute_query(gatt_service_query, values)
-    for (bdaddr,) in gatt_service_result:
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE UUID128_hex_str REGEXP %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
-    gatt_char_result = execute_query(gatt_char_query, values)
-    for (bdaddr,) in gatt_char_result:
+    ###################################
+    # Then UUID32 tables
+    ###################################
+
+    # BR/EDR advertisements
+
+    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID32s WHERE str_UUID32s REGEXP %s"
+    eir_result = execute_query(eir_query, values)
+    for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID32s")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
-    gatt_desc_result = execute_query(gatt_desc_query, values)
-    for (bdaddr,) in gatt_desc_result:
+    # LE advertisements
+
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE str_UUID32s REGEXP %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
-    qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    if(try_with_dashes and len(uuid128regex) == 32):
-        uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE str_UUID32s REGEXP %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-        values = (uuid128regex_with_dashes,)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE UUID32_hex_str REGEXP %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32_service_data")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-        gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
-        gatt_service_result = execute_query(gatt_service_query, values)
-        for (bdaddr,) in gatt_service_result:
-            bdaddr_hash[bdaddr] = 1
-        qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services by adding dashes to regex")
-        qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    ###################################
+    # Then UUID16 tables
+    ###################################
 
-        gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
-        gatt_char_result = execute_query(gatt_char_query, values)
-        for (bdaddr,) in gatt_char_result:
-            bdaddr_hash[bdaddr] = 1
-        qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
-        qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+    # BR/EDR advertisements
 
-        gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
-        gatt_desc_result = execute_query(gatt_desc_query, values)
-        for (bdaddr,) in gatt_desc_result:
-            bdaddr_hash[bdaddr] = 1
-        qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles by adding dashes to regex")
-        qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash {len(bdaddr_hash)} = {bdaddr_hash}")
-
-
-    return bdaddr_hash.keys()
-
-def get_bdaddrs_by_uuid16_regex(uuid16regex):
-
-    # To make my life easier when searching for things I've already removed the - from
-    try_with_dashes = True
-
-    qprint(f"{uuid16regex} in get_bdaddrs_by_uuid16_regex")
-    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
-
-    values = (uuid16regex,)
     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid16_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
-    qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    # LE advertisements
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s_list")
-    qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")
-    qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE UUID16_hex_str REGEXP %s"
+    le_result = execute_query(le_query, values)
+    for (bdaddr,) in le_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_data")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    ################################################
+    # Then GATT, which can have UUID16s or UUID128s
+    ################################################
+
+    # GATT (technically LE or BR/EDR but I don't have BR/EDR-based collection)
+
+    gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
+    gatt_service_result = execute_query(gatt_service_query, values)
+    for (bdaddr,) in gatt_service_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_service_result)} results found in GATT_services")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+    gatt_char_result = execute_query(gatt_char_query, values)
+    for (bdaddr,) in gatt_char_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_char_result)} results found in GATT_characteristics")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
+
+    gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+    gatt_desc_result = execute_query(gatt_desc_query, values)
+    for (bdaddr,) in gatt_desc_result:
+        bdaddr_hash[bdaddr] = 1
+    qprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
+    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
+
+    ################################################
+    # Then SDP, which can have UUID16/32/128s
+    ################################################
+
+    # BR/EDR SDP
+
+    # TODO: I'd like to pull out UUIDs specifically and put them back in a separate table,
+    # because right now this will probably yield a decent number of false positives...
+    # It can also yield false negatives, if given the full UUID, because I've seen
+    # them be fragmented across packets.
+    # eir_query = "SELECT bdaddr FROM SDP_Common HERE HEX(byte_values) REGEXP %s"
+    # eir_result = execute_query(eir_query, values)
+    # for (bdaddr,) in eir_result:
+    #     bdaddr_hash[bdaddr] = 1
+    # qprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in SDP_Common")
+    # vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     return bdaddr_hash.keys()
+
+# # FIXME: need to get rid of the 128/16 distinction...
+# def get_bdaddrs_by_uuid128_regex(uuid128regex):
+
+#     # To make my life easier when searching for things I've already removed the - from
+#     try_with_dashes = True
+
+#     qprint(f"{uuid128regex} in get_bdaddrs_by_uuid128_regex")
+#     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
+
+#     values = (uuid128regex,)
+
+#     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
+#     eir_result = execute_query(eir_query, values)
+#     for (bdaddr,) in eir_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE str_UUID128s REGEXP %s"
+#     le_result = execute_query(le_query, values)
+#     for (bdaddr,) in le_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s_list")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
+#     le_result = execute_query(le_query, values)
+#     for (bdaddr,) in le_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
+#     gatt_service_result = execute_query(gatt_service_query, values)
+#     for (bdaddr,) in gatt_service_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+#     gatt_char_result = execute_query(gatt_char_query, values)
+#     for (bdaddr,) in gatt_char_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+#     gatt_desc_result = execute_query(gatt_desc_query, values)
+#     for (bdaddr,) in gatt_desc_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
+#     qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
+
+#     if(try_with_dashes and len(uuid128regex) == 32):
+#         uuid128regex_with_dashes = f"{uuid128regex[:8]}-{uuid128regex[8:12]}-{uuid128regex[12:16]}-{uuid128regex[16:20]}-{uuid128regex[20:32]}"
+
+#         values = (uuid128regex_with_dashes,)
+
+#         gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
+#         gatt_service_result = execute_query(gatt_service_query, values)
+#         for (bdaddr,) in gatt_service_result:
+#             bdaddr_hash[bdaddr] = 1
+#         qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_service_result)} results found in GATT_services by adding dashes to regex")
+#         qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#         gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+#         gatt_char_result = execute_query(gatt_char_query, values)
+#         for (bdaddr,) in gatt_char_result:
+#             bdaddr_hash[bdaddr] = 1
+#         qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_char_result)} results found in GATT_characteristics by adding dashes to regex")
+#         qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash = {bdaddr_hash}")
+
+#         gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+#         gatt_desc_result = execute_query(gatt_desc_query, values)
+#         for (bdaddr,) in gatt_desc_result:
+#             bdaddr_hash[bdaddr] = 1
+#         qprint(f"get_bdaddrs_by_uuid128_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles by adding dashes to regex")
+#         qprint(f"get_bdaddrs_by_uuid128_regex: bdaddr_hash {len(bdaddr_hash)} = {bdaddr_hash}")
+
+
+#     return bdaddr_hash.keys()
+
+# def get_bdaddrs_by_uuid16_regex(uuid16regex):
+
+#     # To make my life easier when searching for things I've already removed the - from
+#     try_with_dashes = True
+
+#     qprint(f"{uuid16regex} in get_bdaddrs_by_uuid16_regex")
+#     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
+
+#     values = (uuid16regex,)
+#     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
+#     eir_result = execute_query(eir_query, values)
+#     for (bdaddr,) in eir_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid16_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
+#     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
+#     le_result = execute_query(le_query, values)
+#     for (bdaddr,) in le_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s_list")
+#     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
+#     le_result = execute_query(le_query, values)
+#     for (bdaddr,) in le_result:
+#         bdaddr_hash[bdaddr] = 1
+#     qprint(f"get_bdaddrs_by_uuid16_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")
+#     qprint(f"get_bdaddrs_by_uuid16_regex: bdaddr_hash = {bdaddr_hash}")
+
+#     return bdaddr_hash.keys()
 
 
 def get_bdaddrs_by_LL_VERSION_IND(version, company_id, subversion):
