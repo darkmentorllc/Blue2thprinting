@@ -1,6 +1,3 @@
-Created by Xeno Kovah  
-Copyright(c) © Dark Mentor LLC 2023-2024
-
 ## GPS coordinate logging
 
 ### Test GPS module:
@@ -89,3 +86,5 @@ user@VM:/home/user/Blue2thprinting/Scripts: ls -la bt_map.html
 The file bt_map.html can be opened in a browser to see the GPS locations of named devices.
 
 *Note:* The accepted name format is just the filename, not the full path. You must remove the filetype suffix like ".txt" or ".bin".
+
+Copyright(c) © Dark Mentor LLC 2023-2025
