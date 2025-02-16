@@ -124,8 +124,6 @@ def main():
             query_object["UUID_regex"] = args.UUID_regex
         if args.NOT_UUID_regex:
             query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
-        if args.UUID16_regex:
-            query_object["UUID16_regex"] = args.UUID16_regex
         if args.MSD_regex:
             query_object["MSD_regex"] = args.MSD_regex
         if args.require_GATT_any:
