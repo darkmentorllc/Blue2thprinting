@@ -17,11 +17,21 @@ cd Analysis
 python3 ./Tell_Me_Everything.py --query-BTIDALPOOL --name-regex "Samsung" 
 ```
 
-You will be prompted for a Google OAuth single-sign-on login when using `--query-BTIDALPOOL`. Navigate to the printed out SSO URL and use any throwaway Google account. You will receive a JSON authentication token like the following from the web page:
+The first time you use an argument like `--query-BTIDALPOOL` or `--to-BTIDALPOOL`, you will be prompted for a Google OAuth single-sign-on login, like the following:
+
+```
+Please visit this URL to authenticate:
+https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbtidalpool.ddns.net%3A7653%2Foauth2callback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=k8nDQob2xEqPngwj3GrpZPWLMU5Xzu&prompt=consent&access_type=offline
+
+After authentication, copy the entire JSON token from the browser:
+Token: 
+```
+
+ Navigate to the printed out SSO URL and use any throwaway Google account. You will receive a JSON authentication token like the following from the web page:
 
 `{"token": "ya29.a0AXeO80T7U4kRn46t37622aicxfPcDzecZtarP3p5nPurIRbsAX33I_Rbfas23pM-EQM4Lsn39287flybxRCFEErsuM37_ymU-7i-Y8EX56xxekSl5F5Rq4Bbbsn1ktvvPTXY3rVuT_UXQFGS9vQjeAdowNgKsDqdr387LaShel0T561aCgYKAYESARASFQChangMiaVpYH3EQo8nnYFrbD5racw0175", "refresh_token": "1//04AGf0b8ENKDCgYIARAAGAQSNwF-L9IrEHgZ1sn4rkE9cuz121bx8M3KUCCEBIEzoabroBj4ChUpuMo6Y9yMtx83wmHKlcU"}`
 
-Paste that token into the command where asked. But also store it into a file named `./tf` so you can pass `--token-file ./tf` in the future and skip authenticating again.
+Paste that token into the command where asked. But also store it into a file named `./tf` so you can pass `--token-file ./tf` in the future and skip navigating to the website again.
 
 For the above query, you will likely see output like the following (though it will change over time as more data is added.)
 

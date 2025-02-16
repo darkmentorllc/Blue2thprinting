@@ -30,7 +30,7 @@ fi
 
 echo ""
 echo "====================================================================================================================================="
-echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
+echo "Recursive pull of the submodules (which gets the latest Bluetooth assigned IDs, CLUES data, etc)."
 echo "====================================================================================================================================="
 git submodule update --init --recursive
 
