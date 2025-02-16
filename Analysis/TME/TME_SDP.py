@@ -300,13 +300,21 @@ def print_SDP_info(bdaddr):
 
     reassembly_buffer = b''
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result2:
+        byte_size = len(byte_values)
         i = 0
         AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
         i+=2
-        fragment_bytes = byte_values[2:2+AttributeListsByteCount]
-        reassembly_buffer += fragment_bytes
-        i+=AttributeListsByteCount
-        ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
+        try:
+            fragment_bytes = byte_values[2:2+AttributeListsByteCount]
+            reassembly_buffer += fragment_bytes
+            i+=AttributeListsByteCount
+            if(i > byte_size):
+                print("Error: i is greater than the length of the byte_values array. Aborting.")
+                break
+            ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
+        except Exception as e:
+            print(f"Possible out of bounds access: {e}. Aborting")
+            break
 
         if(ContinuationState):
             continue
