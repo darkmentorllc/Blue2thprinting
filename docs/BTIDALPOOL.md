@@ -44,3 +44,4 @@ The following limits are currently in effect:
 
 If you'd like to bypass these limits, you can email btidalpool at gmail to request Trusted Contributor status. This status is granted to researchers who provide a significant contribution of data to the BTIDALPOOL server.
 
+Copyright(c) © Dark Mentor LLC 2023-2025

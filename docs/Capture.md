@@ -1,12 +1,14 @@
 # Recommended Software
 
-Install *Ubuntu 24.04* into a **VMware** VM.
+* Laptop: Install *Ubuntu 24.04* into a **VMware** VM
+* Mini-PC: Install *Ubuntu 24.04* into host OS.
+* Raspberry Pi Zero W: Install Raspbian ***Buster*** using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
 # OS Setup & Configuration
 
 ## ***All code assumes that you've checked out this repository to your home directory as `~/Blue2thprinting`.***
 
-### Run the setup helper script
+## Run the setup helper script
 
 This previously was a bunch of manual commands. Now instead just run the below:
 
@@ -19,7 +21,7 @@ And there's comments in that script if you want to see what's being done and why
 
 If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth and Sweyntooth to get the full power of Blue2thprinting!
 
-### Setup Braktooth
+## Setup Braktooth
 
 Place the Braktooth code in the location assumed by `central_app_launcher2.py`:
 
@@ -30,7 +32,7 @@ git clone https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic
 
 You are required to setup Braktooth to work **[per the "Installation instructions" in the Braktooth repository](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks)**.
 
-**Known issues with instructions:**
+**Known issues with Braktooth's given instructions:**
 
 **1)** The `wdissector.tar.zst` in the root of the folder isn't the full 300MB+ file; it instead needs to be grabbed from the [artifact release](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks/releases/download/v1.0.1/release.zip).
 
@@ -91,7 +93,7 @@ Of course, replace `AA:BB:CC:11:22:33` with the BTC BDADDR you want to target.
 
 Once you have confirmed this works, you should set `btc_2thprint_enabled = True` in `~/central_app_launcher2.py`.
 
-### Setup Sweyntooth
+## Setup Sweyntooth
 
 Place the Sweyntooth code in the location assumed by `central_app_launcher2.py`:
 
@@ -113,7 +115,7 @@ sudo python2.7 get-pip.py
 sudo pip2.7 install -r requirements.txt
 ```
 
-**Manually confirm that Sweyntooth is working before attempting to run it from within central_app_launcher2.py:**
+**Manually confirm that Sweyntooth is working before attempting to run it from within `central_app_launcher2.py`:**
 
 If you're using a username other than "pi", edit the `BLE2TH_LOG_PATH` variable in `~/Downloads/sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py`.
 
@@ -130,7 +132,7 @@ Once you have confirmed this works, you should set `ble_2thprint_enabled = True`
 
 Which scripts launch which other scripts, and what logs what data to where is captured in the below diagram (click for full size image.)
 
-![](./docs/img/Blue2thprinting_script_to_data_diagram.png)
+![](./img/Blue2thprinting_script_to_data_diagram.png)
 
 # Capture Scripts Setup
 
@@ -158,11 +160,10 @@ You can cancel collection by running: `sudo ~/Blue2thprinting/Scripts/killall.sh
 
 If you want to manually restart the collection without a reboot, you can run: `sudo ./runall.sh` from the Scripts folder.
 
-
 ### GPS
 
 I originally added support for GPS logging of where devices were seen, before I learned that [WiGLE.net](https://WiGLE.net) had support for crowdsourced Bluetooth logging. These days I tend to not use my GPS dongle, and instead I just run a junk Pixel phone with WiGLE and consider its capture good enough. (Also the phone's GPS seemed to generally be more reliable than the USB GPS dongle.)
 
-Therefore I have moved discussion of the GPS setup to a [separate page](GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
+Therefore I have moved discussion of the GPS setup to a [separate page](./GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
 
 Copyright(c) © Dark Mentor LLC 2023-2025

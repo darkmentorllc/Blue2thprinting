@@ -4,7 +4,7 @@ Note: the below hardware purchase links are Amazon affiliate links that support 
 
 # WHAT THIS DOESN'T SUPPORT
 
-Braktooth is only available as an x86 binary, therefore **this setup cannot be used for BT Classic custom traffic sending.** For that you will need to upgrade to [a x86-based laptop](./laptopHW.md) or [a x86-based mini-PC](./maxHW.md).
+[Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) is only available as an x86 binary, therefore **this setup cannot be used for BT Classic custom traffic sending.** For that you will need to upgrade to [a x86-based laptop](./laptopHW.md) or [a x86-based mini-PC](./maxHW.md).
 
 # Assumed Hardware
 If you do not have any of the below, you will need to purchase.
@@ -47,10 +47,10 @@ For devices where only 1 is recommended, it is assumed that you will only have o
 ---
 **Required: custom packet sending hardware (for Braktooth/Sweyntooth/Sniffle)**
 
-* For Sniffle - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://sonoff.tech/product/gateway-and-sensors/sonoff-zigbee-3-0-usb-dongle-plus-p/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.) For capturing pcap of BLE traffic and/or sending custom BLE packets.
+* For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://sonoff.tech/product/gateway-and-sensors/sonoff-zigbee-3-0-usb-dongle-plus-p/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.) For capturing pcap of BLE traffic and/or sending custom BLE packets.
  * The code will currently automatically scale to however many Sniffle dongles you plug in, capturing backup pcaps across channels to catch packets which might be missed otherwise (e.g. due to wireless interference/decoding issues.)
 
-* For Sweyntooth - 1x [nRF52840 USB dongle](https://www.mouser.com/ProductDetail/Nordic-Semiconductor/nRF52840-Dongle?qs=gTYE2QTfZfTbdrOaMHWEZg%3D%3D) - ~\$10/unit
+* For [Sweyntooth](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks) - 1x [nRF52840 USB dongle](https://www.mouser.com/ProductDetail/Nordic-Semiconductor/nRF52840-Dongle?qs=gTYE2QTfZfTbdrOaMHWEZg%3D%3D) - ~\$10/unit
 
 
 ---
@@ -79,7 +79,7 @@ The following are only required if you'll be placing the devices into an outdoor
 * 2x - [Flexible bike lock](https://amzn.to/3YOu7xf) - ~$9/unit
  * These [aren't particularly secure](https://www.youtube.com/shorts/dA9OsRal_L8), and indeed I forgot my combo at one point and had to pick my own. But they're just there to stop hobos and randos from walking off with your stuff ;).
 
-**If you bought everything correctly, your setup should look like this :P**
+**If you bought everything correctly, your setup should look like this:**
 
 ![basic 3x USB setup](./img/tiny2th_w_3x_USB.jpg)
 
@@ -92,3 +92,5 @@ Or if you decide to add more Sonoff dongles...
 Or, if you decide to optimize for size rather tha capabilities...
 
 ![0x USB setup](./img/tiny2th.jpg)
+
+Copyright(c) © Dark Mentor LLC 2023-2025
