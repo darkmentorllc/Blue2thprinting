@@ -214,10 +214,10 @@ def main():
         query_object["company_regex"] = args.company_regex
     if args.NOT_company_regex:
         query_object["NOT_company_regex"] = args.NOT_company_regex
-    if args.UUID128_regex:
-        query_object["UUID128_regex"] = args.UUID128_regex
-    if args.NOT_UUID128_regex:
-        query_object["NOT_UUID128_regex"] = args.NOT_UUID128_regex
+    if args.UUID_regex:
+        query_object["UUID_regex"] = args.UUID_regex
+    if args.NOT_UUID_regex:
+        query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
     if args.UUID16_regex:
         query_object["UUID16_regex"] = args.UUID16_regex
     if args.MSD_regex:

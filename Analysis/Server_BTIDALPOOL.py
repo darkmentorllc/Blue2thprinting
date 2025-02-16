@@ -265,15 +265,12 @@ def handle_query(self, username, query_object):
     if("NOT_company_regex" in query_object):
         args_array.append(f"--NOT-company-regex")
         args_array.append(f"{query_object['NOT_company_regex']}")
-    if("UUID128_regex" in query_object):
-        args_array.append(f"--UUID128-regex")
-        args_array.append(f"{query_object['UUID128_regex']}")
-    if("NOT_UUID128_regex" in query_object):
-        args_array.append(f"--NOT-UUID128-regex")
-        args_array.append(f"{query_object['NOT_UUID128_regex']}")
-    if("UUID16_regex" in query_object):
-        args_array.append(f"--UUID16-regex")
-        args_array.append(f"{query_object['UUID16_regex']}")
+    if("UUID_regex" in query_object):
+        args_array.append(f"--UUID-regex")
+        args_array.append(f"{query_object['UUID_regex']}")
+    if("NOT_UUID_regex" in query_object):
+        args_array.append(f"--NOT-UUID-regex")
+        args_array.append(f"{query_object['NOT_UUID_regex']}")
     if("MSD_regex" in query_object):
         args_array.append(f"--MSD-regex")
         args_array.append(f"{query_object['MSD_regex']}")
