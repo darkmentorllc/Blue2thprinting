@@ -1,6 +1,6 @@
-# Recommended Software
+# Supported base OSes
 
-* Laptop: Install *Ubuntu 24.04* into a **VMware** VM
+* Laptop: Install *Ubuntu 24.04* into a **VMware** VM.
 * Mini-PC: Install *Ubuntu 24.04* into host OS.
 * Raspberry Pi Zero W: Install Raspbian ***Buster*** using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
@@ -128,12 +128,6 @@ Of course, replace `AA:BB:CC:11:22:33` with the BLE BDADDR you want to target, a
 
 Once you have confirmed this works, you should set `ble_2thprint_enabled = True` in `~/central_app_launcher2.py`.
 
-# Script interactions & data flow
-
-Which scripts launch which other scripts, and what logs what data to where is captured in the below diagram (click for full size image.)
-
-![](./img/Blue2thprinting_script_to_data_diagram.png)
-
 # Capture Scripts Setup
 
 ### Setup automatic script execution at boot:
@@ -160,10 +154,18 @@ You can cancel collection by running: `sudo ~/Blue2thprinting/Scripts/killall.sh
 
 If you want to manually restart the collection without a reboot, you can run: `sudo ./runall.sh` from the Scripts folder.
 
-### GPS
+# Script interactions & data flow
+
+Which scripts launch which other scripts, and what logs what data to where is captured in the below diagram (click for full size image.)
+
+![](./img/Blue2thprinting_script_to_data_diagram.png)
+
+# GPS
 
 I originally added support for GPS logging of where devices were seen, before I learned that [WiGLE.net](https://WiGLE.net) had support for crowdsourced Bluetooth logging. These days I tend to not use my GPS dongle, and instead I just run a junk Pixel phone with WiGLE and consider its capture good enough. (Also the phone's GPS seemed to generally be more reliable than the USB GPS dongle.)
 
-Therefore I have moved discussion of the GPS setup to a [separate page](./GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
+So currently I primarily get GPS data from WiGLE and import it via `~/Blue2thprinting/Analysis/WIGLE_to_BTIDES.py`.
+
+Therefore I have moved discussion of the linux native GPS setup to a [separate page](./GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
 
 Copyright(c) © Dark Mentor LLC 2023-2025

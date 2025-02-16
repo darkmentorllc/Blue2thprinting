@@ -93,4 +93,11 @@ Or, if you decide to optimize for size rather tha capabilities...
 
 ![0x USB setup](./img/tiny2th.jpg)
 
+# Supported base OS
+
+* Raspberry Pi Zero W: Install Raspbian ***Buster*** using the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+
+Further configuration instructions will be given later.
+
+
 Copyright(c) © Dark Mentor LLC 2023-2025
