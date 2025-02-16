@@ -41,8 +41,10 @@ For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB D
 ![](./img/laptop.jpg)
 ---
 
-# Recommended Software
+# Supported base OS
 
-Install *Ubuntu 24.04* into a **VMware** VM.
+* Install *Ubuntu 24.04* into a **VMware** VM.
+
+Further configuration instructions will be given later.
 
 Copyright(c) © Dark Mentor LLC 2023-2025

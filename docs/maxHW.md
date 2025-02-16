@@ -130,8 +130,10 @@ The following are only required if you'll be placing the devices into an outdoor
 
 ---
 
-# Recommended Software
+# Supported base OS
 
-Install *Ubuntu 24.04* on the UP^2.
+* Install *Ubuntu 24.04* into host OS.
+
+Further configuration instructions will be given later.
 
 Copyright(c) © Dark Mentor LLC 2023-2025
