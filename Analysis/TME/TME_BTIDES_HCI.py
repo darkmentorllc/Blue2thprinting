@@ -20,6 +20,7 @@ def ff_HCI_Remote_Name_Request_Complete(name):
     obj = {"event_code": event_code_HCI_Remote_Name_Request_Complete, "status": 0, "remote_name_hex_str": name}
     if(TME.TME_glob.verbose_BTIDES):
         obj["event_code_str"] = "HCI_Remote_Name_Request_Complete"
+        obj["utf8_name"] = bytes.fromhex(name).decode('utf-8', 'ignore')
     return obj
 
 ############################
