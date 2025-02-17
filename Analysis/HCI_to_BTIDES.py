@@ -374,7 +374,7 @@ def process_names(p):
             except UnicodeDecodeError as e:
                 print(f"Error decoding remote name: {e}")
                 return False
-            remote_name_hex_str = ''.join(format(byte, '02x') for byte in name_str.encode('utf-8'))
+            remote_name_hex_str = str_to_hex_str(name_str)
             export_Remote_Name_Request_Complete(event.fields['bd_addr'], remote_name_hex_str)
             return True
 

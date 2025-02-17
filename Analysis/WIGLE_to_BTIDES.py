@@ -91,12 +91,21 @@ def find_bdaddr_rand(bdaddr):
 
     # return 1
 
-def read_WiGLE_DB(input):
+def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False):
     try:
         sqlite_conn = sqlite3.connect(input)
         sqlite_cursor = sqlite_conn.cursor()
         sqlite_conn.commit()
-        sqlite_cursor.execute("SELECT * FROM network WHERE type = 'B' or type = 'E'")
+        query = "SELECT * FROM network WHERE (type = 'B' or type = 'E')"
+        values = ()
+        if(gps_exclude_upper_left and gps_exclude_lower_right):
+            lower_lon = min(gps_exclude_upper_left[1], gps_exclude_lower_right[1])
+            upper_lon = max(gps_exclude_upper_left[1], gps_exclude_lower_right[1])
+            lower_lat = min(gps_exclude_upper_left[0], gps_exclude_lower_right[0])
+            upper_lat = max(gps_exclude_upper_left[0], gps_exclude_lower_right[0])
+            query += " AND (bestlat NOT BETWEEN ? AND ?) AND (bestlon NOT BETWEEN ? AND ?)"
+            values += (lower_lat, upper_lat, lower_lon, upper_lon)
+        sqlite_cursor.execute(query, values)
         rows = sqlite_cursor.fetchall()
     except sqlite3.DatabaseError as e:
         print(f"Error: {e}")
@@ -145,23 +154,27 @@ def read_WiGLE_DB(input):
             data["lat"] = last_lat
             data["lon"] = last_lon
 
-        if(name != ""):
-            vprint(f"\t Name: {name}")
-            # TODO: export name to HCI_bdaddr_to_name DB?
-
         # TODO: look up RSSI in location table, by matching on bssid?
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
-        # query = "SELECT * FROM location WHERE bssid = ?"
-        # values = (bssid_ACID,)
-        # sqlite_cursor.execute(query, values)
-        # locations = sqlite_cursor.fetchall()
-        # for location in locations:
-        #     rssi = location[2]
-        #     lat = location[3]
-        #     lon = location[4]
-        #     time = location[7]
-        #     data = {"time": {"unix_time_milli": time}, "rssi": rssi, "lat": lat, "lon": lon}
-        #     BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
+
+        if(name != ""):
+            vprint(f"\t Name: {name}")
+            # Just going to hardcode a HCI_Remote_Name_Request_Complete since it's an example where we
+            # have the name but not much else to go on...
+            export_Remote_Name_Request_Complete(bdaddr, str_to_hex_str(name))
+
+        if(get_all_GPS):
+            query = "SELECT * FROM location WHERE bssid = ?"
+            values = (bssid_ACID,)
+            sqlite_cursor.execute(query, values)
+            locations = sqlite_cursor.fetchall()
+            for location in locations:
+                rssi = location[2]
+                lat = location[3]
+                lon = location[4]
+                time = location[7]
+                data = {"time": {"unix_time_milli": time}, "rssi": rssi, "lat": lat, "lon": lon}
+                BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
 
     sqlite_conn.close()
 
@@ -175,6 +188,9 @@ def main():
     btides_group = parser.add_argument_group('BTIDES file output arguments')
     btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+    btides_group.add_argument('--GPS-exclude-upper-left', type=str, required=False, help='The coordinate for the upper left corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(39.171951,-77.615936)\"')
+    btides_group.add_argument('--GPS-exclude-lower-right', type=str, required=False, help='The coordinate for the lower right corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(38.568929,-76.385467)\"')
+    btides_group.add_argument('--get-all-GPS', action='store_true', required=False, help='This will extract every GPS coordinate found for the given BDADDR in the WiGLE database, not just the trilaterated \"best\" one. This will potentially take a *lot* longer, based on how many records exist in your database.')
 
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
@@ -202,9 +218,17 @@ def main():
     if not os.path.isfile(args.input):
         print(f"Error: file {input} does not exist.")
         return
+    if(args.GPS_exclude_upper_left and not args.GPS_exclude_lower_right or args.GPS_exclude_lower_right and not args.GPS_exclude_upper_left):
+        print("Error: If you specify either GPS exclude option, you must specify both.")
+        return
 
     qprint("Reading all Bluetooth entries from WiGLE SQLite database into memory.")
-    read_WiGLE_DB(args.input)
+    if(args.GPS_exclude_upper_left and args.GPS_exclude_lower_right):
+        upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
+        lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
+        read_WiGLE_DB(input=args.input, gps_exclude_upper_left=upper_left_tuple, gps_exclude_lower_right=lower_right_tuple, get_all_GPS=args.get_all_GPS)
+    else:
+        read_WiGLE_DB(input=args.input, get_all_GPS=args.get_all_GPS)
 
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
