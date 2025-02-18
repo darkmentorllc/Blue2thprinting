@@ -761,3 +761,73 @@ def print_device_names(bdaddr, nametype):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, device_name_type, data)
 
     qprint("")
+
+def get_uuid16_gatt_service_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT services
+    return TME.TME_glob.gatt_services_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+def get_uuid16_gatt_declaration_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT declarations
+    return TME.TME_glob.gatt_declarations_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+def get_uuid16_gatt_descriptor_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT descriptors
+    return TME.TME_glob.gatt_descriptors_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+def get_uuid16_gatt_characteristic_string(uuid16):
+    # Use the UUID16 names mapping to get the name for a GATT characteristic
+    return TME.TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
+
+def colored_print_name_for_UUID16(uuid16):
+    service_by_uuid16 = get_uuid16_service_string(uuid16)
+    gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
+    protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
+    company_by_uuid16 = get_company_by_uuid16(uuid16)
+    custom_by_uuid16 = get_custom_by_uuid16(uuid16)
+    if(service_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Service ID: {service_by_uuid16}" + Style.RESET_ALL
+        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        return colored_str
+    elif(gatt_service_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"GATT Service ID: {gatt_service_by_uuid16}" + Style.RESET_ALL
+        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        return colored_str
+    elif(protocol_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
+        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        return colored_str
+    elif(custom_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
+        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        return colored_str
+    elif(company_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Company ID: {company_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+    else:
+        qprint(f"\t\tUUID16 {uuid16} (No matches)")
+        return f"\t\tUUID16 {uuid16} (No matches)"
+
+def return_name_for_UUID16(uuid16):
+    service_by_uuid16 = get_uuid16_service_string(uuid16)
+    gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
+    protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
+    company_by_uuid16 = get_company_by_uuid16(uuid16)
+    custom_by_uuid16 = get_custom_by_uuid16(uuid16)
+    if(service_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Service ID: {service_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    elif(gatt_service_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"GATT Service ID: {gatt_service_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    elif(protocol_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    elif(custom_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    elif(company_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Company ID: {company_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    else:
+        return f"\t\tUUID16 {uuid16} (No matches)"

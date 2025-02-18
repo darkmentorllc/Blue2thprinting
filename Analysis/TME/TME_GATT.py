@@ -15,79 +15,46 @@ from TME.TME_UUID128 import add_dashes_to_UUID128, print_associated_android_pack
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
 
-def get_uuid16_gatt_service_string(uuid16):
-    # Use the UUID16 names mapping to get the name for a GATT services
-    return TME.TME_glob.gatt_services_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
-
-def get_uuid16_gatt_declaration_string(uuid16):
-    # Use the UUID16 names mapping to get the name for a GATT declarations
-    return TME.TME_glob.gatt_declarations_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
-
-def get_uuid16_gatt_descriptor_string(uuid16):
-    # Use the UUID16 names mapping to get the name for a GATT descriptors
-    return TME.TME_glob.gatt_descriptors_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
-
-def get_uuid16_gatt_characteristic_string(uuid16):
-    # Use the UUID16 names mapping to get the name for a GATT characteristic
-    return TME.TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
-
 # UUID can now be a UUID16 or UUID32 or UUID128
 def match_known_GATT_UUID_or_custom_UUID(UUID):
-    UUID.strip().lower()
-    if(len(UUID) == 4): # UUID16
-        uuid16 = UUID
-        UUID_no_dash = ""
-        match = True
+    UUID = convert_UUID128_to_UUID16_if_possible(UUID)
+    # Try to see if it's a known GATT Service
+    str_name = get_uuid16_gatt_service_string(UUID)
+    if(str_name != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Service: {str_name}" + Style.RESET_ALL
+        return colored_str
     else:
-        UUID_no_dash = UUID.replace('-','')
-        pattern = r'0000[a-f0-9]{4}-0000-1000-8000-00805f9b34fb'
-        match = re.match(pattern, UUID)
-        if match:
-            common_part = match.group()  # Extract the matched part
-            uuid16 = common_part[4:8]
-
-    if match:
-        # Try to see if it's a known GATT Service
-        str_name = get_uuid16_gatt_service_string(uuid16)
+        # Try to see if it's a known Characteristic
+        str_name = get_uuid16_gatt_characteristic_string(UUID)
         if(str_name != "Unknown"):
-            colored_str = Fore.CYAN + Style.BRIGHT + f"Service: {str_name}" + Style.RESET_ALL
+            colored_str = Fore.CYAN + Style.BRIGHT + f"Characteristic Value: {str_name}" + Style.RESET_ALL
             return colored_str
+            # return f"Characteristic Value: {str_name}"
         else:
-            # Try to see if it's a known Characteristic
-            str_name = get_uuid16_gatt_characteristic_string(uuid16)
+            # Try to see if it's a known Declaration
+            str_name = get_uuid16_gatt_declaration_string(UUID)
             if(str_name != "Unknown"):
-                colored_str = Fore.CYAN + Style.BRIGHT + f"Characteristic Value: {str_name}" + Style.RESET_ALL
-                return colored_str
-                # return f"Characteristic Value: {str_name}"
+                # colored_str = Fore.CYAN + Style.BRIGHT + f"Declaration: {str_name}"
+                # return colored_str
+                return f"Declaration: {str_name}"
             else:
-                # Try to see if it's a known Declaration
-                str_name = get_uuid16_gatt_declaration_string(uuid16)
+                # Try to see if it's a known Descriptor
+                str_name = get_uuid16_gatt_descriptor_string(UUID)
                 if(str_name != "Unknown"):
-                    # colored_str = Fore.CYAN + Style.BRIGHT + f"Declaration: {str_name}"
-                    # return colored_str
-                    return f"Declaration: {str_name}"
+                    colored_str = Fore.CYAN + Style.BRIGHT + f"Descriptor: {str_name}" + Style.RESET_ALL
+                    return colored_str
+                    # return f"Descriptor: {str_name}"
                 else:
-                    # Try to see if it's a known Descriptor
-                    str_name = get_uuid16_gatt_descriptor_string(uuid16)
-                    if(str_name != "Unknown"):
-                        colored_str = Fore.CYAN + Style.BRIGHT + f"Descriptor: {str_name}" + Style.RESET_ALL
-                        return colored_str
-                        # return f"Descriptor: {str_name}"
+                    if(len(UUID) == 4):
+                        str = return_name_for_UUID16(UUID)
                     else:
-                        if(UUID_no_dash != ""):
-                            str = get_custom_uuid128_string(UUID_no_dash)
-                            if(str == "Unknown UUID128"):
-                                colored_str = Fore.RED + Style.BRIGHT + "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml" + Style.RESET_ALL
-                                return colored_str
-                            else:
-                                colored_str = Fore.CYAN + Style.BRIGHT + str + Style.RESET_ALL
-                                return colored_str
-    else:
-        return get_custom_uuid128_string(UUID_no_dash)
-#    elif(uuid128_no_dash in custom_uuid128_hash):
-#        return custom_uuid128_hash[uuid128_no_dash]
-#    else:
-#        return "Non-standard UUID128"
+                        str = get_custom_uuid128_string(UUID)
+                    if(str == "Unknown UUID128"):
+                        colored_str = Fore.RED + Style.BRIGHT + "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml" + Style.RESET_ALL
+                        return colored_str
+                    else:
+                        colored_str = Fore.CYAN + Style.BRIGHT + str + Style.RESET_ALL
+                        return colored_str
 
 def characteristic_properties_to_string(number):
     str = ""
