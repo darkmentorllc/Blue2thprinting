@@ -201,9 +201,9 @@ def get_bdaddrs_by_company_regex(companyregex):
     try_byte_swapped_bt_cid = True
 
     # For debugging:
-    enable_bt_cid_lookup = False
-    enable_UUID16_lookup = False
-    enable_IEEE_OUI_lookup = False
+    enable_bt_cid_lookup = True
+    enable_UUID16_lookup = True
+    enable_IEEE_OUI_lookup = True
     enable_CLUES_lookup = True
 
     if(enable_bt_cid_lookup):
