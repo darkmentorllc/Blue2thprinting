@@ -379,6 +379,8 @@ def print_GATT_info(bdaddr):
             match_found = False
             qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
             for UUID in unknown_UUID128_hash.keys():
+                if(UUID.replace('-','') == "00000000000000000000000000000000"):
+                    continue
                 (type, indent) = unknown_UUID128_hash[UUID]
                 match_found = print_associated_android_package_names(type, indent, UUID)
             if(not match_found):
