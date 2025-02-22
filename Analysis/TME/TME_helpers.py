@@ -778,6 +778,7 @@ def get_uuid16_gatt_characteristic_string(uuid16):
     # Use the UUID16 names mapping to get the name for a GATT characteristic
     return TME.TME_glob.gatt_characteristic_uuid16_names.get(int(uuid16.strip(), 16), "Unknown")
 
+
 def colored_print_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)
     gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
@@ -830,4 +831,4 @@ def return_name_for_UUID16(uuid16):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company ID: {company_by_uuid16}" + Style.RESET_ALL
         return colored_str
     else:
-        return f"\t\tUUID16 {uuid16} (No matches)"
+        return f"No matches"
