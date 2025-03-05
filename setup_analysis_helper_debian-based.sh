@@ -99,6 +99,16 @@ echo "==========================================================================
 mysql -u user -pa --database='bt2' --execute="SELECT * from BLEScope_UUID128s limit 10;"
 
 echo ""
+echo "==================================================="
+echo "Filling database with USB 16-bit company IDs."
+echo "==================================================="
+./translator_fill_USB_CID_to_company.sh
+echo "============================================================================================"
+echo "You should see 10 mappings between UUI128s and Android package names after the next command:"
+echo "============================================================================================"
+mysql -u user -pa --database='bt2' --execute="SELECT * from USB_CID_to_company order by id desc limit 10;"
+
+echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"
 echo "[--------------------------------------------------]"

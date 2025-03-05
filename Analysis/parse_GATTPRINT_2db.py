@@ -9,6 +9,7 @@ import mysql.connector
 import traceback
 import csv
 import binascii
+import re
 
 # Establish connection to the MySQL database
 db_connection = mysql.connector.connect(
@@ -24,10 +25,10 @@ cursor = db_connection.cursor()
 
 # Prepare the SQL statement with placeholders
 # Currently date from gatttool can only capture primary services, so hardcode service_type to 0 (for 0x2800, but to save space. 0x2801 would therefore be 1))
-sql_GATT_services = "INSERT IGNORE INTO GATT_services (bdaddr, bdaddr_random, service_type, begin_handle, end_handle, UUID128) VALUES (%s, %s, 0, %s, %s, %s)"
-sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (bdaddr, bdaddr_random, attribute_handle, UUID128) VALUES (%s, %s, %s, %s)"
-sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID128) VALUES (%s, %s, %s, %s, %s, %s)"
-sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, operation, char_value_handle, byte_values) VALUES (%s, %s, 0, %s, %s)"
+sql_GATT_services = "INSERT IGNORE INTO GATT_services (bdaddr, bdaddr_random, service_type, begin_handle, end_handle, UUID) VALUES (%s, %s, 0, %s, %s, %s)"
+sql_GATT_attribute_handles = "INSERT IGNORE INTO GATT_attribute_handles (bdaddr, bdaddr_random, attribute_handle, UUID) VALUES (%s, %s, %s, %s)"
+sql_GATT_characteristics = "INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s)"
+sql_GATT_characteristics_values = "INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s)"
 
 # Try to find the bdaddr that will be substituted for {}, in any of our BLE tables
 sql_lookup_bdaddr_type = """
@@ -111,6 +112,18 @@ UNION ALL
 ) AS combined_results;
 """
 
+def convert_UUID128_to_UUID16_if_possible(UUID128):
+    if(len(UUID128) < 32):
+        return UUID128
+    UUID128_tmp = UUID128.strip().lower()
+    UUID128_tmp = UUID128_tmp.replace('-','')
+    pattern = r'0000[a-f0-9]{4}00001000800000805f9b34fb'
+    match = re.match(pattern, UUID128_tmp)
+    if match:
+        return UUID128_tmp[4:8]
+    else:
+        return UUID128_tmp
+
 #Use this to convert byte arrays into human-readable strings
 def print_string(args):
     try:
@@ -158,7 +171,8 @@ def func_CHARACTERISTIC(bdaddr_random, new, args):
         UUID128 = args[5]
 
     # Define the parameter values to be inserted
-    values = (bdaddr_random, bdaddr, declaration_handle, char_properties, char_value_handle, UUID128)
+    UUID = convert_UUID128_to_UUID16_if_possible(UUID128)
+    values = (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_characteristics, values)
@@ -191,7 +205,8 @@ def func_CHAR_VALUE(bdaddr_random, new, args):
 #        print("Couldn't decode byte_values")
         pass
     # Define the parameter values to be inserted
-    values = (bdaddr_random, bdaddr, char_value_handle, binary_string)
+    # 0x0B = ATT_READ_RSP, because all values were read values
+    values = (bdaddr, bdaddr_random, char_value_handle, 0x0B, binary_string)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_characteristics_values, values)
@@ -227,7 +242,8 @@ def func_SERVICE(bdaddr_random, new, args):
         UUID128 = args[4]
 
     # Define the parameter values to be inserted
-    values = (bdaddr_random, bdaddr, begin_handle, end_handle, UUID128)
+    UUID = convert_UUID128_to_UUID16_if_possible(UUID128)
+    values = (bdaddr, bdaddr_random, begin_handle, end_handle, UUID)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_services, values)
@@ -253,7 +269,8 @@ def func_ATT_HANDLES(bdaddr_random, new, args):
         UUID128 = args[3]
 
     # Define the parameter values to be inserted
-    values = (bdaddr_random, bdaddr, attribute_handle, UUID128)
+    UUID = convert_UUID128_to_UUID16_if_possible(UUID128)
+    values = (bdaddr, bdaddr_random, attribute_handle, UUID)
     #print("values = ", values)
     # Execute the SQL statement
     cursor.execute(sql_GATT_attribute_handles, values)
