@@ -294,7 +294,16 @@ att_error_strings = {
     16: "Unsupported Group Type",
     17: "Insufficient Resources",
     18: "Database Out of Sync",
-    19: "Value Not Allowed"
+    19: "Value Not Allowed",
+    0x80: "Unknown Application Error 0",
+    0x81: "Unknown Application Error 1",
+    0x82: "Unknown Application Error 2",
+    0x83: "Unknown Application Error 3",
+    0x84: "Unknown Application Error 4",
+    0xfc: "Write Request Rejected",
+    0xfd: "Client Characteristic Configuration Descriptor Improperly Configured",
+    0xfe: "Procedure Already in Progress",
+    0xff: "Out of Range"
 }
 
 ######################################################
