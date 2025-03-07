@@ -103,6 +103,9 @@ def bytes_to_hex_str(bytes):
 def str_to_hex_str(str):
     return ''.join(format(byte, '02x') for byte in str.encode('utf-8'))
 
+def str_to_bytes(str):
+    return str.encode('utf-8', 'ignore')
+
 def bytes_reversed_to_hex_str(bytes):
     return ''.join(format(byte, '02x') for byte in reversed(bytes))
 
@@ -112,6 +115,10 @@ def bytes_to_utf8(hex_str):
 def hex_str_to_utf8(hex_str):
     bytes_object = bytes.fromhex(hex_str)
     return bytes_to_utf8(bytes_object)
+
+def hex_str_to_bytes(hex_str):
+    bytes_object = bytes.fromhex(hex_str)
+    return bytes_object
 
 # This is just a simple wrapper around insert_std_optional_fields to insert any
 # additional information that we may be able to glean from the packet
@@ -747,6 +754,13 @@ def export_characteristic_descriptors(list_obj, att_data, connect_ind_obj):
         return True
 
     elif(list_obj["UUID"] == "2901"):
+        user_description_hex_str = bytes_to_hex_str(att_data.value)
+        desc_obj = {"handle": list_obj["handle"], "UUID": "2901", "user_description_hex_str": user_description_hex_str}
+        if(TME.TME_glob.verbose_BTIDES):
+            utf8_user_description = bytes_to_utf8(att_data.value)
+            desc_obj["utf8_user_description"] = utf8_user_description
+        desc_obj = ff_Descriptor(desc_obj)
+        insert_descriptor_object(char_obj, desc_obj)
         return True
 
     elif(list_obj["UUID"] == "2902"):

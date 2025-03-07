@@ -18,6 +18,21 @@ clues_regexed = {}
 nameprint_data = {}
 
 #########################################
+# Data from formattypes.yaml
+#########################################
+bt_format_type_to_description = {}
+
+#########################################
+# Data from units.yaml
+#########################################
+bt_units_to_names = {}
+
+#########################################
+# Data from namespace.yaml
+#########################################
+bt_namespace_descriptions = {}
+
+#########################################
 # Data from company_identifiers.yaml
 #########################################
 bt_CID_to_names = {}

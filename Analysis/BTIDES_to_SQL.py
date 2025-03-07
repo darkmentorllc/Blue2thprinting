@@ -1035,6 +1035,37 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                         insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
                         execute_insert(insert, values)
 
+            # Now convert any characteristic descriptors into values appropriate for storage in the GATT_characteristics_values table
+            # TODO: do I need to add an io_array to every descriptor entry, to support operation types other than read?
+            if("descriptors" in char.keys()):
+                descriptors_array = char["descriptors"]
+                for descriptor in descriptors_array:
+                    UUID = descriptor["UUID"]
+                    handle = descriptor["handle"]
+                    operation = type_ATT_READ_RSP
+                    if(UUID == "2900"):
+                        byte_values = descriptor["extended_properties"].to_bytes(2, byteorder='little')
+                    elif(UUID == "2901"):
+                        byte_values = bytes.fromhex(descriptor["user_description_hex_str"])
+                        # byte_values = hex_str_to_bytes(descriptor["user_description_hex_str"]) # FIXME: I want to use hex_str_to_bytes but encountering circular import issues
+                    elif(UUID == "2902" or UUID == "2903"):
+                        byte_values = descriptor["config_bits"].to_bytes(2, byteorder='little')
+                    elif(UUID == "2904"):
+                        byte_values = descriptor["format"].to_bytes(1, byteorder='little')
+                        byte_values += descriptor["exponent"].to_bytes(1, byteorder='little')
+                        byte_values += descriptor["unit"].to_bytes(2, byteorder='little')
+                        byte_values += descriptor["name_space"].to_bytes(1, byteorder='little')
+                        byte_values += descriptor["description"].to_bytes(2, byteorder='little')
+                    elif(UUID == "2905"):
+                        attribute_handles_list = descriptor["attribute_handles_list"]
+                        byte_values = b''
+                        for handle in attribute_handles_list:
+                            byte_values += handle.to_bytes(2, byteorder='little')
+
+                    values = (bdaddr, bdaddr_random, UUID, handle, operation, byte_values)
+                    insert = f"INSERT IGNORE INTO GATT_characteristic_descriptor_values (bdaddr, bdaddr_random, UUID, descriptor_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s, %s);"
+                    execute_insert(insert, values)
+
 def parse_GATTArray(entry):
     #qprint(json.dumps(entry, indent=2))
     if("GATTArray" not in entry.keys() or entry["GATTArray"] == None):

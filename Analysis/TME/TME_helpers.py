@@ -433,7 +433,7 @@ def BT_CID_to_company_name(device_BT_CID):
     if(device_BT_CID in TME.TME_glob.bt_CID_to_names):
         s = TME.TME_glob.bt_CID_to_names[device_BT_CID]
 
-    return s
+    return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL
 
 # Look up company name based on 16-bit USB Company ID (CID) (Sometimes BT uses these IDs if a flag says to)
 def USB_CID_to_company_name(device_USB_CID):
