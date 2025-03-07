@@ -186,6 +186,9 @@ def main():
 
     # Fill in dictionaries based on standard BT assigned numbers YAML files
     import_CoD_to_names()
+    import_bt_format_type_to_descriptions()
+    import_bt_units_to_names()
+    import_bt_namespace_descriptions()
     import_bt_CID_to_names()
     import_bt_member_UUID16s_to_names()
     import_bt_spec_version_numbers_to_names()

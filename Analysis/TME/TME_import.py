@@ -103,6 +103,54 @@ def import_private_nameprint_CSV_data():
 ########################################
 
 #########################################
+# Get data from formattypes.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def import_bt_format_type_to_descriptions():
+    global bt_format_type_to_description
+    with open('./public/assigned_numbers/core/formattypes.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['formattypes']:
+        value = entry['value']
+        description = entry['description']
+        TME.TME_glob.bt_format_type_to_description[value] = description
+
+#########################################
+# Get data from units.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def import_bt_units_to_names():
+    global bt_units_to_names
+    with open('./public/assigned_numbers/uuids/units.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['uuids']:
+        uuid = entry['uuid']
+        name = entry['name']
+        TME.TME_glob.bt_units_to_names[uuid] = name
+
+#########################################
+# Get data from namespace.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def import_bt_namespace_descriptions():
+    global bt_namespace_descriptions
+    with open('./public/assigned_numbers/core/namespace.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['namespace']:
+        value = entry['value']
+        name = entry['name']
+        TME.TME_glob.bt_namespace_descriptions[value] = name
+
+#########################################
 # Get data from company_identifiers.yaml
 #########################################
 # NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
@@ -148,7 +196,6 @@ def import_bt_member_UUID16s_to_names():
 #    qprint(TME.TME_glob.bt_member_UUID16s_to_names)
 #    qprint(TME.TME_glob.bt_member_UUID16_as_UUID128_to_names)
 #    qprint(len(TME.TME_glob.bt_member_UUID16s_to_names))
-
 
 #########################################
 # Get data from class_of_device.yaml
