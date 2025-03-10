@@ -305,7 +305,7 @@ def print_GATT_info(bdaddr):
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
-    values = (bdaddr,bdaddr,bdaddr,bdaddr)
+    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
     query = """
     SELECT DISTINCT handle_value
     FROM (
@@ -323,6 +323,10 @@ def print_GATT_info(bdaddr):
         UNION
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics_values
+        WHERE bdaddr = %s
+        UNION
+        SELECT descriptor_handle AS handle_value
+        FROM GATT_characteristic_descriptor_values
         WHERE bdaddr = %s
     ) AS combined_handles
     ORDER BY handle_value ASC;
@@ -349,6 +353,14 @@ def print_GATT_info(bdaddr):
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID] = ("Service","\t    ")
+        indent = "\t  "
+        if(service_type == 0):
+            type = "2800 (" + match_known_GATT_UUID_or_custom_UUID("2800") + ")"
+        elif(service_type == 1):
+            type = "2801 (" + match_known_GATT_UUID_or_custom_UUID("2801") + ")"
+        qprint(f"{indent}{type} Attribute Handle: {svc_begin_handle:03}")
+        qprint(f"\t  Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
+        qprint(f"\t  Service Value: {UUID} ({UUID128_description}):")
 
         # Iterate through all known handles, so nothing gets missed
         for handle, in GATT_all_known_handles_result:
@@ -366,7 +378,7 @@ def print_GATT_info(bdaddr):
                        or UUID128_2 == "2800" \
                        or UUID128_2 == "00002801-0000-1000-8000-00805f9b34fb" \
                        or UUID128_2 == "2801"):
-                        indent = "\t  "
+                        continue # to not double-print
                     elif(UUID128_2 == "00002803-0000-1000-8000-00805f9b34fb" \
                        or UUID128_2 == "2803"):
                         indent = "\t    "
