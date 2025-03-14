@@ -47,7 +47,7 @@ echo "  Done"
 
 python3 -m venv ./venv
 source ./venv/bin/activate
-pip install gmplot intelhex inotify mysql-connector
+pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector
 
 no_python2=1
 ### Python 2.7

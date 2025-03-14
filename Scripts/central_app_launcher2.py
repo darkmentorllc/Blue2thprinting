@@ -5,11 +5,17 @@ The goal is to try and generally minimize contention for the scanning interface
 (which is the built-in hci0 used by the python BTC/BLE libraries).
 '''
 
+# Activate venv before any other imports
+import os
+import sys
+from pathlib import Path
+from handle_venv import activate_venv
+activate_venv()
+
 import datetime
 import subprocess
 import threading
 import time
-import os
 import glob
 from subprocess import TimeoutExpired
 import traceback
@@ -52,7 +58,7 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
 # PATHS YOU MAY NEED TO FIX
 ##################################################
 
-username = "pi"
+username = "user"
 
 default_cwd = f"/home/{username}/"
 
