@@ -18,5 +18,5 @@ hciconfig hci0 down
 sleep 1
 hciconfig hci0 up
 sleep 1
-RESULT=$( /usr/bin/btmon -T -w ${LOGPATH}/${DATE}_${HN}.bin &>/dev/null&)
+RESULT=$( /home/user/Blue2thprinting/bluez-5.66/monitor/btmon -T -w ${LOGPATH}/${DATE}_${HN}.bin &>/dev/null&)
 echo "start_btmon.sh end" >> $ERRORLOG
