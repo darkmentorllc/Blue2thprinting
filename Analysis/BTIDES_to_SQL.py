@@ -1031,13 +1031,13 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                         byte_values = bytes.fromhex(io_array_entry["value_hex_str"])
                         # Apparently despite being defined as an integer in the schema, the handle can be a string in the JSON and it still passes validation.
                         # So we need to make sure it's an integer before it goes into the DB otherwise it can turn into a handle of 0 by the execute_insert function.
-                        handle = char_value["handle"]
-                        if isinstance(handle, str):
-                            handle = int(handle, 16)
-                            if(handle == 0):
+                        char_value_handle = char_value["value_handle"]
+                        if isinstance(char_value_handle, str):
+                            char_value_handle = int(char_value_handle, 16)
+                            if(char_value_handle == 0):
                                 print("Error: char_value_handle was 0. This is a bug. (Possibly JSON validation isn't working) Exiting.")
                                 exit(-1)
-                        values = (bdaddr, bdaddr_random, handle, operation, byte_values)
+                        values = (bdaddr, bdaddr_random, char_value_handle, operation, byte_values)
                         insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
                         execute_insert(insert, values)
 
