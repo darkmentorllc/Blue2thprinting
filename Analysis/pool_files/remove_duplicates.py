@@ -15,7 +15,7 @@ def find_and_delete_duplicate_files(directory="."):
     file_data = {}  # Dictionary to store file information {hash: [(timestamp, filename), ...]}
 
     for filename in os.listdir(directory):
-        match = re.match(r"([0-9a-f]{40})-(.+)-(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.json\.processed", filename)
+        match = re.match(r"([0-9a-f]{40})-(.+)-(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})", filename)
         if match:
             sha1_hash, _, timestamp_str = match.groups()
             try:
