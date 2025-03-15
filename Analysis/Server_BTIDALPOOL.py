@@ -129,7 +129,7 @@ def run_TellMeEverything(self, username, args_array, output_filename):
     # Run the TellMeEverything.py script in a new thread.
     def target():
         # FIXME: update to refactor to not require subprocess.run (or to use a separate script)
-        args_list = ["python3", "TellMeEverything.py"] + args_array + ["--output", output_filename]
+        args_list = ["python3", "Tell_Me_Everything.py"] + args_array + ["--output", output_filename]
         subprocess.run(args_list)
     thread = threading.Thread(target=target)
     thread.start()
