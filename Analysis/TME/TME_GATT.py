@@ -282,8 +282,8 @@ def print_GATT_info(bdaddr):
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
     for bdaddr_random, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
-        data = {"handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
-        BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        data = {"value_handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
+        BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
         if(char_value_handle in char_value_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
@@ -460,7 +460,7 @@ def print_GATT_info(bdaddr):
                 (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
                 UUID = add_dashes_to_UUID128(UUID)
                 UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-                qprint(f"\t      GATT Characteristic declaration:\t{UUID} ({UUID128_description})\n\t\t\t\t\t\t\t\t\tHandle: {declaration_handle:03}\n\t\t\t\t\t\t\t\t\tProperties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                qprint(f"\t      GATT Characteristic declaration:\t{UUID} ({UUID128_description})\n\t        Handle: {declaration_handle:03}\n\t        Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                 if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                     unknown_UUID128_hash[UUID] = ("Characteristic","\t    ")
 
