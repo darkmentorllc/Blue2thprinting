@@ -953,13 +953,16 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
             insert = f"INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
             execute_insert(insert, values)
         else:
-            # We don't want characteristics to go into the GATT_characteristics_values table
-            values = (bdaddr, bdaddr_random, handle, operation, byte_values)
-            insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
-            execute_insert(insert, values)
+            if(handle != 0):
+                # Handle 0 would be invalid, so ignore any cases where we don't have a last read handle request != 0
+                # We don't want characteristics to go into the GATT_characteristics_values table
+                values = (bdaddr, bdaddr_random, handle, operation, byte_values)
+                insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
+                execute_insert(insert, values)
 
 
 def parse_ATTArray(entry):
+    global g_last_read_req_handle
     if("ATTArray" not in entry.keys() or entry["ATTArray"] == None):
         return # Entry not valid for this type
 
@@ -972,6 +975,9 @@ def parse_ATTArray(entry):
 
         if(bdaddr == "00:00:00:00:00:00"):
             # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            # But still keep track of any ATT_READ_REQ handles we see, because we need their state to know the handle for ATT_READ_RSP that come back
+            if(att_entry["opcode"] == type_ATT_READ_REQ):
+                g_last_read_req_handle = att_entry["handle"]
             continue
 
         if("ATT_handle_enumeration" in att_entry.keys() and att_entry["ATT_handle_enumeration"] != None):
@@ -1035,7 +1041,7 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                         insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
                         execute_insert(insert, values)
 
-            # Now convert any characteristic descriptors into values appropriate for storage in the GATT_characteristics_values table
+            # Now convert any characteristic descriptors into values appropriate for storage in the GATT_characteristic_descriptor_values table
             # TODO: do I need to add an io_array to every descriptor entry, to support operation types other than read?
             if("descriptors" in char.keys()):
                 descriptors_array = char["descriptors"]
@@ -1200,6 +1206,7 @@ def btides_to_sql(args):
     skip_invalid = args.skip_invalid
     global last_printed_percentage
     global BTIDES_JSON
+    global g_last_read_req_handle
 
     last_printed_percentage = 0
     with open(in_filename, 'r') as f:
@@ -1250,6 +1257,7 @@ def btides_to_sql(args):
 
         parse_L2CAPArray(entry)
 
+        g_last_read_req_handle = 0
         parse_ATTArray(entry)
 
         parse_GATTArray(entry)
