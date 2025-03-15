@@ -41,19 +41,21 @@ source ./venv/bin/activate
 # Even for distributions like Ubuntu 24.04 which package jsonschema, it seems they're not at a new enough version to support a constructor we need. So I'm now requiring installation of this version.
 pip install jsonschema==4.23 mysql-connector pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
 
+cd Analysis
+
 # Using my branch because I've got changes that haven't been upstreamed
-git clone https://github.com/XenoKovah/scapy.git
+#git clone https://github.com/XenoKovah/scapy.git
 cd scapy
 pip install .
 cd ..
 # We need this branch of btsnoop which added support for BTSNOOP_FORMAT_MONITOR sufficient to get the data into scapy for parsing
-git clone https://github.com/XenoKovah/btsnoop.git
+#git clone https://github.com/XenoKovah/btsnoop.git
 cd btsnoop
 pip install .
 cd ..
 
 # Next commands assume they run from the Analysis folder
-cd ./Analysis/one_time_initialization
+cd ./one_time_initialization
 
 echo ""
 echo "==================================="

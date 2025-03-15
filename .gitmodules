@@ -7,3 +7,9 @@
 [submodule "Analysis/BTIDES_Schema"]
 	path = Analysis/BTIDES_Schema
 	url = http://github.com/darkmentorllc/BTIDES_Schema.git
+[submodule "Analysis/scapy"]
+	path = Analysis/scapy
+	url = https://github.com/XenoKovah/scapy.git
+[submodule "Analysis/btsnoop"]
+	path = Analysis/btsnoop
+	url = https://github.com/XenoKovah/btsnoop.git
