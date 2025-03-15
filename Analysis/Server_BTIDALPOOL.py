@@ -328,11 +328,41 @@ class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
-    # Don't accept any GET requests
+    # Don't accept any GET or other command requests
     def do_GET(self):
-        self.send_response(404)
+        """Reject GET requests."""
+        self.send_error(405, "Method Not Allowed")
         self.end_headers()
-        return
+
+    def do_PUT(self):
+        """Reject PUT requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
+
+    def do_DELETE(self):
+        """Reject DELETE requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
+
+    def do_HEAD(self):
+        """Reject HEAD requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
+
+    def do_OPTIONS(self):
+        """Reject OPTIONS requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
+
+    def do_PATCH(self):
+        """Reject PATCH requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
+
+    def do_TRACE(self):
+        """Reject TRACE requests."""
+        self.send_error(405, "Method Not Allowed")
+        self.end_headers()
 
     def do_POST(self):
         client_ip = self.client_address[0]
