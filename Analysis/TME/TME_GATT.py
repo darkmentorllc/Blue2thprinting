@@ -99,7 +99,12 @@ def lookup_company_name_by_OUI(OUI):
 # Decode some misc things just because they provide interesting info
 def characteristic_value_decoding(indent, UUID128, bytes):
     UUID = convert_UUID128_to_UUID16_if_possible(UUID128)
-    if(UUID == "2a01"): # Appearance
+    if(UUID == "2a00"): # Name
+        utf8_str = bytes.decode('utf-8', 'ignore')
+        color_str = f"{indent}  Name decodes as: " + Fore.BLUE + Style.BRIGHT + f"{utf8_str}" + Style.RESET_ALL
+        qprint(color_str)
+
+    elif(UUID == "2a01"): # Appearance
         value = int.from_bytes(bytes, byteorder='little')
         #qprint(f"Value = {value}")
         color_str = f"{indent}Appearance decodes as: " + Fore.BLUE + Style.BRIGHT + f"{appearance_uint16_to_string(value)}" + Style.RESET_ALL
