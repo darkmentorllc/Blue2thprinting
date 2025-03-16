@@ -282,7 +282,7 @@ def print_GATT_info(bdaddr):
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
     for bdaddr_random, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
-        data = {"value_handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
+        data = {"handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
         if(char_value_handle in char_value_handles_dict.keys()):

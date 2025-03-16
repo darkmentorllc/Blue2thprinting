@@ -165,7 +165,7 @@ def BTIDES_export_GATT_Characteristic_Value(connect_ind_obj=None, bdaddr=None, r
     # For the placeholder, first run it through the factory function to add any nice-to-haves for verbosity
     data = ff_GATT_Characteristic_Value(data)
     # Next for the embed the char_value data into the placeholder characteristic right from the start
-    placeholder_char_obj = ff_GATT_Characteristic({"placeholder_entry": True, "utype": "2803", "handle": 0xFFFE, "properties": 0xFF, "value_handle": data["value_handle"], "value_uuid": "FFFF", "char_value": data})
+    placeholder_char_obj = ff_GATT_Characteristic({"placeholder_entry": True, "utype": "2803", "handle": 0xFFFE, "properties": 0xFF, "value_handle": data["handle"], "value_uuid": "FFFF", "char_value": data})
     # And then embed the placeholder characteristic into the placeholder service
     placeholder_svc_obj = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ placeholder_char_obj ]})
     ###qprint(json.dumps(entry, indent=2))
@@ -184,14 +184,14 @@ def BTIDES_export_GATT_Characteristic_Value(connect_ind_obj=None, bdaddr=None, r
             #qprint(json.dumps(entry, indent=2))
             return
         else:
-            service_entry = find_service_with_target_handle_in_range(bdaddr=bdaddr, random=random, target_handle=data["value_handle"])
+            service_entry = find_service_with_target_handle_in_range(bdaddr=bdaddr, random=random, target_handle=data["handle"])
             if(service_entry != None):
                 if("characteristics" not in service_entry.keys()):
                     service_entry["characteristics"] = [ placeholder_char_obj ]
                     return
                 else:
-                    # Check if there's already a characteristic within this service which has the matching value_handle
-                    characteristic_entry = find_matching_characteristic(service_entry["characteristics"], data["value_handle"])
+                    # Check if there's already a characteristic within this service which has the matching matching value.handle == char.value_handle
+                    characteristic_entry = find_matching_characteristic(service_entry["characteristics"], data["handle"])
                     if(characteristic_entry == None):
                         # If we get here, we exhaused all characteristics without a match.
                         # Insert an entire placeholder characteristic
