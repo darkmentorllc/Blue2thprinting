@@ -66,7 +66,7 @@ def get_uuid16_stats(arg):
                             seen_le_uuid16s_hash[uuid16] = 1
 
         company_uuid_count = 0
-        qprint()
+        qprint("")
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
         qprint(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s_list")
         qprint(f"{len(seen_le_uuid16s_hash)} unique UUID16s found")
@@ -158,7 +158,7 @@ def get_uuid128_stats(arg):
                         else:
                            seen_le_uuid128s_hash[uuid128] = 1
 
-        qprint()
+        qprint("")
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
         qprint(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s_list")
         qprint(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
