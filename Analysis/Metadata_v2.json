@@ -32,7 +32,7 @@
 		}
 	},
 	"Tesla Keyfob": {
-"2thprint_Chip": "TI CC2640",
+		"2thprint_Chip": "TI CC2640",
 		"2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
 		"2thprint_Chip_Maker": "Texas Instruments",
 		"2thprint_Device_Model": "Tesla Keyfob",
@@ -81,7 +81,8 @@
 		"submission_date": "2025-01-19",
 		"evidence_URL": {
 				"UART": "https://web.archive.org/web/20240718111653/https://developerhelp.microchip.com/xwiki/bin/view/products/wireless-connectivity/ble/bm70/bm70-compact-demo-board-users-guide/transparent-uart/",
-				"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf"
+				"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf",
+				"Advanced Usage of Microchip RN4020": "https://archive.org/details/advanced-useof-rn-4020-cookbook"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2025-01-19",
@@ -91,7 +92,10 @@
 		"GATT_Vendor_Specific": {
 				"49535343-fe7d-4ae5-8fa9-9fafd205e455": "Service: Microchip: Transparent UART",
 				"49535343-1e4d-4bd9-ba61-23c647249616": "Characteristic: Microchip: Transparent UART Transmit (TX)",
-				"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)"
+				"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)",
+				"00035b03-58e6-07dd-021a-08123a000300": "Service: Microchip: Microchip Low energy Data Profile (MLDP)",
+				"00035b03-58e6-07dd-021a-08123a000301": "Characteristic: Microchip: MLDP Data",
+				"00035b03-58e6-07dd-021a-08123a0003ff": "Characteristic: Microchip: MLDP Control"
 		}
 	},
 	"Nordic GATTPrints": {
@@ -515,5 +519,45 @@
 		"evidence_URL": "https://web.archive.org/web/20250126231727/https://gvzcomp.it/component/djcatalog2/?format=raw&task=download&fid=2500",
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-26"
+	},
+	"Polara":{
+		"2thprint_Chip_Maker": "Microchip Technology Inc.",
+		"short_description": "Electronic crosswalk buttons with audio recording and Bluetooth update capabilities",
+		"company_website": "https://polara.com/",
+		"security_research_urls": {
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://www.youtube.com/watch?v=mvvVSTlbqEI",
+			"iN/iNS/iDS 3-Wire Polara FS Android Application Manual": "https://web.archive.org/web/20240806224520/https://polara.com/wp-content/uploads/2023/02/Polara-iN3-Android-Application-Manual.pdf"
+		},
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-04-21",
+		"evidence_URL": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-04-21",
+		"confirmation_method": "APK Reverse Engineering",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"GATT_Vendor_Specific": {
+			"5ee1b93c-3df6-11e4-9d9f-164230d1df67": "Service/Advertisement: Polara",
+			"ad014001-3bcb-fea6-7746-c3084ad1df97": "Advertisement: Polara: WPC (Wireless Pedestrian Head Control Unit)",
+			"ad015001-3bcb-fea6-7746-c3084ad1df97": "Service: Polara: WPC (Wireless Pedestrian Head Control Unit)",
+			"ad015002-3bcb-fea6-7746-c3084ad1df97": "Characteristic: Polara: WPC (Wireless Pedestrian Head Control Unit)",
+			"ad015003-3bcb-fea6-7746-c3084ad1df97": "Characteristic: Polara: WPC (Wireless Pedestrian Head Control Unit)",
+			"b02d4001-0ba5-482b-a8ec-5bb115408951": "Advertisement: Polara: WPSE (Wireless Pedestrian System w/ Solar)",
+			"b02d5001-0ba5-482b-a8ec-5bb115408951": "Service: Polara: WPSE (Wireless Pedestrian System w/ Solar)",
+			"b02d5002-0ba5-482b-a8ec-5bb115408951": "Characteristic: Polara: WPSE (Wireless Pedestrian System w/ Solar)",
+			"b02d5003-0ba5-482b-a8ec-5bb115408951": "Characteristic: Polara: WPSE (Wireless Pedestrian System w/ Solar)",
+			"60054001-f97c-c5a3-9941-1c799c307ddf": "Advertisement: Polara: iNS or PedScout",
+			"60055001-f97c-c5a3-9941-1c799c307ddf": "Service: Polara: iNS or PedScout",
+			"60055002-f97c-c5a3-9941-1c799c307ddf": "Characteristic: Polara: iNS or PedScout",
+			"60055003-f97c-c5a3-9941-1c799c307ddf": "Characteristic: Polara: iNS or PedScout",
+			"8ee74001-818d-cf84-a142-dc849f91bee7": "Advertisement: Polara: iNX",
+			"8ee75001-818d-cf84-a142-dc849f91bee7": "Service: Polara: iNX",
+			"8ee75002-818d-cf84-a142-dc849f91bee7": "Characteristic: Polara: iNX",
+			"8ee75003-818d-cf84-a142-dc849f91bee7": "Characteristic: Polara: iNX",
+			"377c4001-d305-4d3e-b6ee-67610e18b575": "Advertisement: Polara: iNXv2",
+			"377c5001-d305-4d3e-b6ee-67610e18b575": "Service: Polara: iNXv2",
+			"377c5002-d305-4d3e-b6ee-67610e18b575": "Characteristic: Polara: iNXv2",
+			"377c5003-d305-4d3e-b6ee-67610e18b575": "Characteristic: Polara: iNXv2"
+		}
 	}
 }
