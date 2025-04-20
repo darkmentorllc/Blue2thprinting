@@ -19,7 +19,7 @@ For [Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_c
 
 For [Sweyntooth](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks) - [nRF52840 USB dongle](https://www.mouser.com/ProductDetail/Nordic-Semiconductor/nRF52840-Dongle?qs=gTYE2QTfZfTbdrOaMHWEZg%3D%3D) - ~\$10/unit
 
-For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://sonoff.tech/product/gateway-and-sensors/sonoff-zigbee-3-0-usb-dongle-plus-p/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.)
+For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://us.itead.cc/us/products/sonoff-zigbee-3-0-usb-dongle-plus/ref/366/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.)
 
 
 ---

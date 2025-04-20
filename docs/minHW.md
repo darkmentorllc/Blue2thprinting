@@ -47,7 +47,7 @@ For devices where only 1 is recommended, it is assumed that you will only have o
 ---
 **Required: custom packet sending hardware (for Braktooth/Sweyntooth/Sniffle)**
 
-* For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://sonoff.tech/product/gateway-and-sensors/sonoff-zigbee-3-0-usb-dongle-plus-p/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.) For capturing pcap of BLE traffic and/or sending custom BLE packets.
+* For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://us.itead.cc/us/products/sonoff-zigbee-3-0-usb-dongle-plus/ref/366/) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.) For capturing pcap of BLE traffic and/or sending custom BLE packets.
  * The code will currently automatically scale to however many Sniffle dongles you plug in, capturing backup pcaps across channels to catch packets which might be missed otherwise (e.g. due to wireless interference/decoding issues.)
 
 * For [Sweyntooth](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks) - 1x [nRF52840 USB dongle](https://www.mouser.com/ProductDetail/Nordic-Semiconductor/nRF52840-Dongle?qs=gTYE2QTfZfTbdrOaMHWEZg%3D%3D) - ~\$10/unit
