@@ -39,6 +39,9 @@ data_element_size_to_actual_size = {
 }
 
 def parse_SDP_data_element(indent, byte_values, i):
+    if i+1 > len(byte_values):
+        print(f"{indent}Error: i is greater than the length of the byte_values array. Aborting")
+        return None, None, byte_values, i  # Return gracefully if out of bounds (probable truncation)
     data_element, = struct.unpack(">B", byte_values[i:i+1])
     i+=1
     data_element_type = (data_element >> 3) & 0x1F # 5 bits for type
@@ -126,6 +129,9 @@ def parse_SDP_data_element(indent, byte_values, i):
             data_element_type, inner_actual_size, byte_values_new, new_i = parse_SDP_data_element(indent + "\t", byte_values, i)
             # move i and j forward by however many bytes were iterated
             diff = new_i - i_before
+            if(diff == 0):
+                print(f"{indent}Error: no bytes were iterated. Exiting.")
+                break
             j+= diff
             i = new_i
     elif(data_element_type == 7):
