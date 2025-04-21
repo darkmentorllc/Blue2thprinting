@@ -106,7 +106,10 @@ echo ""
 echo "==================================================================================================="
 echo "Filling database with BLEScope research paper's mappings between UUI128s and Android package names."
 echo "==================================================================================================="
-/usr/bin/python3 ./translator_fill_BLEScope_UUID128s.py
+mysql -u user -pa --database='bt2' --execute="DROP table BLEScope_UUID128s" # This is just so I can re-run this file multiple times for testing
+mysql -u user -pa --database='bt2' < BLEScope_UUID128s.sql
+mysql -u user -pa --database='bttest' --execute="DROP table BLEScope_UUID128s" # This is just so I can re-run this file multiple times for testing
+mysql -u user -pa --database='bttest' < BLEScope_UUID128s.sql
 
 echo "============================================================================================"
 echo "You should see 10 mappings between UUI128s and Android package names after the next command:"
