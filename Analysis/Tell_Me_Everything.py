@@ -26,6 +26,7 @@ from TME.TME_BLE2thprint import *
 from TME.TME_BTC2thprint import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
+from TME.TME_GPS import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
@@ -85,6 +86,7 @@ def main():
 
     # Requirement arguments
     requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
+    requirement_group.add_argument('--require-GPS', action='store_true', help='Pass this argument to only print out information for devices which have at least 1 associated GPS coordinate.')
     requirement_group.add_argument('--require-GATT-any', action='store_true', help='Pass this argument to only print out information for devices which have *some* GATT info.')
     requirement_group.add_argument('--require-GATT-values', action='store_true', help='Pass this argument to only print out information for devices which successfully read some GATT values.')
     requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
@@ -126,6 +128,8 @@ def main():
             query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
         if args.MSD_regex:
             query_object["MSD_regex"] = args.MSD_regex
+        if args.require_GPS:
+            query_object["require_GPS"] = True
         if args.require_GATT_any:
             query_object["require_GATT_any"] = True
         if args.require_GATT_values:
@@ -349,17 +353,20 @@ def main():
         bdaddrs = bdaddrs[:args.max_records_output]
 
     for bdaddr in bdaddrs:
+        if(args.require_GPS):
+            if(not device_has_GPS(bdaddr)):
+                continue
         if(args.require_GATT_any):
-            if(device_has_GATT_any(bdaddr) != 1):
+            if(not device_has_GATT_any(bdaddr)):
                 continue
         if(args.require_GATT_values):
-            if(device_has_GATT_values(bdaddr) != 1):
+            if(not device_has_GATT_values(bdaddr)):
                 continue
         if(args.require_LL_VERSION_IND):
-            if(device_has_LL_VERSION_IND_info(bdaddr) != 1):
+            if(not device_has_LL_VERSION_IND_info(bdaddr)):
                 continue
         if(args.require_LMP_VERSION_RES):
-            if(device_has_LMP_VERSION_RES_info(bdaddr) != 1):
+            if(not device_has_LMP_VERSION_RES_info(bdaddr)):
                 continue
         qprint("================================================================================")
         qprint(f"For bdaddr = {bdaddr}:")
@@ -374,6 +381,7 @@ def main():
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
         print_SDP_info(bdaddr)                              # Includes BTIDES export
         print_L2CAP_info(bdaddr)                            # Includes BTIDES export
+        print_GPS(bdaddr)
         print_UniqueIDReport(bdaddr)
 
     if(out_filename != None and out_filename != ""):

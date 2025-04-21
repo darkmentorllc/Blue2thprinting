@@ -42,6 +42,30 @@ def execute_query(query, values):
     connection.close()
     return result
 
+def execute_update(query, values):
+    global use_test_db
+    if(TME.TME_glob.use_test_db):
+        database = 'bttest'
+    else:
+        database = 'bt2'
+
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='user',
+        password='a',
+        database=database,
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
+        auth_plugin='mysql_native_password'
+    )
+
+    cursor = connection.cursor()
+    cursor.execute(query, values)
+    connection.commit()
+
+    cursor.close()
+    connection.close()
+
 # Function to execute a MySQL query and fetch results
 def execute_insert(query, values):
     global insert_count, duplicate_count, use_test_db

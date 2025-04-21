@@ -220,6 +220,8 @@ def main():
         query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
     if args.MSD_regex:
         query_object["MSD_regex"] = args.MSD_regex
+    if args.require_GPS:
+        query_object["require_GPS"] = True
     if args.require_GATT_any:
         query_object["require_GATT_any"] = True
     if args.require_GATT_values:

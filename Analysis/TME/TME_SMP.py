@@ -113,6 +113,12 @@ def print_SMP_info(bdaddr):
     values = (bdaddr,)
     query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_Pairing_Req_Res_result = execute_query(query, values)
+    if (len(SMP_Pairing_Req_Res_result) == 0):
+        vprint("\tNo SMP data found.")
+        return
+    else:
+        qprint("\tSecurity Manager Protocol (SMP) data found:")
+
     for bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist in SMP_Pairing_Req_Res_result:
         # First export BTIDES
         if(opcode == type_SMP_Pairing_Request):
@@ -122,12 +128,6 @@ def print_SMP_info(bdaddr):
         BTIDES_export_SMP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
         # Now print what we want users to see
-        if (len(SMP_Pairing_Req_Res_result) == 0):
-            vprint("\tNo SMP data found.")
-            return
-        else:
-            qprint("\tSecurity Manager Protocol (SMP) data found:")
-
         if(opcode == type_SMP_Pairing_Request):
             print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist)
         elif(opcode == type_SMP_Pairing_Response):

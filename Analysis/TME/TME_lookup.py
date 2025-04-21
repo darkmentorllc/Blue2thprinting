@@ -17,9 +17,9 @@ def device_has_LL_VERSION_IND_info(bdaddr):
     version_query = "SELECT device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
-        return 1
+        return True
     else:
-        return 0
+        return False
 
 # Returns 0 if there is no LMP_VERSION_RES info for this BDADDR, else returns 1
 def device_has_LMP_VERSION_RES_info(bdaddr):
@@ -27,9 +27,9 @@ def device_has_LMP_VERSION_RES_info(bdaddr):
     version_query = "SELECT device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
     if(len(version_result) != 0):
-        return 1
+        return True
     else:
-        return 0
+        return False
 
 def get_bdaddrs_by_name_regex(nameregex):
     qprint(nameregex)

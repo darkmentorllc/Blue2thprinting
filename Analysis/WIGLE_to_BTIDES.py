@@ -26,19 +26,15 @@ from TME.TME_helpers import qprint, vprint
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import write_BTIDES
+from TME.TME_BTIDES_GPS import BTIDES_export_GPS_coordinate
 
 # BTIDALPOOL access related
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
+
 import sqlite3
 import mysql.connector
-
-def BTIDES_export_GPS_coordinate(connect_ind_obj=None, bdaddr=None, random=None, data=None):
-    if connect_ind_obj is not None:
-        generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "GPSArray")
-    else:
-        generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GPSArray")
 
 def find_bdaddr_rand(bdaddr):
     if(TME.TME_glob.use_test_db):
@@ -91,7 +87,7 @@ def find_bdaddr_rand(bdaddr):
 
     # return 1
 
-def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False):
+def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False, offset=0, limit=None):
     try:
         sqlite_conn = sqlite3.connect(input)
         sqlite_cursor = sqlite_conn.cursor()
@@ -105,6 +101,12 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             upper_lat = max(gps_exclude_upper_left[0], gps_exclude_lower_right[0])
             query += " AND (bestlat NOT BETWEEN ? AND ?) AND (bestlon NOT BETWEEN ? AND ?)"
             values += (lower_lat, upper_lat, lower_lon, upper_lon)
+        if(limit):
+            query += " LIMIT ?"
+            values += (limit,)
+        if(offset > 0):
+            query += " OFFSET ?"
+            values += (offset,)
         sqlite_cursor.execute(query, values)
         rows = sqlite_cursor.fetchall()
     except sqlite3.DatabaseError as e:
@@ -118,8 +120,6 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         if i % max(1, len(rows) // 100) == 0:
             qprint(f"Processed {i} out of {len(rows)} records ({(i / len(rows)) * 100:.0f}%)")
         i+=1
-        # if(i == 1000):
-        #     return
 
         # TODO: how to extract these directly from the schema in case it changes?
         bssid_ACID = row[0]
@@ -154,7 +154,19 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             data["lat"] = last_lat
             data["lon"] = last_lon
 
-        # TODO: look up RSSI in location table, by matching on bssid?
+        # See if there's any RSSI in the location table for this exact GPS coordinate (irrespective of time)
+        query = "SELECT * FROM location WHERE bssid = ? AND lat = ? AND lon = ?"
+        values = (bssid_ACID, data["lat"], data["lon"])
+        sqlite_cursor.execute(query, values)
+        locations = sqlite_cursor.fetchall()
+        best_rssi = -127
+        for location in locations:
+            # Only update if we find a better RSSI
+            if(location[2] > best_rssi):
+                best_rssi = location[2]
+                data["rssi"] = location[2]
+
+        # Export the coordinate now that we have the best-case data
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
 
         if(name != ""):
@@ -181,8 +193,10 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
 
 def main():
     global verbose_print, verbose_BTIDES, use_test_db
-    parser = argparse.ArgumentParser(description='HCI file input arguments')
+    parser = argparse.ArgumentParser(description='WiGLE Database Backup file input arguments')
     parser.add_argument('--input', type=str, required=True, help='Input file name for WiGLE Database Backup file.')
+    parser.add_argument('--offset', type=str, required=True, help='Offset into the WiGLE Database Backup file to start importing from. Useful for reading large files in chunks.')
+    parser.add_argument('--limit', type=str, required=True, help='Limit of how many entries to import from the WiGLE Database Backup file. Useful for reading large files in chunks.')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
@@ -226,9 +240,9 @@ def main():
     if(args.GPS_exclude_upper_left and args.GPS_exclude_lower_right):
         upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
         lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
-        read_WiGLE_DB(input=args.input, gps_exclude_upper_left=upper_left_tuple, gps_exclude_lower_right=lower_right_tuple, get_all_GPS=args.get_all_GPS)
+        read_WiGLE_DB(input=args.input, gps_exclude_upper_left=upper_left_tuple, gps_exclude_lower_right=lower_right_tuple, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
     else:
-        read_WiGLE_DB(input=args.input, get_all_GPS=args.get_all_GPS)
+        read_WiGLE_DB(input=args.input, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
 
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)

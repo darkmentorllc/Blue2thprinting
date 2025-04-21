@@ -155,24 +155,24 @@ def device_has_GATT_any(bdaddr):
     query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
     if(len(GATT_services_result) != 0):
-        return 1
+        return True
 
     query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     if(len(GATT_attribute_handles_result) != 0):
-        return 1
+        return True
 
     query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
     if(len(GATT_characteristics_result) != 0):
-        return 1
+        return True
 
     query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     if(len(GATT_characteristics_values_result) != 0):
-        return 1
+        return True
 
-    return 0
+    return False
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
 def device_has_GATT_values(bdaddr):
@@ -181,9 +181,9 @@ def device_has_GATT_values(bdaddr):
     query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     if(len(GATT_characteristics_values_result) != 0):
-        return 1
+        return True
 
-    return 0
+    return False
 
 def descriptor_print(indent, UUID, operation, byte_values):
     if(UUID == "2900"):

@@ -32,7 +32,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 import TME.TME_glob
-from TME.TME_helpers import execute_query, execute_insert, qprint
+from TME.TME_helpers import execute_query, execute_update, execute_insert, qprint
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
@@ -1173,6 +1173,75 @@ def parse_SDPArray(entry):
 
 ###################################
 
+###################################
+# Optional GPS information
+###################################
+
+# From BTIDES_base.json schema
+time_types = {
+    "unix_time": 0,
+    "unix_time_milli": 1,
+    "time_str1": 2
+}
+
+def parse_GPSArray(entry):
+    if("GPSArray" not in entry.keys() or entry["GPSArray"] == None \
+        or "bdaddr" not in entry.keys() or entry["bdaddr"] == None \
+        or "bdaddr_rand" not in entry.keys() or entry["bdaddr_rand"] == None):
+        # Missing required fields
+        return
+
+    for gps_entry in entry["GPSArray"]:
+        # We currently only support single-BDADDR GPS entries and WiGLE style unix time in milliseconds
+        # TODO: add support for dual-BDADDR GPS entries & other timestamp formats
+        if("lat" not in gps_entry.keys() or gps_entry["lat"] == None \
+            or "lon" not in gps_entry.keys() or gps_entry["lon"] == None \
+            or "time" not in gps_entry.keys() or gps_entry["time"] == None \
+            or "unix_time_milli" not in gps_entry["time"].keys() or gps_entry["time"]["unix_time_milli"] == None):
+            # Missing required fields
+            continue
+        bdaddr = entry["bdaddr"]
+        bdaddr_random = entry["bdaddr_rand"]
+        if(bdaddr_random != 0 and bdaddr_random != 1):
+            # Invalid entry
+            continue
+        lat = gps_entry["lat"]
+        lon = gps_entry["lon"]
+        time = gps_entry["time"]["unix_time_milli"]
+        time_type = time_types["unix_time_milli"]
+        if("rssi" in gps_entry.keys()):
+            rssi = gps_entry["rssi"]
+        else:
+            rssi = 0    # This is set to 0 in the db, since WiGLE doesn't record in the main table's "best" GPS coordinate,
+                        # only in the location table, which we only import if they passed --get-all-GPS to WIGLE_to_BTIDES.py
+                        # We need to use 0 instead of NULL, due to how MySQL unique constraints work wrt INSERT IGNORE
+        values = (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon)
+
+        # First check if we already have an entry with the exact same values but with a RSSI == 0
+        select_query = f"SELECT * FROM bdaddr_to_GPS WHERE bdaddr = %s AND bdaddr_random = %s AND time = %s AND time_type = %s AND rssi = 0 AND lat = %s AND lon = %s;"
+        select_results = execute_query(select_query, (bdaddr, bdaddr_random, time, time_type, lat, lon))
+        # If so, we want to update that entry so that we don't have pointless duplication and less valuable RSSI-lacking entries if we have an RSSI-having entry
+        if(len(select_results) > 0 and rssi != 0):
+            # We have a match, so update the existing entry with the new RSSI value
+            update = f"UPDATE bdaddr_to_GPS SET rssi = %s WHERE bdaddr = %s AND bdaddr_random = %s AND time = %s AND time_type = %s AND lat = %s AND lon = %s;"
+            execute_update(update, (rssi, bdaddr, bdaddr_random, time, time_type, lat, lon))
+        # Else, no match, so continue to additional checks
+        else:
+            # Next, don't insert an entry which would be destined for later updating if there's already an exact entry with the same values, except the RSSI
+            # because this will occur if you re-run insertion from the same file multiple times
+            if(rssi == 0):
+                select_query = f"SELECT * FROM bdaddr_to_GPS WHERE bdaddr = %s AND bdaddr_random = %s AND time = %s AND time_type = %s AND rssi != 0 AND lat = %s AND lon = %s;"
+                select_results = execute_query(select_query, (bdaddr, bdaddr_random, time, time_type, lat, lon))
+                if(len(select_results) > 0):
+                    # We have a match, so don't insert
+                    continue
+            # Else, no match, so just insert as normal
+            insert = f"INSERT IGNORE INTO bdaddr_to_GPS (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+            execute_insert(insert, values)
+
+
+###################################
+
 class btides_to_sql_args:
     def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
         self.input = input
@@ -1267,6 +1336,8 @@ def btides_to_sql(args):
         parse_EIRArray(entry)
 
         parse_SDPArray(entry)
+
+        parse_GPSArray(entry)
 
         count += 1
         progress_update(total, count)

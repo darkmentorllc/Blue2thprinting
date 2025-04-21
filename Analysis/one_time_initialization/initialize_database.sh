@@ -131,3 +131,6 @@ mysql -u user -pa --database='bt2' --execute="CREATE TABLE UUID16_to_company (id
 
 # uuid_type 1 is a service, uuid_type 2 is a characteristic. Note that this is using "str_UUID128" not "str_UUID128s", because each entry will be a single UUID128
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE BLEScope_UUID128s (id INT NOT NULL AUTO_INCREMENT, android_pkg_name VARCHAR(100) NOT NULL, uuid_type TINYINT NOT NULL, str_UUID128 VARCHAR(37) NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (android_pkg_name, uuid_type, str_UUID128)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Because MySQL doesn't treat a NULL value as a unique value, for purposes of ignoring duplicate insertions, we will need to set rssi to 0 instead of NULL
+mysql -u user -pa --database='bt2' --execute="CREATE TABLE bdaddr_to_GPS (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, bdaddr_random BOOLEAN NOT NULL, time BIGINT UNSIGNED NOT NULL, time_type TINYINT UNSIGNED NOT NULL, rssi TINYINT NOT NULL, lat DOUBLE NOT NULL, lon DOUBLE NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
