@@ -205,10 +205,10 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
         # and if so, try that nameprint against the name(s) for this device
         for heading, metadata in TME.TME_glob.metadata_v2.items():
             # Confirm that this entry even has what we're looking for
-            if('GATT_Vendor_Specific' in metadata.keys() and metadata_input_type in metadata.keys() and metadata_output_type in metadata.keys()):
+            if('Vendor_Specific_UUIDs' in metadata.keys() and metadata_input_type in metadata.keys() and metadata_output_type in metadata.keys()):
 
                 # Iterate through every UUID128 from the metadata
-                for UUID128_metadata in metadata['GATT_Vendor_Specific'].keys():
+                for UUID128_metadata in metadata['Vendor_Specific_UUIDs'].keys():
                     UUID128_metadata_ = UUID128_metadata.replace('-','').lower()
 
                     if(len(services_result) > 0):
@@ -217,7 +217,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
                             if(UUID128_db_ == UUID128_metadata_):
-                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (GATT_services table)")
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (GATT_services table)")
 
                     if(len(chars_result) > 0):
                         # Iterate through every UUID128 from the GATT_Characteristics database query
@@ -225,7 +225,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
                             if(UUID128_db_ == UUID128_metadata_):
-                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (GATT_characteristics table)")
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (GATT_characteristics table)")
 
                             # While we're here, check if this device has a "Manufacturer Name String" characteristic
                             if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
@@ -252,7 +252,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s_list table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s_list table)")
 
                     if(len(le_adv2_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -264,7 +264,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128_service_solicit table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128_service_solicit table)")
 
                     if(len(eir_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -276,7 +276,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['GATT_Vendor_Specific'][UUID128_metadata]}\" (EIR_bdaddr_to_UUID128s table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (EIR_bdaddr_to_UUID128s table)")
 
     # Else return an empty list to indicate we have no name or no match
     return str_list
@@ -297,6 +297,25 @@ def create_ChipMaker_OUI_hash():
             ChipMaker_OUI_hash[oui.lower()] = company_name # I'm using the IEEE name instead of the company regex since it will generally be longer and more verbose, since I cut down some regexes to match both IEEE OUIs and BT CIDs
 
     #qprint(ChipMaker_OUI_hash)
+
+def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
+    results_found = False
+    if(len(UUID16_result) != 0):
+        for(str_UUID16s,) in UUID16_result:
+            UUID16_list = str_UUID16s.split(",")
+            if(len(UUID16_list) != 0):
+                for UUID16_db in UUID16_list:
+                    # Remove dashes and make lowercase
+                    UUID16_db_ = UUID16_db.lower()
+                    # Check if this UUID16 is a known chip-maker UUID
+                    for heading, metadata in TME.TME_glob.metadata_v2.items():
+                        if('Vendor_Specific_UUIDs' in metadata.keys() and '2thprint_Chip_Maker' in metadata.keys()):
+                            for UUID in metadata['Vendor_Specific_UUIDs'].keys():
+                                if(UUID16_db_ == UUID.lower()):
+                                    qprint(f"{indent}{metadata['2thprint_Chip_Maker']} -> From GATT Vendor Specific UUID16 match with {UUID16_db} ({tablename} table)")
+                                    results_found = True
+
+    return results_found
 
 # This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
 # If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
@@ -381,10 +400,22 @@ def print_ChipMakerPrint(bdaddr):
         for s in str_list:
             qprint(s)
 
-    # FIXME: TODO! Start with Quintic->NXP OTA = 0xfee8, can also do CSR/Qualcomm = 0x000a and also need to look up in PnP ID if present
     #=============================#
     # Known chip-maker UUID16s    #
     #=============================#
+    le_UUID16_query = "SELECT UUID16_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
+    LE_bdaddr_to_UUID16_service_data_result = execute_query(le_UUID16_query, values)
+    le_UUID16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
+    LE_bdaddr_to_UUID16s_list_result = execute_query(le_UUID16_query, values)
+    eir_UUID16_query = "SELECT str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
+    EIR_bdaddr_to_UUID16s_result = execute_query(eir_UUID16_query, values)
+
+    if(print_ChipMakerPrint_helper_UUID16("\t\t", LE_bdaddr_to_UUID16_service_data_result, "LE_bdaddr_to_UUID16_service_data")):
+        no_results_found = False
+    if(print_ChipMakerPrint_helper_UUID16("\t\t", LE_bdaddr_to_UUID16s_list_result, "LE_bdaddr_to_UUID16s_list")):
+        no_results_found = False
+    if(print_ChipMakerPrint_helper_UUID16("\t\t", EIR_bdaddr_to_UUID16s_result, "EIR_bdaddr_to_UUID16s")):
+        no_results_found = False
 
     if(time_profile): qprint(f"MSD BTC = {time.time()}")
     #========================================#

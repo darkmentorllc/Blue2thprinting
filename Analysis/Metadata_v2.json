@@ -24,7 +24,7 @@
 		"FCC_ID": "2AEIM-1089773",
 		"FCC_ExternalPhotos": "https://fccid.io/2AEIM-1089773/External-Photos/External-Photos-3491653.pdf",
 		"FCC_InternalPhotos": "https://fccid.io/2AEIM-1089773/Internal-Photos/Internal-Photos-3491654.pdf",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"00000211-b2d1-43f0-9b88-960cebf8b91e": "Service",
 			"00000212-b2d1-43f0-9b88-960cebf8b91e": "'To Vehicle' Characteristic",
 			"00000213-b2d1-43f0-9b88-960cebf8b91e": "'From Vehicle' Characteristic",
@@ -56,7 +56,7 @@
 	},
 	"Atmel GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Atmel Corporation",
+		"2thprint_Chip_Maker": "Atmel Corporation (Acquired by Microchip Technology Inc.)",
 		"company_website": "https://microchip.com",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-01-19",
@@ -68,99 +68,26 @@
 		"confirmation_method": "evidence_URL",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-				"77880001-d229-11e4-8689-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Connect/Provisioning",
-				"fb8c0001-d224-11e4-85a1-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Scan"
+		"Vendor_Specific_UUIDs": {
+			"77880001-d229-11e4-8689-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Connect/Provisioning",
+			"fb8c0001-d224-11e4-85a1-0002a5d5c51b": "Service: Microchip Technology Inc. (formerly Atmel): Wi-Fi Scan"
 		}
 	},
-	"Microchip GATTPrints": {
-		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Microchip Technology Inc.",
-		"company_website": "https://microchip.com",
+	"Barrot": {
+		"2thprint_Chip_Maker": "Barrot Technology Co.,Ltd.",
+		"company_website": "http://en.barrot.com.cn/",
 		"submitted_by": "Xeno Kovah",
-		"submission_date": "2025-01-19",
+		"submission_date": "2024-04-22",
 		"evidence_URL": {
-				"UART": "https://web.archive.org/web/20240718111653/https://developerhelp.microchip.com/xwiki/bin/view/products/wireless-connectivity/ble/bm70/bm70-compact-demo-board-users-guide/transparent-uart/",
-				"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf",
-				"Advanced Usage of Microchip RN4020": "https://archive.org/details/advanced-useof-rn-4020-cookbook"
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
 		},
 		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2025-01-19",
-		"confirmation_method": "evidence_URL",
-		"confirmation_confidence": "10/10",
+		"confirmation_date": "2024-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "1/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-				"49535343-fe7d-4ae5-8fa9-9fafd205e455": "Service: Microchip: Transparent UART",
-				"49535343-1e4d-4bd9-ba61-23c647249616": "Characteristic: Microchip: Transparent UART Transmit (TX)",
-				"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)",
-				"00035b03-58e6-07dd-021a-08123a000300": "Service: Microchip: Microchip Low energy Data Profile (MLDP)",
-				"00035b03-58e6-07dd-021a-08123a000301": "Characteristic: Microchip: MLDP Data",
-				"00035b03-58e6-07dd-021a-08123a0003ff": "Characteristic: Microchip: MLDP Control"
-		}
-	},
-	"Nordic GATTPrints": {
-		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Nordic Semiconductor",
-		"company_website": "https://www.nordicsemi.com/",
-		"submitted_by": "Xeno Kovah",
-		"submission_date": "2024-01-01",
-		"evidence_URL": {
-			"Nordic UART": "https://web.archive.org/web/20240303153909/https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html",
-			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
-			"Nordic insecure DFU 2": "https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
-			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
-			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
-			"Nordic Experimental Buttonless DFU Service 2": ""
-		},
-		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2024-01-01",
-		"confirmation_method": "evidence_URL",
-		"confirmation_confidence": "10/10",
-		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-			"6e400001-b5a3-f393-e0a9-e50e24dcca9e": "Service: Nordic: UART",
-			"6e400002-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Receive (RX)",
-			"6e400003-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Transmit (TX)",
-			"00001530-1212-efde-1523-785feabcd123": "Service: Nordic: 'Legacy'(insecure) Device Firmware Update (DFU)",
-			"00001531-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Control Point",
-			"00001532-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Packet",
-			"00001534-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Version",
-			"0000fe59-0000-1000-8000-00805f9b34fb": "Service: Nordic: Secure Device Firmware Update (DFU)",
-			"8EC90001-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Control Point",
-			"8EC90002-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Packet",
-			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU"
-		},
-		"TODO: GATT values": "Need to handle cases like 2a28 'Software Revision String' and then have a regex like '^nRF52' and have that be a Nordic ChipMakerPrint"
-	},
-	"Silicon Labs GATTPrints": {
-		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Silicon Laboratories",
-		"company_website": "https://www.silabs.com/",
-		"submitted_by": "Xeno Kovah",
-		"submission_date": "2024-01-01",
-		"security_research_urls": {
-			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://web.archive.org/web/20240618170612/https://darkmentor.com/publication/2020-08-blackhat/",
-			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
-			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
-
-		},
-		"evidence_URL": {
-			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
-			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html"
-		},
-		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2024-01-01",
-		"confirmation_method": "evidence_URL",
-		"confirmation_confidence": "10/10",
-		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-			"1D14D6EE-FD63-4FA1-BFA4-8F47B42119F0": "Service: Silicon Labs: Over The Air firmware update protocol",
-			"F7BF3564-FB6D-4E53-88A4-5E37E0326063": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Control Endpoint",
-			"984227F3-34FC-4045-A5D0-2C581F81A153": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Data Endpoint",
-			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
-			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
-			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
-			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)"
+		"Vendor_Specific_UUIDs": {
+			"fcfd": "Advertisement: Barrot: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
 		}
 	},
 	"Cambridge Silicon Radio (CSR) GATTPrints": {
@@ -178,62 +105,33 @@
 		"confirmation_method": "evidence_URL",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
+			"fef1": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fef2": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fe8f": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
 			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol)",
 			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Command Endpoint",
 			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Response Endpoint",
 			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Data Endpoint"
 		}
 	},
-	"TeLink GATTPrints": {
+	"Cypress GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Telink Semiconductor Co. Ltd",
-		"company_website": "https://telink-semi.cn",
+		"2thprint_Chip_Maker": "Cypress",
+		"company_website": "https://www.cypress.com/",
 		"submitted_by": "Xeno Kovah",
-		"submission_date": "2025-01-16",
+		"submission_date": "2024-09-02",
 		"evidence_URL": {
-				"Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h"
+			"PSoC® Creator™ Example Project BLE External Memory Bootloader and Bootloadable Example Projects": "https://web.archive.org/web/20170908223844/https://www.cypress.com/file/228556/download"
 		},
 		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2025-01-16",
-		"confirmation_method": "evidence_URL",
+		"confirmation_date": "2024-09-02",
+		"confirmation_method": "evidence_URL & looking at collected GATT data",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-				"00010203-0405-0607-0809-0a0b0c0d1910": "Service: TeLink: Serial Port Profile (if 2b10 characteristic is present) OR Mesh Light Service (if 1911 characteristic is present). Unfortunate UUID reuse!",
-				"00010203-0405-0607-0809-0a0b0c0d2b10": "Characteristic: TeLink: Serial Port Profile (SPP): SERVER2CLIENT",
-				"00010203-0405-0607-0809-0a0b0c0d2b11": "Characteristic: TeLink: Serial Port Profile (SPP): CLIENT2SERVER",
-				"00010203-0405-0607-0809-0a0b0c0d1911": "Service: TeLink: Audio OR Characteristic: TeLink: Mesh Light Status",
-				"00010203-0405-0607-0809-0a0b0c0d1912": "Service: TeLink: Over-The-Air (OTA) update OR Characteristic: TeLink: Mesh Light Command. Unfortunate UUID reuse!",
-				"00010203-0405-0607-0809-0a0b0c0d2b12": "Characteristic: TeLink: Over-The-Air (OTA) update: data",
-				"00010203-0405-0607-0809-0a0b0c0d2b13": "Characteristic: TeLink: Serial Port Profile: Pair",
-				"00010203-0405-0607-0809-0a0b0c0d2b14": "Characteristic: TeLink: Serial Port Profile: User-defined Data",
-				"00010203-0405-0607-0809-0a0b0c0d1913": "Characteristic: TeLink: Mesh Light OTA update",
-				"00010203-0405-0607-0809-0a0b0c0d1914": "Characteristic: TeLink: Mesh Light Pair",
-				"00010203-0405-0607-0809-0a0b0c0d1920": "Service: TeLink: TeLink Mesh (proprietary?)",
-				"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)"
-		}
-	},
-	"Texas Instruments GATTPrints": {
-		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Texas Instruments",
-		"company_website": "https://www.ti.com/",
-		"submitted_by": "Xeno Kovah",
-		"submission_date": "2024-01-01",
-		"evidence_URL": {
-			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0"
-		},
-		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2024-01-01",
-		"confirmation_method": "evidence_URL",
-		"confirmation_confidence": "10/10",
-		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-			"f000ffc0-0451-4000-b000-000000000000": "Service: Texas Instruments: Over the Air Download (OAD) firmware update",
-			"f000ffc1-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Identify",
-			"f000ffc2-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Block",
-			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
-			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
+		"Vendor_Specific_UUIDs": {
+			"00060000-f8ce-11e4-abf4-0002a5d5c51b": "Service: Cypress: Bootloader",
+			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command"
 		}
 	},
 	"Espressif GATTPrints": {
@@ -251,30 +149,91 @@
 		"confirmation_method": "evidence_URL",
 		"confirmation_confidence": "2/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"d6f1d96d-594c-4c53-b1c6-244a1dfde6d8": "Service: NimBLE ESP32: OTA",
 			"7ad671aa-21c0-46a4-b722-270e3ae3d830": "Characteristic: NimBLE ESP32: OTA Control",
 			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data"
 		}
 	},
-	"Cypress GATTPrints": {
+	"ISSC GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Cypress",
-		"company_website": "https://www.cypress.com/",
+		"2thprint_Chip_Maker": "ISSC Technologies Corp. (Acquired by Microchip Technology Inc.)",
+		"company_website": "https://microchip.com",
 		"submitted_by": "Xeno Kovah",
-		"submission_date": "2024-09-02",
+		"submission_date": "2025-04-22",
 		"evidence_URL": {
-                        "PSoC® Creator™ Example Project BLE External Memory Bootloader and Bootloadable Example Projects": "https://web.archive.org/web/20170908223844/https://www.cypress.com/file/228556/download"
+				"Acquisition confirmation": "https://ir.microchip.com/news-events/press-releases/detail/700/microchip-technology-announces-acquisition-of-issc-technologies"
 		},
 		"confirmed_by": "Xeno Kovah",
-		"confirmation_date": "2024-09-02",
-		"confirmation_method": "evidence_URL & looking at collected GATT data",
+		"confirmation_date": "2025-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "1/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"feda": "Service/Advertisement: (ISSC Technologies Corp.)->Microchip: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
+		}
+	},
+	"Microchip GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Microchip Technology Inc.",
+		"company_website": "https://microchip.com",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-01-19",
+		"evidence_URL": {
+			"UART": "https://web.archive.org/web/20240718111653/https://developerhelp.microchip.com/xwiki/bin/view/products/wireless-connectivity/ble/bm70/bm70-compact-demo-board-users-guide/transparent-uart/",
+			"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf",
+			"Advanced Usage of Microchip RN4020": "https://archive.org/details/advanced-useof-rn-4020-cookbook"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-01-19",
+		"confirmation_method": "evidence_URL",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-			"00060000-f8ce-11e4-abf4-0002a5d5c51b": "Service: Cypress: Bootloader",
-			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command"
+		"Vendor_Specific_UUIDs": {
+			"49535343-fe7d-4ae5-8fa9-9fafd205e455": "Service: Microchip: Transparent UART",
+			"49535343-1e4d-4bd9-ba61-23c647249616": "Characteristic: Microchip: Transparent UART Transmit (TX)",
+			"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)",
+			"00035b03-58e6-07dd-021a-08123a000300": "Service: Microchip: Microchip Low energy Data Profile (MLDP)",
+			"00035b03-58e6-07dd-021a-08123a000301": "Characteristic: Microchip: MLDP Data",
+			"00035b03-58e6-07dd-021a-08123a0003ff": "Characteristic: Microchip: MLDP Control"
 		}
+	},
+	"Nordic GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Nordic Semiconductor",
+		"company_website": "https://www.nordicsemi.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Nordic UART": "https://web.archive.org/web/20240303153909/https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html",
+			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic insecure DFU 2": "https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
+			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fee4": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fee5": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fe58": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fe59": "Service: Nordic: Secure Device Firmware Update (DFU)",
+			"6e400001-b5a3-f393-e0a9-e50e24dcca9e": "Service: Nordic: UART",
+			"6e400002-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Receive (RX)",
+			"6e400003-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Transmit (TX)",
+			"00001530-1212-efde-1523-785feabcd123": "Service: Nordic: 'Legacy'(insecure) Device Firmware Update (DFU)",
+			"00001531-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Control Point",
+			"00001532-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Packet",
+			"00001534-1212-efde-1523-785feabcd123": "Characteristic: Nordic: ('Legacy'/insecure) DFU: Version",
+			"0000fe59-0000-1000-8000-00805f9b34fb": "Service: Nordic: Secure Device Firmware Update (DFU)",
+			"8EC90001-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Control Point",
+			"8EC90002-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Packet",
+			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU"
+		},
+		"TODO: GATT values": "Need to handle cases like 2a28 'Software Revision String' and then have a regex like '^nRF52' and have that be a Nordic ChipMakerPrint"
 	},
 	"NXP GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
@@ -283,18 +242,67 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-02",
 		"evidence_URL": {
-                        "QN902x OTA Profile Guide": "https://web.archive.org/web/20230405132905/https://www.nxp.com/docs/en/user-guide/UM10993.pdf"
+			"QN902x OTA Profile Guide": "https://web.archive.org/web/20230405132905/https://www.nxp.com/docs/en/user-guide/UM10993.pdf"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-09-02",
 		"confirmation_method": "evidence_URL & looking at collected GATT data",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
-			"TODO": "This is a standard UUID128 w/ UUID16 fee8. We should make that signal an NXP Chip_Maker_Print",
+		"Vendor_Specific_UUIDs": {
+			"fee8": "Service: (Quintic->)NXP: OTA firmware update",
+			"fee9": "Service: (Quintic->)NXP: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
 			"0000fee8-0000-1000-8000-00805f9b34fb": "Service: (Quintic->)NXP: OTA firmware update",
 			"003784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA TX",
 			"013784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA RX"
+		}
+	},
+	"Realtek": {
+		"2thprint_Chip_Maker": "Realtek Semiconductor Corp.",
+		"company_website": "https://www.realtek.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-04-22",
+		"evidence_URL": {
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "1/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
+		}
+	},
+
+	"Silicon Labs GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Silicon Laboratories",
+		"company_website": "https://www.silabs.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"security_research_urls": {
+			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://web.archive.org/web/20240618170612/https://darkmentor.com/publication/2020-08-blackhat/",
+			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
+			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+		},
+		"evidence_URL": {
+			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
+			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"1D14D6EE-FD63-4FA1-BFA4-8F47B42119F0": "Service: Silicon Labs: Over The Air firmware update protocol",
+			"F7BF3564-FB6D-4E53-88A4-5E37E0326063": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Control Endpoint",
+			"984227F3-34FC-4045-A5D0-2C581F81A153": "Characteristic: Silicon Labs: Over The Air firmware update protocol: Data Endpoint",
+			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
+			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
+			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
+			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)"
 		}
 	},
 	"ST BlueNRG GATTPrints": {
@@ -313,7 +321,7 @@
 		"confirmation_method": "evidence_URLs only, no actual data seen for this",
 		"confirmation_confidence": "5/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"8a97f7c0-8506-11e3-baa7-0800200c9a66": "Service: ST BlueNRG OTA firmware update",
 			"122e8cc0-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: Image",
 			"210f99f0-8508-11e3-baa7-0800200c9a66": "Characteristic: ST BlueNRG OTA: New Image",
@@ -342,7 +350,7 @@
 		"confirmation_method": "Primarily evidence_URLs, no actual data seen for most of these, except 0000fe40... P2P service",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"0000fe20-cc7a-482a-984a-7f2ed5b3e58f": "Service: STM32WBA OTA firmware update",
 			"0000fe22-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA OTA: Base Address (Write without response)",
 			"0000fe23-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA OTA: Confirmation (Indication)",
@@ -360,6 +368,57 @@
 			"0000fe83-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer TX RX INFO (Notify)"
 		},
 		"TODO: Add stuff from here": "https://www.st.com/resource/en/user_manual/dm00550659-getting-started-with-the-bluest-protocol-and-sdk-stmicroelectronics.pdf"
+	},
+	"TeLink GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Telink Semiconductor Co. Ltd",
+		"company_website": "https://telink-semi.cn",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-01-16",
+		"evidence_URL": {
+				"Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-01-16",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"00010203-0405-0607-0809-0a0b0c0d1910": "Service: TeLink: Serial Port Profile (if 2b10 characteristic is present) OR Mesh Light Service (if 1911 characteristic is present). Unfortunate UUID reuse!",
+			"00010203-0405-0607-0809-0a0b0c0d2b10": "Characteristic: TeLink: Serial Port Profile (SPP): SERVER2CLIENT",
+			"00010203-0405-0607-0809-0a0b0c0d2b11": "Characteristic: TeLink: Serial Port Profile (SPP): CLIENT2SERVER",
+			"00010203-0405-0607-0809-0a0b0c0d1911": "Service: TeLink: Audio OR Characteristic: TeLink: Mesh Light Status",
+			"00010203-0405-0607-0809-0a0b0c0d1912": "Service: TeLink: Over-The-Air (OTA) update OR Characteristic: TeLink: Mesh Light Command. Unfortunate UUID reuse!",
+			"00010203-0405-0607-0809-0a0b0c0d2b12": "Characteristic: TeLink: Over-The-Air (OTA) update: data",
+			"00010203-0405-0607-0809-0a0b0c0d2b13": "Characteristic: TeLink: Serial Port Profile: Pair",
+			"00010203-0405-0607-0809-0a0b0c0d2b14": "Characteristic: TeLink: Serial Port Profile: User-defined Data",
+			"00010203-0405-0607-0809-0a0b0c0d1913": "Characteristic: TeLink: Mesh Light OTA update",
+			"00010203-0405-0607-0809-0a0b0c0d1914": "Characteristic: TeLink: Mesh Light Pair",
+			"00010203-0405-0607-0809-0a0b0c0d1920": "Service: TeLink: TeLink Mesh (proprietary?)",
+			"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)"
+		}
+	},
+	"Texas Instruments GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "Texas Instruments",
+		"company_website": "https://www.ti.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-01-01",
+		"evidence_URL": {
+			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-01-01",
+		"confirmation_method": "evidence_URL",
+		"confirmation_confidence": "10/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"f000ffc0-0451-4000-b000-000000000000": "Service: Texas Instruments: Over the Air Download (OAD) firmware update",
+			"f000ffc1-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Identify",
+			"f000ffc2-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Block",
+			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
+			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
+		}
 	},
 	"Jabra Elite 3":{
 		"2thprint_Chip": "Qualcomm QCC3040",
@@ -449,7 +508,7 @@
 		"confirmation_date": "2024-01-01",
 		"confirmation_method": "GATT data",
 		"confirmation_confidence": "8/10",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"0508e6f8-ad82-898f-f843-e3410cb60103": "Service: MagTek: Unknown",
 			"0508e6f8-ad82-898f-f843-e3410cb60200": "Characteristic: MagTek: Unknown",
 			"0508e6f8-ad82-898f-f843-e3410cb60201": "Characteristic: MagTek: Unknown",
@@ -493,7 +552,7 @@
 		"confirmation_date": "2024-09-04",
 		"confirmation_method": "evidence_URL + GATT data",
 		"confirmation_confidence": "10/10",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"a3c87500-8ed3-4bdf-8a39-a01bebede295": "Service: Eddystone: Eddystone Configuration Service",
 			"a3c87501-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Capabilities",
 			"a3c87502-8ed3-4bdf-8a39-a01bebede295": "Characteristic: Eddystone: Active Slot",
@@ -522,6 +581,7 @@
 	},
 	"Polara":{
 		"2thprint_Chip_Maker": "Microchip Technology Inc.",
+		"comment": "When I actually went and 2thprinted a Polara device, it returned Nordic in its LL_VERSION_IND packet. So it is probably overly broad to assign Microchip to all Polara devices, and this probably needs to be broken up on a per-model basis.",
 		"short_description": "Electronic crosswalk buttons with audio recording and Bluetooth update capabilities",
 		"company_website": "https://polara.com/",
 		"security_research_urls": {
@@ -536,7 +596,7 @@
 		"confirmation_method": "APK Reverse Engineering",
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
-		"GATT_Vendor_Specific": {
+		"Vendor_Specific_UUIDs": {
 			"5ee1b93c-3df6-11e4-9d9f-164230d1df67": "Service/Advertisement: Polara",
 			"ad014001-3bcb-fea6-7746-c3084ad1df97": "Advertisement: Polara: WPC (Wireless Pedestrian Head Control Unit)",
 			"ad015001-3bcb-fea6-7746-c3084ad1df97": "Service: Polara: WPC (Wireless Pedestrian Head Control Unit)",

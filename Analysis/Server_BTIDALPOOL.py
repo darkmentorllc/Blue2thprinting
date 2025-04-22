@@ -132,8 +132,8 @@ def run_TellMeEverything(self, username, args_array, output_filename):
         args_list = ["python3", "Tell_Me_Everything.py"] + args_array + ["--output", output_filename]
         subprocess.run(args_list)
     thread = threading.Thread(target=target)
-    thread.start()
-    thread.join()
+    thread.start()  # Starts the thread and returns immediately.
+    thread.join()   # Blocks until the thread has finished executing.
 
     try:
         with open(output_filename, 'r') as f:
