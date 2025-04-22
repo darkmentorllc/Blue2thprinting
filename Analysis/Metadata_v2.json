@@ -56,7 +56,7 @@
 	},
 	"Atmel GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Atmel Corporation (Acquired by Microchip Technology Inc.)",
+		"2thprint_Chip_Maker": "Atmel Corporation (acquired by Microchip Technology Inc.)",
 		"company_website": "https://microchip.com",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-01-19",
@@ -87,12 +87,31 @@
 		"confirmation_confidence": "1/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fcfd": "Advertisement: Barrot: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
+			"fcfd": "Advertisement: Barrot: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)",
+			"fcfc": "Advertisement: Barrot: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)"
+		}
+	},
+	"Broadcom": {
+		"2thprint_Chip_Maker": "Broadcom Corporation",
+		"company_website": "http://en.barrot.com.cn/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-04-22",
+		"evidence_URL": {
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fed6": "Advertisement: Broadcom: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"fed7": "Advertisement: Broadcom: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)"
 		}
 	},
 	"Cambridge Silicon Radio (CSR) GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "Cambridge Silicon Radio (CSR) (Acquired by Qualcomm)",
+		"2thprint_Chip_Maker": "Cambridge Silicon Radio (CSR) (acquired by Qualcomm)",
 		"company_website": "https://www.qualcomm.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
@@ -106,13 +125,30 @@
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fef1": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
-			"fef2": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
-			"fe8f": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fef1": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"fef2": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"fe8f": "Service: CSR(->Qualcomm): Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
 			"00001100-d102-11e1-9b23-00025b00a5a5": "Service: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol)",
 			"00001101-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Command Endpoint",
 			"00001102-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Response Endpoint",
 			"00001103-d102-11e1-9b23-00025b00a5a5": "Characteristic: CSR(->Qualcomm): GAIA (Over The Air firmware update protocol): Data Endpoint"
+		}
+	},
+	"Casambi": {
+		"2thprint_Chip_Maker": "Casambi Technologies Oy",
+		"company_website": "https://casambi.com/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-04-22",
+		"evidence_URL": {
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fe4d": "Advertisement: Casambi: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
 		}
 	},
 	"Cypress GATTPrints": {
@@ -133,6 +169,25 @@
 			"00060000-f8ce-11e4-abf4-0002a5d5c51b": "Service: Cypress: Bootloader",
 			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command"
 		}
+	},
+	"Dialog Semiconductor GmbH": {
+		"2thprint_Chip_Maker": "Dialog Semiconductor GmbH (acquired by Renesas)",
+		"company_website": "http://en.barrot.com.cn/",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2024-04-22",
+		"evidence_URL": {
+			"Acquisition confirmation": "https://www.renesas.com/en/about/newsroom/renesas-completes-acquisition-dialog-semiconductor?srsltid=AfmBOop05FFx39AMi-1fLb_-Q1OMRaUoQ1DNybW3YmMU3osmyFpKAgC3",
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2024-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fef5": "Service/Advertisement: Renesas: Software Update Over-The-Air (OTA) Receiver (SUOTAR))"
+		},
+		"comment": "The UUID fef5 was originally assigned to Dialog per the member_uuids.yaml, but it's documented in CLUES how it's used by Renesas currently"
 	},
 	"Espressif GATTPrints": {
 		"comment": "I don't think this is official, but rather just something someone decided to come up with for themselves. But if it is official then it's not on the open web and might be in private SDKs.",
@@ -155,22 +210,61 @@
 			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data"
 		}
 	},
-	"ISSC GATTPrints": {
+	"Intel": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
-		"2thprint_Chip_Maker": "ISSC Technologies Corp. (Acquired by Microchip Technology Inc.)",
-		"company_website": "https://microchip.com",
+		"2thprint_Chip_Maker": "Intel Corporation",
+		"company_website": "https://intel.com",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-04-22",
 		"evidence_URL": {
-				"Acquisition confirmation": "https://ir.microchip.com/news-events/press-releases/detail/700/microchip-technology-announces-acquisition-of-issc-technologies"
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2025-04-22",
 		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
-		"confirmation_confidence": "1/10",
+		"confirmation_confidence": "2/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"feda": "Service/Advertisement: (ISSC Technologies Corp.)->Microchip: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
+			"fc89": "Service/Advertisement: Intel: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)",
+			"fc8a": "Service/Advertisement: Intel: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)",
+			"fe66": "Service/Advertisement: Intel: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)",
+			"fef0": "Service/Advertisement: Intel: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
+		}
+	},
+	"ISSC GATTPrints": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "ISSC Technologies Corp. (acquired by Microchip Technology Inc.)",
+		"company_website": "https://microchip.com",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-04-22",
+		"evidence_URL": {
+			"Acquisition confirmation": "https://ir.microchip.com/news-events/press-releases/detail/700/microchip-technology-announces-acquisition-of-issc-technologies"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"feda": "Service/Advertisement: (ISSC Technologies Corp.)->Microchip: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
+		}
+	},
+	"LAPIS": {
+		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
+		"2thprint_Chip_Maker": "LAPIS Technology Co., Ltd.",
+		"company_website": "https://www.rohm.com/lapis-tech",
+		"submitted_by": "Xeno Kovah",
+		"submission_date": "2025-04-22",
+		"evidence_URL": {
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+		},
+		"confirmed_by": "Xeno Kovah",
+		"confirmation_date": "2025-04-22",
+		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
+		"confirmation_confidence": "2/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fe10": "Service/Advertisement: LAPIS: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
 		}
 	},
 	"Microchip GATTPrints": {
@@ -217,9 +311,9 @@
 		"confirmation_confidence": "10/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fee4": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
-			"fee5": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
-			"fe58": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fee4": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"fee5": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"fe58": "Service: Nordic: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Not observed in wild data. (Please report if you see this!)",
 			"fe59": "Service: Nordic: Secure Device Firmware Update (DFU)",
 			"6e400001-b5a3-f393-e0a9-e50e24dcca9e": "Service: Nordic: UART",
 			"6e400002-b5a3-f393-e0a9-e50e24dcca9e": "Characteristic: Nordic: UART: Receive (RX)",
@@ -251,7 +345,7 @@
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
 			"fee8": "Service: (Quintic->)NXP: OTA firmware update",
-			"fee9": "Service: (Quintic->)NXP: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)",
+			"fee9": "Service: (Quintic->)NXP: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
 			"0000fee8-0000-1000-8000-00805f9b34fb": "Service: (Quintic->)NXP: OTA firmware update",
 			"003784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA TX",
 			"013784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA RX"
@@ -268,13 +362,12 @@
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-04-22",
 		"confirmation_method": "Unconfirmed. Just following pattern I'm using for adding other UUID16s from chipmakers in the assigned numbers doc.",
-		"confirmation_confidence": "1/10",
+		"confirmation_confidence": "2/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml)"
+			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
 		}
 	},
-
 	"Silicon Labs GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Silicon Laboratories",
