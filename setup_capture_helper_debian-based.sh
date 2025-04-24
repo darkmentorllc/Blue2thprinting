@@ -190,14 +190,10 @@ else
 fi
 
 echo ""
-echo "================================================================="
-echo "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
-echo "================================================================="
-#### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
-#### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
-#### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
+echo "===================================================================="
+echo "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
+echo "===================================================================="
 cd /home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/
-### BlueZ Configuration ###
 if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
     find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
     echo "  Sonoff firmware flashing complete."
