@@ -13,6 +13,7 @@
 #   like insufficient encryption/authentication/authorization/key size
 # - Writing per-BDADDR logs, instead of a single global log file
 
+import re
 import globals
 from BGG_Helper_All import *
 from BGG_Helper_LL import *
@@ -100,11 +101,14 @@ def main():
         while True:
             msg = globals.hw.recv_and_decode()
             ret = print_sniffle_message_or_packet(msg, args.quiet)
-            if(ret == "restart"):
+            # Only retry if we're not on Linux (where it doesn't work and gets into a broken state, unlike macOS)
+            if(ret == "restart" and not re.match(r"ttyUSB.*", args.serport)):
                 # It timed out. Go ahead and try to connect again
                 print("Connect timeout... restarting")
                 globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
                 create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
+            else:
+                print("Connect timeout... you will need to restart the script")
     except KeyboardInterrupt:
         # Formally tear down with an LL_TERMINATE_IND, otherwise it will be harder to re-connect again afterwards,
         # because some devices may keep the connection open too long, and don't start advertising again right away
