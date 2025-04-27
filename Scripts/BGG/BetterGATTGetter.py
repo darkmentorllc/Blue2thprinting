@@ -94,7 +94,7 @@ def main():
     globals.hw.mark_and_flush()
 
     # now enter initiator/Central mode
-    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, timeout=0x7fff)
+    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=6, timeout=0x7fff)
 
     if not (args.output is None):
         globals.pcwriter = PcapBleWriter(args.output)
@@ -110,7 +110,7 @@ def main():
                 if(not re.match(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
-                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, timeout=0x7fff)
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=6, timeout=0x7fff)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
                 # Don't retry on Linux, because it doesn't work and gets into a broken state
                 else:
@@ -232,7 +232,7 @@ def stateful_LL_CTRL_outgoing_handler():
              (globals.ll_phy_req_sent and globals.ll_phy_rsp_recv))):
             # Only send an update request to devices supporting 2M PHY
             # Make sure both a REQ and a RSP were seen before sending the PHY update
-            send_LL_PHY_UPDATE_IND_and_update_state(instant_offset=5)
+            send_LL_PHY_UPDATE_IND_and_update_state(instant_offset=3)
         elif(not globals.ll_length_req_sent and not globals.current_ll_ctrl_state.ll_length_negotiated):
             # We handle response to any incoming
             send_LL_LENGTH_REQ_and_update_state()
@@ -264,7 +264,7 @@ def stateful_GATT_getter(actual_body_len, dpkt):
     ####################################################################################
     # Note: this is needed because there can be discontinuities in the handle ranges
     if(manage_GATT_Secondary_Services(actual_body_len, dpkt)):
-            return
+        return
 
     #################################################################################
     # Send ATT_FIND_INFORMATION_REQs to find all handles, declarations, & descriptors
@@ -331,7 +331,8 @@ def print_packet(dpkt, quiet):
     elif(actual_body_len == 2):
         # Send any LL_CTRL packets we need to send
         stateful_LL_CTRL_outgoing_handler()
-        manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt)
+        stateful_GATT_getter(actual_body_len, dpkt)
+#        manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt)
 
 
 if __name__ == "__main__":

@@ -43,14 +43,12 @@ att_error_strings = {
 ####################################################################################
 # Note: this is needed because there can be discontinuities in the handle ranges
 def manage_GATT_Primary_Services(actual_body_len, dpkt):
-    global att_exchange_MTU_rsp_recv, read_primary_services_req_sent, all_primary_services_recv
+    global att_MTU_negotiated, read_primary_services_req_sent, all_primary_services_recv
     global primary_service_handle_ranges_dict, final_primary_service_handle, all_handles_received_values
-#    if (globals.att_exchange_MTU_rsp_recv and not globals.read_primary_services_req_sent):
     # FIXME: ideally we'd want some sort of a timer to not proceed into this part unless we've given enough time to get back
     # the LL_LENGTH_REQ and ATT_EXCHANGE_MTU_RSP IF they're likely to come in. Otherwise we're just proceeding with smaller MTU
     # than is desirable, which will consequently lead to a longer overall enumeration time
-    # FIXME: should I not be using att_exchange_MTU_rsp_recv as a precondition? If so, due to which devices?
-    if ((globals.att_exchange_MTU_rsp_recv or (globals.ll_length_rsp_recv and not globals.current_ll_ctrl_state.ll_length_negotiated)) and not globals.read_primary_services_req_sent):
+    if (globals.att_MTU_negotiated and not globals.read_primary_services_req_sent):
         send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2800)
         globals.read_primary_services_req_sent = True
 
