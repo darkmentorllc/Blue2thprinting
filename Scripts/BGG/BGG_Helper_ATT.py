@@ -246,7 +246,7 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
                 if(globals.current_ll_ctrl_state.ll_length_negotiated):
                     client_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
                     if(client_rx_mtu_ACID >= 23):
-                        smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet, client_rx_mtu_ACID)
+                        smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, client_rx_mtu_ACID)
                         vprint(f"Updating ATT MTU from 0x{globals.att_mtu:04x} to 0x{smaller_mtu:04x}")
                         globals.att_mtu = smaller_mtu
                     else:
@@ -272,7 +272,7 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
             globals.att_exchange_MTU_rsp_recv = True
             globals.att_exchange_MTU_rsp_sent_time = time.time_ns()
         if(not globals.att_exchange_MTU_req_sent):
-            smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet, 247)
+            smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, 247)
             globals.att_mtu = smaller_mtu
             send_ATT_EXCHANGE_MTU_REQ(globals.att_mtu)
             globals.att_exchange_MTU_req_sent = True
