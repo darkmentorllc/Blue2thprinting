@@ -327,12 +327,11 @@ def print_packet(dpkt, quiet):
             # Get SMP information once GATT enumeration is done
             handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
 
-    # Use empty packets as an opportunity see if we need to send any LL_CTRL packets
+    # Use empty packets as an opportunity see if we need to send any further packets
     elif(actual_body_len == 2):
         # Send any LL_CTRL packets we need to send
         stateful_LL_CTRL_outgoing_handler()
         stateful_GATT_getter(actual_body_len, dpkt)
-#        manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt)
 
 
 if __name__ == "__main__":
