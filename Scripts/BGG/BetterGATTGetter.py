@@ -101,14 +101,17 @@ def main():
         while True:
             msg = globals.hw.recv_and_decode()
             ret = print_sniffle_message_or_packet(msg, args.quiet)
-            # Only retry if we're not on Linux (where it doesn't work and gets into a broken state, unlike macOS)
-            if(ret == "restart" and not re.match(r"ttyUSB.*", args.serport)):
-                # It timed out. Go ahead and try to connect again
-                print("Connect timeout... restarting")
-                globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
-                create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
-            else:
-                print("Connect timeout... you will need to restart the script")
+            if(ret == "restart"):
+                # Retry on macOS (which I'm detecting based on the serport string, which is different on Linux)
+                if(not re.match(r"ttyUSB", args.serport)):
+                    # It timed out. Go ahead and try to connect again
+                    print("Connect timeout... restarting")
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, timeout=0x7fff)
+                    create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
+                # Don't retry on Linux, because it doesn't work and gets into a broken state
+                else:
+                    print("Connect timeout... you will need to restart the script")
+                    exit(-2)
     except KeyboardInterrupt:
         # Formally tear down with an LL_TERMINATE_IND, otherwise it will be harder to re-connect again afterwards,
         # because some devices may keep the connection open too long, and don't start advertising again right away
