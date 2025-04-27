@@ -50,7 +50,7 @@ def manage_GATT_Primary_Services(actual_body_len, dpkt):
     # the LL_LENGTH_REQ and ATT_EXCHANGE_MTU_RSP IF they're likely to come in. Otherwise we're just proceeding with smaller MTU
     # than is desirable, which will consequently lead to a longer overall enumeration time
     # FIXME: should I not be using att_exchange_MTU_rsp_recv as a precondition? If so, due to which devices?
-    if ((globals.att_exchange_MTU_rsp_recv or (globals.ll_length_rsp_recv and not globals.ll_length_rsp_supported)) and not globals.read_primary_services_req_sent):
+    if ((globals.att_exchange_MTU_rsp_recv or (globals.ll_length_rsp_recv and not globals.current_ll_ctrl_state.ll_length_negotiated)) and not globals.read_primary_services_req_sent):
         send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2800)
         globals.read_primary_services_req_sent = True
 

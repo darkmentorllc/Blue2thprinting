@@ -61,8 +61,8 @@ def vmultiprint(*args):
 ######################################################################################
 # Helper functions for writing to the pcap
 
-# This creates a fake CONNECT_IND packet to insert into the pcap, 
-# because Wireshark won't know which device is the Central vs. Peripheral 
+# This creates a fake CONNECT_IND packet to insert into the pcap,
+# because Wireshark won't know which device is the Central vs. Peripheral
 # if it doesn't see who sent the CONNECT_IND, and then it will display
 # things incorrectly
 # The real CONNECT_IND is created by the Sniffle firmware on the TI chip
@@ -114,6 +114,7 @@ def write_outbound_pkt(llid, body):
                                                   # because we didn't set all the other LL header fields
     vprint(full_bytes)
 
+    # FIXME: this isn't capturing the channel correctly
     pkt = DPacketMessage.from_body(full_bytes, True)
     pkt.ts_epoch = time.time()
     pkt.ts = pkt.ts_epoch - globals.hw.decoder_state.first_epoch_time

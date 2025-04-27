@@ -1,3 +1,5 @@
+import time
+
 # Written by Xeno Kovah
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
@@ -17,6 +19,12 @@ target_bdaddr = ""
 target_bdaddr_type_public = False
 verbose = True
 
+# This will be used to estimate the connEventCount
+# This starts as 0 to detect that we haven't set it yet,
+# and then is set to the first time we receive a packet
+first_received_packet_time = 0
+connEventCount = 0
+
 ######################################################################################
 # Storage for the data returned from the GATT client so it can be output at the end
 ######################################################################################
@@ -32,17 +40,94 @@ handles_with_error_rsp = {}
 # State transition globals so we can get each data type before moving on to the next
 ######################################################################################
 
-# Use this as a general mutex to stop us from sending a new LL CTRL packet
-# until we've received a response to the most recently sent one
-# TODO: Note, this can DOS us though, so we'll want to add better timeout & retry capability
-ll_ctrl_pkt_pending = False
+ll_packet_states_to_names = {
+    0: "Not sent",
+    1: "Sent",
+    2: "Received",
+    3: "Error",
+    4: "Rejected",
+    5: "Unknown",
+    6: "Timeout"
+}
+
+ll_packet_names_to_states = {
+    "Not sent": 0,
+    "Sent": 1,
+    "Received": 2,
+    "Error": 3,
+    "Rejected": 4,
+    "Unknown": 5,
+    "Timeout": 6
+}
+
+class ll_ctrl_state:
+    def __init__(self):
+        # Use this as a general mutex to stop us from sending a new LL CTRL packet
+        # until we've received a response to the most recently sent one
+        self.ll_ctrl_pkt_pending = False
+        self.last_sent_ll_ctrl_pkt_opcode = None
+        self.last_sent_ll_ctrl_pkt_time = None
+
+        ##################################
+        # STRONGLY-DESIRED LL_CTRL PACKETS
+        ##################################
+
+        # LL_PHY_REQ/RSP state info
+        # NOTE: Added in spec 5.0
+        self.supported_PHYs = None # Set to None until we get an LL_PHY_REQ/RSP, at which point it's set to the bitmap (0x01 = LE 1M, 0x02 = LE 2M, 0x04 = LE Coded)
+        self.PHY_update_sent = False
+        self.PHY_updated = False
+        self.PHY_info_rejected = False # Set to True if we get a LL_REJECT_IND with a PHY that we don't support
+
+        # LL_LENGTH_REQ/RSP state info
+        # NOTE: Added in spec 4.2
+        self.ll_length_negotiated = False # This is essentially the quick-check "done" state
+        self.ll_length_max_rx_octet = 27 # BT spec default
+        self.ll_length_max_tx_octet = 27
+        self.ll_length_state = ll_packet_names_to_states["Not sent"]
+
+        # LL_VERSION_IND state info
+        # NOTE: In spec 4.0+
+        self.ll_version_received = False # This is essentially the quick-check "done" state
+        self.ll_version_state = ll_packet_names_to_states["Not sent"]
+
+        # LL_FEATURE_REQ/RSP state info
+        # NOTE: In spec 4.0+
+        # Or LL_PERIPHERAL_FEATURE_REQ/ state info
+        # NOTE: Added in spec 4.1
+        self.ll_features_received = False # This is essentially the quick-check "done" state
+        self.ll_features_state = ll_packet_names_to_states["Not sent"]
+        self.ll_peripheral_features = None
+        self.ll_peripheral_features_supports_2M_phy = False # For quicker single-boolean checking
+
+        ##################################
+        # NICE-TO-HAVE LL_CTRL PACKETS
+        ##################################
+
+        # LL_PING_RSP state info
+        # NOTE: Added in spec 4.1
+        self.ll_ping_state = ll_packet_names_to_states["Not sent"]
+
+        # LL_CONNECTION_PARAM_REQ/RSP state info
+        # NOTE: Added in spec 4.1
+
+
+current_ll_ctrl_state = ll_ctrl_state()
+
 
 ll_length_req_sent = False
 ll_length_req_sent_time = 0
+ll_length_req_recv = False
+ll_length_req_recv_time = 0
+ll_length_rsp_sent = False
+ll_length_rsp_sent_time = 0
 ll_length_rsp_recv = False
-ll_length_rsp_supported = False # Set this to True if they send a LL_LENGTH_RSP, not an error
+ll_length_rsp_recv_time = 0
+#ll_length_negotiated = False    # Set this to True if they send a LL_LENGTH_RSP, not an error
                                 # And also don't do a ATT_EXCHANGE_MTU until this is True. Otherwise
                                 # the responses will be fragmented (which we can't currently handle)
+# ll_length_max_rx_octet = 0
+# ll_length_max_tx_octet = 0
 
 ll_version_ind_sent = False
 ll_version_ind_sent_time = 0
@@ -51,6 +136,7 @@ ll_version_ind_recv = False
 ll_feature_req_sent = False
 ll_feature_req_sent_time = 0
 ll_feature_rsp_recv = False
+ll_feature_rsp_sent = False
 ll_feature_rsp_sent_time = 0
 ll_peripheral_feature_req_recv = False
 
@@ -61,12 +147,18 @@ ll_phy_req_recv_time = 0
 ll_phy_rsp_sent = False
 ll_phy_rsp_sent_time = 0
 ll_phy_rsp_recv = False
-ll_phy_rsp_sent_time = 0
+ll_phy_rsp_recv_time = 0
+ll_phy_update_ind_sent = False
+ll_phy_update_ind_sent_time = 0
 
 att_mtu = 23 # Defaults to 23, updated if we get back an ATT_EXCHANGE_MTU_RSP
+att_exchange_MTU_req_recv = False
 att_exchange_MTU_req_sent = False
 att_exchange_MTU_req_sent_time = 0
+att_exchange_MTU_rsp_sent = False
+att_exchange_MTU_rsp_sent_time = 0
 att_exchange_MTU_rsp_recv = False
+att_MTU_negotiated = False
 
 read_primary_services_req_sent = False
 all_primary_services_recv = False
