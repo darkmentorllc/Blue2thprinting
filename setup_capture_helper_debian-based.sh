@@ -195,12 +195,28 @@ echo "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
 echo "===================================================================="
 cd /home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/
 if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
-    find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
-    echo "  Sonoff firmware flashing complete."
+    dongles=$(find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
+    if [ -z "$dongles" ]; then
+        echo "  No Sonoff 2Mbps dongles found. No flashing attempted."
+    else
+        echo "$dongles" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
+        echo "  Sonoff firmware flashing complete."
+    fi
 else
-    echo "  No Sonoff firmware, not attempting firmware flashing."
+    echo "  No Sonoff 2Mbps firmware file found, not attempting firmware flashing."
 fi
 
+if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_1M.hex" ]; then
+    dongles=$(find /dev/serial/by-id/ -name "usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
+    if [ -z "$dongles" ]; then
+        echo "  No Sonoff 921600 baud dongles found. No flashing attempted."
+    else
+        echo "$dongles" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_1M.hex
+        echo "  Sonoff firmware flashing complete."
+    fi
+else
+    echo "  No Sonoff 921600 baud firmware file found, not attempting firmware flashing."
+fi
 
 echo ""
 echo "[--------------------------------------------------]"
