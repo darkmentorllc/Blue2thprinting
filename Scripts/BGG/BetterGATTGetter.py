@@ -103,7 +103,7 @@ def main():
             ret = print_sniffle_message_or_packet(msg, args.quiet)
             if(ret == "restart"):
                 # Retry on macOS (which I'm detecting based on the serport string, which is different on Linux)
-                if(not re.match(r"ttyUSB", args.serport)):
+                if(not re.search(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
                     globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
