@@ -106,7 +106,7 @@ def main():
                 if(not re.match(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
-                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, timeout=0x7fff)
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
                 # Don't retry on Linux, because it doesn't work and gets into a broken state
                 else:
