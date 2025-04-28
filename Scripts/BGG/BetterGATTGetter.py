@@ -97,6 +97,7 @@ def main():
         globals.pcwriter = PcapBleWriter(args.output)
         create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
 
+    linux_retry_count = 0
     try:
         while True:
             msg = globals.hw.recv_and_decode()
@@ -108,10 +109,17 @@ def main():
                     print("Connect timeout... restarting")
                     globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
-                # Don't retry on Linux, because it doesn't work and gets into a broken state
                 else:
-                    print("Connect timeout... you will need to restart the script")
-                    exit(-2)
+                    linux_retry_count += 1
+                    if(linux_retry_count == 4):
+                        print("Connect timeout... you will need to restart the script")
+                        exit(-2)
+                    else:
+                        time.sleep(1)
+                        print(f"Connect timeout... restart attempt {linux_retry_count} of 3")
+                        globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public)
+                        create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
+
     except KeyboardInterrupt:
         # Formally tear down with an LL_TERMINATE_IND, otherwise it will be harder to re-connect again afterwards,
         # because some devices may keep the connection open too long, and don't start advertising again right away
