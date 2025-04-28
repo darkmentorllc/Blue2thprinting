@@ -94,7 +94,7 @@ def main():
     globals.hw.mark_and_flush()
 
     # now enter initiator/Central mode
-    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=6, timeout=50)
+    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, latency=0, timeout=50)
 
     if not (args.output is None):
         globals.pcwriter = PcapBleWriter(args.output)
@@ -107,10 +107,10 @@ def main():
             # Only retry if we're not on Linux (where it doesn't work and gets into a broken state, unlike macOS)
             if(ret == "restart"):
                 # Retry on macOS (which I'm detecting based on the serport string, which is different on Linux)
-                if(not re.match(r"ttyUSB", args.serport)):
+                if(not re.search(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
-                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=6, timeout=50)
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, latency=0, timeout=50)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
                 # Don't retry on Linux, because it doesn't work and gets into a broken state
                 else:
@@ -282,6 +282,7 @@ def stateful_GATT_getter(actual_body_len, dpkt):
 
 def print_sniffle_message_or_packet(msg, quiet):
     global hw
+    global connEventCount
     if isinstance(msg, PacketMessage):
         globals.connEventCount = msg.event
         print_packet(msg, quiet)
