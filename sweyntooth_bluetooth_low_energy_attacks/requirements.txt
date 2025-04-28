@@ -1,4 +1,0 @@
-pyserial
-nrfutil
-pycryptodome
-six

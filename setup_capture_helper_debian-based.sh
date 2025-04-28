@@ -49,19 +49,6 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector
 
-no_python2=1
-### Python 2.7
-dpkg -l | grep -q '^ii  python2.7'
-if [ $? != 0 ]; then
-    echo "  WARNING: This distribution is missing the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent it from working."
-else
-    sudo apt-get install -y python2.7
-    python2.7 --version
-    if [ $? == 0 ]; then
-        $no_python2=0
-    fi
-fi
-
 echo ""
 echo "====================================================================================================================================="
 echo "Fixing this repository when it's not cloned with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
@@ -81,10 +68,6 @@ echo "==========================================================================
 if [ $USERNAME != "user" ]; then
     echo "Replacing username 'user' with '$USERNAME'."
     cd /home/$USERNAME/Blue2thprinting
-    sed -i "s|/home/user/|/home/$USERNAME/|" sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py
-    echo "Correcting sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
-    echo "Correcting bluez-5.66/attrib/gatttool.c"
-    sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/attrib/gatttool.c
     echo "Correcting bluez-5.66/tools/sdptool.c"
     sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/tools/sdptool.c
     echo "Correcting all the scripts in ./Scripts"
@@ -222,6 +205,3 @@ echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"
 echo "[--------------------------------------------------]"
-if [ $no_python2 == 1 ]; then
-    echo "WARNING: This system could not install the python2.7 package. This is required for Sweyntooth. If you are not using Sweyntooth for 2thprinting, you can ignore this. If you are, this will prevent full 2thprinting from working."
-fi
