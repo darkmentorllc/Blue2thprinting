@@ -382,6 +382,6 @@ def manage_peripheral_info_requests(actual_body_len, dpkt):
     if(actual_body_len == 13):
         (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_READ_BY_GROUP_TYPE_REQ, dpkt)
         if(matched):
-            starting_handle = unpack("<BBHHBH", dpkt.body[7:9])
+            starting_handle, = unpack("<H", dpkt.body[7:9])
             send_ATT_ERROR_RSP(opcode_ATT_READ_BY_GROUP_TYPE_REQ, starting_handle, errorcode_0A_ATT_Attribute_Not_Found)
             vprint(f"manage_peripheral_info_requests: Rejecting ATT Read by Group Type request")
