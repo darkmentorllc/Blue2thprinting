@@ -379,7 +379,6 @@ def manage_ATT_FIND_INFORMATION(actual_body_len, dpkt):
 ####################################################################################
 def manage_peripheral_info_requests(actual_body_len, dpkt):
     # See if the Peripheral is trying to send us an ATT Read by Group Type request, and if so, reject it
-    # TODO: it seems like some Apple devices
     if(actual_body_len == 13):
         (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_READ_BY_GROUP_TYPE_REQ, dpkt)
         if(matched):
