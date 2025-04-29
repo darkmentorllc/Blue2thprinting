@@ -223,8 +223,6 @@ def stateful_LL_CTRL_outgoing_handler():
             # FWIW I've found that an iPad won't proceed with responding to the ATT_EXCHANGE_MTU_REQ if I haven't replied to their LL_VERSION_IND
             # So this needs to be sent regardless of whether we've already receive an LL_VERSION_IND from the Peripheral
             send_LL_VERSION_IND_and_update_state()
-        # TODO: check features if it even supports 2M PHY?
-        # Don't bother sending the Central-initiated LL_PHY_REQ if we've already sent an LL_PHY_REQ or LL_PHY_RSP
         elif(globals.ll_version_ind_recv and not globals.ll_phy_req_sent):
             send_LL_PHY_REQ_and_update_state()
         elif (not globals.ll_phy_update_ind_sent and \
