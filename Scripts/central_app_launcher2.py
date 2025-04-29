@@ -488,9 +488,9 @@ def ble_thread_function():
                             serial_port = f"-s={first_sniffle_serial_port_absolute_path}"
                             # -u for unbuffered python output (so it streams to log realtime)
                             if(type != "random"):
-                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P"]
+                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
                             else:
-                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}"]
+                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
                             try:
                                 if(sniffle_stdout_logging):
                                     sniffle_append_stdout = open(f"{gatttool_output_pcap_path}/Sniffle_stdout.log", "a")
