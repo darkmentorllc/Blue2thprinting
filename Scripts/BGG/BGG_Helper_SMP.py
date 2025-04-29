@@ -31,6 +31,9 @@ def send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_
     write_outbound_pkt(2, packet_bytes)
     vprint(f"Sent SMP pairing request")
 
+###############################################################################################################
+# Try to pair w/ Legacy Just Works to see if the device supports that
+###############################################################################################################
 # TODO! This hasn't actually been fully fleshed out yet
 def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
     global all_characteristic_handles_recv, handles_with_error_rsp

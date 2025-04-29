@@ -221,47 +221,62 @@ def is_packet_ATT_type(opcode, dpkt):
 # Exchange ATT_MTU to try and get more data in less packets
 ####################################################################################
 def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
-    global ll_version_ind_recv
-    global att_mtu, att_exchange_MTU_req_sent, att_exchange_MTU_req_sent_time, att_exchange_MTU_rsp_recv
+    global current_ll_ctrl_state
+    global att_mtu, att_exchange_MTU_req_sent, att_exchange_MTU_req_sent_time, att_exchange_MTU_rsp_recv, att_MTU_negotiated
 
-    # Don't do a ATT_EXCHANGE_MTU if this is set.
-    # Otherwise it may support a larger ATT_MTU but then the responses will be fragmented
-    # which we can't currently handle
-# FIXME!: Don't bother with an MTU exchange if their LL_LENGTH_RSP came back with a lower value than we indicated we support (i.e. we say 251 bytes, then they reply 27 bytes...)
-    if(not globals.ll_length_rsp_supported):
-        return
-
-    # TODO: Do we still want ll_version_ind_recv to be a prerequisite?
-#    if(ll_version_ind_recv and not globals.att_exchange_MTU_req_sent):
-    if(not globals.att_exchange_MTU_req_sent):
-        send_ATT_EXCHANGE_MTU_REQ(247)
-        globals.att_exchange_MTU_req_sent = True
-        globals.att_exchange_MTU_req_sent_time = time.time_ns()
-
-    # Process ATT_EXCHANGE_MTU_RSP or ATT_ERROR_RSP responses
+    # Process incoming ATT_EXCHANGE_MTU_RSP or ATT_ERROR_RSP responses
     # 7 byte header + 2 bytes Server/Client Rx MTU for both REQ and RSP
-    if(globals.att_exchange_MTU_req_sent and not globals.att_exchange_MTU_rsp_recv and actual_body_len >= 9):
-        (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_EXCHANGE_MTU_RSP, dpkt)
-        if(matched):
-            server_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
-            # Don't accept smaller-than-required-minimum MTUs, and only update if the new value would be larger
-            if(server_rx_mtu_ACID >= 23 and server_rx_mtu_ACID > globals.att_mtu):
-                globals.att_mtu = server_rx_mtu_ACID
-                vprint(f"Got new MTU of 0x{globals.att_mtu:04x}")
+    if(not globals.att_MTU_negotiated and actual_body_len >= 9):
+        if(not globals.att_exchange_MTU_rsp_recv):
+            (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_EXCHANGE_MTU_RSP, dpkt)
+            if(matched):
+                server_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
+                # Don't accept smaller-than-required-minimum MTUs, and only update if the new value would be larger
+                if(server_rx_mtu_ACID >= 23 and server_rx_mtu_ACID > globals.att_mtu):
+                    globals.att_mtu = server_rx_mtu_ACID
+                    vprint(f"Got new MTU of 0x{globals.att_mtu:04x}")
+                globals.att_exchange_MTU_rsp_recv = True
+                globals.att_MTU_negotiated = True
+                print(f"---> ATT_EXCHANGE_MTU* phase done (received ATT_EXCHANGE_MTU_RSP), moving to next phase")
+                return
+        if(not globals.att_exchange_MTU_req_recv):
+            (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_EXCHANGE_MTU_REQ, dpkt)
+            if(matched):
+                # We need to
+                if(globals.current_ll_ctrl_state.ll_length_negotiated):
+                    client_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
+                    if(client_rx_mtu_ACID >= 23):
+                        smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, client_rx_mtu_ACID)
+                        vprint(f"Updating ATT MTU from 0x{globals.att_mtu:04x} to 0x{smaller_mtu:04x}")
+                        globals.att_mtu = smaller_mtu
+                    else:
+                        vprint(f"Using existing MTU of 0x{globals.att_mtu:04x}")
+                    # There's no point in sending back an MTU larger than what the other side supports, because the lesser of the two will be used, so just match it
+                    send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)
+                    globals.att_exchange_MTU_req_recv = True
+                    globals.att_exchange_MTU_rsp_sent = True
+                    globals.att_MTU_negotiated = True
+                    print(f"---> ATT_EXCHANGE_MTU* phase done (received ATT_EXCHANGE_MTU_REQ), moving to next phase")
+                    return
+                else:
+                    # TODO: how can we queue up an ATT_EXCHANGE_MTU_RSP for later?
+                    # If we can't, then let's just wait and send our own ATT_EXCHANGE_MTU_REQ later and ignore the above for now
+                    send_ATT_ERROR_RSP(opcode_ATT_EXCHANGE_MTU_REQ, 1, errorcode_0E_ATT_Unlikely_Error)
+                    vprint(f"manage_ATT_EXCHANGE_MTU: Rejecting ATT MTU request for now (to send our own)")
+
+    # Process outgoing
+    if(globals.current_ll_ctrl_state.PHY_updated and globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated):
+        if(not globals.att_exchange_MTU_rsp_sent):
+            send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)
+            globals.att_MTU_negotiated = True
             globals.att_exchange_MTU_rsp_recv = True
-            print(f"---> ATT_EXCHANGE_MTU* phase done (received ATT_EXCHANGE_MTU_RSP), moving to next phase")
-            return
-        (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_EXCHANGE_MTU_REQ, dpkt)
-        if(matched):
-            client_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
-            globals.att_mtu = client_rx_mtu_ACID
-            vprint(f"Got new MTU of 0x{globals.att_mtu:04x}")
-            # There's no point in sending back an MTU larger than what the other side supports, because the lesser of the two will be used, so just match it
-            send_ATT_EXCHANGE_MTU_RSP(client_rx_mtu_ACID)
-            # Go ahead and treat it like we've received the RSP, even though one of those might come in later due to race conditions
-            globals.att_exchange_MTU_rsp_recv = True
-            print(f"---> ATT_EXCHANGE_MTU* phase done (received ATT_EXCHANGE_MTU_REQ), moving to next phase")
-            return
+            globals.att_exchange_MTU_rsp_sent_time = time.time_ns()
+        if(not globals.att_exchange_MTU_req_sent):
+            smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, 247)
+            globals.att_mtu = smaller_mtu
+            send_ATT_EXCHANGE_MTU_REQ(globals.att_mtu)
+            globals.att_exchange_MTU_req_sent = True
+            globals.att_exchange_MTU_req_sent_time = time.time_ns()
 
 #################################################################################
 # Helpers for manage_ATT_FIND_INFORMATION
@@ -365,7 +380,8 @@ def manage_ATT_FIND_INFORMATION(actual_body_len, dpkt):
 def manage_peripheral_info_requests(actual_body_len, dpkt):
     # See if the Peripheral is trying to send us an ATT Read by Group Type request, and if so, reject it
     if(actual_body_len == 13):
-        header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode, starting_handle = unpack("<BBHHBH", dpkt.body[:9])
-        if(att_opcode == opcode_ATT_READ_BY_GROUP_TYPE_REQ):
+        (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_READ_BY_GROUP_TYPE_REQ, dpkt)
+        if(matched):
+            starting_handle = unpack("<BBHHBH", dpkt.body[7:9])
             send_ATT_ERROR_RSP(opcode_ATT_READ_BY_GROUP_TYPE_REQ, starting_handle, errorcode_0A_ATT_Attribute_Not_Found)
             vprint(f"manage_peripheral_info_requests: Rejecting ATT Read by Group Type request")

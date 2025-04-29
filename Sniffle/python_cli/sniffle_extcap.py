@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/opt/homebrew/bin/python3
 
 #
 #   Copyright 2018-2024, Jay Logue and NCC Group plc
