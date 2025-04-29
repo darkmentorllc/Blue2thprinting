@@ -4,7 +4,6 @@ This is a tool which coordinates the launching of various 2thprinting apps.
 The goal is to try and generally minimize contention for the scanning interface
 (which is the built-in hci0 used by the python BTC/BLE libraries).
 '''
-
 # Activate venv before any other imports
 import os
 import sys
@@ -32,7 +31,6 @@ BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
 btc_2thprint_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
-ble_2thprint_enabled = False # This is toggled off by default because unless you have Sweyntooth set up, turning this on will cause an error and reboot loop. Only turn on once Sweyntooth is configured.
 gattprint_enabled = True
 sdpprint_enabled = True
 
@@ -62,18 +60,14 @@ username = "user"
 
 default_cwd = f"/home/{username}/"
 
-gatttool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/attrib/gatttool"
+gatttool_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/BetterGATTGetter.py"
+gatttool_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
 
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
 sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
 
 braktooth = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter"
 brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/"
-
-python2 = "/usr/bin/python2.7"
-ble2thprint = f"/home/{username}/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py"
-sweyn_cwd = f"/home/{username}/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks/"
-dongle1 = "/dev/ttyACM0"
 
 btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
 gattprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
@@ -99,10 +93,44 @@ gatt_success_bdaddrs = {}
 gatt_success_bdaddrs_lock = threading.Lock()
 sdp_success_bdaddrs = {}
 sdp_success_bdaddrs_lock = threading.Lock()
-ll2thprint_success_bdaddrs = {}
-ll2thprint_success_bdaddrs_lock = threading.Lock()
 lmp2thprint_success_bdaddrs = {}
 lmp2thprint_success_bdaddrs_lock = threading.Lock()
+
+hostname = os.popen('hostname').read().strip()
+
+#####################################################################################
+# Single global serial port list for Sniffle sniffers or BetterGATTGetter.py to share
+#####################################################################################
+#
+base_dir = '/dev/serial/by-id'
+# Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
+pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
+
+# Check if the base directory exists and is accessible
+# Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
+retry_count = 0
+MAX_RETRY_COUNT = 360
+while(retry_count < MAX_RETRY_COUNT):
+    if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
+        retry_count += 10
+        if(print_verbose): print(f"sniffle_thread_function: /dev/serial/by-id may not be accessible yet. Sleeping 10 seconds.")
+        time.sleep(10)
+    else:
+        break # It's accessible, try to access Sniffle dongles now
+if(retry_count == MAX_RETRY_COUNT):
+    print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Fix sniffle_thread_function() or permissions.")
+    exit(-1)
+
+# Construct the full pattern path
+full_pattern = os.path.join(base_dir, pattern)
+
+# Use glob to match the pattern
+matching_files = glob.glob(full_pattern)
+
+# The first path is reserved for BetterGATTGetter.py
+# Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
+first_sniffle_serial_port_relative_path = os.readlink(matching_files[0])
+first_sniffle_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sniffle_serial_port_relative_path))
 
 ##################################################
 # Log print helpers
@@ -131,7 +159,7 @@ def locked_delete_from_dict(dict, lock, key):
 
 def all_2thprints_done(type, bdaddr):
    if(type == "BLE"):
-       if(bdaddr in gatt_success_bdaddrs.keys() and bdaddr in ll2thprint_success_bdaddrs.keys()):
+       if(bdaddr in gatt_success_bdaddrs.keys()):
            return True
        else:
            return False
@@ -170,13 +198,6 @@ class ApplicationThread(threading.Thread):
                            if(all_2thprints_done("BLE", self.bdaddr)):
                                locked_delete_from_dict(ble_bdaddrs, ble_bdaddrs_lock, self.bdaddr)
                                if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {self.bdaddr} from ble_bdaddrs!")
-                    elif(self.info_type == "LL2thprint"):
-                       with ll2thprint_success_bdaddrs_lock:
-                           ll2thprint_success_bdaddrs[self.bdaddr] = 1
-                           if(print_finished_bdaddrs): print(f"Successful LL2thprinting of {self.bdaddr}!")
-                           if(all_2thprints_done("BLE", self.bdaddr)):
-                               locked_delete_from_dict(ble_bdaddrs, ble_bdaddrs_lock, self.bdaddr)
-                               if(print_verbose): print(f"All 2thprints collected! Deleting {self.bdaddr} from ble_bdaddrs!")
                     elif(self.info_type == "LMP2thprint"):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
                        with lmp2thprint_success_bdaddrs_lock:
@@ -452,7 +473,7 @@ def ble_thread_function():
                         if(all_2thprints_done("BLE", bdaddr)):
                             locked_delete_from_dict(ble_bdaddrs, ble_bdaddrs_lock, bdaddr)
                             if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {bdaddr} from ble_bdaddrs!")
-                        skip_sub_process = True # We can't just 'continue' here or we'd skip attempting the ll2thprint below
+                        continue
 
                 # We have to check whether bdaddr is still in ble_bdaddrs because it could have been deleted via finding a [DEL] in the bluetoothctl log
                 # This is a race condition...
@@ -461,9 +482,21 @@ def ble_thread_function():
                         if(bdaddr in ble_bdaddrs):
                             external_log_write(gattprint_log_path, f"GATTPRINTING ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
                             (type, rssi) = ble_bdaddrs[bdaddr]
-                            gatt_cmd = [gatttool_exec_path, "-t", type, "-b", bdaddr]
+                            current_time = datetime.datetime.now()
+                            launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
+                            pcap_output = f"-o={gatttool_output_pcap_path}/{launch_time}_{bdaddr}_BGG_{hostname}.pcap"
+                            serial_port = f"-s={first_sniffle_serial_port_absolute_path}"
+                            # -u for unbuffered python output (so it streams to log realtime)
+                            if(type != "random"):
+                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P"]
+                            else:
+                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}"]
                             try:
-                                gatt_process = launch_application(gatt_cmd, default_cwd)
+                                if(sniffle_stdout_logging):
+                                    sniffle_append_stdout = open(f"{gatttool_output_pcap_path}/Sniffle_stdout.log", "a")
+                                else:
+                                    sniffle_append_stdout = open(f"/dev/null", "a")
+                                gatt_process = launch_application(gatt_cmd, default_cwd, stdout=sniffle_append_stdout)
                             except BlockingIOError as e:
                                 print(f"Caught BlockingIOError while launching GATT application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
                                 # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -481,41 +514,6 @@ def ble_thread_function():
                                     print(f"Caught an exception while starting GATT thread: {e}")
                                     # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                                     force_reboot()
-
-
-            if(ble_2thprint_enabled):
-                skip_sub_process = False
-                with ll2thprint_success_bdaddrs_lock:
-                    if(bdaddr in ll2thprint_success_bdaddrs.keys()):
-                        if(print_finished_bdaddrs): print(f"We've already successfully LL2thprinted {bdaddr}! Skipping!")
-                        # Remove it from further consideration (it could have just been added in by a [DEL] -> [NEW] sequence)
-                        if(all_2thprints_done("BLE", bdaddr)):
-                            locked_delete_from_dict(ble_bdaddrs, ble_bdaddrs_lock, bdaddr)
-                            if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {bdaddr} from ble_bdaddrs!")
-                        skip_sub_process = True # We can't just 'continue' here for generalism, for if we add more stuff beyond this
-
-                if(not skip_sub_process and bdaddr in ble_bdaddrs): # Double check that bdaddr hasn't been deleted out of ble_bdaddrs by a [DEL]
-                    ble_2thprint_cmd = [python2, ble2thprint, dongle1, bdaddr]
-                    try:
-                        ble_2thprint_process = launch_application(ble_2thprint_cmd, sweyn_cwd)
-                    except BlockingIOError as e:
-                        print(f"Caught BlockingIOError while launching LL2thprint application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
-                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                        force_reboot()
-                    except Exception as e:
-                        print(f"Caught an exception while launching LL2thprint application: {e}")
-                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                        force_reboot()
-
-                    if(ble_2thprint_process != None):
-                        ble_2thprint_thread = ApplicationThread(ble_2thprint_process, bdaddr, info_type="LL2thprint", timeout=10)
-                        try:
-                            ble_2thprint_thread.start()
-                            ble_external_tool_threads.append(ble_2thprint_thread)
-                        except Exception as e:
-                            print(f"Caught an exception while starting LL2thprint thread: {e}")
-                            # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                            force_reboot()
 
 
             # Wait for all threads to finish, before moving to the next bd_addr
@@ -672,6 +670,7 @@ def sniffle_thread_function():
     adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
     create_connection_follower = True
 
+    '''
     base_dir = '/dev/serial/by-id'
     # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
     pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
@@ -695,7 +694,10 @@ def sniffle_thread_function():
 
     # Use glob to match the pattern
     matching_files = glob.glob(full_pattern)
-    for serial_port_filename in matching_files:
+    '''
+
+    # Skip the first serial port and leave it for BetterGATTGetter.py, by using the [1:] notation to start from matching_files[1]
+    for serial_port_filename in matching_files[1:]:
         # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
         link_target_relative_path = os.readlink(serial_port_filename)
         link_target_absolute_path = os.path.abspath(os.path.join(os.path.dirname(serial_port_filename), link_target_relative_path))
@@ -719,9 +721,9 @@ def sniffle_thread_function():
                 hostname = os.popen('hostname').read().strip()
                 # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
                 if(serial_port_status[link_target_absolute_path] == 0):
-                    sniffle_cmd = ["python3", sniffle_path, f"-e", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
+                    sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
                 else:
-                    sniffle_cmd = ["python3", sniffle_path, f"-e", f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
+                    sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
                 #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
                 #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
 

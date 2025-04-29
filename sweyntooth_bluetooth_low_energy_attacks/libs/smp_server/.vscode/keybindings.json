@@ -1,7 +1,0 @@
-{
-    "key": "ctrl+shift+b",
-    "command": "terminator.run",
-    "args": [
-        "build*"
-    ]
-}

@@ -19,7 +19,7 @@ sudo ./setup_capture_helper_debian-based.sh
 
 And there's comments in that script if you want to see what's being done and why.
 
-If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth and Sweyntooth to get the full power of Blue2thprinting!
+If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth to get the full power of Blue2thprinting!
 
 ## Setup Braktooth
 
@@ -92,41 +92,6 @@ sudo ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exp
 Of course, replace `AA:BB:CC:11:22:33` with the BTC BDADDR you want to target.
 
 Once you have confirmed this works, you should set `btc_2thprint_enabled = True` in `~/central_app_launcher2.py`.
-
-## Setup Sweyntooth
-
-Place the Sweyntooth code in the location assumed by `central_app_launcher2.py`:
-
-```
-cp -r ~/Blue2thprinting/sweyntooth_bluetooth_low_energy_attacks ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
-```
-
-You are required to setup Sweyntooth to work **[by following the instructions in the Sweyntooth repository](https://github.com/Matheus-Garbelini/sweyntooth_bluetooth_low_energy_attacks)**.
-
-Once you get the custom firmware onto the Nordic device, the theoretical minimal instructions to make this local copy of Sweyntooth work are as follows:
-
-```
-cd ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
-sudo apt-get install python2.7
-wget -c https://bootstrap.pypa.io/pip/2.7/get-pip.py
-# need to install the Python 2.7 requirements in /root (sudo) because the Sweyntooth script will run with sudo
-sudo python2.7 get-pip.py
-# In case it warns you that it installed pip2.7 in a location that's not in your path, e.g. /home/user/.local/bin/, add that location to your PATH with "export PATH=$PATH:/home/user/.local/bin/"
-sudo pip2.7 install -r requirements.txt
-```
-
-**Manually confirm that Sweyntooth is working before attempting to run it from within `central_app_launcher2.py`:**
-
-If you're using a username other than "pi", edit the `BLE2TH_LOG_PATH` variable in `~/Downloads/sweyntooth_bluetooth_low_energy_attacks/LL2thprint.py`.
-
-```
-cd ~/Downloads/sweyntooth_bluetooth_low_energy_attacks
-sudo -E python2.7 LL2thprint.py /dev/ttyACM0 AA:BB:CC:11:22:33
-```
-
-Of course, replace `AA:BB:CC:11:22:33` with the BLE BDADDR you want to target, and `/dev/ttyACM0` with the correct TTY device (but that should be it by default if you don't e.g. have the GPS plugged in before it.)
-
-Once you have confirmed this works, you should set `ble_2thprint_enabled = True` in `~/central_app_launcher2.py`.
 
 # Capture Scripts Setup
 
