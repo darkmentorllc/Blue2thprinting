@@ -670,32 +670,6 @@ def sniffle_thread_function():
     adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
     create_connection_follower = True
 
-    '''
-    base_dir = '/dev/serial/by-id'
-    # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
-    pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
-
-    # Check if the base directory exists and is accessible
-    retry_count = 0
-    MAX_RETRY_COUNT = 360 # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late!)
-    while(retry_count < MAX_RETRY_COUNT):
-        if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
-            retry_count += 10
-            if(print_verbose): print(f"sniffle_thread_function: /dev/serial/by-id may not be accessible yet. Sleeping 10 seconds.")
-            time.sleep(10)
-        else:
-            break # It's accessible, try to access Sniffle dongles now
-    if(retry_count == MAX_RETRY_COUNT):
-        print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Fix sniffle_thread_function() or permissions.")
-        exit(-1)
-
-    # Construct the full pattern path
-    full_pattern = os.path.join(base_dir, pattern)
-
-    # Use glob to match the pattern
-    matching_files = glob.glob(full_pattern)
-    '''
-
     # Skip the first serial port and leave it for BetterGATTGetter.py, by using the [1:] notation to start from matching_files[1]
     for serial_port_filename in matching_files[1:]:
         # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
@@ -710,54 +684,54 @@ def sniffle_thread_function():
             serial_port_status[link_target_absolute_path] = 1
 
     while(True):
-            for link_target_absolute_path in serial_port_status.keys():
-                # Get just the "ttyUSB# part to append to file names so they're unique
-                short_name = link_target_absolute_path.split("/")[2]
-                target_adv_channel = 37 + adv_channel
-                adv_channel = (adv_channel + 1) % 3
-                # Launch the sniffer as a background thread
-                current_time = datetime.datetime.now()
-                launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
-                hostname = os.popen('hostname').read().strip()
-                # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
-                if(serial_port_status[link_target_absolute_path] == 0):
-                    sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
+        for link_target_absolute_path in serial_port_status.keys():
+            # Get just the "ttyUSB# part to append to file names so they're unique
+            short_name = link_target_absolute_path.split("/")[2]
+            target_adv_channel = 37 + adv_channel
+            adv_channel = (adv_channel + 1) % 3
+            # Launch the sniffer as a background thread
+            current_time = datetime.datetime.now()
+            launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
+            hostname = os.popen('hostname').read().strip()
+            # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
+            if(serial_port_status[link_target_absolute_path] == 0):
+                sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
+            else:
+                sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
+            #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
+            #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
+
+            try:
+                if(sniffle_stdout_logging):
+                    sniffle_append_stdout = open(f"{sniffle_pcap_log_folder}/Sniffle_stdout.log", "a")
                 else:
-                    sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow__{hostname}.pcap"]
-                #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
-                #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
+                    sniffle_append_stdout = open(f"/dev/null", "a")
+                sniffle_process = launch_application(sniffle_cmd, default_cwd, stdout=sniffle_append_stdout)
+                if(print_verbose): print(f"Setting {link_target_absolute_path} pid to {sniffle_process.pid}")
+                serial_port_status[link_target_absolute_path] = sniffle_process.pid
+            except BlockingIOError as e:
+                print(f"Caught BlockingIOError while launching Sniffle application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
+                # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
+                force_reboot()
+            except Exception as e:
+                print(f"Caught an exception while launching Sniffle application: {e}")
+                # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
+                force_reboot()
 
+            if(sniffle_process != None):
+                # TODO: I don't feel like adding a new parameter right now, so I'm just reusing the bdaddr to include info about the sniffle_cmd used to launch the process
+                launch_cmd_str = " ".join(sniffle_cmd)
+                individual_sniffle_instance_thread = ApplicationThread(sniffle_process, info_type="Sniffle", bdaddr="N/A", launch_cmd=launch_cmd_str, timeout=sniffle_log_rotate_in_seconds)
                 try:
-                    if(sniffle_stdout_logging):
-                        sniffle_append_stdout = open(f"{sniffle_pcap_log_folder}/Sniffle_stdout.log", "a")
-                    else:
-                        sniffle_append_stdout = open(f"/dev/null", "a")
-                    sniffle_process = launch_application(sniffle_cmd, default_cwd, stdout=sniffle_append_stdout)
-                    if(print_verbose): print(f"Setting {link_target_absolute_path} pid to {sniffle_process.pid}")
-                    serial_port_status[link_target_absolute_path] = sniffle_process.pid
-                except BlockingIOError as e:
-                    print(f"Caught BlockingIOError while launching Sniffle application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
-                    # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                    force_reboot()
+                    individual_sniffle_instance_thread.start()
+                    #Sniffle_individual_sniffer_threads_list.append(individual_sniffle_instance_thread)
                 except Exception as e:
-                    print(f"Caught an exception while launching Sniffle application: {e}")
+                    print(f"Caught an exception while starting Sniffle thread: {e}")
                     # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                     force_reboot()
-
-                if(sniffle_process != None):
-                    # TODO: I don't feel like adding a new parameter right now, so I'm just reusing the bdaddr to include info about the sniffle_cmd used to launch the process
-                    launch_cmd_str = " ".join(sniffle_cmd)
-                    individual_sniffle_instance_thread = ApplicationThread(sniffle_process, info_type="Sniffle", bdaddr="N/A", launch_cmd=launch_cmd_str, timeout=sniffle_log_rotate_in_seconds)
-                    try:
-                        individual_sniffle_instance_thread.start()
-                        #Sniffle_individual_sniffer_threads_list.append(individual_sniffle_instance_thread)
-                    except Exception as e:
-                        print(f"Caught an exception while starting Sniffle thread: {e}")
-                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                        force_reboot()
-            # We have now launched threads for all available serial ports
-            with start_sniffle_threads_condition:
-                start_sniffle_threads_condition.wait()
+        # We have now launched threads for all available serial ports
+        with start_sniffle_threads_condition:
+            start_sniffle_threads_condition.wait()
 
     # End while(True)
 
