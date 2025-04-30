@@ -24,7 +24,7 @@ from BGG_Helper_SMP import *
 from BGG_Helper_Output import *
 
 def main():
-    global target_bdaddr, target_bdaddr_type_public, verbose
+    global central_bdaddr, peripheral_bdaddr, peripheral_bdaddr_type_public, verbose
     global hw, _aa, pcwriter
 
     aparse = argparse.ArgumentParser(description="Code to enumerate public GATT information")
@@ -81,11 +81,12 @@ def main():
             return
         globals.hw.cmd_mac(bdaddr_bytes, False)
 
-        globals.target_bdaddr = args.bdaddr
-        globals.target_bdaddr_type_public = args.public
+        globals.peripheral_bdaddr = args.bdaddr
+        globals.peripheral_bdaddr_type_public = args.public
 
     # initiator/Central needs a BDADDR
     central_bdaddr_bytes = bytes(globals.hw.random_addr())
+    globals.central_bdaddr = ":".join([f"{b:02x}" for b in reversed(central_bdaddr_bytes)])
 
     # reset preloaded encrypted connection interval changes
     globals.hw.cmd_interval_preload()
@@ -283,8 +284,36 @@ def stateful_GATT_getter(actual_body_len, dpkt):
     manage_read_all_handles(actual_body_len, dpkt)
 
     # Current exit conditions
-    if(globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv):
+#    if(globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv):
+    if(globals.smp_pairing_random_recv):
         print_and_exit()
+
+##############################################################################################################
+# Function to call all the sub-functions for SMP pairing
+##############################################################################################################
+
+def stateful_incoming_SMP_handler(actual_body_len, dpkt):
+    if(actual_body_len >= 7):
+        actual_body_len = len(dpkt.body) # The point of actual_body_len is to iterate based on the known size of actual bytes that python is holding, not any ACID lengths
+        vprint(f"actual_body_len = 0x{actual_body_len:02x}")
+
+        header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode  = unpack("<BBHHB", dpkt.body[:7])
+        # Check if it's SMP (CID = 6) and header says it's l2cap w/o fragmentation (I can't handle fragments yet)
+        if(cid_ACID == 0x0006 and (header_ACID & 0b10 == 0b10)):
+            vmultiprint(header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode)
+
+            incoming_SMP_Pairing(smp_opcode, actual_body_len, dpkt, max_key_size=0x10)
+            incoming_SMP_Confirm_legacy(smp_opcode, actual_body_len, dpkt)
+            incoming_SMP_Random(smp_opcode, actual_body_len, dpkt)
+
+
+def stateful_outgoing_SMP_handler():
+    if(not globals.all_characteristic_handles_recv):
+        return
+
+    outgoing_SMP_Pairing()
+    outgoing_SMP_Confirm_Legacy()
+    outgoing_SMP_Random()
 
 def print_sniffle_message_or_packet(msg, quiet):
     global hw
@@ -329,16 +358,22 @@ def print_packet(dpkt, quiet):
             # Send any LL_CTRL packets we need to send based on updates due to incoming LL_CTRL packets
             stateful_LL_CTRL_outgoing_handler()
         else:
-            # Begin GATT enumeration process
-            stateful_GATT_getter(actual_body_len, dpkt)
-            # Get SMP information once GATT enumeration is done
-            handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
+            if(actual_body_len >= 4):
+                header_ACID, ll_len_ACID, l2cap_len_ACID, l2cap_cid_ACID = unpack("<BBBB", dpkt.body[:4])
+                # Need at least 4 bytes for L2CAP header for all of the below types of packets
+                # Begin GATT enumeration process
+                stateful_GATT_getter(actual_body_len, dpkt)
+                # Get SMP information once GATT enumeration is done
+                stateful_incoming_SMP_handler(actual_body_len, dpkt)
+                stateful_outgoing_SMP_handler()
+                # TODO: Add in L2CAP_CONNECTION_PARAMETER_UPDATE_REQ as a nice-to-have
 
     # Use empty packets as an opportunity see if we need to send any further packets
     elif(actual_body_len == 2):
         # Send any LL_CTRL packets we need to send
         stateful_LL_CTRL_outgoing_handler()
         stateful_GATT_getter(actual_body_len, dpkt)
+        stateful_outgoing_SMP_handler()
 
 
 if __name__ == "__main__":

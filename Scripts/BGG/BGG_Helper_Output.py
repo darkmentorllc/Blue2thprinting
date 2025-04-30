@@ -5,15 +5,15 @@ import globals
 from BGG_Helper_All import *
 
 def append_common(tokens):
-    if(globals.target_bdaddr_type_public):
+    if(globals.peripheral_bdaddr_type_public):
         tokens.append("public")
     else:
         tokens.append("random")
-    tokens.append(f"{globals.target_bdaddr}")
+    tokens.append(f"{globals.peripheral_bdaddr}")
 
 def write_to_csv(tokens):
-    global target_bdaddr
-    with open(f"/tmp/GATTPRINT_{globals.target_bdaddr.replace(':','_')}.csv", 'a', newline='\n') as csvfile:
+    global peripheral_bdaddr
+    with open(f"/tmp/GATTPRINT_{globals.peripheral_bdaddr.replace(':','_')}.csv", 'a', newline='\n') as csvfile:
         csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL, lineterminator="\n")
         csvwriter.writerow(tokens)
 
@@ -117,6 +117,13 @@ def print_all_info():
         if(verbose2): print(f"Service {i+1} handles 0x{begin_handle:04x}-0x{end_handle:04x} = UUID 0x{UUID128}")
         store_services_in_existing_format_expectations(begin_handle, end_handle, UUID128)
         i += 1
+
+    # Random helpful summary info
+    vprint("HANDLES WITH ERRORS")
+    for handle in sorted(globals.handles_with_error_rsp.keys()):
+        #vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {att_error_strings[globals.handles_with_error_rsp[handle]]}")
+        vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} ({globals.handles_with_error_rsp[handle]} = {globals.att_errorcode_to_str[globals.handles_with_error_rsp[handle]]})")
+
 
 def print_and_exit():
     print_all_info()
