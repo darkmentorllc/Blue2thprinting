@@ -49,41 +49,6 @@ cd ~/Blue2thprinting/Analysis
 ./Import_all_HCI_and_PCAP.py --HCI-logs-folder ../Logs/btmon/ --pcaps-folder ../Logs/sniffle/
 ```
 
-## Importing GATT data from GATTprint.log
-
-Both `central_app_launcher2.py` and `gatttool` log information about attempted and successful GATTprinting to the file `/home/user/Blue2thprinting/Logs/GATTprint.log` (or alt user home directory if you reconfigured it). To import this data into the database, (copy the data from your capture system to your analysis system, if applicable, and then) run the following:
-
-```
-cd ~/Blue2thprinting/Analysis/
-cat ~/Blue2thprinting/Logs/GATTprint*.log | sort | uniq > GATTprint_dedup.log
-python3 ./parse_GATTPRINT_2db.py
-```
-
-The above `cat` step is useful both to speed up the parsing of a single host's data (if it queried the same host multiple times), but also to combine data from multiple hosts, and avoid unnecessary duplicative mysql imports.
-
-**To confirm that some data was successfully imported, you can issue:**
-
-```
-mysql -u user -pa -D bt -e "SELECT * FROM GATT_characteristics LIMIT 10;"
-```
-
-## Importing BLE LL data from BLE_2THPRINT.log
-
-Both `central_all_launcher2.py` and my `LL2thprint.py` Sweyntooth module log information about attempted and successful LL2thprint to the file `/home/user/Blue2thprinting/Logs/BLE_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, (copy the data from your capture system to your analysis system, if applicable, and then) run the following:
-
-```
-cd ~/Blue2thprinting/Analysis/
-cat ~/Blue2thprinting/Logs/BLE_2THPRINT*.log | sort | uniq > BLE_2THPRINT_dedup.log
-python3 ./parse_BLE_2THPRINT_2db.py
-```
-
-The above `cat` step is useful both to speed up the parsing of a single host's data (if it queried the same host multiple times), but also to combine data from multiple hosts, and avoid unnecessary duplicative mysql imports.
-
-**To confirm that some data was successfully imported, you can issue:**
-
-```
-mysql -u user -pa -D bt -e "SELECT * FROM LL_VERSION_IND LIMIT 10;"
-```
 
 ## Importing BTC LMP data from BTC_2THPRINT.log
 
