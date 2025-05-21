@@ -170,6 +170,7 @@ def import_bt_CID_to_names():
     TME.TME_glob.bt_CID_to_names[0x4C00] = "Apple, Inc. (wrong-endian)"
     TME.TME_glob.bt_CID_to_names[0x7500] = "Samsung (wrong-endian)"
     TME.TME_glob.bt_CID_to_names[0xff19] = "Samsung (buggy)"
+    TME.TME_glob.bt_CID_to_names[0xD906] = "Shanghai Mountain View Silicon Co.,Ltd. (wrong-endian)"
 
 #    qprint(TME.TME_glob.bt_CID_to_names)
 #    qprint(len(TME.TME_glob.bt_CID_to_names))

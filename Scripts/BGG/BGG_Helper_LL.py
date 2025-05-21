@@ -205,7 +205,7 @@ def send_LL_PHY_REQ(tx_phys, rx_phys):
     vprint("Sent LL_PHY_REQ!")
 
 
-def send_LL_PHY_REQ_and_update_state():
+def  send_LL_PHY_REQ_and_update_state():
     global current_ll_ctrl_state
     global ll_phy_req_sent_time, ll_phy_req_sent
     # Don't send this if either we weren't directed on the CLI to attempt 2M PHY update

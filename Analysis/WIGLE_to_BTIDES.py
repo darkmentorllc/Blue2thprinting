@@ -131,6 +131,10 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         best_lat = row[9]
         best_lon = row[10]
 
+        # Skip processing if any of the lat/lon values are infinite or all zero
+        if any(map(math.isinf, [last_lat, last_lon, best_lat, best_lon])):
+            continue
+
         if type == "B":
             bdaddr = bssid_ACID
             bdaddr_rand = 0
@@ -153,6 +157,14 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             vprint(f"\t Last GPS location: lat: {last_lat}, lon: {last_lon}")
             data["lat"] = last_lat
             data["lon"] = last_lon
+        else:
+            vprint(f"\t No GPS location found")
+            continue
+
+        # Check for invalid GPS coordinates and skip if found (apparently these can exist in the DB. Not sure why though.)
+        if data["lat"] > 90.0 or data["lat"] < -90.0 or data["lon"] > 180.0 or data["lon"] < -180.0:
+            vprint(f"\t Invalid GPS coordinates found, skipping")
+            continue
 
         # See if there's any RSSI in the location table for this exact GPS coordinate (irrespective of time)
         query = "SELECT * FROM location WHERE bssid = ? AND lat = ? AND lon = ?"

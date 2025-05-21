@@ -26,37 +26,6 @@ errorcode_0E_ATT_Unlikely_Error = 0x0E
 errorcode_0F_ATT_Insufficient_Encryption = 0x0F
 errorcode_10_ATT_Unsupported_Group_Type = 0x10
 
-errorcode_to_str = {
-    1: "Invalid Handle",
-    2: "Read Not Permitted",
-    3: "Write Not Permitted",
-    4: "Invalid PDU",
-    5: "Insufficient Authentication",
-    6: "Request Not Supported",
-    7: "Invalid Offset",
-    8: "Insufficient Authorization",
-    9: "Prepare Queue Full",
-    10: "Attribute Not Found",
-    11: "Attribute Not Long",
-    12: "Encryption Key Size Too Short",
-    13: "Invalid Attribute Value Length",
-    14: "Unlikely Error",
-    15: "Insufficient Encryption",
-    16: "Unsupported Group Type",
-    17: "Insufficient Resources",
-    18: "Database Out of Sync",
-    19: "Value Not Allowed",
-    0x80: "Unknown Application Error 0",
-    0x81: "Unknown Application Error 1",
-    0x82: "Unknown Application Error 2",
-    0x83: "Unknown Application Error 3",
-    0x84: "Unknown Application Error 4",
-    0xfc: "Write Request Rejected",
-    0xfd: "Client Characteristic Configuration Descriptor Improperly Configured",
-    0xfe: "Procedure Already in Progress",
-    0xff: "Out of Range"
-}
-
 def send_ATT_ERROR_RSP(request_opcode, handle_in_error, error_code):
     # LLID = 2 (L2CAP w/o fragmentation)
     # L2CAP length = 0x0007 (1 byte opcode + 2 byte begin handle + 2 byte end handle + 2 byte group type)
@@ -265,7 +234,11 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
                     vprint(f"manage_ATT_EXCHANGE_MTU: Rejecting ATT MTU request for now (to send our own)")
 
     # Process outgoing
-    if(globals.current_ll_ctrl_state.PHY_updated and globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated):
+    if(globals.current_ll_ctrl_state.supported_PHYs == 0x01): # Meaning no request was made to update the PHY:
+        conditions = globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
+    else: # Meaning a request was made to update the PHY:
+       conditions = globals.current_ll_ctrl_state.PHY_updated and globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
+    if(conditions):
         if(not globals.att_exchange_MTU_rsp_sent):
             send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)
             globals.att_MTU_negotiated = True
@@ -357,7 +330,7 @@ def manage_ATT_FIND_INFORMATION(actual_body_len, dpkt):
                 elif(att_opcode == opcode_ATT_ERROR_RSP and actual_body_len >= 11):
                     req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
                     vmultiprint(req_opcode_in_error, handle_in_error)
-                    vprint(f"error_code = 0x{error_code:02x} = {errorcode_to_str[error_code]}")
+                    vprint(f"error_code = 0x{error_code:02x} = {globals.att_errorcode_to_str[error_code]}")
                     # Store something for reference later
                     globals.handles_with_error_rsp[handle_in_error] = error_code
                     #globals.received_handles[handle_in_error] = v1b(error_code) # Store as a single byte so that it can be differentiated from a UUID16 based on length

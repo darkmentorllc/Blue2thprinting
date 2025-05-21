@@ -26,19 +26,11 @@ first_received_packet_time = 0
 connEventCount = 0
 
 ######################################################################################
-# Storage for the data returned from the GATT client so it can be output at the end
-######################################################################################
-
-received_handles = {}
-service_received_handles = {}
-all_handles_received_values = {}
-characteristic_descriptor_handles = {}
-handles_with_error_rsp = {}
-
-# TODO: Get rid of some of the below state transition variables? Things that aren't actually shared between files could just be intra-file globals...
-######################################################################################
 # State transition globals so we can get each data type before moving on to the next
 ######################################################################################
+
+LLID_data = 2 # 0b10 for unfragmented L2CAP PDUs
+LLID_ctrl = 3 # 0b11 for LL control PDUs
 
 ll_packet_states_to_names = {
     0: "Not sent",
@@ -114,7 +106,6 @@ class ll_ctrl_state:
 
 current_ll_ctrl_state = ll_ctrl_state()
 
-
 ll_length_req_sent = False
 ll_length_req_sent_time = 0
 ll_length_req_recv = False
@@ -151,6 +142,17 @@ ll_phy_rsp_recv_time = 0
 ll_phy_update_ind_sent = False
 ll_phy_update_ind_sent_time = 0
 
+# L2CAP state
+l2cap_connection_parameter_update_req_sent = False
+l2cap_connection_parameter_update_rsp_recv = False
+l2cap_credit_based_connection_req_sent = False
+l2cap_credit_based_connection_rsp_recv = False
+l2cap_le_credit_based_connection_req_sent = False
+l2cap_le_credit_based_connection_rsp_recv = False
+l2cap_flow_control_credit_ind_sent = False
+
+# ATT state
+ATT_CID_bytes = b'\x04\x00'
 att_mtu = 23 # Defaults to 23, updated if we get back an ATT_EXCHANGE_MTU_RSP
 att_exchange_MTU_req_recv = False
 att_exchange_MTU_req_sent = False
@@ -160,6 +162,48 @@ att_exchange_MTU_rsp_sent_time = 0
 att_exchange_MTU_rsp_recv = False
 att_MTU_negotiated = False
 
+att_errorcode_to_str = {
+    1: "Invalid Handle",
+    2: "Read Not Permitted",
+    3: "Write Not Permitted",
+    4: "Invalid PDU",
+    5: "Insufficient Authentication",
+    6: "Request Not Supported",
+    7: "Invalid Offset",
+    8: "Insufficient Authorization",
+    9: "Prepare Queue Full",
+    10: "Attribute Not Found",
+    11: "Attribute Not Long",
+    12: "Encryption Key Size Too Short",
+    13: "Invalid Attribute Value Length",
+    14: "Unlikely Error",
+    15: "Insufficient Encryption",
+    16: "Unsupported Group Type",
+    17: "Insufficient Resources",
+    18: "Database Out of Sync",
+    19: "Value Not Allowed",
+    0x80: "Unknown Application Error 0",
+    0x81: "Unknown Application Error 1",
+    0x82: "Unknown Application Error 2",
+    0x83: "Unknown Application Error 3",
+    0x84: "Unknown Application Error 4",
+    0xfc: "Write Request Rejected",
+    0xfd: "Client Characteristic Configuration Descriptor Improperly Configured",
+    0xfe: "Procedure Already in Progress",
+    0xff: "Out of Range"
+}
+
+######################################################################################
+# Storage for the data returned from the GATT client so it can be output at the end
+######################################################################################
+
+received_handles = {}
+service_received_handles = {}
+all_handles_received_values = {}
+characteristic_descriptor_handles = {}
+handles_with_error_rsp = {}
+
+# GATT state
 read_primary_services_req_sent = False
 all_primary_services_recv = False
 final_primary_service_handle = 1
@@ -179,7 +223,16 @@ characteristic_info_req_sent = False
 all_characteristic_handles_recv = False
 last_sent_read_handle = 1
 
+# SMP state
+SMP_CID_bytes = b'\x06\x00'
 smp_legacy_pairing_req_sent = False
 smp_legacy_pairing_rsp_recv = False
 smp_SC_pairing_req_sent = False
 smp_SC_pairing_rsp_recv = False
+smp_pairing_confirm_legacy_sent = False
+smp_pairing_confirm_legacy_recv = False
+smp_pairing_random_sent = False
+smp_pairing_random_recv = False
+preq = None
+pres = None
+lp_rand_i = None
