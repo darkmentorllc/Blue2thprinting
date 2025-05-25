@@ -21,7 +21,7 @@ static const char *filter_lmp_encryption_key_size_req;
 
 // Vars
 
-char * BTC2TH_LOG_PATH = "/home/pi/BTC_2THPRINT.log";
+char * BTC2TH_LOG_PATH = "/home/pi/Blue2thprinting/Logs/BTC_2THPRINT.log";
 
 FILE * glogfile;
 
