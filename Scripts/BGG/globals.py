@@ -25,6 +25,12 @@ verbose = True
 first_received_packet_time = 0
 connEventCount = 0
 
+skip_apple = False
+# This is only set to True if skip_apple is True, and if we've already checked the GATT Manufacturer characteristic
+detect_apple_done = False
+apple_mfg_req_sent = False
+apple_mfg_rsp_recv = False
+
 ######################################################################################
 # State transition globals so we can get each data type before moving on to the next
 ######################################################################################
@@ -114,11 +120,6 @@ ll_length_rsp_sent = False
 ll_length_rsp_sent_time = 0
 ll_length_rsp_recv = False
 ll_length_rsp_recv_time = 0
-#ll_length_negotiated = False    # Set this to True if they send a LL_LENGTH_RSP, not an error
-                                # And also don't do a ATT_EXCHANGE_MTU until this is True. Otherwise
-                                # the responses will be fragmented (which we can't currently handle)
-# ll_length_max_rx_octet = 0
-# ll_length_max_tx_octet = 0
 
 ll_version_ind_sent = False
 ll_version_ind_sent_time = 0

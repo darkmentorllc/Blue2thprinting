@@ -10,6 +10,8 @@ opcode_ATT_EXCHANGE_MTU_REQ = 0x02
 opcode_ATT_EXCHANGE_MTU_RSP = 0x03
 opcode_ATT_FIND_INFORMATION_REQ = 0x04
 opcode_ATT_FIND_INFORMATION_RSP = 0x05
+opcode_ATT_FIND_BY_TYPE_VALUE_REQ = 0x06
+opcode_ATT_FIND_BY_TYPE_VALUE_RSP = 0x07
 opcode_ATT_READ_REQ = 0x0A
 opcode_ATT_READ_RSP = 0x0B
 opcode_ATT_READ_BY_GROUP_TYPE_REQ = 0x10
@@ -34,10 +36,9 @@ def send_ATT_ERROR_RSP(request_opcode, handle_in_error, error_code):
     # Request Opcode in Error = request_opcode
     # Handle in error = handle_in_error
     # Error code = error_code
-    ATT_CID_bytes = b'\x04\x00'
     payload_bytes = v1b(opcode_ATT_ERROR_RSP) + v1b(request_opcode) + v2b(handle_in_error) + v1b(error_code)
     payload_len_bytes = v2b(len(payload_bytes))
-    write_outbound_pkt(2, payload_len_bytes + ATT_CID_bytes + payload_bytes)
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Sent ATT_ERROR_RSP of type 0x{error_code:02x} due to Request Opcode 0x{request_opcode:02x}")
 
 # Send this to hopefully make the other side send back more responses per packet (so we have less back and forth)
@@ -47,10 +48,9 @@ def send_ATT_EXCHANGE_MTU_REQ(client_rx_mtu):
     # CID = 0x0004 (ATT)
     # Opcode = 0x02 (Exchange MTU request)
     # Client Rx MTU = client_rx_mtu (typically set to 0x00f7 (247) - common seeming max value seen by others)
-    ATT_CID_bytes = b'\x04\x00'
     payload_bytes = v1b(opcode_ATT_EXCHANGE_MTU_REQ) + v2b(client_rx_mtu)
     payload_len_bytes = v2b(len(payload_bytes))
-    write_outbound_pkt(2, payload_len_bytes + ATT_CID_bytes + payload_bytes)
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"ATT Exchange MTU sent with ClientRxMTU = 0x{client_rx_mtu:04x}")
 
 def send_ATT_EXCHANGE_MTU_RSP(server_rx_mtu):
@@ -59,10 +59,9 @@ def send_ATT_EXCHANGE_MTU_RSP(server_rx_mtu):
     # CID = 0x0004 (ATT)
     # Opcode = 0x03 (Exchange MTU response)
     # Server Rx MTU = server_rx_mtu (typically set to 0x00f7 (247) - common seeming max value seen by others)
-    ATT_CID_bytes = b'\x04\x00'
     payload_bytes = v1b(opcode_ATT_EXCHANGE_MTU_RSP) + v2b(server_rx_mtu)
     payload_len_bytes = v2b(len(payload_bytes))
-    write_outbound_pkt(2, payload_len_bytes + ATT_CID_bytes + payload_bytes)
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"ATT Exchange MTU sent with ClientRxMTU = 0x{server_rx_mtu:04x}")
 
 def send_ATT_READ_BY_GROUP_TYPE_REQ(begin_handle, group_type):
@@ -72,10 +71,9 @@ def send_ATT_READ_BY_GROUP_TYPE_REQ(begin_handle, group_type):
     # Opcode = 0x10 (Read by group type request - ATT_READ_BY_GROUP_TYPE_REQ)
     # Starting handle = begin_handle (e.g. 0x0001)
     # Ending handle = 0xFFFF
-    ATT_CID_bytes = b'\x04\x00'
-    payload_bytes = opcode_ATT_READ_BY_GROUP_TYPE_REQ.to_bytes(1, byteorder='little') + begin_handle.to_bytes(2, byteorder='little') + b'\xff\xff' + group_type.to_bytes(2, byteorder='little')
-    payload_len_bytes = len(payload_bytes).to_bytes(2, byteorder='little')
-    write_outbound_pkt(2, payload_len_bytes + ATT_CID_bytes + payload_bytes)
+    payload_bytes = v1b(opcode_ATT_READ_BY_GROUP_TYPE_REQ) + v2b(begin_handle) + b'\xff\xff' + v2b(group_type)
+    payload_len_bytes = v2b(len(payload_bytes))
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Read by group type request for handles 0x{begin_handle:04x}-0xffff and type 0x{group_type:04x}")
 
 def send_ATT_FIND_INFORMATION_REQ(begin_handle):
@@ -85,8 +83,9 @@ def send_ATT_FIND_INFORMATION_REQ(begin_handle):
     # Opcode = 0x04 (Find information request - ATT_FIND_INFORMATION_REQ)
     # Starting handle = begin_handle (e.g. 0x0001)
     # Ending handle = 0xFFFF
-    packet_bytes = b'\x05\x00\x04\x00' + opcode_ATT_FIND_INFORMATION_REQ.to_bytes(1, byteorder='little') + begin_handle.to_bytes(2, byteorder='little') + b'\xff\xff'
-    write_outbound_pkt(2, packet_bytes)
+    payload_bytes = v1b(opcode_ATT_FIND_INFORMATION_REQ) + begin_handle.to_bytes(2, byteorder='little') + b'\xff\xff'
+    payload_len_bytes = v2b(len(payload_bytes))
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Sent find info request for handles 0x{begin_handle:04x}-0xffff!")
 
 def send_ATT_READ_REQ(begin_handle):
@@ -95,9 +94,25 @@ def send_ATT_READ_REQ(begin_handle):
     # CID = 0x0004 (ATT)
     # Opcode = 0x0A (Read request - ATT_READ_REQ)
     # Handle = begin_handle (e.g. 0x0001)
-    packet_bytes = b'\x03\x00\x04\x00' + opcode_ATT_READ_REQ.to_bytes(1, byteorder='little') + begin_handle.to_bytes(2, byteorder='little')
-    write_outbound_pkt(2, packet_bytes)
+    payload_bytes = v1b(opcode_ATT_READ_REQ) + begin_handle.to_bytes(2, byteorder='little')
+    payload_len_bytes = v2b(len(payload_bytes))
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Sent read request for handle 0x{begin_handle:04x}")
+
+def send_ATT_FIND_BY_TYPE_VALUE_REQ_0x2A29_Apple():
+    # LLID = 2 (L2CAP w/o fragmentation)
+    # CID = 0x0004 (ATT)
+    # Opcode = 0x06 (Read request - ATT_FIND_BY_TYPE_VALUE_REQ)
+    # Starting Handle = 0x0001
+    # Ending Handle = 0xFFFF
+    # Attribute Type = 0x2A29
+    # Attribute Value = "Apple Inc." (0x41, 0x70, 0x70, 0x6C, 0x65, 0x20, 0x49, 0x6E, 0x63, 0x2E)
+    payload_bytes = v1b(opcode_ATT_FIND_BY_TYPE_VALUE_REQ) + b'\x01\x00' + b'\xff\xff' + b'\x29\x2a' + b'\x41\x70\x70\x6C\x65\x20\x49\x6E\x63\x2E'
+    payload_len_bytes = v2b(len(payload_bytes))
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
+
+    vprint(f"Sent Apple-specific ATT_FIND_BY_TYPE_VALUE_REQ for 0x2A29 (Apple Inc.)")
+
 
 #########
 
@@ -185,6 +200,7 @@ def is_packet_ATT_type(opcode, dpkt):
         if(cid_ACID == 0x0004 and (header_ACID & 0b10 == 0b10) and att_opcode == opcode):
             return (True, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode)
     return (False, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode)
+
 
 ####################################################################################
 # Exchange ATT_MTU to try and get more data in less packets

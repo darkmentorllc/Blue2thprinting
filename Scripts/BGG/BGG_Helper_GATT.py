@@ -39,6 +39,37 @@ att_error_strings = {
 }
 
 ####################################################################################
+# Detect Apple devices based on
+####################################################################################
+def detect_Apple_by_GATT_Manufacturer_Name(actual_body_len, dpkt):
+    if(globals.detect_apple_done):
+        return False
+
+    if(not globals.apple_mfg_req_sent):
+        # Send a ATT_FIND_BY_TYPE_VALUE_REQ to find the Manufacturer Name (0x2A29) == "Apple"
+        send_ATT_FIND_BY_TYPE_VALUE_REQ_0x2A29_Apple()
+        globals.apple_mfg_req_sent = True
+
+    (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_FIND_BY_TYPE_VALUE_RSP, dpkt)
+    # Because this is the only ATT_FIND_BY_TYPE_VALUE_REQ we send, if we get any ATT_FIND_BY_TYPE_VALUE_RSP, rather than error,
+    # that means the other side must have had a match, so we can assume it's an Apple device
+    if(matched):
+        vmultiprint(actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode)
+        globals.apple_mfg_rsp_recv = True
+        return True
+
+    # Look for ATT_ERROR_RSP
+    (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_ERROR_RSP, dpkt)
+    if(matched and actual_body_len >= 11):
+        req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
+        if(req_opcode_in_error == opcode_ATT_FIND_BY_TYPE_VALUE_REQ and handle_in_error == 0x0001):
+            globals.apple_mfg_rsp_recv = True
+            print(f"-----> ATT_FIND_BY_TYPE_VALUE phase done for Manufacturer Name, moving to next phase")
+            globals.detect_apple_done = True
+
+    return False
+
+####################################################################################
 # Send ATT_READ_BY_GROUP_TYPE_REQ for Primary (0x2800) Services
 ####################################################################################
 # Note: this is needed because there can be discontinuities in the handle ranges
@@ -222,3 +253,52 @@ def manage_read_all_handles(actual_body_len, dpkt):
                             globals.all_characteristic_handles_recv = True
                             print(f"-------> ATT_READ* phase done, moving to next phase")
                             print_and_exit()
+
+##############################################################################################################
+# Function to call all the sub-functions to meet all the prerequisites of various devices to GET ALL THE GATT!
+##############################################################################################################
+def stateful_GATT_getter(actual_body_len, dpkt):
+
+    if(globals.skip_apple):
+        # See if we can get the GATT ManufacturerName (0x2a29), and if it's set to Apple, and if so
+        if(detect_Apple_by_GATT_Manufacturer_Name(actual_body_len, dpkt)):
+            vprint("Apple device detected based on GATT Manufacturer Name, exiting!")
+            exit(0x0A)
+
+    ####################################################################################
+    # Exchange ATT_MTU to try and get more data in less packets
+    ####################################################################################
+    manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt)
+
+    ####################################################################################
+    # Some devices (like AppleTV) try to enumerate us. This rejects them.
+    ####################################################################################
+    manage_peripheral_info_requests(actual_body_len, dpkt)
+
+    ####################################################################################
+    # Send ATT_READ_BY_GROUP_TYPE_REQ for Primary (0x2800) Services
+    ####################################################################################
+    # Note: this is needed because there can be discontinuities in the handle ranges
+    if(manage_GATT_Primary_Services(actual_body_len, dpkt)):
+        return
+
+    ####################################################################################
+    # Send ATT_READ_BY_GROUP_TYPE_REQ for Secondary (0x2801) Services
+    ####################################################################################
+    # Note: this is needed because there can be discontinuities in the handle ranges
+    if(manage_GATT_Secondary_Services(actual_body_len, dpkt)):
+        return
+
+    #################################################################################
+    # Send ATT_FIND_INFORMATION_REQs to find all handles, declarations, & descriptors
+    #################################################################################
+    manage_ATT_FIND_INFORMATION(actual_body_len, dpkt)
+
+    ################################################################################
+    # Read all Services, Characteristics, and Characteristic Values from all handles
+    ################################################################################
+    manage_read_all_handles(actual_body_len, dpkt)
+
+    # Current exit conditions
+    if(globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv):
+        print_and_exit()
