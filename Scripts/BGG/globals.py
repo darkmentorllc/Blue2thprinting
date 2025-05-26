@@ -25,6 +25,8 @@ verbose = True
 first_received_packet_time = 0
 connEventCount = 0
 
+attempt_2M_PHY_update = False
+
 skip_apple = False
 # This is only set to True if skip_apple is True, and if we've already checked the GATT Manufacturer characteristic
 detect_apple_done = False

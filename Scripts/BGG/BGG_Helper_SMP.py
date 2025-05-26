@@ -8,6 +8,8 @@ opcode_SMP_Pairing_Req = 0x01
 opcode_SMP_Pairing_Rsp = 0x02
 opcode_SMP_Pairing_Failed = 0x05
 
+pairing_failure_reason_Pairing_Not_Supported = 0x05
+
 def send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist):
     global opcode_SMP_Pairing_Req
     # LLID = 2 (L2CAP w/o fragmentation)
@@ -38,7 +40,6 @@ def send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_
 def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
     global all_characteristic_handles_recv, handles_with_error_rsp
     global smp_legacy_pairing_req_sent, smp_legacy_pairing_rsp_recv
-#    if(globals.all_characteristic_handles_recv and len(globals.handles_with_error_rsp) != 0):
     if(globals.all_characteristic_handles_recv):
         if(not globals.smp_legacy_pairing_req_sent):
             vprint("HANDLES WITH ERRORS")
@@ -76,16 +77,21 @@ def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
                         return
                         # print_and_exit()
                     elif(smp_opcode == opcode_SMP_Pairing_Failed and actual_body_len == 8):
-                        # Try Secure Connections pairing
-                        if(not globals.smp_SC_pairing_req_sent):
-                            io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
-                            oob_data = 0x00
-                            auth_req = 0x0C # SC = 0x8 | MITM = 0x4
-                            max_key_size = 0x10 # Set to 0x07 for KNOB test
-                            init_key_dist = 0x00 # 0x08
-                            resp_key_dist = 0x00 # 0x0a
-                            send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
-                            globals.smp_SC_pairing_req_sent = True
+                        failure_reason, = unpack("<B", dpkt.body[7:8])
+                        if(failure_reason == pairing_failure_reason_Pairing_Not_Supported):
+                            globals.smp_legacy_pairing_rsp_recv = True
+                            return
                         else:
-                            globals.smp_SC_pairing_rsp_recv = True
-                        return
+                            # Try Secure Connections pairing
+                            if(not globals.smp_SC_pairing_req_sent):
+                                io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
+                                oob_data = 0x00
+                                auth_req = 0x0C # SC = 0x8 | MITM = 0x4
+                                max_key_size = 0x10 # Set to 0x07 for KNOB test
+                                init_key_dist = 0x00 # 0x08
+                                resp_key_dist = 0x00 # 0x0a
+                                send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+                                globals.smp_SC_pairing_req_sent = True
+                            else:
+                                globals.smp_SC_pairing_rsp_recv = True
+                            return

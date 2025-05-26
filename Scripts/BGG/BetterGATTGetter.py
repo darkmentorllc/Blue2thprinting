@@ -18,6 +18,7 @@ import math
 import globals
 from BGG_Helper_All import *
 from BGG_Helper_LL import *
+from BGG_Helper_L2CAP import *
 from BGG_Helper_ATT import *
 from BGG_Helper_GATT import *
 from BGG_Helper_SMP import *
@@ -68,6 +69,7 @@ def main():
         globals.verbose = False
 
     if(args.attempt_2M_PHY_update):
+        globals.attempt_2M_PHY_update = True
         globals.current_ll_ctrl_state.supported_PHYs = 0x2
     else:
         globals.current_ll_ctrl_state.supported_PHYs = 0x1
@@ -115,7 +117,7 @@ def main():
                 if(not re.search(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
-                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, latency=0, timeout=50)
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=10, latency=0, timeout=50)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
                 else:
                     linux_retry_count += 1
@@ -157,6 +159,7 @@ def apple_advertisement(dpkt, actual_body_len):
                 # Apple has had endianness issues in the past, so check both endiannesses
                 if(company_id == 0x004C or company_id == 0x4C00):
                     return True
+                i += adv_data_item_len + 1 # +1 for the length byte
             else:
                 i += adv_data_item_len + 1 # +1 for the length byte
 
@@ -212,6 +215,8 @@ def print_packet(dpkt, quiet):
             # Send any LL_CTRL packets we need to send based on updates due to incoming LL_CTRL packets
             stateful_LL_CTRL_outgoing_handler()
         else:
+            # Check for any L2CAP_CONNECTION_PARAMETER_UPDATE_REQ to reject (for now)
+            stateful_incoming_L2CAP_handler(actual_body_len, dpkt)
             # Begin GATT enumeration process
             stateful_GATT_getter(actual_body_len, dpkt)
             # Get SMP information once GATT enumeration is done
@@ -221,6 +226,7 @@ def print_packet(dpkt, quiet):
     elif(actual_body_len == 2):
         # Send any LL_CTRL packets we need to send
         stateful_LL_CTRL_outgoing_handler()
+        stateful_incoming_L2CAP_handler(actual_body_len, dpkt)
         stateful_GATT_getter(actual_body_len, dpkt)
 
 

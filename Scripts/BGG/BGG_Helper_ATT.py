@@ -250,10 +250,10 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
                     vprint(f"manage_ATT_EXCHANGE_MTU: Rejecting ATT MTU request for now (to send our own)")
 
     # Process outgoing
-    if(globals.current_ll_ctrl_state.supported_PHYs == 0x01): # Meaning no request was made to update the PHY:
-        conditions = globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
+    if(globals.attempt_2M_PHY_update): # Meaning no request was made to update the PHY:
+        conditions = globals.current_ll_ctrl_state.PHY_updated and globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
     else: # Meaning a request was made to update the PHY:
-       conditions = globals.current_ll_ctrl_state.PHY_updated and globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
+        conditions = globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
     if(conditions):
         if(not globals.att_exchange_MTU_rsp_sent):
             send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)

@@ -90,6 +90,9 @@ def update_LL_LENGTH_state(opcode, state_str, ll_length_max_rx_octet=None, ll_le
     if(opcode == opcode_LL_LENGTH_RSP or opcode == opcode_LL_REJECT_IND or opcode == opcode_LL_REJECT_EXT_IND or opcode == opcode_LL_UNKNOWN_RSP):
         clear_pending_packet_state()
         globals.ll_length_rsp_recv = True
+        # FIXME: is this OK to just treat it like it suceeded but negotiated default, if the thing we talked to
+        # only supported 4.0 and thus sent back an error to LL_LENGTH_REQ?
+        globals.att_MTU_negotiated = True
 
 
 ################################################################################
@@ -205,12 +208,17 @@ def send_LL_PHY_REQ(tx_phys, rx_phys):
     vprint("Sent LL_PHY_REQ!")
 
 
-def  send_LL_PHY_REQ_and_update_state():
+def send_LL_PHY_REQ_and_update_state():
     global current_ll_ctrl_state
     global ll_phy_req_sent_time, ll_phy_req_sent
+    global attempt_2M_PHY_update
     # Don't send this if either we weren't directed on the CLI to attempt 2M PHY update
     # or if the Peripheral features indicate it doesn't support 2M PHY
-    if ((globals.current_ll_ctrl_state.supported_PHYs != 2) or not globals.current_ll_ctrl_state.ll_peripheral_features_supports_2M_phy):
+    if(not globals.attempt_2M_PHY_update):
+        return
+    if (not globals.current_ll_ctrl_state.ll_peripheral_features_supports_2M_phy):
+        # If the peripheral doesn't support 2M PHY, set this to false, to avoid an infinite loop
+        globals.attempt_2M_PHY_update = False
         return
 
     send_LL_PHY_REQ(0x02, 0x02)
@@ -554,9 +562,9 @@ def stateful_LL_CTRL_outgoing_handler():
             # FWIW I've found that an iPad won't proceed with responding to the ATT_EXCHANGE_MTU_REQ if I haven't replied to their LL_VERSION_IND
             # So this needs to be sent regardless of whether we've already receive an LL_VERSION_IND from the Peripheral
             send_LL_VERSION_IND_and_update_state()
-        elif(globals.ll_version_ind_recv and not globals.ll_phy_req_sent):
+        elif(globals.attempt_2M_PHY_update and globals.ll_version_ind_recv and not globals.ll_phy_req_sent):
             send_LL_PHY_REQ_and_update_state()
-        elif (not globals.ll_phy_update_ind_sent and \
+        elif (globals.attempt_2M_PHY_update and not globals.ll_phy_update_ind_sent and \
              ((globals.ll_phy_req_recv and globals.ll_phy_rsp_sent) or \
              (globals.ll_phy_req_sent and globals.ll_phy_rsp_recv))):
             # Only send an update request to devices supporting 2M PHY
