@@ -82,6 +82,16 @@ def manage_GATT_Primary_Services(actual_body_len, dpkt):
     if (globals.att_MTU_negotiated and not globals.read_primary_services_req_sent):
         send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2800)
         globals.read_primary_services_req_sent = True
+        globals.read_primary_services_req_sent_time = time.time_ns()
+
+    # Check if we need to re-send because it's been too long since we saw any response
+    # If the final_primary_service_handle is still 1 that means we haven't received any responses
+    # so retry sending the request
+    if(globals.read_primary_services_req_sent):
+        time_elapsed = (time.time_ns() - globals.read_primary_services_req_sent_time)
+        if(time_elapsed > 1e12 and globals.final_primary_service_handle == 1):
+            send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2800)
+
 
     # Process ATT_READ_BY_GROUP_TYPE_RSP or ATT_ERROR_RSP responses
     if (globals.read_primary_services_req_sent and not globals.all_primary_services_recv):

@@ -208,6 +208,7 @@ handles_with_error_rsp = {}
 
 # GATT state
 read_primary_services_req_sent = False
+read_primary_services_req_sent_time = 0
 all_primary_services_recv = False
 final_primary_service_handle = 1
 primary_service_handle_ranges_dict = {}
@@ -228,7 +229,9 @@ last_sent_read_handle = 1
 
 # SMP state
 SMP_CID_bytes = b'\x06\x00'
+smp_pairing_request_attempt_count = 0
 smp_legacy_pairing_req_sent = False
+smp_legacy_pairing_req_sent_time = 0
 smp_legacy_pairing_rsp_recv = False
 smp_SC_pairing_req_sent = False
 smp_SC_pairing_rsp_recv = False

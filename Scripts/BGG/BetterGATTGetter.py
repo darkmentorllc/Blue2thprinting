@@ -228,6 +228,7 @@ def print_packet(dpkt, quiet):
         stateful_LL_CTRL_outgoing_handler()
         stateful_incoming_L2CAP_handler(actual_body_len, dpkt)
         stateful_GATT_getter(actual_body_len, dpkt)
+        handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
 
 
 if __name__ == "__main__":

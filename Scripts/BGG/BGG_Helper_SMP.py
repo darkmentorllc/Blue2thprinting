@@ -40,6 +40,7 @@ def send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_
 def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
     global all_characteristic_handles_recv, handles_with_error_rsp
     global smp_legacy_pairing_req_sent, smp_legacy_pairing_rsp_recv
+    global smp_legacy_pairing_req_sent_time, smp_pairing_request_attempt_count
     if(globals.all_characteristic_handles_recv):
         if(not globals.smp_legacy_pairing_req_sent):
             vprint("HANDLES WITH ERRORS")
@@ -55,7 +56,25 @@ def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
             resp_key_dist = 0x00 # 0x0a
             send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
             globals.smp_legacy_pairing_req_sent = True
+            globals.smp_legacy_pairing_req_sent_time = time.time_ns()
+            globals.smp_pairing_request_attempt_count += 1
             return
+
+        # Resend the pairing request if we haven't heard back in 1s
+        if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
+            time_elapsed = time.time_ns() - globals.smp_legacy_pairing_req_sent_time
+            if(time_elapsed > 1000000000):
+                io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
+                oob_data = 0x00
+                auth_req = 0x00 # 0x2C # SC = 0b1 + MITM = 0b1 +  Bonding 0b10 == 0b1101 # 0x00 # Insecure
+                init_key_dist = 0x00 # 0x08
+                resp_key_dist = 0x00 # 0x0a
+                send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+                globals.smp_legacy_pairing_req_sent_time = time.time_ns()
+                globals.smp_pairing_request_attempt_count += 1
+                if(globals.smp_pairing_request_attempt_count > 5):
+                    # If we've tried 5 times and not heard back, just consider it that they're not going to reply, and pairing is done
+                    globals.smp_legacy_pairing_rsp_recv = True
 
         if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
             actual_body_len = len(dpkt.body) # The point of actual_body_len is to iterate based on the known size of actual bytes that python is holding, not any ACID lengths

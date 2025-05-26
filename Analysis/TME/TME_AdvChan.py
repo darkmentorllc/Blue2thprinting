@@ -612,7 +612,7 @@ def print_manufacturer_data(bdaddr):
 
     for device_BT_CID, manufacturer_specific_data in eir_result:
         company_name = BT_CID_to_company_name(device_BT_CID)
-        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
+        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(company_name == "No Match"):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
@@ -623,7 +623,7 @@ def print_manufacturer_data(bdaddr):
 
     for le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data in le_result:
         company_name = BT_CID_to_company_name(device_BT_CID)
-        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately!" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
+        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(company_name == "No Match"):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
