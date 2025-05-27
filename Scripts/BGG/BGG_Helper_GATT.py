@@ -263,6 +263,13 @@ def manage_read_all_handles(actual_body_len, dpkt):
                             globals.all_characteristic_handles_recv = True
                             print(f"-------> ATT_READ* phase done, moving to next phase")
                             print_and_exit()
+        else:
+            # Check for any outstanding read requests which haven't been serviced in the last 1s, and re-request
+            # NOTE: this was occurring reliably when trying to scan a "JBL LIVE660NC-LE" device, but then it went out of range...
+            time_elapsed = time.time_ns() - globals.last_sent_read_handle_time
+            if(time_elapsed > 1e12):
+                send_next_ATT_READ_REQ_if_applicable(globals.last_sent_read_handle)
+
 
 ##############################################################################################################
 # Function to call all the sub-functions to meet all the prerequisites of various devices to GET ALL THE GATT!

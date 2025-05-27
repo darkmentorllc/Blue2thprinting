@@ -164,6 +164,7 @@ att_exchange_MTU_rsp_sent = False
 att_exchange_MTU_rsp_sent_time = 0
 att_exchange_MTU_rsp_recv = False
 att_MTU_negotiated = False
+queued_client_rx_mtu_ACID = 23
 
 att_errorcode_to_str = {
     1: "Invalid Handle",
@@ -226,6 +227,7 @@ final_handle = 1
 characteristic_info_req_sent = False
 all_characteristic_handles_recv = False
 last_sent_read_handle = 1
+last_sent_read_handle_time = 0
 
 # SMP state
 SMP_CID_bytes = b'\x06\x00'

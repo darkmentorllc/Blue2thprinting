@@ -185,6 +185,7 @@ def send_next_ATT_READ_REQ_if_applicable(last_read_handle):
         if(next_handle != -1):
             send_ATT_READ_REQ(next_handle)
             globals.last_sent_read_handle = next_handle
+            globals.last_sent_read_handle_time = time.time_ns()
             return
 
     globals.all_characteristic_handles_recv = True
@@ -227,27 +228,23 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
         if(not globals.att_exchange_MTU_req_recv):
             (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_EXCHANGE_MTU_REQ, dpkt)
             if(matched):
-                # We need to
+                globals.att_exchange_MTU_req_recv = True
+                globals.queued_client_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
+                # We need to wait for the LL Data Length Extension to be negotiated before we can respond to the ATT_EXCHANGE_MTU_REQ
+                # so that we don't negotiate something larger than the LL can handle, and thus lead to fragmentation (which I can't currently handle)
                 if(globals.current_ll_ctrl_state.ll_length_negotiated):
-                    client_rx_mtu_ACID, = unpack("<H", dpkt.body[7:9])
-                    if(client_rx_mtu_ACID >= 23):
-                        smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, client_rx_mtu_ACID)
+                    if(globals.queued_client_rx_mtu_ACID >= 23):
+                        smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, globals.queued_client_rx_mtu_ACID)
                         vprint(f"Updating ATT MTU from 0x{globals.att_mtu:04x} to 0x{smaller_mtu:04x}")
                         globals.att_mtu = smaller_mtu
                     else:
                         vprint(f"Using existing MTU of 0x{globals.att_mtu:04x}")
                     # There's no point in sending back an MTU larger than what the other side supports, because the lesser of the two will be used, so just match it
                     send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)
-                    globals.att_exchange_MTU_req_recv = True
                     globals.att_exchange_MTU_rsp_sent = True
                     globals.att_MTU_negotiated = True
                     print(f"---> ATT_EXCHANGE_MTU* phase done (received ATT_EXCHANGE_MTU_REQ), moving to next phase")
                     return
-                else:
-                    # TODO: how can we queue up an ATT_EXCHANGE_MTU_RSP for later?
-                    # If we can't, then let's just wait and send our own ATT_EXCHANGE_MTU_REQ later and ignore the above for now
-                    send_ATT_ERROR_RSP(opcode_ATT_EXCHANGE_MTU_REQ, 1, errorcode_0E_ATT_Unlikely_Error)
-                    vprint(f"manage_ATT_EXCHANGE_MTU: Rejecting ATT MTU request for now (to send our own)")
 
     # Process outgoing
     if(globals.attempt_2M_PHY_update): # Meaning no request was made to update the PHY:
@@ -255,12 +252,19 @@ def manage_ATT_EXCHANGE_MTU(actual_body_len, dpkt):
     else: # Meaning a request was made to update the PHY:
         conditions = globals.current_ll_ctrl_state.ll_length_negotiated and not globals.att_MTU_negotiated
     if(conditions):
-        if(not globals.att_exchange_MTU_rsp_sent):
+        # Send a response to the queued ATT_EXCHANGE_MTU_REQ, if any
+        if(globals.att_exchange_MTU_req_recv and not globals.att_exchange_MTU_rsp_sent):
+            smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, globals.queued_client_rx_mtu_ACID)
+            vprint(f"Updating ATT MTU from 0x{globals.att_mtu:04x} to 0x{smaller_mtu:04x}")
+            globals.att_mtu = smaller_mtu
+            # There's no point in sending back an MTU larger than what the other side supports, because the lesser of the two will be used, so just match it
             send_ATT_EXCHANGE_MTU_RSP(globals.att_mtu)
-            globals.att_MTU_negotiated = True
-            globals.att_exchange_MTU_rsp_recv = True
+            globals.att_exchange_MTU_rsp_sent = True
             globals.att_exchange_MTU_rsp_sent_time = time.time_ns()
-        if(not globals.att_exchange_MTU_req_sent):
+            globals.att_MTU_negotiated = True
+            print(f"---> ATT_EXCHANGE_MTU* phase done (replied to queued ATT_EXCHANGE_MTU_REQ), moving to next phase")
+        # Else send an ATT_EXCHANGE_MTU_REQ if we haven't already send a RSP (which would mark att_MTU_negotiated = True)
+        if(not globals.att_MTU_negotiated and not globals.att_exchange_MTU_req_sent):
             smaller_mtu = min(globals.current_ll_ctrl_state.ll_length_max_tx_octet - 4, 247)
             globals.att_mtu = smaller_mtu
             send_ATT_EXCHANGE_MTU_REQ(globals.att_mtu)
