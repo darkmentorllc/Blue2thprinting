@@ -237,22 +237,23 @@ secondary_service_handle_ranges_dict = {}
 info_req_sent_time = None
 info_req_last_requested_handle = 1
 all_info_handles_recv = False
+last_sent_read_handle = 1
+last_sent_read_handle_time = 0
 final_handle = 1
 
-
 # Searching for all characteristics via ATT_FIND_INFORMATION_REQ
-
 characteristic_info_req_sent = False
 characteristic_info_req_sent_time = 0
 final_characteristic_handle = 2
 all_characteristic_handles_recv = False
+
 # Searching for all characteristics via ATT_READ_BY_TYPE_REQ
 characteristic_read_by_type_req_sent = False
 characteristic_read_by_type_req_sent_time = 0
+characteristic_read_by_type_req_sent_retry_count = 0
+characteristic_read_by_type_req_sent_max_retries = 4
 all_characteristic_handles_read = False
-# Reading all handles
-last_sent_read_handle = 1
-last_sent_read_handle_time = 0
+characteristic_last_read_requested_handle = 2
 
 # SMP state
 SMP_CID_bytes = b'\x06\x00'

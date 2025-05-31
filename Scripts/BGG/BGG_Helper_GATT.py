@@ -295,8 +295,10 @@ def manage_GATT_Secondary_Services(actual_body_len, dpkt):
 # Send ATT_READ_BY_GROUP_TYPE_REQ for Characteristics (0x2803)
 ####################################################################################
 # Note: this is needed because there can be discontinuities in the handle ranges
-def manage_GATT_Characteristics(actual_body_len, dpkt):
-    global characteristic_info_req_sent, all_characteristic_handles_recv
+def outgoing_characteristic_discovery(actual_body_len, dpkt):
+    global all_characteristic_handles_recv
+    global characteristic_read_by_type_req_sent, characteristic_read_by_type_req_sent_time
+    global characteristic_read_by_type_req_sent_retry_count
 
     # Don't begin this check until after all handle enumeration
     if(not globals.all_info_handles_recv or globals.all_characteristic_handles_recv):
@@ -305,17 +307,39 @@ def manage_GATT_Characteristics(actual_body_len, dpkt):
     # Check if Handle 2 exists, and is 0x2803 (Characteristic)
     # If so, then Characteristics have already been enumerated, and the device is not
     # misbehaving like Meta Quest 3S, so we can skip this phase
-    if(globals.received_handles[2] == b'\x03\x28'):
+    # The handle to check should be the first service handle + 1 to get the first possible characteristic handle
+    handle_to_check = 1 + sorted(globals.primary_service_handle_ranges_dict.keys())[0]
+    if(handle_to_check in globals.received_handles.keys() and globals.received_handles[handle_to_check] == b'\x03\x28'):
         globals.all_characteristic_handles_recv = True
         return
 
     # Else, go ahead and request all the characteristics
     if (not globals.characteristic_read_by_type_req_sent):
-        send_ATT_READ_BY_TYPE_REQ(2, 0xffff, 0x2803)
+        send_ATT_READ_BY_TYPE_REQ(globals.characteristic_last_read_requested_handle, 0xffff, 0x2803)
         globals.characteristic_read_by_type_req_sent = True
         globals.characteristic_read_by_type_req_sent_time = time.time_ns()
+        return True
+    elif(globals.retry_enabled and not globals.all_characteristic_handles_recv and
+         globals.characteristic_read_by_type_req_sent_retry_count < globals.characteristic_read_by_type_req_sent_max_retries):
+        # Check if we need to re-send because it's been too long since we saw any response
+        # If the primary_service_final_handle is still 1 that means we haven't received any responses
+        # so retry sending the request
+        time_elapsed = (time.time_ns() - globals.characteristic_read_by_type_req_sent_time)
+        if(time_elapsed > globals.retry_timeout):
+            globals.characteristic_read_by_type_req_sent_retry_count += 1
+            if(globals.characteristic_read_by_type_req_sent_retry_count == globals.characteristic_read_by_type_req_sent_max_retries):
+                # We're done trying, consider discovery of secondary services done
+                globals.all_characteristic_handles_recv = True
+                return True
+            else:
+                send_ATT_READ_BY_TYPE_REQ(globals.characteristic_last_read_requested_handle, 0xffff, 0x2803)
+                return True
 
-    # Don't support resend for now
+def process_ATT_READ_BY_TYPE_RSP(actual_body_len, dpkt):
+    global all_handles_received_values
+    global final_characteristic_handle
+    global characteristic_last_read_requested_handle
+    global all_characteristic_handles_read
 
     # Process opcode_ATT_READ_BY_TYPE_REQ or ATT_ERROR_RSP responses
     if (globals.characteristic_read_by_type_req_sent and not globals.all_characteristic_handles_read):
@@ -343,23 +367,38 @@ def manage_GATT_Characteristics(actual_body_len, dpkt):
 
             if(globals.final_characteristic_handle != 0xFFFF):
                 # Entire list processed, make a new request
-                send_ATT_READ_BY_TYPE_REQ(globals.final_characteristic_handle+1, 0xffff, 0x2803)
+                globals.characteristic_last_read_requested_handle = globals.final_characteristic_handle+1
+                send_ATT_READ_BY_TYPE_REQ(globals.characteristic_last_read_requested_handle, 0xffff, 0x2803)
                 return True
             else:
                 # If the last handle of the last service ended with 0xFFFF then we're done enumerating
                 globals.all_characteristic_handles_read = True
                 return True
-        else:
-            # Look for ATT_ERROR_RSP
-            (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_ERROR_RSP, dpkt)
-            if(matched and actual_body_len >= 11):
-                req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
-                vmultiprint(req_opcode_in_error, handle_in_error)
-                vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
-                if(req_opcode_in_error == opcode_ATT_READ_BY_TYPE_REQ and error_code == errorcode_0A_ATT_Attribute_Not_Found and handle_in_error == globals.final_characteristic_handle+1):
-                    globals.all_characteristic_handles_read = True
-                    print(f"----> ATT_READ_BY_GROUP_TYPE* phase done for Characteristics, moving to next phase")
-                    return True
+
+def process_ATT_ERROR_RSP_for_ATT_READ_BY_TYPE_REQ(actual_body_len, dpkt):
+    global all_characteristic_handles_read
+
+    # Look for ATT_ERROR_RSP
+    (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_ERROR_RSP, dpkt)
+    if(matched and actual_body_len >= 11):
+        req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
+        vmultiprint(req_opcode_in_error, handle_in_error)
+        vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
+        if(req_opcode_in_error == opcode_ATT_READ_BY_TYPE_REQ and error_code == errorcode_0A_ATT_Attribute_Not_Found):
+            if(handle_in_error == globals.characteristic_last_read_requested_handle):
+                globals.all_characteristic_handles_read = True
+                print(f"----> ATT_READ_BY_GROUP_TYPE* phase done for Characteristics, moving to next phase")
+                return True
+
+def incoming_characteristic_discovery(actual_body_len, dpkt):
+    if(not globals.characteristic_read_by_type_req_sent or globals.all_characteristic_handles_read):
+        return False
+
+    if(process_ATT_READ_BY_TYPE_RSP(actual_body_len, dpkt)):
+        return True
+    elif(process_ATT_ERROR_RSP_for_ATT_READ_BY_TYPE_REQ(actual_body_len, dpkt)):
+        return True
+    return False
 
 ################################################################################
 # Read all Services, Characteristics, and Characteristic Values from all handles
@@ -467,6 +506,12 @@ def stateful_GATT_getter(actual_body_len, dpkt):
             # and send further ATT_FIND_INFORMATION_REQs if necessary
             #################################################################################
             incoming_handle_discovery(actual_body_len, dpkt)
+
+            ####################################################################################
+            # Receive ATT_READ_BY_TYPE_RSP for Characteristics (0x2803)
+            # This was only found to be necessary for things which misbehave like Meta Quest 3S...
+            ####################################################################################
+            incoming_characteristic_discovery(actual_body_len, dpkt)
     else:
         # take this opportunity to handle any necessary outgoing ATT packets
         ####################################################################################
@@ -485,12 +530,12 @@ def stateful_GATT_getter(actual_body_len, dpkt):
         #################################################################################
         outgoing_handle_discovery(actual_body_len, dpkt)
 
-    ####################################################################################
-    # Send ATT_READ_BY_GROUP_TYPE_REQ for Primary (0x2803) Characteristics
-    # This was only found to be necessary for things which misbehave like Meta Quest 3S...
-    ####################################################################################
-    if(manage_GATT_Characteristics(actual_body_len, dpkt)):
-        return
+        ####################################################################################
+        # Send ATT_READ_BY_TYPE_REQ for Characteristics (0x2803)
+        # This was only found to be necessary for things which misbehave like Meta Quest 3S...
+        ####################################################################################
+        if(outgoing_characteristic_discovery(actual_body_len, dpkt)):
+            return
 
     ################################################################################
     # Read all Services, Characteristics, and Characteristic Values from all handles
