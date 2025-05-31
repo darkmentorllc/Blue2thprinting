@@ -210,11 +210,14 @@ handles_with_error_rsp = {}
 retry_timeout = 1e12
 retry_enabled = True
 
+all_handles_read = False
+handle_read_req_sent_time = None
+handle_read_last_sent_handle = 1
+
 # GATT state
 last_requested_service_type = None
 # Reading all primary services via ATT_READ_BY_GROUP_TYPE_REQ
-primary_services_read_req_sent = False
-primary_services_read_req_sent_time = 0
+primary_services_read_req_sent_time = None
 primary_services_all_recv = False
 primary_service_final_handle = 1
 primary_service_last_reqested_handle = 1
@@ -223,8 +226,7 @@ primary_service_request_max_retries = 4
 primary_service_handle_ranges_dict = {}
 
 # Reading all secondary services via ATT_READ_BY_GROUP_TYPE_REQ
-secondary_services_read_req_sent = False
-secondary_services_read_req_sent_time = 0
+secondary_services_read_req_sent_time = None
 secondary_services_all_recv = False
 secondary_service_final_handle = 1
 secondary_service_last_reqested_handle = 1
@@ -237,8 +239,6 @@ secondary_service_handle_ranges_dict = {}
 info_req_sent_time = None
 info_req_last_requested_handle = 1
 all_info_handles_recv = False
-last_sent_read_handle = 1
-last_sent_read_handle_time = 0
 final_handle = 1
 
 # Searching for all characteristics via ATT_FIND_INFORMATION_REQ

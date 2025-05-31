@@ -230,6 +230,9 @@ def print_packet(dpkt, quiet):
         stateful_GATT_getter(actual_body_len, dpkt)
         handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
 
+    # Current exit conditions
+    if(globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv):
+        print_and_exit()
 
 if __name__ == "__main__":
     main()

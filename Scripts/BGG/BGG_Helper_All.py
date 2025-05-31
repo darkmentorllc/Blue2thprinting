@@ -35,6 +35,11 @@ def v8b(var):
  return var.to_bytes(8, byteorder='little')
 
 
+# "Variable to 16-byte-little-endian byte array" (variable,8-bytes)
+def v16b(var):
+ return var.to_bytes(16, byteorder='little')
+
+
 ######################################################################################
 # Helper functions for verbose printing
 

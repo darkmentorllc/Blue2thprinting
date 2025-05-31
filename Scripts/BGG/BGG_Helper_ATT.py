@@ -24,6 +24,7 @@ errorcode_01_ATT_Invalid_Handle = 0x01
 errorcode_02_ATT_Read_Not_Permitted = 0x02
 errorcode_05_ATT_Insufficient_Authentication = 0x05
 errorcode_08_ATT_Insufficient_Authorization = 0x08
+errorcode_10_ATT_Unsupported_Group_Type = 0x10
 errorcode_0A_ATT_Attribute_Not_Found = 0x0A
 errorcode_0C_ATT_Encryption_Key_Size_Too_Short = 0x0C
 errorcode_0E_ATT_Unlikely_Error = 0x0E
@@ -161,6 +162,7 @@ def helper_skip_service_handles(test_handle):
 # For now we intentionally don't want this to be aware of Characteristic read/write permissions, and to just attempt to read everything possible
 def get_next_handle_to_att_read(last_read_handle):
     global received_handles
+    global all_handles_read
     vprint(f"get_next_handle_to_att_read: got {last_read_handle}")
     next_handle_assumption = last_read_handle + 1
 
@@ -187,23 +189,24 @@ def get_next_handle_to_att_read(last_read_handle):
                 return returned_handle
 
     # If we get here, there must be no higher handle, so we're truly done
+    globals.all_handles_read = True
     return -1
 
 def send_next_ATT_READ_REQ_if_applicable(last_read_handle):
     global final_handle
-    global last_sent_read_handle
+    global handle_read_last_sent_handle
     global all_characteristic_handles_recv
 
-    vprint(f"globals.final_handle = {globals.final_handle}, globals.last_sent_read_handle = {globals.last_sent_read_handle}")
-    if(globals.final_handle >= globals.last_sent_read_handle): # Don't send a request past the presumed end of the handles
+    vprint(f"globals.final_handle = {globals.final_handle}, globals.handle_read_last_sent_handle = {globals.handle_read_last_sent_handle}")
+    if(globals.final_handle >= globals.handle_read_last_sent_handle): # Don't send a request past the presumed end of the handles
         next_handle = get_next_handle_to_att_read(last_read_handle)
         if(next_handle != -1):
             send_ATT_READ_REQ(next_handle)
-            globals.last_sent_read_handle = next_handle
-            globals.last_sent_read_handle_time = time.time_ns()
+            globals.handle_read_last_sent_handle = next_handle
+            globals.handle_read_req_sent_time = time.time_ns()
             return
 
-    globals.all_characteristic_handles_recv = True
+    globals.all_handles_read = True
     vprint("Setting all_characteristic_handles_recv = True")
 
 def is_packet_ATT_type(opcode, dpkt):
