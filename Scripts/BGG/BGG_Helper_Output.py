@@ -94,13 +94,14 @@ def print_all_info():
             # in the else case, we're saying we don't want to do it for 0x2800 and 0x2803 entries,
             # as that would essentially be adding redundant information to the GATT_characteristics_values table
             # which is captured in other tables like GATT_characteristics and GATT_services
-            if(handle in globals.all_handles_received_values.keys() and isinstance(globals.all_handles_received_values[handle], bytes)):
-                raw_hex_str = ''.join(f'{byte:02x}' for byte in globals.all_handles_received_values[handle])
-                store_characteristic_values_in_existing_format_expectations(handle, raw_hex_str)
-#               print(f"handle = 0x{handle:02x}, value (raw hex) = {raw_hex_str}")
-                if(verbose2): print(f"handle = 0x{handle:02x}, value (as UTF8) = {globals.all_handles_received_values[handle].decode('utf8', errors='backslashreplace')}")
-            else:
-                if(verbose2): print(f"handle = 0x{handle:02x}, value (str)     = {globals.all_handles_received_values[handle]}")
+            if(handle in globals.all_handles_received_values.keys()):
+                if(isinstance(globals.all_handles_received_values[handle], bytes)):
+                    raw_hex_str = ''.join(f'{byte:02x}' for byte in globals.all_handles_received_values[handle])
+                    store_characteristic_values_in_existing_format_expectations(handle, raw_hex_str)
+    #               print(f"handle = 0x{handle:02x}, value (raw hex) = {raw_hex_str}")
+                    if(verbose2): print(f"handle = 0x{handle:02x}, value (as UTF8) = {globals.all_handles_received_values[handle].decode('utf8', errors='backslashreplace')}")
+                else:
+                    if(verbose2): print(f"handle = 0x{handle:02x}, value (str)     = {globals.all_handles_received_values[handle]}")
 
     i = 0
     # I need to have the full list available so I can move forward to the next index and subtract 1 to get the handle range for a given service

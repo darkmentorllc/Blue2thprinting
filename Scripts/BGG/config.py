@@ -30,15 +30,15 @@ g_att_mtu = 23 # Defaults to 23, updated if we get back an ATT_EXCHANGE_MTU_RSP
 att_exchange_MTU_req_sent = False
 att_exchange_MTU_rsp_recv = False
 
-read_primary_services_req_sent = False
-all_primary_services_recv = False
-g_final_primary_service_handle = 1
+primary_services_read_req_sent = False
+primary_services_all_recv = False
+g_primary_service_final_handle = 1
 g_primary_service_handle_ranges_dict = {}
 
-read_secondary_services_req_sent = False
-all_secondary_services_recv = False
-g_final_secondary_service_handle = 1
-g_last_reqested_secondary_service_handle = 1
+secondary_services_read_req_sent = False
+secondary_services_all_recv = False
+g_secondary_service_final_handle = 1
+g_secondary_service_last_reqested_handle = 1
 g_secondary_service_handle_ranges_dict = {}
 
 info_req_sent = False

@@ -207,25 +207,50 @@ all_handles_received_values = {}
 characteristic_descriptor_handles = {}
 handles_with_error_rsp = {}
 
+retry_timeout = 1e12
+retry_enabled = True
+
 # GATT state
-read_primary_services_req_sent = False
-read_primary_services_req_sent_time = 0
-all_primary_services_recv = False
-final_primary_service_handle = 1
+last_requested_service_type = None
+# Reading all primary services via ATT_READ_BY_GROUP_TYPE_REQ
+primary_services_read_req_sent = False
+primary_services_read_req_sent_time = 0
+primary_services_all_recv = False
+primary_service_final_handle = 1
+primary_service_last_reqested_handle = 1
+primary_service_request_retry_count = 0
+primary_service_request_max_retries = 4
 primary_service_handle_ranges_dict = {}
 
-read_secondary_services_req_sent = False
-all_secondary_services_recv = False
-final_secondary_service_handle = 1
-last_reqested_secondary_service_handle = 1
+# Reading all secondary services via ATT_READ_BY_GROUP_TYPE_REQ
+secondary_services_read_req_sent = False
+secondary_services_read_req_sent_time = 0
+secondary_services_all_recv = False
+secondary_service_final_handle = 1
+secondary_service_last_reqested_handle = 1
+secondary_service_request_retry_count = 0
+secondary_service_request_max_retries = 4
 secondary_service_handle_ranges_dict = {}
 
-info_req_sent = False
+# Finding all handles via ATT_FIND_INFORMATION_REQ
+# info_req_sent = False
+info_req_sent_time = None
+info_req_last_requested_handle = 1
 all_info_handles_recv = False
 final_handle = 1
 
+
+# Searching for all characteristics via ATT_FIND_INFORMATION_REQ
+
 characteristic_info_req_sent = False
+characteristic_info_req_sent_time = 0
+final_characteristic_handle = 2
 all_characteristic_handles_recv = False
+# Searching for all characteristics via ATT_READ_BY_TYPE_REQ
+characteristic_read_by_type_req_sent = False
+characteristic_read_by_type_req_sent_time = 0
+all_characteristic_handles_read = False
+# Reading all handles
 last_sent_read_handle = 1
 last_sent_read_handle_time = 0
 

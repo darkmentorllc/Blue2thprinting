@@ -594,6 +594,10 @@ def print_microsoft_MSD(indent, manufacturer_specific_data):
             except:
                 qprint(f"{indent}\t\tNon-spec interpretation of 'Device Hash' as string: does not decode")
 
+def print_meta_MSD(indent, manufacturer_specific_data):
+    if(len(manufacturer_specific_data) == 28): # 14 bytes * 2 chars per byte
+        manufacturer_specific_data_str = bytes.fromhex(manufacturer_specific_data).decode("utf-8")
+        qprint(f"{indent}Meta Quest Serial Number: {manufacturer_specific_data_str}")
 
 def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
@@ -635,6 +639,8 @@ def print_manufacturer_data(bdaddr):
             print_apple_MSD("\t\t", manufacturer_specific_data)
         elif(device_BT_CID == 6):
             print_microsoft_MSD("\t\t", manufacturer_specific_data)
+        elif(device_BT_CID == 0x058e):
+            print_meta_MSD("\t\t", manufacturer_specific_data)
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 
