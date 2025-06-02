@@ -38,79 +38,83 @@ def send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_
 ###############################################################################################################
 # TODO! This hasn't actually been fully fleshed out yet
 def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
-    global all_characteristic_handles_recv, handles_with_error_rsp
+    global handles_with_error_rsp
     global smp_legacy_pairing_req_sent, smp_legacy_pairing_rsp_recv
     global smp_legacy_pairing_req_sent_time, smp_pairing_request_attempt_count
-    if(globals.all_characteristic_handles_recv):
-        if(not globals.smp_legacy_pairing_req_sent):
-            vprint("HANDLES WITH ERRORS")
-            for handle in sorted(globals.handles_with_error_rsp.keys()):
-                #vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {att_error_strings[globals.handles_with_error_rsp[handle]]}")
-                vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {globals.handles_with_error_rsp[handle]}")
 
+    # Don't start until all handles have been read
+    if(not globals.all_handles_read):
+        return
+
+    if(not globals.smp_legacy_pairing_req_sent):
+        vprint("HANDLES WITH ERRORS")
+        for handle in sorted(globals.handles_with_error_rsp.keys()):
+            #vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {att_error_strings[globals.handles_with_error_rsp[handle]]}")
+            vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {globals.handles_with_error_rsp[handle]}")
+
+        io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
+        oob_data = 0x00
+        auth_req = 0x00 # 0x2C # SC = 0b1 + MITM = 0b1 +  Bonding 0b10 == 0b1101 # 0x00 # Insecure
+        #max_key_size = 0x10 # Set to 0x07 for KNOB test
+        init_key_dist = 0x00 # 0x08
+        resp_key_dist = 0x00 # 0x0a
+        send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+        globals.smp_legacy_pairing_req_sent = True
+        globals.smp_legacy_pairing_req_sent_time = time.time_ns()
+        globals.smp_pairing_request_attempt_count += 1
+        return
+
+    # Resend the pairing request if we haven't heard back in 1s
+    if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
+        time_elapsed = time.time_ns() - globals.smp_legacy_pairing_req_sent_time
+        if(time_elapsed > 1000000000):
             io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
             oob_data = 0x00
             auth_req = 0x00 # 0x2C # SC = 0b1 + MITM = 0b1 +  Bonding 0b10 == 0b1101 # 0x00 # Insecure
-            #max_key_size = 0x10 # Set to 0x07 for KNOB test
             init_key_dist = 0x00 # 0x08
             resp_key_dist = 0x00 # 0x0a
             send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
-            globals.smp_legacy_pairing_req_sent = True
             globals.smp_legacy_pairing_req_sent_time = time.time_ns()
             globals.smp_pairing_request_attempt_count += 1
-            return
+            if(globals.smp_pairing_request_attempt_count > 5):
+                # If we've tried 5 times and not heard back, just consider it that they're not going to reply, and pairing is done
+                globals.smp_legacy_pairing_rsp_recv = True
 
-        # Resend the pairing request if we haven't heard back in 1s
-        if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
-            time_elapsed = time.time_ns() - globals.smp_legacy_pairing_req_sent_time
-            if(time_elapsed > 1000000000):
-                io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
-                oob_data = 0x00
-                auth_req = 0x00 # 0x2C # SC = 0b1 + MITM = 0b1 +  Bonding 0b10 == 0b1101 # 0x00 # Insecure
-                init_key_dist = 0x00 # 0x08
-                resp_key_dist = 0x00 # 0x0a
-                send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
-                globals.smp_legacy_pairing_req_sent_time = time.time_ns()
-                globals.smp_pairing_request_attempt_count += 1
-                if(globals.smp_pairing_request_attempt_count > 5):
-                    # If we've tried 5 times and not heard back, just consider it that they're not going to reply, and pairing is done
-                    globals.smp_legacy_pairing_rsp_recv = True
+    if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
+        actual_body_len = len(dpkt.body) # The point of actual_body_len is to iterate based on the known size of actual bytes that python is holding, not any ACID lengths
+        vprint(f"actual_body_len = 0x{actual_body_len:02x}")
+        if(actual_body_len >= 7):
+            header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode  = unpack("<BBHHB", dpkt.body[:7])
+            # Check if it's ATT (CID = 4) and header says it's l2cap w/o fragmentation (I can't handle fragments yet)
+            if(cid_ACID == 0x0006 and (header_ACID & 0b10 == 0b10)):
+                vmultiprint(header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode)
 
-        if(globals.smp_legacy_pairing_req_sent and not globals.smp_legacy_pairing_rsp_recv):
-            actual_body_len = len(dpkt.body) # The point of actual_body_len is to iterate based on the known size of actual bytes that python is holding, not any ACID lengths
-            vprint(f"actual_body_len = 0x{actual_body_len:02x}")
-            if(actual_body_len >= 7):
-                header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode  = unpack("<BBHHB", dpkt.body[:7])
-                # Check if it's ATT (CID = 4) and header says it's l2cap w/o fragmentation (I can't handle fragments yet)
-                if(cid_ACID == 0x0006 and (header_ACID & 0b10 == 0b10)):
-                    vmultiprint(header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, smp_opcode)
-
-                    # Check if it's a Pairing Response opcode
-                    if(smp_opcode == opcode_SMP_Pairing_Rsp and actual_body_len == 13):
-                        io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist = unpack("<BBBBBB", dpkt.body[7:13])
-                        vmultiprint(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+                # Check if it's a Pairing Response opcode
+                if(smp_opcode == opcode_SMP_Pairing_Rsp and actual_body_len == 13):
+                    io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist = unpack("<BBBBBB", dpkt.body[7:13])
+                    vmultiprint(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+                    if(not globals.smp_SC_pairing_req_sent):
+                        globals.smp_legacy_pairing_rsp_recv = True
+                    else:
+                        globals.smp_SC_pairing_rsp_recv = True
+                    return
+                    # print_and_exit()
+                elif(smp_opcode == opcode_SMP_Pairing_Failed and actual_body_len == 8):
+                    failure_reason, = unpack("<B", dpkt.body[7:8])
+                    if(failure_reason == pairing_failure_reason_Pairing_Not_Supported):
+                        globals.smp_legacy_pairing_rsp_recv = True
+                        return
+                    else:
+                        # Try Secure Connections pairing
                         if(not globals.smp_SC_pairing_req_sent):
-                            globals.smp_legacy_pairing_rsp_recv = True
+                            io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
+                            oob_data = 0x00
+                            auth_req = 0x0C # SC = 0x8 | MITM = 0x4
+                            max_key_size = 0x10 # Set to 0x07 for KNOB test
+                            init_key_dist = 0x00 # 0x08
+                            resp_key_dist = 0x00 # 0x0a
+                            send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
+                            globals.smp_SC_pairing_req_sent = True
                         else:
                             globals.smp_SC_pairing_rsp_recv = True
                         return
-                        # print_and_exit()
-                    elif(smp_opcode == opcode_SMP_Pairing_Failed and actual_body_len == 8):
-                        failure_reason, = unpack("<B", dpkt.body[7:8])
-                        if(failure_reason == pairing_failure_reason_Pairing_Not_Supported):
-                            globals.smp_legacy_pairing_rsp_recv = True
-                            return
-                        else:
-                            # Try Secure Connections pairing
-                            if(not globals.smp_SC_pairing_req_sent):
-                                io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO
-                                oob_data = 0x00
-                                auth_req = 0x0C # SC = 0x8 | MITM = 0x4
-                                max_key_size = 0x10 # Set to 0x07 for KNOB test
-                                init_key_dist = 0x00 # 0x08
-                                resp_key_dist = 0x00 # 0x0a
-                                send_SMP_Pairing_Request(io_cap, oob_data, auth_req, max_key_size, init_key_dist, resp_key_dist)
-                                globals.smp_SC_pairing_req_sent = True
-                            else:
-                                globals.smp_SC_pairing_rsp_recv = True
-                            return

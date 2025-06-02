@@ -195,7 +195,6 @@ def get_next_handle_to_att_read(last_read_handle):
 def send_next_ATT_READ_REQ_if_applicable(last_read_handle):
     global final_handle
     global handle_read_last_sent_handle
-    global all_characteristic_handles_recv
 
     vprint(f"globals.final_handle = {globals.final_handle}, globals.handle_read_last_sent_handle = {globals.handle_read_last_sent_handle}")
     if(globals.final_handle >= globals.handle_read_last_sent_handle): # Don't send a request past the presumed end of the handles
@@ -206,8 +205,7 @@ def send_next_ATT_READ_REQ_if_applicable(last_read_handle):
             globals.handle_read_req_sent_time = time.time_ns()
             return
 
-    globals.all_handles_read = True
-    vprint("Setting all_characteristic_handles_recv = True")
+    # globals.all_handles_read = True
 
 def is_packet_ATT_type(opcode, dpkt):
     header_ACID = ll_len_ACID = l2cap_len_ACID = cid_ACID = att_opcode = 0
@@ -422,8 +420,13 @@ def outgoing_handle_discovery(actual_body_len, dpkt):
         # so retry sending the request
         time_elapsed = (time.time_ns() - globals.info_req_sent_time)
         if(time_elapsed > globals.retry_timeout):
-            send_ATT_FIND_INFORMATION_REQ(globals.info_req_last_requested_handle)
-            globals.info_req_sent_time = time.time_ns()
+            globals.info_req_sent_retry_count += 1
+            if(globals.info_req_sent_retry_count == globals.primary_service_request_max_retries):
+                # We're done trying, consider discovery of secondary services done
+                globals.all_info_handles_recv = True
+            else:
+                send_ATT_FIND_INFORMATION_REQ(globals.info_req_last_requested_handle)
+                globals.info_req_sent_time = time.time_ns()
 
 
 

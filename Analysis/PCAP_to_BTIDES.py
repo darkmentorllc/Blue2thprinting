@@ -473,7 +473,6 @@ def export_to_L2CAPArray(packet):
         return True
     if(export_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(connect_ind_obj, packet)):
         return True
-
     # TODO: handle ALL opcodes
 
 
@@ -512,7 +511,6 @@ def export_to_ATTArray(packet):
         return True
     if(export_ATT_Read_By_Group_Type_Response(connect_ind_obj, packet)):
         return True
-
     # TODO: handle ALL opcodes
 
 

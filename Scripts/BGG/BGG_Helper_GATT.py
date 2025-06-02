@@ -85,19 +85,20 @@ def outgoing_service_discovery(actual_body_len, dpkt):
         send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2800)
         globals.last_requested_service_type = "primary"
         globals.primary_services_read_req_sent_time = time.time_ns()
-    else:
-        if(globals.retry_enabled and not globals.primary_services_all_recv):
-            # Check if we need to re-send because it's been too long since we saw any response
-            # If the primary_service_final_handle is still 1 that means we haven't received any responses
-            # so retry sending the request
-            time_elapsed = (time.time_ns() - globals.primary_services_read_req_sent_time)
-            if(time_elapsed > globals.retry_timeout):
-                    if(globals.primary_service_request_retry_count == globals.primary_service_request_max_retries):
-                        # We're done trying, consider discovery of secondary services done
-                        globals.primary_services_all_recv = True
-                    else:
-                        send_ATT_READ_BY_GROUP_TYPE_REQ(globals.primary_service_last_reqested_handle, 0x2800)
-                        globals.primary_service_request_retry_count += 1
+    elif(globals.retry_enabled and not globals.primary_services_all_recv):
+        # Check if we need to re-send because it's been too long since we saw any response
+        # If the primary_service_final_handle is still 1 that means we haven't received any responses
+        # so retry sending the request
+        time_elapsed = (time.time_ns() - globals.primary_services_read_req_sent_time)
+        if(time_elapsed > globals.retry_timeout):
+            globals.primary_service_request_retry_count += 1
+            if(globals.primary_service_request_retry_count == globals.primary_service_request_max_retries):
+                # We're done trying, consider discovery of secondary services done
+                globals.primary_services_all_recv = True
+            else:
+                send_ATT_READ_BY_GROUP_TYPE_REQ(globals.primary_service_last_reqested_handle, 0x2800)
+                globals.primary_services_read_req_sent_time = time.time_ns()
+
 
     # Wait for all primary services to be received before proceeding to secondary services
     if (globals.primary_services_all_recv):
@@ -105,19 +106,20 @@ def outgoing_service_discovery(actual_body_len, dpkt):
             globals.last_requested_service_type = "secondary"
             send_ATT_READ_BY_GROUP_TYPE_REQ(1, 0x2801)
             globals.secondary_services_read_req_sent_time = time.time_ns()
-        else:
-            if(globals.retry_enabled and not globals.secondary_services_all_recv):
-                # Check if we need to re-send because it's been too long since we saw any response
-                # If the primary_service_final_handle is still 1 that means we haven't received any responses
-                # so retry sending the request
-                time_elapsed = (time.time_ns() - globals.primary_services_read_req_sent_time)
-                if(time_elapsed > globals.retry_timeout):
-                    if(globals.secondary_service_request_retry_count == globals.secondary_service_request_max_retries):
-                        # We're done trying, consider discovery of secondary services done
-                        globals.secondary_services_all_recv = True
-                    else:
-                        send_ATT_READ_BY_GROUP_TYPE_REQ(globals.secondary_service_last_reqested_handle, 0x2801)
-                        globals.secondary_service_request_retry_count += 1
+        elif(globals.retry_enabled and not globals.secondary_services_all_recv):
+            # Check if we need to re-send because it's been too long since we saw any response
+            # If the primary_service_final_handle is still 1 that means we haven't received any responses
+            # so retry sending the request
+            time_elapsed = (time.time_ns() - globals.primary_services_read_req_sent_time)
+            if(time_elapsed > globals.retry_timeout):
+                globals.secondary_service_request_retry_count += 1
+                if(globals.secondary_service_request_retry_count == globals.secondary_service_request_max_retries):
+                    # We're done trying, consider discovery of secondary services done
+                    globals.secondary_services_all_recv = True
+                else:
+                    send_ATT_READ_BY_GROUP_TYPE_REQ(globals.secondary_service_last_reqested_handle, 0x2801)
+                    globals.secondary_services_read_req_sent_time = time.time_ns()
+
     # TODO: do Include (0x2802) as well?
 
 def process_ATT_READ_BY_GROUP_TYPE_RSP(actual_body_len, dpkt):
@@ -229,12 +231,13 @@ def incoming_service_discovery(actual_body_len, dpkt):
 ####################################################################################
 # Note: this is needed because there can be discontinuities in the handle ranges
 def outgoing_characteristic_discovery(actual_body_len, dpkt):
-    global all_characteristic_handles_recv
-    global characteristic_read_by_type_req_sent, characteristic_read_by_type_req_sent_time
+    global characteristic_read_by_type_req_sent_time, characteristic_read_by_type_req_sent_time
     global characteristic_read_by_type_req_sent_retry_count
+    global characteristic_read_by_type_req_all_received
 
     # Don't begin this check until after all handle enumeration
-    if(not globals.all_info_handles_recv or globals.all_characteristic_handles_recv):
+    # And don't continue within if we've already received all handles
+    if(not globals.all_info_handles_recv or globals.characteristic_read_by_type_req_all_received):
         return
 
     # Check if Handle 2 exists, and is 0x2803 (Characteristic)
@@ -243,16 +246,16 @@ def outgoing_characteristic_discovery(actual_body_len, dpkt):
     # The handle to check should be the first service handle + 1 to get the first possible characteristic handle
     handle_to_check = 1 + sorted(globals.primary_service_handle_ranges_dict.keys())[0]
     if(handle_to_check in globals.received_handles.keys() and globals.received_handles[handle_to_check] == b'\x03\x28'):
-        globals.all_characteristic_handles_recv = True
+        globals.characteristic_read_by_type_req_all_received = True
         return
 
     # Else, go ahead and request all the characteristics
-    if (not globals.characteristic_read_by_type_req_sent):
+    if (not globals.characteristic_read_by_type_req_sent_time):
         send_ATT_READ_BY_TYPE_REQ(globals.characteristic_last_read_requested_handle, 0xffff, 0x2803)
-        globals.characteristic_read_by_type_req_sent = True
+        globals.characteristic_read_by_type_req_sent_time = True
         globals.characteristic_read_by_type_req_sent_time = time.time_ns()
         return True
-    elif(globals.retry_enabled and not globals.all_characteristic_handles_recv and
+    elif(globals.retry_enabled and
          globals.characteristic_read_by_type_req_sent_retry_count < globals.characteristic_read_by_type_req_sent_max_retries):
         # Check if we need to re-send because it's been too long since we saw any response
         # If the primary_service_final_handle is still 1 that means we haven't received any responses
@@ -262,7 +265,7 @@ def outgoing_characteristic_discovery(actual_body_len, dpkt):
             globals.characteristic_read_by_type_req_sent_retry_count += 1
             if(globals.characteristic_read_by_type_req_sent_retry_count == globals.characteristic_read_by_type_req_sent_max_retries):
                 # We're done trying, consider discovery of secondary services done
-                globals.all_characteristic_handles_recv = True
+                globals.characteristic_read_by_type_req_all_received = True
                 return True
             else:
                 send_ATT_READ_BY_TYPE_REQ(globals.characteristic_last_read_requested_handle, 0xffff, 0x2803)
@@ -272,10 +275,10 @@ def process_ATT_READ_BY_TYPE_RSP(actual_body_len, dpkt):
     global all_handles_received_values
     global final_characteristic_handle
     global characteristic_last_read_requested_handle
-    global all_characteristic_handles_read
+    global characteristic_read_by_type_req_all_received
 
     # Process opcode_ATT_READ_BY_TYPE_RSP
-    if (globals.characteristic_read_by_type_req_sent and not globals.all_characteristic_handles_read):
+    if (globals.characteristic_read_by_type_req_sent_time and not globals.characteristic_read_by_type_req_all_received):
         # Look for opcode_ATT_READ_BY_TYPE_REQ
         (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_READ_BY_TYPE_RSP, dpkt)
         if(matched and actual_body_len >= 8):
@@ -305,11 +308,11 @@ def process_ATT_READ_BY_TYPE_RSP(actual_body_len, dpkt):
                 return True
             else:
                 # If the last handle of the last service ended with 0xFFFF then we're done enumerating
-                globals.all_characteristic_handles_read = True
+                globals.characteristic_read_by_type_req_all_received = True
                 return True
 
 def process_ATT_ERROR_RSP_for_ATT_READ_BY_TYPE_REQ(actual_body_len, dpkt):
-    global all_characteristic_handles_read
+    global characteristic_read_by_type_req_all_received
 
     # Look for ATT_ERROR_RSP
     (matched, actual_body_len, header_ACID, ll_len_ACID, l2cap_len_ACID, cid_ACID, att_opcode) = is_packet_ATT_type(opcode_ATT_ERROR_RSP, dpkt)
@@ -319,12 +322,12 @@ def process_ATT_ERROR_RSP_for_ATT_READ_BY_TYPE_REQ(actual_body_len, dpkt):
         vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
         if(req_opcode_in_error == opcode_ATT_READ_BY_TYPE_REQ and error_code == errorcode_0A_ATT_Attribute_Not_Found):
             if(handle_in_error == globals.characteristic_last_read_requested_handle):
-                globals.all_characteristic_handles_read = True
+                globals.characteristic_read_by_type_req_all_received = True
                 print(f"----> ATT_READ_BY_TYPE* phase done for Characteristics, moving to next phase")
                 return True
 
 def incoming_characteristic_discovery(actual_body_len, dpkt):
-    if(not globals.characteristic_read_by_type_req_sent or globals.all_characteristic_handles_read):
+    if(not globals.characteristic_read_by_type_req_sent_time or globals.characteristic_read_by_type_req_all_received):
         return False
 
     if(process_ATT_READ_BY_TYPE_RSP(actual_body_len, dpkt)):
@@ -338,10 +341,10 @@ def incoming_characteristic_discovery(actual_body_len, dpkt):
 ################################################################################
 # Decided to put this in GATT instead of ATT file because it's Primary/Secondary Service-aware in skipping handles to read
 def outgoing_read_all_handles(actual_body_len, dpkt):
-    global all_info_handles_recv, characteristic_info_req_sent, all_characteristic_handles_recv
+    global all_info_handles_recv
     global handle_read_last_sent_handle
 
-    if(not globals.all_characteristic_handles_read):
+    if(not globals.characteristic_read_by_type_req_all_received):
         return
 
     if(globals.all_info_handles_recv and not globals.handle_read_req_sent_time):
@@ -355,8 +358,14 @@ def outgoing_read_all_handles(actual_body_len, dpkt):
         # TODO: See if I can find another one of those and re-try...
         time_elapsed = time.time_ns() - globals.handle_read_req_sent_time
         if(time_elapsed > globals.retry_timeout):
-            send_next_ATT_READ_REQ_if_applicable(globals.handle_read_last_sent_handle)
-            globals.handle_read_req_sent_time = time.time_ns()
+            globals.info_req_last_requested_handle_retry_count += 1
+            if(globals.info_req_last_requested_handle_retry_count == globals.secondary_service_request_max_retries):
+                # We're done trying, consider reading all handles done
+                globals.all_handles_read = True
+            else:
+                send_next_ATT_READ_REQ_if_applicable(globals.handle_read_last_sent_handle)
+                globals.handle_read_req_sent_time = time.time_ns()
+
 
 def process_ATT_READ_RSP(actual_body_len, dpkt):
     vprint(f"actual_body_len = 0x{actual_body_len:02x}")

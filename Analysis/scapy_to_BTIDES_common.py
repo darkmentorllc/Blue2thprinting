@@ -60,6 +60,9 @@ g_bdaddr_to_list_of_ff_ATT_FIND_INFORMATION_RSP_information_data = {}
 # so that we can identify it in incoming L2CAP packets
 g_CIDs_used_for_SDP = {}
 
+# What type was requested by the last ATT_READ_BY_TYPE_REQ
+g_last_requested_uuid_type = None
+
 # Saved text for printing fields
 #    for field in btle_adv.fields_desc:
 #        print(f"{field.name}: {field.__class__.__name__}")
@@ -639,14 +642,17 @@ def export_ATT_Exchange_MTU_Response(connect_ind_obj, packet, direction=None):
 
 
 def export_ATT_Read_By_Type_Request(connect_ind_obj, packet, direction=None):
+    global g_last_requested_uuid_type
     if(packet.haslayer(ATT_Read_By_Type_Request)):
         att_data = get_ATT_data(packet, ATT_Read_By_Type_Request, type_ATT_READ_BY_TYPE_REQ)
         attribute_uuid = att_data.uuid
+        g_last_requested_uuid_type = attribute_uuid
     elif(packet.haslayer(ATT_Read_By_Type_Request_128bit)):
         att_data = get_ATT_data(packet, ATT_Read_By_Type_Request_128bit, type_ATT_READ_BY_TYPE_REQ)
         uuid1 = att_data.uuid1 # FIXME: change Scapy definition to use a proper 16-byte UUID128!
         uuid2 = att_data.uuid2
         attribute_uuid = uuid1 + uuid2 # FIXME: untested, need to see value and debug to know what's in here currently
+        g_last_requested_uuid_type = attribute_uuid
     else:
         return False
     try:
@@ -687,6 +693,21 @@ def export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=None):
         data = ff_ATT_READ_BY_TYPE_RSP(direction, length, attribute_data_list)
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+
+        # If this response is for a Read By Type Request for a Characteristic Declaration
+        # then export it to the BTIDES accordingly
+        if(g_last_requested_uuid_type == 0x2803):
+            for list_obj in att_data.handles:
+                # If the handle is 0, then this is a "no more entries" marker
+                if(list_obj.handle == 0):
+                    continue
+                # FIXME: not done
+                properties, char_handle, char_UUID = struct.unpack("<BHH", list_obj.value[:3])
+                data = {"handle": list_obj["handle"], "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
+                char_obj = ff_GATT_Characteristic(data)
+
+
+
         return True
     return False
 

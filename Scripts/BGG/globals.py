@@ -207,7 +207,7 @@ all_handles_received_values = {}
 characteristic_descriptor_handles = {}
 handles_with_error_rsp = {}
 
-retry_timeout = 1e12
+retry_timeout = 1e9
 retry_enabled = True
 
 all_handles_read = False
@@ -237,22 +237,20 @@ secondary_service_handle_ranges_dict = {}
 # Finding all handles via ATT_FIND_INFORMATION_REQ
 # info_req_sent = False
 info_req_sent_time = None
+info_req_sent_retry_count = 0
 info_req_last_requested_handle = 1
+info_req_last_requested_handle_retry_count = 0
 all_info_handles_recv = False
 final_handle = 1
 
 # Searching for all characteristics via ATT_FIND_INFORMATION_REQ
-characteristic_info_req_sent = False
-characteristic_info_req_sent_time = 0
 final_characteristic_handle = 2
-all_characteristic_handles_recv = False
 
 # Searching for all characteristics via ATT_READ_BY_TYPE_REQ
-characteristic_read_by_type_req_sent = False
-characteristic_read_by_type_req_sent_time = 0
+characteristic_read_by_type_req_sent_time = None
 characteristic_read_by_type_req_sent_retry_count = 0
 characteristic_read_by_type_req_sent_max_retries = 4
-all_characteristic_handles_read = False
+characteristic_read_by_type_req_all_received = False
 characteristic_last_read_requested_handle = 2
 
 # SMP state
