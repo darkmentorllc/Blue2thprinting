@@ -56,7 +56,7 @@ def decode_BLE_features(features):
     if(features & (0b1 << 0x1d)): qprint(f"\t\t\t\t* Connected Isochronous Stream - Peripheral")
     if(features & (0b1 << 0x1e)): qprint(f"\t\t\t\t* Isochronous Broadcaster")
     if(features & (0b1 << 0x1f)): qprint(f"\t\t\t\t* Synchronized Receiver")
-    if(features & (0b1 << 0x20)): qprint(f"\t\t\t\t* Connected Isophronous Stream (Host Support)")
+    if(features & (0b1 << 0x20)): qprint(f"\t\t\t\t* Connected Isochronous Stream (Host Support)")
     if(features & (0b1 << 0x21)): qprint(f"\t\t\t\t* LE Power Control Request")
     if(features & (0b1 << 0x22)): qprint(f"\t\t\t\t* LE Power Control Indication")
     if(features & (0b1 << 0x23)): qprint(f"\t\t\t\t* LE Path Loss Monitoring")
