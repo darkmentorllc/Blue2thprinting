@@ -493,7 +493,7 @@ def print_apple_MSD(indent, manufacturer_specific_data):
         qprint(f"{indent}\tRSSI at 1 meter: {signed_rssi}dBm")
     elif(manufacturer_specific_data[0:4] == "1202"):
         qprint(f"{indent}Apple Find My network device in 'nearby' state:")
-        bitfield = int(manufacturer_specific_data[4:5])
+        bitfield = int(manufacturer_specific_data[4:5], 16)
         maintained = (bitfield >> 2) & 1
         battery_state = (bitfield >> 6) & 3
         qprint(f"{indent}\tOwner connected within last 15 minutes?: {"True" if maintained else "False"}")
@@ -501,7 +501,7 @@ def print_apple_MSD(indent, manufacturer_specific_data):
         qprint(f"{indent}\tBattery Level: {level_str[battery_state]}")
     elif(manufacturer_specific_data[0:4] == "1219"):
         qprint(f"{indent}Apple Find My network device in 'separated' state:")
-        bitfield = int(manufacturer_specific_data[4:5])
+        bitfield = int(manufacturer_specific_data[4:5], 16)
         maintained = (bitfield >> 2) & 1
         battery_state = (bitfield >> 6) & 3
         qprint(f"{indent}\tOwner connected within last 15 minutes?: {"True" if maintained else "False"}")

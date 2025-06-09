@@ -32,6 +32,8 @@ from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
+from PCAP_to_BTIDES import read_pcap
+from HCI_to_BTIDES import read_HCI
 
 ########################################
 # MAIN #################################
@@ -55,6 +57,9 @@ def main():
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
+    btides_group.add_argument('--input-pcap', type=str, required=False, help='Input pcap file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout.')
+    btides_group.add_argument('--input-hci-log', type=str, required=False, help='Input HCI log file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout.')
+    btides_group.add_argument('--include-centrals', action='store_true', help='Include the Central BDADDR from connections in the output.')
     btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
 
@@ -66,7 +71,7 @@ def main():
 
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
-    device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
     device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
     device_group.add_argument('--name-regex', type=str, default='', help='Value for REGEXP match against device_name.')
@@ -103,6 +108,41 @@ def main():
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
     TME.TME_glob.hideBLEScopedata = args.hide_BLEScope_data
+
+    bdaddrs = []
+
+    #######################################################
+    # If given an input file, convert it to BTIDES JSON
+    # and import it into the local database,
+    # and collect all the BDADDRs from it for printing.
+    #######################################################
+    if(args.input_pcap):
+        read_pcap(args.input_pcap)
+
+    if(args.input_hci_log):
+        read_HCI(args.input_hci_log)
+
+    # Fill in bdaddrs[] with the bdaddrs in the BTIDES data, if any
+    if(TME.TME_glob.BTIDES_JSON):
+        # Magic input filename "SKIPME" tells btides_to_sql to not read from file, but just use the global TME.TME_glob.BTIDES_JSON
+        b2s_args = btides_to_sql_args(input="SKIPME", use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        btides_to_sql_succeeded = btides_to_sql(b2s_args)
+
+        for entry in TME.TME_glob.BTIDES_JSON:
+            if 'bdaddr' in entry:
+                if(entry['bdaddr'] not in bdaddrs):
+                    bdaddrs.append(entry['bdaddr'])
+            elif 'CONNECT_IND' in entry:
+                if(entry['CONNECT_IND']['peripheral_bdaddr'] not in bdaddrs):
+                    bdaddrs.append(entry['CONNECT_IND']['peripheral_bdaddr'])
+                # Most of the time we don't care about the Central BDADDR, because it's just our own device.
+                # with some random BDADDR set. However, if we happen to have collected data from overhearing
+                # the conversation between two devices, then we'd want to include the Central as well.
+                if(args.include_centrals):
+                    if(entry['CONNECT_IND']['central_bdaddr'] not in bdaddrs):
+                        bdaddrs.append(entry['CONNECT_IND']['central_bdaddr'])
+
+
 
     #######################################################
     # If querying the BTIDALPOOL, collect that information,
@@ -211,10 +251,9 @@ def main():
     # TODO: consider doing this in the future if it adds too much overhead to every invocation
     create_ChipMaker_OUI_hash()
 
+    # Note: passing the --bdaddr argument will override any bdaddrs collected from the BTIDALPOOL or from the input files
     if(args.bdaddr is not None):
         bdaddrs = [args.bdaddr]
-    else:
-        bdaddrs = []
 
     ######################################################
     # Options to simply print statistics from the database

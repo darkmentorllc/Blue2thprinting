@@ -1267,6 +1267,7 @@ class btides_to_sql_args:
 
 
 # Input must be a Namespace like args from argparse
+# Magic input filename "SKIPME" tells btides_to_sql to not read from file, but just use the global TME.TME_glob.BTIDES_JSON
 def btides_to_sql(args):
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
@@ -1278,9 +1279,10 @@ def btides_to_sql(args):
     global g_last_read_req_handle
 
     last_printed_percentage = 0
-    with open(in_filename, 'r') as f:
-        TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
-        #qprint(json.dumps(BTIDES_JSON, indent=2))
+    if(in_filename != "SKIPME"):
+        with open(in_filename, 'r') as f:
+            TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
+            #qprint(json.dumps(BTIDES_JSON, indent=2))
 
     # Import all the local BTIDES json schema files, so that we don't hit the website all the time
     all_schemas = []
