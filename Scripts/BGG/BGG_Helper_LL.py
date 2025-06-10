@@ -176,7 +176,7 @@ def send_LL_FEATURE_REQ(features):
         # Of course if something doesn't, then you'd want to fix this
     packet_bytes = v1b(opcode_LL_FEATURE_REQ) + v8b(features)
     write_outbound_pkt(LLID_ctrl, packet_bytes)
-    print("Sent LL_FEATURE_REQ!")
+    vprint("Sent LL_FEATURE_REQ!")
 
 
 def send_LL_FEATURE_REQ_and_update_state():
