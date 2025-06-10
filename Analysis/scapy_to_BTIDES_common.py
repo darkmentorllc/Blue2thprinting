@@ -697,16 +697,35 @@ def export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=None):
         # If this response is for a Read By Type Request for a Characteristic Declaration
         # then export it to the BTIDES accordingly
         if(g_last_requested_uuid_type == 0x2803):
-            for list_obj in att_data.handles:
-                # If the handle is 0, then this is a "no more entries" marker
-                if(list_obj.handle == 0):
-                    continue
-                # FIXME: not done
-                properties, char_handle, char_UUID = struct.unpack("<BHH", list_obj.value[:3])
-                data = {"handle": list_obj["handle"], "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
-                char_obj = ff_GATT_Characteristic(data)
+            try:
+                for list_obj in att_data.handles:
+                    # If the handle is 0, then this is a "no more entries" marker
+                    if(list_obj.handle == 0):
+                        continue
+                    if(len(list_obj.value) == 5):
+                        properties, value_handle, value_uuid = struct.unpack("<BHH", list_obj.value[:5])
+                        value_uuid = f"{value_uuid:04x}"
+                    elif(len(list_obj.value) == 19):
+                        properties, value_handle = struct.unpack("<BH", list_obj.value[:3])
+                        value_uuid = bytes_reversed_to_hex_str(list_obj.value[3:])
+                    else:
+                        print("Unexpected length error.")
+                        return False
+                    data = {"handle": list_obj.handle, "properties": properties, "value_handle": value_handle, "value_uuid": value_uuid}
+                    char_obj = ff_GATT_Characteristic(data)
+                    # Going to insert a "char_value" placeholder, and then can insert io_array stuff based on later reads/writes etc.
+                    char_value_obj = {"handle": value_handle, "value_uuid": value_uuid}
+                    char_obj["char_value"] = char_value_obj
+                    BTIDES_export_GATT_Characteristic(connect_ind_obj=connect_ind_obj, data=char_obj)
 
-
+                    # Then also insert this information into the ATT_handle_enumeration
+                    data = ff_ATT_handle_entry(list_obj.handle, "2803")
+                    BTIDES_export_ATT_handle(connect_ind_obj=connect_ind_obj, data=data)
+                    data = ff_ATT_handle_entry(value_handle, value_uuid)
+                    BTIDES_export_ATT_handle(connect_ind_obj=connect_ind_obj, data=data)
+            except Exception as e:
+                print(f"Error processing ATT_Read_By_Type_Response: {e}")
+                return False
 
         return True
     return False

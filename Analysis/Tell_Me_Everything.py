@@ -142,8 +142,6 @@ def main():
                     if(entry['CONNECT_IND']['central_bdaddr'] not in bdaddrs):
                         bdaddrs.append(entry['CONNECT_IND']['central_bdaddr'])
 
-
-
     #######################################################
     # If querying the BTIDALPOOL, collect that information,
     # import it into the local database, and then proceed
