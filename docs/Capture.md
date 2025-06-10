@@ -21,6 +21,8 @@ And there's comments in that script if you want to see what's being done and why
 
 If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth to get the full power of Blue2thprinting!
 
+Run `sudo crontab -e` to review your crontab and confirm you only have a single instance of the `@reboot /home/user/Blue2thprinting/Scripts/runall.sh` command in it. If you ran the `setup_capture_helper_debian-based.sh` file multiple times, remove any extra instances of the `runall.sh` command.
+
 ## Setup Braktooth
 
 Place the Braktooth code in the location assumed by `central_app_launcher2.py`:
@@ -97,7 +99,7 @@ Once you have confirmed this works, you should set `btc_2thprint_enabled = True`
 
 ### Setup automatic script execution at boot:
 
-The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot. So now reboot with `sudo reboot`.
+The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot (which you should have confirmed with the `sudo crontab -e` above). So now reboot with `sudo reboot`.
 
 After the system comes back up, run:
 `~/Blue2thprinting/Scripts/check.sh`
