@@ -18,6 +18,8 @@ opcode_LL_LENGTH_RSP                = 0x15
 opcode_LL_PHY_REQ                   = 0x16
 opcode_LL_PHY_RSP                   = 0x17
 opcode_LL_PHY_UPDATE_IND            = 0x18
+opcode_LL_POWER_CONTROL_REQ         = 0x23
+opcode_LL_POWER_CONTROL_RSP         = 0x24
 
 LL_opcode_to_str = {}
 LL_opcode_to_str[opcode_LL_TERMINATE_IND]           = "LL_TERMINATE_IND"
@@ -262,6 +264,7 @@ def send_LL_PHY_UPDATE_IND_and_update_state(instant_offset=0):
     globals.ll_phy_update_ind_sent = True
     globals.ll_phy_update_ind_sent_time = time.time_ns()
 
+
 # for rejecting opcodes we don't want to deal with
 def send_LL_REJECT_EXT_IND(opcode, error_code):
     # LL Ctrl Opcode = LL_REJECT_EXT_IND
@@ -270,6 +273,16 @@ def send_LL_REJECT_EXT_IND(opcode, error_code):
     packet_bytes = v1b(opcode_LL_REJECT_EXT_IND) + v1b(opcode) + v1b(error_code)
     write_outbound_pkt(LLID_ctrl, packet_bytes)
     vprint("Sent LL_REJECT_EXT_IND!")
+
+
+def send_LL_POWER_CONTROL_RSP(min, max, delta, txpower, apr):
+    # LL Ctrl Opcode = LL_POWER_CONTROL_RSP
+    # CtrlData = (LSB) min (1 bit), max (1 bit), RFU (6 bits),  delta (8 bits), txpower (8 bits), apr (Acceptable Power Reduction) (8 bits) (MSB)
+    #ctrl_data = v1b(apr) << 24 | v1b(txpower) << 16 | v1b(delta) << 8 | v1b(max) << 1 | v1b(min)
+    ctrl_data = apr << 24 | txpower << 16 | delta << 8 | max << 1 | min
+    packet_bytes = v1b(opcode_LL_POWER_CONTROL_RSP) + v4b(ctrl_data)
+    write_outbound_pkt(LLID_ctrl, packet_bytes)
+    vprint("Sent LL_POWER_CONTROL_RSP!")
 
 ####################################################################################
 # Incoming error responses (LL_UNKNOWN_RSP, LL_REJECT_IND, LL_REJECT_EXT_IND)
@@ -422,7 +435,6 @@ def incoming_LL_VERSION_IND(actual_body_len, dpkt):
 ####################################################################################
 # LL_PHY_REQ/RSP due to some devices requiring it
 ####################################################################################
-# Currently I can't send an LL_PHY_UPDATE_IND due to not being able to set the Instant
 def incoming_LL_PHYs(actual_body_len, dpkt):
     global current_ll_ctrl_state
     global ll_phy_req_recv, ll_phy_rsp_sent, ll_phy_rsp_sent_time
@@ -465,6 +477,17 @@ def incoming_LL_PHYs(actual_body_len, dpkt):
                 print(f"--> LL_PHY* phase done, moving to next phase")
                 return True
 
+####################################################################################
+# Reject anyone sending us a LL_POWER_CONTROL_REQ by saying we can't change TX power
+####################################################################################
+
+def incoming_LL_POWER_CONTROL_REQ(actual_body_len, dpkt):
+    global current_ll_ctrl_state
+    global ll_length_rsp_recv, ll_length_req_recv
+
+    # This is essentially rejecting the LL_POWER_CONTROL_REQ
+    send_LL_POWER_CONTROL_RSP(1, 1, 0, 126, 255)
+
 #################################################################################################################
 # Function to call all the sub-functions to meet all the prerequisites of various devices to GET ALL THE LL CTRL!
 #################################################################################################################
@@ -504,6 +527,12 @@ def stateful_LL_CTRL_incoming_handler(actual_body_len, ll_ctl_opcode, dpkt):
     ####################################################################################
     elif(ll_ctl_opcode == opcode_LL_LENGTH_REQ or ll_ctl_opcode == opcode_LL_LENGTH_RSP):
         incoming_LL_LENGTHs(actual_body_len, dpkt)
+
+    ####################################################################################
+    # Reject any opcode_LL_POWER_CONTROL_REQ
+    ####################################################################################
+    elif(ll_ctl_opcode == opcode_LL_POWER_CONTROL_REQ):
+        incoming_LL_POWER_CONTROL_REQ(actual_body_len, dpkt)
 
     ####################################################################################
     # Handle incoming error messages that can occur in response to our LL_CTRL packets

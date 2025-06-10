@@ -726,6 +726,9 @@ def export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=None):
             except Exception as e:
                 print(f"Error processing ATT_Read_By_Type_Response: {e}")
                 return False
+        else:
+            # TODO: needs to be tested
+            pass
 
         return True
     return False
