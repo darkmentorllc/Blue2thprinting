@@ -201,6 +201,14 @@ else
     echo "  No Sonoff 921600 baud firmware file found, not attempting firmware flashing."
 fi
 
+echo "======================================================="
+echo "Adding helpful command aliases (c, k, TME) to ~/.bashrc"
+echo "======================================================="
+echo "alias c=\"sudo ~/Blue2thprinting/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
+echo "alias k=\"~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
+echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
+source /home/$USERNAME/.bashrc
+
 echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"
