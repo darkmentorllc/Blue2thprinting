@@ -99,7 +99,11 @@ Once you have confirmed this works, you should set `btc_2thprint_enabled = True`
 
 ### Setup automatic script execution at boot:
 
-The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot (which you should have confirmed with the `sudo crontab -e` above). So now reboot with `sudo reboot`.
+The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot (which you should have confirmed with the `sudo crontab -e` above). 
+
+Before rebooting, run `hciconfig` and confirm you see at least one HCI Bluetooth interface (i.e. not empty output). If you don't, make sure you attach your USB Bluetooth dongle (if you don't have built-in Bluetooth), and attach that USB device to your VM (if you're not running bare-metal Linux.)
+
+Now reboot with `sudo reboot`.
 
 After the system comes back up, run:
 `~/Blue2thprinting/Scripts/check.sh`
