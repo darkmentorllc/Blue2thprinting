@@ -418,8 +418,8 @@ def main():
         print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
         print_company_name_from_bdaddr("\t", bdaddr, True)
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
-        print_all_advdata(bdaddr, args.bdaddr_type)
-        print_GATT_info(bdaddr)    # Includes BTIDES export
+        print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export
+        print_GATT_info(bdaddr)                             # Includes BTIDES export
         print_SMP_info(bdaddr)                              # Includes BTIDES export
         print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
         print_BTC_2thprint(bdaddr)                          # Includes BTIDES export

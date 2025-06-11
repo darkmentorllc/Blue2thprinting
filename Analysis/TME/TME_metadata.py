@@ -609,6 +609,9 @@ def chip_by_sub_version(sub_version, device_BT_CID):
     # If we get here, return empty string denoting nothing found
     return ""
 
+def string_yellow_bright(s):
+    return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL
+
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipPrint(bdaddr):
@@ -637,7 +640,7 @@ def print_ChipPrint(bdaddr):
                 if(not printed_header):
                     qprint(f"\t2thprint_ChipPrint:")
                     printed_header = True
-                qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (DB:LL_VERSION_IND)")
+                qprint(f"\t\t{string_yellow_bright(chip_name)} -> From LL_VERSION_IND info (DB:LL_VERSION_IND)")
 
     #==========================#
     # LMP_VERSION_REQ/RSP data #
@@ -658,14 +661,14 @@ def print_ChipPrint(bdaddr):
                 if(not printed_header):
                     qprint(f"\t2thprint_ChipPrint:")
                     printed_header = True
-                qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (DB:LMP_VERSION_RES)")
+                qprint(f"\t\t{string_yellow_bright(chip_name)} -> From LMP_VERSION_REQ/RSP info (DB:LMP_VERSION_RES)")
 
     #================#
     # NamePrint data #
     #================#
     str = lookup_metadata_by_nameprint(bdaddr, '2thprint_Chip')
     if(str != ""):
-        qprint(str)
+        qprint(string_yellow_bright(str))
         no_results_found = False
 
     #======================#
@@ -676,7 +679,7 @@ def print_ChipPrint(bdaddr):
         if(not printed_header):
             qprint(f"\t2thprint_ChipPrint:")
             printed_header = True
-        qprint(str)
+        qprint(string_yellow_bright(str))
         no_results_found = False
 
     if(no_results_found):
