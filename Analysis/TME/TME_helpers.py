@@ -856,3 +856,38 @@ def return_name_for_UUID16(uuid16):
         return colored_str
     else:
         return f"No matches"
+
+
+# For just finding out if we can completely skip this BDADDR
+def bdaddr_found_in_any_table(bdaddr):
+    tables = [
+        "bdaddr_to_GPS", "EIR_bdaddr_to_3d_info", "EIR_bdaddr_to_CoD", "EIR_bdaddr_to_DevID",
+        "EIR_bdaddr_to_flags", "EIR_bdaddr_to_MSD", "EIR_bdaddr_to_name", "EIR_bdaddr_to_PSRM",
+        "EIR_bdaddr_to_tx_power", "EIR_bdaddr_to_URI", "EIR_bdaddr_to_UUID128s",
+        "EIR_bdaddr_to_UUID16s", "EIR_bdaddr_to_UUID32s", "GATT_attribute_handles",
+        "GATT_characteristic_descriptor_values", "GATT_characteristics", "GATT_characteristics_values",
+        "GATT_services", "HCI_bdaddr_to_name", "L2CAP_CONNECTION_PARAMETER_UPDATE_REQ",
+        "L2CAP_CONNECTION_PARAMETER_UPDATE_RSP", "LE_bdaddr_to_3d_info", "LE_bdaddr_to_appearance",
+        "LE_bdaddr_to_CoD", "LE_bdaddr_to_connect_interval", "LE_bdaddr_to_flags",
+        "LE_bdaddr_to_MSD", "LE_bdaddr_to_name", "LE_bdaddr_to_other_le_bdaddr",
+        "LE_bdaddr_to_public_target_bdaddr", "LE_bdaddr_to_random_target_bdaddr",
+        "LE_bdaddr_to_role", "LE_bdaddr_to_tx_power", "LE_bdaddr_to_URI",
+        "LE_bdaddr_to_UUID128_service_data", "LE_bdaddr_to_UUID128_service_solicit",
+        "LE_bdaddr_to_UUID128s_list", "LE_bdaddr_to_UUID16_service_data",
+        "LE_bdaddr_to_UUID16_service_solicit", "LE_bdaddr_to_UUID16s_list",
+        "LE_bdaddr_to_UUID32_service_data", "LE_bdaddr_to_UUID32_service_solicit",
+        "LE_bdaddr_to_UUID32s_list", "LL_FEATUREs", "LL_LENGTHs", "LL_PHYs", "LL_PINGs",
+        "LL_UNKNOWN_RSP", "LL_VERSION_IND", "LMP_FEATURES_RES", "LMP_FEATURES_RES_EXT",
+        "LMP_NAME_RES", "LMP_VERSION_RES", "SDP_Common", "SDP_ERROR_RSP", "SMP_Pairing_Req_Res"
+    ]
+
+    query = " UNION ALL ".join([f"SELECT EXISTS(SELECT 1 FROM {table} WHERE bdaddr = %s)" for table in tables])
+    values = (bdaddr,) * len(tables)
+
+    try:
+        result = execute_query(query, values)
+        # If any row returned 1, the bdaddr exists in at least one table
+        return any(row[0] for row in result)
+    except Exception as e:
+        print(f"Error checking tables: {e}")
+        return False

@@ -47,7 +47,8 @@ def print_GPS_entries(indent, results, bdaddr):
     for(bdaddr_random, time, time_type, rssi, lat, lon) in results:
         print_GPS_time(indent, time, time_type)
         print_RSSI(indent, rssi)
-        qprint(f"{indent}Latitude,Longitude: {lat},{lon}")
+        qprint(f"{indent}Latitude, Longitude: {lat}, {lon}")
+        qprint(f"{indent}https://www.google.com/maps/place/{lat},{lon}")
         qprint("")
         # Export as BTIDES
         if(time_type == 1):

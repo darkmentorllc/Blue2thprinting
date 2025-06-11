@@ -30,6 +30,7 @@ def print_UniqueIDReport(bdaddr):
     le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
     le_result = execute_query(le_query, values)
 
+
     if (len(le_result) != 0):
         for(le_evt_type, manufacturer_specific_data) in le_result:
             BTC_BDADDR_bytes = bytes.fromhex(manufacturer_specific_data[6:18])

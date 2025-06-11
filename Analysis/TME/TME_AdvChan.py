@@ -64,7 +64,6 @@ def print_transmit_power(bdaddr, nametype):
     values = (bdaddr,)
     eir_query = "SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-#    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s AND bdaddr_random = {nametype}"
     le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 

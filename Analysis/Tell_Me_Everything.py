@@ -405,6 +405,13 @@ def main():
         if(args.require_LMP_VERSION_RES):
             if(not device_has_LMP_VERSION_RES_info(bdaddr)):
                 continue
+
+        # Check if we have no information in any table for this BDADDR
+        # and if so, continue to the next BDADDR (if any)
+        if(not bdaddr_found_in_any_table(bdaddr)):
+            print(f"Information about {bdaddr} was not found in any table.")
+            continue
+
         qprint("================================================================================")
         qprint(f"For bdaddr = {bdaddr}:")
         print_ChipPrint(bdaddr)
