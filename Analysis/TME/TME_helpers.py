@@ -489,7 +489,8 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         random = is_bdaddr_le_and_random(bdaddr)
 
     if(random):
-        qprint(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
+        vprint(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
+        vprint("")
     else:
         # Query the database for the company_name based on the first 3 octets
         values = (first_three_octets,)
@@ -508,8 +509,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
                 qprint(f"{indent}\tBDADDR is Bluetooth Classic")
             else:
                 qprint(f"{indent}\tBDADDR is Bluetooth Low Energy Public")
-
-    qprint("")
+        qprint("")
 
 ###################################################################################
 # Ideally should be in TME_names, but I don't want to introduce cyclic dependancies
@@ -754,7 +754,7 @@ def print_device_names(bdaddr, nametype):
         device_name = get_utf8_string_from_hex_string(name_hex_str)
         color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
         qprint(f"\tDeviceName: {color_name}")
-        qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
+        qprint(f"\t\tDeviceNameType: {name_type_translation[device_name_type]}")
         qprint(f"\t\tIn BT Classic Data (DB:EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
 
@@ -775,7 +775,7 @@ def print_device_names(bdaddr, nametype):
         device_name = get_utf8_string_from_hex_string(name_hex_str)
         color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
         qprint(f"\tDeviceName: {color_name}")
-        qprint(f"\tDeviceNameType: {name_type_translation[device_name_type]}")
+        qprint(f"\t\tDeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"\t\tIn BLE Data (DB:LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")

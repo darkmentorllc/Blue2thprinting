@@ -504,7 +504,7 @@ def print_GATT_info(bdaddr):
                 match_found = print_associated_android_package_names(type, indent, UUID)
             if(not match_found):
                 qprint("\t\t\tNo matches found\n")
-            else:
-                qprint("")
+            # else:
+            #     qprint("")
 
     qprint("")

@@ -495,7 +495,10 @@ def print_ChipMakerPrint(bdaddr):
         vprint(f"\t\tNo ChipMakerPrint(s) found.")
 
     # Final padding print of print_ChipMakerPrint()
-    vprint("")
+    if(g_printed_ChipMakerPrint_header):
+        qprint("")
+    else:
+        vprint("")
 
 ########################################
 # Chip Info
