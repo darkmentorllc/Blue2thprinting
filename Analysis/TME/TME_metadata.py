@@ -300,6 +300,15 @@ def create_ChipMaker_OUI_hash():
 
     #qprint(ChipMaker_OUI_hash)
 
+
+g_printed_ChipMakerPrint_header = False
+def print_ChipMakerPrint_header_if_needed():
+    global g_printed_ChipMakerPrint_header
+    if(not g_printed_ChipMakerPrint_header):
+        qprint(f"\t2thprint_ChipMakerPrint:")
+        g_printed_ChipMakerPrint_header = True
+
+
 def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
     results_found = False
     if(len(UUID16_result) != 0):
@@ -314,6 +323,7 @@ def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
                         if('Vendor_Specific_UUIDs' in metadata.keys() and '2thprint_Chip_Maker' in metadata.keys()):
                             for UUID in metadata['Vendor_Specific_UUIDs'].keys():
                                 if(UUID16_db_ == UUID.lower()):
+                                    print_ChipMakerPrint_header_if_needed()
                                     qprint(f"{indent}{metadata['2thprint_Chip_Maker']} -> From GATT Vendor Specific UUID16 match with {UUID16_db} (DB:{tablename})")
                                     results_found = True
 
@@ -326,8 +336,6 @@ def print_ChipMakerPrint(bdaddr):
     time_profile = False
 
     no_results_found = True
-
-    qprint(f"\t2thprint_ChipMakerPrint:")
 
     if(time_profile): qprint(f"Start = {time.time()}")
     #=====================#
@@ -343,6 +351,7 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (bdaddr_random, ll_version, device_BT_CID, ll_sub_version) in ble_version_result:
+            print_ChipMakerPrint_header_if_needed()
             qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LL_VERSION_IND: Company ID (LL_VERSION_IND)")
             # FIXME: For now all the data in the database is P2C, but we need to update the DB to capture this in the future
             data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, ll_version, device_BT_CID, ll_sub_version)
@@ -361,6 +370,7 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
+            print_ChipMakerPrint_header_if_needed()
             qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (DB:LMP_VERSION_RES)")
             BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
@@ -370,6 +380,7 @@ def print_ChipMakerPrint(bdaddr):
     #================#
     s = lookup_metadata_by_nameprint(bdaddr, '2thprint_Chip_Maker')
     if(s != ""):
+        print_ChipMakerPrint_header_if_needed()
         qprint(s)
         no_results_found = False
 
@@ -383,12 +394,14 @@ def print_ChipMakerPrint(bdaddr):
     is_classic = is_bdaddr_classic(bdaddr)
     if(is_classic):
         if(oui in ChipMaker_OUI_hash.keys()):
+            print_ChipMakerPrint_header_if_needed()
             qprint(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
             no_results_found = False
     else:
         random = is_bdaddr_le_and_random(bdaddr)
         if(not random):
             if(oui in ChipMaker_OUI_hash.keys()):
+                print_ChipMakerPrint_header_if_needed()
                 qprint(f"\t\t{ChipMaker_OUI_hash[oui]} -> From IEEE OUI matched with BT Classic address")
                 no_results_found = False
 
@@ -400,6 +413,7 @@ def print_ChipMakerPrint(bdaddr):
     if(len(str_list) > 0):
         no_results_found = False
         for s in str_list:
+            print_ChipMakerPrint_header_if_needed()
             qprint(s)
 
     #=============================#
@@ -440,6 +454,7 @@ def print_ChipMakerPrint(bdaddr):
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
+                    print_ChipMakerPrint_header_if_needed()
                     qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (DB:EIR_bdaddr_to_MSD)")
                     no_results_found = False
 
@@ -469,16 +484,17 @@ def print_ChipMakerPrint(bdaddr):
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
                     no_results_found = False
+                    print_ChipMakerPrint_header_if_needed()
                     qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Low Energy Manufacturer-Specific Data Company ID (DB:LE_bdaddr_to_MSD {get_le_event_type_string(le_evt_type)})")
                     # if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
                     #     qprint(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
     if(time_profile): qprint(f"End = {time.time()}")
     if(no_results_found):
-        qprint(f"\t\tNo ChipMakerPrint(s) found.")
+        vprint(f"\t\tNo ChipMakerPrint(s) found.")
 
     # Final padding print of print_ChipMakerPrint()
-    qprint("")
+    vprint("")
 
 ########################################
 # Chip Info
@@ -592,11 +608,10 @@ def chip_by_sub_version(sub_version, device_BT_CID):
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipPrint(bdaddr):
+    printed_header = False
     bdaddr = bdaddr.strip().lower()
 
     no_results_found = True
-
-    qprint(f"\t2thprint_ChipPrint:")
 
     #=====================#
     # LL_VERSION_IND data #
@@ -615,6 +630,9 @@ def print_ChipPrint(bdaddr):
         for (ll_sub_version,device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(ll_sub_version, device_BT_CID)
             if(chip_name != ""):
+                if(not printed_header):
+                    qprint(f"\t2thprint_ChipPrint:")
+                    printed_header = True
                 qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (DB:LL_VERSION_IND)")
 
     #==========================#
@@ -633,6 +651,9 @@ def print_ChipPrint(bdaddr):
         for (lmp_sub_version, device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
             if(chip_name != ""):
+                if(not printed_header):
+                    qprint(f"\t2thprint_ChipPrint:")
+                    printed_header = True
                 qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (DB:LMP_VERSION_RES)")
 
     #================#
@@ -648,14 +669,16 @@ def print_ChipPrint(bdaddr):
     #======================#
     str = lookup_ChipPrint_by_GATT(bdaddr)
     if(str != ""):
+        if(not printed_header):
+            qprint(f"\t2thprint_ChipPrint:")
+            printed_header = True
         qprint(str)
         no_results_found = False
 
-
     if(no_results_found):
-        qprint(f"\t\tNo ChipPrint(s) found.")
+        vprint(f"\t\tNo ChipPrint(s) found.")
 
-    qprint("")
+    vprint("")
 
 ########################################
 # ModuleMaker Info
