@@ -110,6 +110,8 @@ def print_UniqueIDReport(bdaddr):
         eir_result = execute_query(eir_query, values)
         for (name_hex_str,) in eir_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
+            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                continue
             print_possible_unique_ID_header_if_needed()
             qprint(f"{i3}This device contains a name \"{name}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
@@ -119,6 +121,8 @@ def print_UniqueIDReport(bdaddr):
         hci_result = execute_query(hci_query, values)
         for (name_hex_str,) in hci_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
+            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                continue
             print_possible_unique_ID_header_if_needed()
             qprint(f"{i3}This device contains a name \"{name}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
@@ -128,6 +132,8 @@ def print_UniqueIDReport(bdaddr):
         le_result = execute_query(le_query, values)
         for name_hex_str, le_evt_type in le_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
+            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                continue
             print_possible_unique_ID_header_if_needed()
             qprint(f"{i3}This device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
             qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
@@ -138,6 +144,8 @@ def print_UniqueIDReport(bdaddr):
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
                 name = byte_values.decode('utf-8', 'ignore')
+                if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                    continue
                 print_possible_unique_ID_header_if_needed()
                 qprint(f"{i3}This device contains a name \"{name}\" found via GATT. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
                 qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
@@ -148,6 +156,8 @@ def print_UniqueIDReport(bdaddr):
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
             if(len(ms_msd_name) > 0):
+                if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                    continue
                 print_possible_unique_ID_header_if_needed()
                 qprint(f"{i3}This device contains a name \"{ms_msd_name}\" found via Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
                 qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
@@ -163,6 +173,8 @@ def print_UniqueIDReport(bdaddr):
             except:
                 ms_msd_name2 = ""
             if(len(ms_msd_name2) > 0):
+                if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                    continue
                 print_possible_unique_ID_header_if_needed()
                 qprint(f"{i3}This device contains a name \"{ms_msd_name2}\" found via Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
                 qprint(f"{i3}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")

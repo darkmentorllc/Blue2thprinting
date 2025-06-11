@@ -521,13 +521,24 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
 # that leads to failure to match on values from the NAMEPRINT_DB.csv, even when something could have been looked up by the nameregex
 
 def find_nameprint_match(name_string):
-    for key, value in TME.TME_glob.nameprint_data.items():
+    for key, value in TME.TME_glob.full_nameprint_data.items():
         #regex_pattern = key
         # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
         regex_pattern = key.replace('\\\\\\', '\\')
         #qprint(f"regex_pattern = {regex_pattern}")
         if re.search(regex_pattern, name_string):
             qprint(f"{i3}NamePrint: match found for {key}: {value}")
+
+def name_matches_nonunique_nameprint(name_string):
+    for key, value in TME.TME_glob.nonunique_nameprint_data.items():
+        #regex_pattern = key
+        # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+        regex_pattern = key.replace('\\\\\\', '\\')
+        #qprint(f"regex_pattern = {regex_pattern}")
+        if re.search(regex_pattern, name_string):
+            return True
+
+    return False
 
 ##################################################################################
 # Appearance (This is in here because it comes up in both advertisements and GATT)

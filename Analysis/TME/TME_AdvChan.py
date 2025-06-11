@@ -653,7 +653,7 @@ def print_manufacturer_data(bdaddr):
 def print_all_advdata(bdaddr, nametype):
     # TODO: Ideally I want to have information grouped by the source packet type it came in on
     # TODO: But looping through and printing only the information for a single type at a time seem like it would be inefficient in terms of db queries
-    # TODO: Maybe build up data structure (effectively recreating BTIDES hierarchy?) and then print that?
+    # TODO: Maybe build up the BTIDES data structure and then pretty-print that?
     print_device_names(bdaddr, nametype)
     print_uuid16s(bdaddr)                               # Includes BTIDES export
     print_uuid16_service_data(bdaddr)                   # Includes BTIDES export

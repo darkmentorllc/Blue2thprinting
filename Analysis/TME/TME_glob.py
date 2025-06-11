@@ -8,20 +8,19 @@
 #########################################
 
 # Indendation (so I can change formatting in a centralized way later)
-# Tabs
+# 1 tab per level
 # i1 = "\t"
 # i2 = "\t\t"
 # i3 = "\t\t\t"
 # i4 = "\t\t\t\t"
 # i5 = "\t\t\t\t\t"
 
-# Spaces
+# 2 spaces per level
 i1 = "  "
 i2 = "    "
 i3 = "      "
 i4 = "        "
 i5 = "          "
-
 
 # Metadata_v1 globals
 custom_uuid128_hash = {}
@@ -32,7 +31,8 @@ clues = {}
 # clues globals hash indexed by UUID, containing a UUID meant to be interpreted as a regex
 clues_regexed = {}
 # NamePrint data
-nameprint_data = {}
+full_nameprint_data = {}
+nonunique_nameprint_data = {}
 
 #########################################
 # Data from formattypes.yaml

@@ -72,20 +72,17 @@ def import_private_CLUES():
 ########################################
 
 def import_nameprint_CSV_data():
-    global nameprint_data
+    global full_nameprint_data
     with open("./NAMEPRINT_DB.csv", 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
         for row in csv_reader:
             if len(row) >= 2:
                 key = row[1].strip()
                 value = row[0].strip()
-                TME.TME_glob.nameprint_data[key] = value
+                TME.TME_glob.full_nameprint_data[key] = value
 
-def import_private_nameprint_CSV_data():
-    global nameprint_data
-    # Option to store private metadata in
-    # this file. It will be consulted, but
-    # doesn't need to be checked in
+    # The user has the option to store private metadata in
+    # this file. It will be consulted, but doesn't need to be checked in
     try:
         with open('./private/NAMEPRINT_DB_private.csv', 'r') as csvfile:
             csv_reader = csv.reader(csvfile)
@@ -93,10 +90,35 @@ def import_private_nameprint_CSV_data():
                 if len(row) >= 2:
                     key = row[1].strip()
                     value = row[0].strip()
-                    TME.TME_glob.nameprint_data[key] = value
+                    TME.TME_glob.full_nameprint_data[key] = value
     except FileNotFoundError:
         pass
 
+def import_nonunique_nameprint_CSV_data():
+    global nonunique_nameprint_data
+    global full_nameprint_data
+    with open("./NAMEPRINT_NONUNIQUE_DB.csv", 'r') as csvfile:
+        csv_reader = csv.reader(csvfile)
+        for row in csv_reader:
+            if len(row) >= 2:
+                key = row[1].strip()
+                value = row[0].strip()
+                TME.TME_glob.nonunique_nameprint_data[key] = value
+                TME.TME_glob.full_nameprint_data[key] = value
+
+    # The user has the option to store private metadata in
+    # this file. It will be consulted, but doesn't need to be checked in
+    try:
+        with open('./private/NAMEPRINT_NONUNIQUE_DB_private.csv', 'r') as csvfile:
+            csv_reader = csv.reader(csvfile)
+            for row in csv_reader:
+                if len(row) >= 2:
+                    key = row[1].strip()
+                    value = row[0].strip()
+                    TME.TME_glob.nonunique_nameprint_data[key] = value
+                    TME.TME_glob.full_nameprint_data[key] = value
+    except FileNotFoundError:
+        pass
 
 ########################################
 # BEGIN FILL DATA FROM YAML ############
