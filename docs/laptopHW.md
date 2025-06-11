@@ -23,8 +23,11 @@ For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB D
 ---
 **Required: accessories**
 
+* 1x - [USB BT dongle](https://amzn.to/45kyeGW) - ~$14/unit
+ * Only needed if your VMware doesn't show a Bluetooth passthrough option.
+
 * 1x - [Separate-power-optional USB-A hub](https://amzn.to/3VILnnj) - ~$17/unit
-* * Necessary because there's not enough USB ports for everything you need to connect
+ * Only needed if there's not enough USB ports for everything you need to connect.
 
 ---
 **Nice to have: general**
