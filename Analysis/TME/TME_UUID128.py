@@ -24,9 +24,9 @@ def print_associated_android_package_names(type, indent, UUID128):
     if(len(android_pkgs_result) > 0):
         match_found = True
         qprint(f"{indent}{type} {UUID128}:")
-        qprint(f"{indent}\tThis vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
+        qprint(f"{indent}{i1}This vendor-specific UUID128 is associated with the following Android packages in the BLEScope data:")
         for (pkg,) in android_pkgs_result:
-            qprint(f"{indent}\t{pkg}")
+            qprint(f"{indent}{i1}{pkg}")
 
     return match_found
 

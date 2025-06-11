@@ -98,20 +98,19 @@ def print_LMP_info(bdaddr):
     else:
         qprint(f"{i1}BTC LMP Info:")
 
-    indent = "\t\t"
     for lmp_version, lmp_sub_version, device_BT_CID in version_result:
-        qprint(f"{indent}BTC LMP version response:")
-        qprint(f"{indent}\tVersion ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
-        qprint(f"{indent}\tSub-version: 0x{lmp_sub_version:04x}")
-        qprint(f"{indent}\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+        qprint(f"{i2}BTC LMP version response:")
+        qprint(f"{i3}Version ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
+        qprint(f"{i3}Sub-version: 0x{lmp_sub_version:04x}")
+        qprint(f"{i3}Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
     for page, features in features_result:
-        qprint(f"{indent}BTC LMP Features: 0x{features:016x}")
-        decode_BTC_features(page, features, f"{indent}\t")
+        qprint(f"{i2}BTC LMP Features: 0x{features:016x}")
+        decode_BTC_features(page, features, f"{i3}")
         BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
 
     for (device_name,) in name_result:
-        qprint(f"{indent}BTC LMP Name Response: {device_name}")
+        qprint(f"{i2}BTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
         # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RES fragments (it's defragmented)
         remote_name_hex_str = device_name
@@ -120,11 +119,11 @@ def print_LMP_info(bdaddr):
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
         vprint("\n\tRaw BTC LMP info:")
         for lmp_version, lmp_sub_version, device_BT_CID in version_result:
-            vprint(f"{indent}\"lmp_version\",\"0x{lmp_version:02x}\"")
-            vprint(f"{indent}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
-            vprint(f"{indent}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
+            vprint(f"{i2}\"lmp_version\",\"0x{lmp_version:02x}\"")
+            vprint(f"{i2}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
+            vprint(f"{i2}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
 
         for page, features in features_result:
-            vprint(f"{indent}\"features\",\"0x{features:016x}\"")
+            vprint(f"{i2}\"features\",\"0x{features:016x}\"")
 
     qprint("")

@@ -4,9 +4,9 @@
 ########################################
 
 from TME.TME_helpers import *
-from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_BTIDES_EIR import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # BTC EIR Device CID

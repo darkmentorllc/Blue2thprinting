@@ -501,15 +501,15 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         if result:
             qprint(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): {result[0][0]}")
             if(first_three_octets == "00:00:00"):
-                qprint(f"{indent}\tNOTE: Most BDADDR that begin with 00:00:00 are erroneous, not actual XEROX devices!")
+                qprint(f"{indent}{i1}NOTE: Most BDADDR that begin with 00:00:00 are erroneous, not actual XEROX devices!")
         else:
             qprint(f"{indent}Company Name by IEEE OUI ({bdaddr[:8]}): No Match")
 
         if(print_type):
             if(is_classic):
-                qprint(f"{indent}\tBDADDR is Bluetooth Classic")
+                qprint(f"{indent}{i1}BDADDR is Bluetooth Classic")
             else:
-                qprint(f"{indent}\tBDADDR is Bluetooth Low Energy Public")
+                qprint(f"{indent}{i1}BDADDR is Bluetooth Low Energy Public")
         qprint("")
 
 ###################################################################################

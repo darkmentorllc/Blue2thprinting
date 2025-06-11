@@ -484,29 +484,29 @@ def print_apple_MSD(indent, manufacturer_specific_data):
         major = f"{manufacturer_specific_data[36:40]}"
         minor = f"{manufacturer_specific_data[40:44]}"
         rssi = f"{manufacturer_specific_data[44:46]}"
-        qprint(f"{indent}\tUUID128: {UUID128}")
-        qprint(f"{indent}\tMajor ID: {major}")
-        qprint(f"{indent}\tMinor ID: {minor}")
+        qprint(f"{indent}{i1}UUID128: {UUID128}")
+        qprint(f"{indent}{i1}Major ID: {major}")
+        qprint(f"{indent}{i1}Minor ID: {minor}")
         signed_rssi = int(rssi, 16)
         if(signed_rssi & 0x80):
             signed_rssi -= 256
-        qprint(f"{indent}\tRSSI at 1 meter: {signed_rssi}dBm")
+        qprint(f"{indent}{i1}RSSI at 1 meter: {signed_rssi}dBm")
     elif(manufacturer_specific_data[0:4] == "1202"):
         qprint(f"{indent}Apple Find My network device in 'nearby' state:")
         bitfield = int(manufacturer_specific_data[4:5], 16)
         maintained = (bitfield >> 2) & 1
         battery_state = (bitfield >> 6) & 3
-        qprint(f"{indent}\tOwner connected within last 15 minutes?: {"True" if maintained else "False"}")
+        qprint(f"{indent}{i1}Owner connected within last 15 minutes?: {"True" if maintained else "False"}")
         level_str = {0: "Full", 1: "Medium", 2: "Low", 3: "Critically Low"}
-        qprint(f"{indent}\tBattery Level: {level_str[battery_state]}")
+        qprint(f"{indent}{i1}Battery Level: {level_str[battery_state]}")
     elif(manufacturer_specific_data[0:4] == "1219"):
         qprint(f"{indent}Apple Find My network device in 'separated' state:")
         bitfield = int(manufacturer_specific_data[4:5], 16)
         maintained = (bitfield >> 2) & 1
         battery_state = (bitfield >> 6) & 3
-        qprint(f"{indent}\tOwner connected within last 15 minutes?: {"True" if maintained else "False"}")
+        qprint(f"{indent}{i1}Owner connected within last 15 minutes?: {"True" if maintained else "False"}")
         level_str = {0: "Full", 1: "Medium", 2: "Low", 3: "Critically Low"}
-        qprint(f"{indent}\tBattery Level: {level_str[battery_state]}")
+        qprint(f"{indent}{i1}Battery Level: {level_str[battery_state]}")
         # TODO: not sure if it's worth printing public key bytes or not (didn't read enough of spec...)
 
 # Print Microsoft Manufacturer-Specific Data information, where known
@@ -515,24 +515,24 @@ def print_microsoft_MSD(indent, manufacturer_specific_data):
     if(manufacturer_specific_data[0:6] == "030080"): # "Pairing over LE only"
         qprint(f"{indent}Microsoft Swift Pair - \"Pairing over LE only\"")
         utf8_string = extract_ms_msd_name(manufacturer_specific_data)
-        qprint(f"{indent}\tDisplayName = {utf8_string}")
+        qprint(f"{indent}{i1}DisplayName = {utf8_string}")
     if(manufacturer_specific_data[0:6] == "030280"): # "Pairing over LE and BR/EDR with Secure Connections"
         qprint(f"{indent}Microsoft Swift Pair - \"Pairing over LE and BR/EDR with Secure Connections\"")
         utf8_string = extract_ms_msd_name(manufacturer_specific_data)
-        qprint(f"{indent}\tDisplayName = {utf8_string}")
+        qprint(f"{indent}{i1}DisplayName = {utf8_string}")
         CoD_bytes = bytes.fromhex(manufacturer_specific_data[6:12])
         big_endian_integer_CoD = struct.unpack('>I', b'\x00' + CoD_bytes)[0]
         print_CoD_to_names(big_endian_integer_CoD)
     if(manufacturer_specific_data[0:6] == "030180"): # "Pairing over BR/EDR only, using Bluetooth LE for discovery"
         qprint(f"{indent}Microsoft Swift Pair - \"Pairing over BR/EDR only, using Bluetooth LE for discovery\"")
         utf8_string = extract_ms_msd_name(manufacturer_specific_data)
-        qprint(f"{indent}\tDisplayName = {utf8_string}")
+        qprint(f"{indent}{i1}DisplayName = {utf8_string}")
         CoD_bytes = bytes.fromhex(manufacturer_specific_data[18:24])
         big_endian_integer_CoD = struct.unpack('>I', b'\x00' + CoD_bytes)[0]
         print_CoD_to_names(big_endian_integer_CoD)
         BTC_BDADDR_bytes = bytes.fromhex(manufacturer_specific_data[6:18])
         BTC_BDADDR_str = f"{BTC_BDADDR_bytes[5]:02x}:{BTC_BDADDR_bytes[4]:02x}:{BTC_BDADDR_bytes[3]:02x}:{BTC_BDADDR_bytes[2]:02x}:{BTC_BDADDR_bytes[1]:02x}:{BTC_BDADDR_bytes[0]:02x}"
-        qprint(f"{indent}\tBluetooth Classic BDADDR embedded in MSD = {BTC_BDADDR_str}")
+        qprint(f"{indent}{i1}Bluetooth Classic BDADDR embedded in MSD = {BTC_BDADDR_str}")
         print_company_name_from_bdaddr(f"{i4}", BTC_BDADDR_str, False)
     # Print other Microsoft beacon information (format from https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569)
     if(manufacturer_specific_data[0:2] == "01"):
@@ -552,7 +552,7 @@ def print_microsoft_MSD(indent, manufacturer_specific_data):
         }
         device_type = int(manufacturer_specific_data[2:4], 16)
         device_type = device_type & 0x1f # It's technically only the bottom 5 bits, though no one (including Microsoft) seems to set the upper 3 bits to 001 like the spec says they should
-        qprint(f"{indent}\tDevice Type = {device_types[device_type]}")
+        qprint(f"{indent}{i1}Device Type = {device_types[device_type]}")
         Version_and_Flags = int(manufacturer_specific_data[4:6], 16)
         if(Version_and_Flags == 0x20):
             share_state = "only my devices"
@@ -560,39 +560,39 @@ def print_microsoft_MSD(indent, manufacturer_specific_data):
             share_state = "everyone"
         else:
             share_state = "Unknown value: check for specification update!"
-        qprint(f"{indent}\tNearBy share set to: {share_state}")
+        qprint(f"{indent}{i1}NearBy share set to: {share_state}")
         # The values observed in the wild for Flags_and_Device_Status only make sense if you assume the MS spec has the bit ordering reversed and bit 0 is right-most not left-most
         Flags_and_Device_Status = int(manufacturer_specific_data[6:8], 16)
         Bluetooth_Address_As_Device_ID = True if((Flags_and_Device_Status >> 5) & 1) else False
-        qprint(f"{indent}\tBluetooth address can be used as the device ID?: {Bluetooth_Address_As_Device_ID}")
+        qprint(f"{indent}{i1}Bluetooth address can be used as the device ID?: {Bluetooth_Address_As_Device_ID}")
         ExtendedDeviceStatus = Flags_and_Device_Status & 0xf
         # per spec "Values may be ORed"
         if(ExtendedDeviceStatus & 0x1):
-            qprint(f"{indent}\tExtended Status: Hosted by remote session")
+            qprint(f"{indent}{i1}Extended Status: Hosted by remote session")
         if(ExtendedDeviceStatus & 0x2):
-            qprint(f"{indent}\tExtended Status: The device does not have session hosting status available")
+            qprint(f"{indent}{i1}Extended Status: The device does not have session hosting status available")
         if(ExtendedDeviceStatus & 0x4):
-            qprint(f"{indent}\tExtended Status: The device supports NearShare if the user is the same for the other device")
+            qprint(f"{indent}{i1}Extended Status: The device supports NearShare if the user is the same for the other device")
         if(ExtendedDeviceStatus & 0x8):
-            qprint(f"{indent}\tExtended Status: The device supports NearShare")
+            qprint(f"{indent}{i1}Extended Status: The device supports NearShare")
         if(ExtendedDeviceStatus == 0):
-            qprint(f"{indent}\tExtended Status: None")
+            qprint(f"{indent}{i1}Extended Status: None")
         Salt_bytes = bytes.fromhex(manufacturer_specific_data[8:16])
         big_endian_integer_Salt = struct.unpack('<I', Salt_bytes)[0] # Salt is ostensibly stored little-endian, but without knowing a "Device Thumbprint" to calculate the Device Hash I can't be sure
-        qprint(f"{indent}\tSalt: 0x{big_endian_integer_Salt:08x}")
+        qprint(f"{indent}{i1}Salt: 0x{big_endian_integer_Salt:08x}")
         #Device_Hash_bytes = bytes.fromhex(manufacturer_specific_data[16:])
-        qprint(f"{indent}\tDevice Hash: {manufacturer_specific_data[16:]}")
+        qprint(f"{indent}{i1}Device Hash: {manufacturer_specific_data[16:]}")
         # Non-spec interpretation based on observed data: I see 2 bytes and then a string
         # This seems to only occur if(ExtendedDeviceStatus & 0x8). Found some if(ExtendedDeviceStatus & 0x4), data and confirmed it doesn't occur then
         if(ExtendedDeviceStatus & 0x8):
             try:
                 Device_Hash_as_utf8_str = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
-                qprint(f"{indent}\t\tNon-spec interpretation of 'Device Hash' as possible string: {Device_Hash_as_utf8_str}")
+                qprint(f"{indent}{i2}Non-spec interpretation of 'Device Hash' as possible string: {Device_Hash_as_utf8_str}")
                 Device_Hash_unknown_bytes = bytes.fromhex(manufacturer_specific_data[16:20])
                 Device_Hash_unknown_bytes_little_endian_short = struct.unpack('<H', Device_Hash_unknown_bytes)[0]
-                qprint(f"{indent}\t\tNon-spec interpretation of 'Device Hash' as possible string: unknown prefix bytes interpreted as little-endian 16-bit value: 0x{Device_Hash_unknown_bytes_little_endian_short:04x}")
+                qprint(f"{indent}{i2}Non-spec interpretation of 'Device Hash' as possible string: unknown prefix bytes interpreted as little-endian 16-bit value: 0x{Device_Hash_unknown_bytes_little_endian_short:04x}")
             except:
-                qprint(f"{indent}\t\tNon-spec interpretation of 'Device Hash' as string: does not decode")
+                qprint(f"{indent}{i2}Non-spec interpretation of 'Device Hash' as string: does not decode")
 
 def print_meta_MSD(indent, manufacturer_specific_data):
     if(len(manufacturer_specific_data) == 28): # 14 bytes * 2 chars per byte

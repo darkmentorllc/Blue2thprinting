@@ -30,26 +30,26 @@ def device_has_L2CAP_info(bdaddr):
 def print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(indent, direction, pkt_id, data_len, interval_min, interval_max, latency, timeout):
     print(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_REQ:")
     if(direction == type_BTIDES_direction_C2P):
-        qprint(f"{indent}\tDirection: Central to Peripheral")
+        qprint(f"{indent}{i1}Direction: Central to Peripheral")
     else:
-        qprint(f"{indent}\tDirection: Peripheral to Central")
-    qprint(f"{indent}\tPacket command/response association ID: {pkt_id}")
-    qprint(f"{indent}\tData Length: {data_len}")
-    qprint(f"{indent}\tRequested minimum connection interval (in units of 1.25ms): {interval_min}")
-    qprint(f"{indent}\tRequested maximum connection interval (in units of 1.25ms): {interval_max}")
-    qprint(f"{indent}\tRequested Peripheral Latency (number of connection events Peripheral can skip responding): {latency}")
-    qprint(f"{indent}\tRequested timeout (in units of 10ms): {timeout}")
+        qprint(f"{indent}{i1}Direction: Peripheral to Central")
+    qprint(f"{indent}{i1}Packet command/response association ID: {pkt_id}")
+    qprint(f"{indent}{i1}Data Length: {data_len}")
+    qprint(f"{indent}{i1}Requested minimum connection interval (in units of 1.25ms): {interval_min}")
+    qprint(f"{indent}{i1}Requested maximum connection interval (in units of 1.25ms): {interval_max}")
+    qprint(f"{indent}{i1}Requested Peripheral Latency (number of connection events Peripheral can skip responding): {latency}")
+    qprint(f"{indent}{i1}Requested timeout (in units of 10ms): {timeout}")
 
 
 def print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(indent, direction, pkt_id, data_len, result):
     print(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_RSP:")
     if(direction == type_BTIDES_direction_C2P):
-        qprint(f"{indent}\tDirection: Central to Peripheral")
+        qprint(f"{indent}{i1}Direction: Central to Peripheral")
     else:
-        qprint(f"{indent}\tDirection: Peripheral to Central")
-    qprint(f"{indent}\tPacket command/response association ID: {pkt_id}")
-    qprint(f"{indent}\tData Length: {data_len}")
-    qprint(f"{indent}\tResult: {result} ({type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings[result]})")
+        qprint(f"{indent}{i1}Direction: Peripheral to Central")
+    qprint(f"{indent}{i1}Packet command/response association ID: {pkt_id}")
+    qprint(f"{indent}{i1}Data Length: {data_len}")
+    qprint(f"{indent}{i1}Result: {result} ({type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings[result]})")
 
 
 def print_L2CAP_info(bdaddr):
