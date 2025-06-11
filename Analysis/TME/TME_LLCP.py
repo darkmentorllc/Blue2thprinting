@@ -3,12 +3,11 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-#import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_LLCP import *
 
 ########################################
-# 2thprint_BLE Info
+# LLCP Info
 ########################################
 
 def phy_prefs_to_string(number):

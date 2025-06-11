@@ -9,7 +9,7 @@ from TME.TME_BTIDES_LMP import *
 from TME.TME_BTIDES_HCI import *
 
 ########################################
-# 2thprint_BTC Info
+# LMP Info
 ########################################
 
 def decode_BTC_features(page, features, indent):
@@ -118,7 +118,7 @@ def print_LMP_info(bdaddr):
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
-        vprint("\n\tRaw BTC 2thprint:")
+        vprint("\n\tRaw BTC LMP info:")
         for lmp_version, lmp_sub_version, device_BT_CID in version_result:
             vprint(f"{indent}\"lmp_version\",\"0x{lmp_version:02x}\"")
             vprint(f"{indent}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")

@@ -4,8 +4,6 @@
 ########################################
 
 from TME.TME_helpers import *
-#from TME.TME_metadata import *
-#from TME.TME_AdvChan import *
 from TME.TME_BTIDES_GPS import BTIDES_export_GPS_coordinate
 from datetime import datetime
 
