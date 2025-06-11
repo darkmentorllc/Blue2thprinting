@@ -683,7 +683,10 @@ def print_ChipPrint(bdaddr):
         vprint(f"\t2thprint_ChipPrint:")
         vprint(f"\t\tNo ChipPrint(s) found.")
 
-    vprint("")
+    if(not printed_header):
+        vprint("")
+    else:
+        qprint("")
 
 ########################################
 # ModuleMaker Info
