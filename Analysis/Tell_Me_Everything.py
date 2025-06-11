@@ -265,7 +265,7 @@ def main():
         get_uuid128_stats(args.UUID128_stats)
         quit() # Don't do anything other than print the stats and exit
 
-    qprint(bdaddrs)
+    vprint(bdaddrs)
 
     #######################################################
     # Options to search based on specific values or regexes
@@ -409,7 +409,7 @@ def main():
         # Check if we have no information in any table for this BDADDR
         # and if so, continue to the next BDADDR (if any)
         if(not bdaddr_found_in_any_table(bdaddr)):
-            print(f"Information about {bdaddr} was not found in any table.")
+            print(f"No information was found for {bdaddr}.")
             continue
 
         qprint("================================================================================")
