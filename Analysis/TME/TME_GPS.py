@@ -56,7 +56,6 @@ def print_GPS_entries(indent, results, bdaddr):
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
 def print_GPS(bdaddr):
-    qprint("\tGPS coordinates:")
     values = (bdaddr,)
     # The WiGLE data is not capable of distinguishing between Classic and LE,
     # so we need to not constraint it based on the bdaddr_random value, to get both Classic and LE
@@ -65,8 +64,10 @@ def print_GPS(bdaddr):
 
     indent = "\t\t"
     if (len(select_results) == 0):
-        qprint(f"{indent}No GPS data present for this device.)")
+        vprint(f"{indent}No GPS data present for this device.)")
         return
+    else:
+        qprint("\tGPS coordinates:")
 
     print_GPS_entries(indent, select_results, bdaddr)
 

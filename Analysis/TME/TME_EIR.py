@@ -62,6 +62,6 @@ def print_PSRM(bdaddr):
 
         # Then human UI output
         qprint(f"\t\tPage Scan Repetition Mode: 0x{page_scan_rep_mode:02x}")
-        qprint(f"\t\tIn BT Classic Data (EIR_bdaddr_to_PSRM)")
+        qprint(f"\t\tIn BT Classic Data (DB:EIR_bdaddr_to_PSRM)")
 
     qprint("")

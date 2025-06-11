@@ -18,7 +18,7 @@ That script will perform required software installation and some one-time databa
 
 ```
 cd Analysis
-python3 ./Tell_Me_Everything.py --query-BTIDALPOOL --name-regex "Samsung" 
+python3 ./Tell_Me_Everything.py --query-BTIDALPOOL --name-regex "Samsung"
 ```
 
 The first time you use an argument like `--query-BTIDALPOOL` or `--to-BTIDALPOOL`, you will be prompted for a Google OAuth single-sign-on login, like the following:
@@ -28,7 +28,7 @@ Please visit this URL to authenticate:
 https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbtidalpool.ddns.net%3A7653%2Foauth2callback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=k8nDQob2xEqPngwj3GrpZPWLMU5Xzu&prompt=consent&access_type=offline
 
 After authentication, copy the entire JSON token from the browser:
-Token: 
+Token:
 ```
 
  Navigate to the printed out SSO URL and use any throwaway Google account. You will receive a JSON authentication token like the following from the web page:
@@ -42,7 +42,7 @@ For the above query, you will likely see output like the following (though it wi
 ```
 	DeviceName: [TV] Samsung AU9000 65 TV
 	DeviceNameType: Complete Name
-		In BT Classic Data (EIR_bdaddr_to_name)
+		In BT Classic Data (DB:EIR_bdaddr_to_name)
 	DeviceName: [TV] Samsung AU9000 65 TV
 	DeviceNameType: Shortened Name
 		This was found in an event of type 4 which corresponds to Scan Response (SCAN_RSP)
