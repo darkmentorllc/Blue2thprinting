@@ -7,7 +7,7 @@ import re
 import time
 from TME.TME_helpers import *
 from TME.TME_AdvChan import *
-from TME.TME_BTIDES_LL import *
+from TME.TME_BTIDES_LLCP import *
 from TME.TME_BTIDES_LMP import *
 from TME.TME_BTIDES_AdvData import *
 

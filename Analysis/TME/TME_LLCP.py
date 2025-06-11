@@ -5,7 +5,7 @@
 
 #import TME.TME_glob
 from TME.TME_helpers import *
-from TME.TME_BTIDES_LL import *
+from TME.TME_BTIDES_LLCP import *
 
 ########################################
 # 2thprint_BLE Info

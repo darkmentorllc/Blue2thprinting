@@ -22,8 +22,8 @@ from TME.TME_L2CAP import *
 from TME.TME_GATT import *
 from TME.TME_SMP import *
 from TME.TME_SDP import *
-from TME.TME_BLE2thprint import *
-from TME.TME_BTC2thprint import *
+from TME.TME_LLCP import *
+from TME.TME_LMP import *
 from TME.TME_metadata import *
 from TME.TME_trackability import *
 from TME.TME_GPS import *

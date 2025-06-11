@@ -30,8 +30,8 @@ from TME.TME_BTIDES_base import write_BTIDES, insert_std_optional_fields
 # Advertisement Channel
 from scapy_to_BTIDES_common import *
 from TME.TME_AdvChan import *
-# LL Control
-from TME.TME_BTIDES_LL import *
+# Link Layer Control Protocol
+from TME.TME_BTIDES_LLCP import *
 # ATT
 from TME.TME_BTIDES_ATT import *
 # GATT

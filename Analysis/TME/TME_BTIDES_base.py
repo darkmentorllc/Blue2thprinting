@@ -17,7 +17,7 @@ from jsonschema import Draft202012Validator
 # Same order as in BTIDES_base.json
 BTIDES_files = ["BTIDES_base.json",
                 "BTIDES_AdvData.json",
-                "BTIDES_LL.json",
+                "BTIDES_LLCP.json",
                 "BTIDES_HCI.json",
                 "BTIDES_L2CAP.json",
                 "BTIDES_SMP.json",

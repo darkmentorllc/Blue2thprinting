@@ -22,7 +22,7 @@ from TME.TME_BTIDES_base import insert_std_optional_fields
 from TME.TME_BTIDES_AdvData import BTIDES_export_AdvData
 from TME.TME_AdvChan import *
 # Feature response
-from TME.TME_BTIDES_LL import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
+from TME.TME_BTIDES_LLCP import ff_LL_FEATURE_RSP, BTIDES_export_LLArray_entry
 # HCI (for Remote Name Request Complete)
 from TME.TME_BTIDES_HCI import *
 # L2CAP

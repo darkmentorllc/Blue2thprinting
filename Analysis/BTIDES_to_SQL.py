@@ -607,7 +607,7 @@ def parse_AdvChanArray(entry):
                     continue
 
 ###################################
-# BTIDES_LL.json information
+# BTIDES_LLCP.json information
 ###################################
 
 def import_LL_UNKNOWN_RSP(bdaddr, random, ll_entry):
