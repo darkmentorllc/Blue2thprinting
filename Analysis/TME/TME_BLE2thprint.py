@@ -71,7 +71,7 @@ def decode_BLE_features(features):
     if(features & (0b1 << 0x2b)): qprint(f"{indent}* Periodic Advertising with Responses - Advertiser")
     if(features & (0b1 << 0x2c)): qprint(f"{indent}* Periodic Advertising with Responses - Scanner")
 
-def print_BLE_2thprint(bdaddr):
+def print_LLCP_info(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
@@ -104,13 +104,13 @@ def print_BLE_2thprint(bdaddr):
     # FIXME: for now the direction in all my DB data is P2C, so I'm hardcoding it here, but this needs to be fixed in the future once the DB is updated
     direction = type_BTIDES_direction_P2C
     for ll_version, ll_sub_version, device_BT_CID in version_result:
-        qprint(f"{indent}BLE LL Ctrl Opcode: 0x0C ({ll_ctrl_pdu_opcodes_to_strings[0x0C]})")
+        qprint(f"{indent}LLCP opcode 0x0C: {ll_ctrl_pdu_opcodes_to_strings[0x0C]}")
         qprint(f"{indent}\tBT Version ({ll_version}): {get_bt_spec_version_numbers_to_names(ll_version)}")
         qprint(f"{indent}\tLL Sub-version: 0x{ll_sub_version:04x}")
         qprint(f"{indent}\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
     for bdaddr_random, opcode, features in features_result:
-        qprint(f"{indent}BLE LL Ctrl Opcode: 0x{opcode:02X} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
+        qprint(f"{indent}LLCP opcode 0x{opcode:02X}: {ll_ctrl_pdu_opcodes_to_strings[opcode]}")
         qprint(f"{indent}\tBLE LL Features: 0x{features:016x}")
         decode_BLE_features(features)
         data = ff_LL_FEATURE_RSP(direction, features)
@@ -134,7 +134,7 @@ def print_BLE_2thprint(bdaddr):
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     for bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time in lengths_result:
-        qprint(f"{indent}LL Ctrl Opcode: 0x{opcode:02X} ({ll_ctrl_pdu_opcodes_to_strings[opcode]})")
+        qprint(f"{indent}LLCP opcode 0x{opcode:02X}: {ll_ctrl_pdu_opcodes_to_strings[opcode]}")
         qprint(f"{indent}\tMax RX octets: {max_rx_octets}")
         qprint(f"{indent}\tMax RX time: {max_rx_time} microseconds")
         qprint(f"{indent}\tMax TX octets: {max_tx_octets}")
@@ -162,7 +162,7 @@ def print_BLE_2thprint(bdaddr):
             BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(phys_result) != 0 or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
-        vprint("\tRaw BLE 2thprint:")
+        vprint("\tRaw LLCP info:")
         for ll_version, ll_sub_version, device_BT_CID in version_result:
             vprint(f"{indent}\"LL_VERSION_IND:ll_version\",\"0x%02x\"" % ll_version)
 

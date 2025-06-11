@@ -12,8 +12,7 @@ from TME.TME_BTIDES_HCI import *
 # 2thprint_BTC Info
 ########################################
 
-def decode_BTC_features(page, features):
-    indent = "\t\t\t"
+def decode_BTC_features(page, features, indent):
     if(page == 0):
         if(features & (0b1 << 0x00)): qprint(f"{indent}* 3 slot packets")
         if(features & (0b1 << 0x01)): qprint(f"{indent}* 5 slot packets")
@@ -80,11 +79,10 @@ def decode_BTC_features(page, features):
         if(features & (0b1 << 0x3e)): qprint(f"{indent}* Reserved for future use")
         if(features & (0b1 << 0x3f)): qprint(f"{indent}* Extended features")
 
-def print_BTC_2thprint(bdaddr):
+def print_LMP_info(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-
     version_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
 
@@ -95,36 +93,38 @@ def print_BTC_2thprint(bdaddr):
     name_result = execute_query(name_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
-        vprint("\tNo BTC 2thprint Info found.")
+        vprint("\tNo BTC LMP Info found.")
         return
     else:
-        qprint("\tBTC 2thprint Info:")
+        qprint("\tBTC LMP Info:")
 
+    indent = "\t\t"
     for lmp_version, lmp_sub_version, device_BT_CID in version_result:
-        qprint(f"\t\tBT Version ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
-        qprint("\t\tLMP Sub-version: 0x%04x" % lmp_sub_version)
-        qprint(f"\t\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
+        qprint(f"{indent}BTC LMP version response:")
+        qprint(f"{indent}\tVersion ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
+        qprint(f"{indent}\tSub-version: 0x{lmp_sub_version:04x}")
+        qprint(f"{indent}\tCompany ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
 
     for page, features in features_result:
-        qprint("\t\tBTC LMP Features: 0x%016x" % features)
-        decode_BTC_features(page, features)
+        qprint(f"{indent}BTC LMP Features: 0x{features:016x}")
+        decode_BTC_features(page, features, f"{indent}\t")
         BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
 
     for (device_name,) in name_result:
-        qprint(f"\t\tBTC LMP Name Response: {device_name}")
+        qprint(f"{indent}BTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
         # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RES fragments (it's defragmented)
         remote_name_hex_str = device_name
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
-        qprint("\n\tRaw BTC 2thprint:")
+        vprint("\n\tRaw BTC 2thprint:")
         for lmp_version, lmp_sub_version, device_BT_CID in version_result:
-            qprint(f"\t\t\"lmp_version\",\"0x%02x\"" % lmp_version)
-            qprint("\t\t\"lmp_sub_version\",\"0x%04x\"" % lmp_sub_version)
-            qprint(f"\t\t\"version_BT_CID\",\"0x%04x\"" % device_BT_CID)
+            vprint(f"{indent}\"lmp_version\",\"0x{lmp_version:02x}\"")
+            vprint(f"{indent}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
+            vprint(f"{indent}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
 
         for page, features in features_result:
-            qprint("\t\t\"features\",\"0x%016x\"" % features)
+            vprint(f"{indent}\"features\",\"0x{features:016x}\"")
 
     qprint("")

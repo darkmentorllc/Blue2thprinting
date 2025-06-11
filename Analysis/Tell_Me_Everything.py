@@ -421,8 +421,8 @@ def main():
         print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export
         print_GATT_info(bdaddr)                             # Includes BTIDES export
         print_SMP_info(bdaddr)                              # Includes BTIDES export
-        print_BLE_2thprint(bdaddr)                          # Includes BTIDES export
-        print_BTC_2thprint(bdaddr)                          # Includes BTIDES export
+        print_LLCP_info(bdaddr)                             # Includes BTIDES export
+        print_LMP_info(bdaddr)                              # Includes BTIDES export
         print_SDP_info(bdaddr)                              # Includes BTIDES export
         print_L2CAP_info(bdaddr)                            # Includes BTIDES export
         print_GPS(bdaddr)

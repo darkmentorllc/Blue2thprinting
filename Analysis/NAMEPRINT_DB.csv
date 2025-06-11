@@ -189,3 +189,4 @@
 "LifeScan Inc. OneTouch glucose test meter (https://www.onetouch.com/products/glucose-meters/onetouch-verio-sync)","^OneTouch [A-Z0-9]{4}$"
 "Phillips Respironics System One CPAP sleep apnea treatment medical device","^PR BT [A-F0-9]{4}$"
 "Caterpillar(CAT) heavy equipment BT keyless-start (https://fccid.io/PQMA5S4/User-Manual/Exhibit-D-Users-Manual-per-2-1033-b3-3137980.pdf)","^CATBTNT-[0-9]{2} [A-Z]{3}[0-9]{5}$"
+"OPPO Reno7 Z 5G cell phone (https://www.oppo.com/en/smartphones/series-reno/reno7-z-5g/specs/)","^OPPO Reno7 Z 5G$"
