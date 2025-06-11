@@ -491,6 +491,7 @@ def print_ChipMakerPrint(bdaddr):
 
     if(time_profile): qprint(f"End = {time.time()}")
     if(no_results_found):
+        vprint(f"\t2thprint_ChipMakerPrint:")
         vprint(f"\t\tNo ChipMakerPrint(s) found.")
 
     # Final padding print of print_ChipMakerPrint()
@@ -676,6 +677,7 @@ def print_ChipPrint(bdaddr):
         no_results_found = False
 
     if(no_results_found):
+        vprint(f"\t2thprint_ChipPrint:")
         vprint(f"\t\tNo ChipPrint(s) found.")
 
     vprint("")
