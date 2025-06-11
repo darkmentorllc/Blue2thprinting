@@ -76,7 +76,7 @@ def print_uuid16s(bdaddr):
                     qprint("\t\tEmpty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID16s)")
+        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
 
     # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID16s in le_uuid16s_result:
@@ -102,7 +102,7 @@ def print_uuid16s(bdaddr):
                     qprint("\t\tEmpty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -128,7 +128,7 @@ def print_uuid16s_service_solicit(bdaddr):
                 qprint("\t\tEmpty list present")
                 continue
             colored_print_name_for_UUID16(uuid16)
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -156,7 +156,7 @@ def print_uuid16_service_data(bdaddr):
         colored_print_name_for_UUID16(UUID16_hex_str)
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

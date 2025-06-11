@@ -27,7 +27,7 @@ def get_uuid16_stats(arg):
                     seen_btc_uuid16s_hash[uuid16] = 1
 
         qprint("----= BLUETOOTH CLASSIC RESULTS =----")
-        qprint(f"{len(eir_uuid16_result)} rows of data found in EIR_bdaddr_to_UUID16s")
+        qprint(f"{len(eir_uuid16_result)} rows of data found in DB:EIR_bdaddr_to_UUID16s")
         qprint(f"{len(seen_btc_uuid16s_hash)} unique UUID16s found")
 #            qprint(seen_btc_uuid16s_hash)
         sorted_items = sorted(seen_btc_uuid16s_hash.items(), key=lambda item: item[1], reverse=True)
@@ -68,7 +68,7 @@ def get_uuid16_stats(arg):
         company_uuid_count = 0
         qprint("")
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        qprint(f"{len(le_uuid16_result)} rows of data found in LE_bdaddr_to_UUID16s_list")
+        qprint(f"{len(le_uuid16_result)} rows of data found in DB:LE_bdaddr_to_UUID16s_list")
         qprint(f"{len(seen_le_uuid16s_hash)} unique UUID16s found")
 #            qprint(seen_le_uuid16s_hash)
         sorted_items = sorted(seen_le_uuid16s_hash.items(), key=lambda item: item[1], reverse=True)
@@ -114,7 +114,7 @@ def get_uuid128_stats(arg):
                     seen_btc_uuid128s_hash[uuid128] = 1
 
         qprint("----= BLUETOOTH CLASSIC RESULTS =----")
-        qprint(f"{len(eir_uuid128_result)} rows of data found in EIR_bdaddr_to_UUID128s")
+        qprint(f"{len(eir_uuid128_result)} rows of data found in DB:EIR_bdaddr_to_UUID128s")
         qprint(f"{len(seen_btc_uuid128s_hash)} unique UUID128s found")
 #            qprint(seen_btc_uuid128s_hash)
         sorted_items = sorted(seen_btc_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)
@@ -160,7 +160,7 @@ def get_uuid128_stats(arg):
 
         qprint("")
         qprint("----= BLUETOOTH LOW ENERGY RESULTS =----")
-        qprint(f"{len(le_uuid128_result)} rows of data found in LE_bdaddr_to_UUID128s_list")
+        qprint(f"{len(le_uuid128_result)} rows of data found in DB:LE_bdaddr_to_UUID128s_list")
         qprint(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
 #            qprint(seen_le_uuid128s_hash)
         sorted_items = sorted(seen_le_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)

@@ -89,28 +89,28 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                     for (name_hex_str,) in eir_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (EIR_bdaddr_to_name table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:EIR_bdaddr_to_name)"
                 if(len(hci_result) > 0):
                     for (name_hex_str,) in hci_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (HCI_bdaddr_to_name table)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:HCI_bdaddr_to_name)"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (LE_bdaddr_to_name table, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:LE_bdaddr_to_name, le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
                         name = byte_values.decode('utf-8', 'ignore',)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (GATT_characteristics & GATT_characteristics_values tables)"
+                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:GATT_characteristics & DB:GATT_characteristics_values)"
                 if(ms_msd_name_present):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
                         ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
                         if(len(ms_msd_name) > 0):
                             if re.search(regex_pattern, ms_msd_name):
-                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Swift Pair data in manufacturer_specific_data table)"
+                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Swift Pair data in DB:LE_bdaddr_to_MSD)"
                 if(ms_msd_name_present2):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
                         try:
@@ -119,7 +119,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                             ms_msd_name2 = ""
                         if(len(ms_msd_name2) > 0):
                             if re.search(regex_pattern, ms_msd_name2):
-                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data in manufacturer_specific_data table)"
+                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data in DB:LE_bdaddr_to_MSD)"
 
     # Else return an empty string to indicate we have no name or no match
     return ""
@@ -157,7 +157,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
                                 # FIXME: I think this is probably an insufficient matching criteria. E.g. a "Jabra Evolve 65e" device might match "Jabra Elite Active" metadata and then the printout would be a bit confusing
                                 if(tmpstr == metadata['2thprint_Chip_GATT_Model_Number']):
                                     model_name_match = 1
-                                    s = f"\t\t{metadata['2thprint_Chip']} -> From GATT \"Model/Hardware Number String\" match with '{metadata['2thprint_Device_Model']}' device metadata (GATT_characteristics & GATT_characteristics_values tables & metadata_v2)"
+                                    s = f"\t\t{metadata['2thprint_Chip']} -> From GATT \"Model/Hardware Number String\" match with '{metadata['2thprint_Device_Model']}' device metadata (DB:GATT_characteristics & DB:GATT_characteristics_values & metadata_v2)"
 
     # Return something appropriate for printing, or an empty string if no match
     return s
@@ -219,7 +219,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
                             if(UUID128_db_ == UUID128_metadata_):
-                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (GATT_services table)")
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_services)")
 
                     if(len(chars_result) > 0):
                         # Iterate through every UUID128 from the GATT_Characteristics database query
@@ -227,7 +227,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                             # Remove dashes and make lowercase
                             UUID128_db_ = UUID128_db.replace('-','').lower()
                             if(UUID128_db_ == UUID128_metadata_):
-                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (GATT_characteristics table)")
+                                str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_characteristics)")
 
                             # While we're here, check if this device has a "Manufacturer Name String" characteristic
                             if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
@@ -242,7 +242,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                         match = match_str_to_ChipMaker(tmpstr)
                                         if(match != ""):
                                             manufacturer_name_match = 1
-                                            str_list.append(f"\t\t{tmpstr} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (GATT_characteristics & GATT_characteristics_values tables)")
+                                            str_list.append(f"\t\t{tmpstr} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (DB:GATT_characteristics & DB:GATT_characteristics_values)")
 
                     if(len(le_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -254,7 +254,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128s_list table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128s_list)")
 
                     if(len(le_adv2_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -266,7 +266,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (LE_bdaddr_to_UUID128_service_solicit table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128_service_solicit)")
 
                     if(len(eir_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -278,7 +278,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     # Remove dashes and make lowercase
                                     UUID128_db_ = UUID128_db.replace('-','').lower()
                                     if(UUID128_db_ == UUID128_metadata_):
-                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (EIR_bdaddr_to_UUID128s table)")
+                                        str_list.append(f"\t\t{metadata[metadata_output_type]} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:EIR_bdaddr_to_UUID128s)")
 
     # Else return an empty list to indicate we have no name or no match
     return str_list
@@ -314,7 +314,7 @@ def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
                         if('Vendor_Specific_UUIDs' in metadata.keys() and '2thprint_Chip_Maker' in metadata.keys()):
                             for UUID in metadata['Vendor_Specific_UUIDs'].keys():
                                 if(UUID16_db_ == UUID.lower()):
-                                    qprint(f"{indent}{metadata['2thprint_Chip_Maker']} -> From GATT Vendor Specific UUID16 match with {UUID16_db} ({tablename} table)")
+                                    qprint(f"{indent}{metadata['2thprint_Chip_Maker']} -> From GATT Vendor Specific UUID16 match with {UUID16_db} (DB:{tablename})")
                                     results_found = True
 
     return results_found
@@ -361,7 +361,7 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if we got some corrupt data, which resulted in inserting N distinct entries into the db, or if we had old and new Wireshark parsing
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
-            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (LMP_VERSION_RES table)")
+            qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID (DB:LMP_VERSION_RES)")
             BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
     if(time_profile): qprint(f"NamePrint = {time.time()}")
@@ -440,7 +440,7 @@ def print_ChipMakerPrint(bdaddr):
             for name in ChipMaker_names_and_BT_CIDs.keys():
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
-                    qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (EIR_bdaddr_to_MSD table)")
+                    qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID (DB:EIR_bdaddr_to_MSD)")
                     no_results_found = False
 
 
@@ -469,7 +469,7 @@ def print_ChipMakerPrint(bdaddr):
                 BT_CID_list = ChipMaker_names_and_BT_CIDs[name]
                 if(device_BT_CID in BT_CID_list):
                     no_results_found = False
-                    qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Low Energy Manufacturer-Specific Data Company ID (LE_bdaddr_to_MSD table {get_le_event_type_string(le_evt_type)})")
+                    qprint(f"\t\t{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Low Energy Manufacturer-Specific Data Company ID (DB:LE_bdaddr_to_MSD {get_le_event_type_string(le_evt_type)})")
                     # if(device_BT_CID == 76 and manufacturer_specific_data[0:4] == "0215"):
                     #     qprint(f"\t\t\tCAVEAT: This company ID was seen as part of an 'iBeacon', which is a standardized beacon format used by many companies other than Apple. So this is a low-signal indication of ChipMaker")
 
@@ -615,7 +615,7 @@ def print_ChipPrint(bdaddr):
         for (ll_sub_version,device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(ll_sub_version, device_BT_CID)
             if(chip_name != ""):
-                qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (LL_VERSION_IND table)")
+                qprint(f"\t\t{chip_name} -> From LL_VERSION_IND info (DB:LL_VERSION_IND)")
 
     #==========================#
     # LMP_VERSION_REQ/RSP data #
@@ -633,7 +633,7 @@ def print_ChipPrint(bdaddr):
         for (lmp_sub_version, device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
             if(chip_name != ""):
-                qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (LMP_VERSION_RES table)")
+                qprint(f"\t\t{chip_name} -> From LMP_VERSION_REQ/RSP info (DB:LMP_VERSION_RES)")
 
     #================#
     # NamePrint data #

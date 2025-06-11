@@ -42,7 +42,7 @@ def get_bdaddrs_by_name_regex(nameregex):
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in EIR_bdaddr_to_name")
+    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for HCI_bdaddr_to_name table
@@ -50,7 +50,7 @@ def get_bdaddrs_by_name_regex(nameregex):
     hci_result = execute_query(hci_query, values)
     for (bdaddr,) in hci_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(hci_result)} results found in HCI_bdaddr_to_name")
+    qprint(f"get_bdaddrs_by_name_regex: {len(hci_result)} results found in DB:HCI_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
@@ -58,7 +58,7 @@ def get_bdaddrs_by_name_regex(nameregex):
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in LE_bdaddr_to_name")
+    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in DB:LE_bdaddr_to_name")
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -230,21 +230,21 @@ def get_bdaddrs_by_company_regex(companyregex):
             tooth_lmp_result = execute_query(tooth_lmp_query, values)
             for (bdaddr,) in tooth_lmp_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(tooth_lmp_result)} results found in LMP_VERSION_RES for key 0x{key:04x}")
+            qprint(f"{len(tooth_lmp_result)} results found in DB:LMP_VERSION_RES for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             tooth_ll_query = "SELECT bdaddr FROM LL_VERSION_IND WHERE device_BT_CID = %s"
             tooth_ll_result = execute_query(tooth_ll_query, values)
             for (bdaddr,) in tooth_ll_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(tooth_ll_result)} results found in LL_VERSION_IND for key 0x{key:04x}")
+            qprint(f"{len(tooth_ll_result)} results found in DB:LL_VERSION_IND for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
             le_msd_result = execute_query(le_msd_query, values)
             for (bdaddr,) in le_msd_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for key 0x{key:04x}")
+            qprint(f"{len(le_msd_result)} results found in DB:LE_bdaddr_to_MSD for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             # NOTE: Manufacture-specific data is the location where the BT_CID is most likely to be byte-swapped
@@ -257,14 +257,14 @@ def get_bdaddrs_by_company_regex(companyregex):
                 le_msd_result = execute_query(le_msd_query, values2)
                 for (bdaddr,) in le_msd_result:
                     bdaddr_hash[bdaddr] = 1
-                qprint(f"{len(le_msd_result)} results found in LE_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
+                qprint(f"{len(le_msd_result)} results found in DB:LE_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             eir_msd_query = "SELECT bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = %s"
             eir_msd_result = execute_query(eir_msd_query, values)
             for (bdaddr,) in eir_msd_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for key 0x{key:04x}")
+            qprint(f"{len(eir_msd_result)} results found in DB:EIR_bdaddr_to_MSD for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             if(try_byte_swapped_bt_cid):
@@ -274,7 +274,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 eir_msd_result = execute_query(eir_msd_query, values2)
                 for (bdaddr,) in eir_msd_result:
                     bdaddr_hash[bdaddr] = 1
-                qprint(f"{len(eir_msd_result)} results found in EIR_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
+                qprint(f"{len(eir_msd_result)} results found in DB:EIR_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
     if(enable_UUID16_lookup):
@@ -301,14 +301,14 @@ def get_bdaddrs_by_company_regex(companyregex):
             eir_uuid16_result = execute_query(eir_uuid16_query, values)
             for (bdaddr,) in eir_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(eir_uuid16_result)} results found in EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
+            qprint(f"{len(eir_uuid16_result)} results found in DB:EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
             le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
             le_uuid16_result = execute_query(le_uuid16_query, values)
             for (bdaddr,) in le_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
-            qprint(f"{len(le_uuid16_result)} results found in LE_bdaddr_to_UUID16s_list for key 0x{key:04x}")
+            qprint(f"{len(le_uuid16_result)} results found in DB:LE_bdaddr_to_UUID16s_list for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
     if(enable_IEEE_OUI_lookup):
@@ -467,14 +467,14 @@ def get_bdaddrs_by_msd_regex(msdregex):
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in EIR_bdaddr_to_MSD")
+    qprint(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_MSD")
     qprint(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_msd_regex: {len(le_result)} results found in LE_bdaddr_to_MSD")
+    qprint(f"get_bdaddrs_by_msd_regex: {len(le_result)} results found in DB:LE_bdaddr_to_MSD")
     qprint(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
     return bdaddr_hash.keys()
@@ -505,7 +505,7 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID128s")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID128s")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
@@ -514,21 +514,21 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE UUID128_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID128_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     ###################################
@@ -541,7 +541,7 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID32s")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID32s")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
@@ -550,21 +550,21 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE str_UUID32s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE UUID32_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID32_service_data")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32_service_data")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     ###################################
@@ -577,7 +577,7 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in EIR_bdaddr_to_UUID16s")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID16s")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
@@ -586,21 +586,21 @@ def get_bdaddrs_by_uuid_regex(uuid_regex):
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16s_list")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_solicit")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE UUID16_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in LE_bdaddr_to_UUID16_service_data")
+    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16_service_data")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     ################################################

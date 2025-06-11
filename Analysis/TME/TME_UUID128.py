@@ -105,7 +105,7 @@ def print_uuid128s(bdaddr):
                 qprint(f"\t\tUUID128 {dashed_uuid128} ({uuid_str})")
                 if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
                     unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
-        vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID128s)")
+        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID128s)")
 
     # Process LE_bdaddr_to_UUID128s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID128s in le_UUID128s_result:
@@ -133,7 +133,7 @@ def print_uuid128s(bdaddr):
                 if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
                     # In general the UUIDs in advertisements should be services, not characteristics, so set the type to 1
                     unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
-        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
 
@@ -174,7 +174,7 @@ def print_uuid128s_service_solicit(bdaddr):
                 continue
             dashed_uuid128 = add_dashes_to_UUID128(uuid128)
             qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
-        qprint("\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_solicit), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
+        qprint("\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128_service_solicit), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
         qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -211,7 +211,7 @@ def print_uuid128_service_data(bdaddr):
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
         print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, "\t\t")
 
-        qprint(f"\t\t\tFound in BT LE data (LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

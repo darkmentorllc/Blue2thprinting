@@ -67,7 +67,7 @@ def print_uuid32s(bdaddr):
             else:
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
-        vprint("\t\t\tFound in BT Classic data (EIR_bdaddr_to_UUID32s)")
+        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID32s)")
 
     # Process LE_bdaddr_to_UUID32s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID32s in le_uuid32s_result:
@@ -107,7 +107,7 @@ def print_uuid32s(bdaddr):
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -151,7 +151,7 @@ def print_service_solicit_uuid32s(bdaddr):
             else:
                 qprint(f"\t\tUUID32 {uuid32} (No matches)")
             '''
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
@@ -197,7 +197,7 @@ def print_uuid32_service_data(bdaddr):
 
         qprint(f"\t\tRaw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BT LE data (LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
