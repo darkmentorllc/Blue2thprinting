@@ -4,13 +4,14 @@
 ########################################
 
 #import os
-import re
-import struct
-import TME.TME_glob
+# import re
+# import struct
+# import TME.TME_glob
 from TME.TME_helpers import *
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_L2CAP import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
@@ -60,9 +61,9 @@ def print_L2CAP_info(bdaddr):
     l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result = execute_query(query, values)
 
     if (l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result or l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):
-        qprint("\tL2CAP data found:")
+        qprint(f"{i1}L2CAP data found:")
     else:
-        vprint("\tNo L2CAP data found.")
+        vprint(f"{i1}No L2CAP data found.")
         return
 
     if(l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result):

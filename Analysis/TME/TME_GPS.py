@@ -3,9 +3,11 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
+from datetime import datetime
+
 from TME.TME_helpers import *
 from TME.TME_BTIDES_GPS import BTIDES_export_GPS_coordinate
-from datetime import datetime
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ###########################################
 # Print GPS information, if present
@@ -66,7 +68,7 @@ def print_GPS(bdaddr):
         vprint(f"{indent}No GPS data present for this device.)")
         return
     else:
-        qprint("\tGPS coordinates:")
+        qprint(f"{i1}GPS coordinates:")
 
     print_GPS_entries(indent, select_results, bdaddr)
 

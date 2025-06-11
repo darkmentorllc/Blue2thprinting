@@ -5,6 +5,7 @@
 
 from TME.TME_helpers import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # UUID128s
@@ -74,10 +75,10 @@ def print_uuid128s(bdaddr):
     le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(eir_UUID128s_result) == 0 and len(le_UUID128s_result) == 0):
-        vprint("\tNo UUID128s found.")
+        vprint(f"{i1}No UUID128s found.")
         return
     else:
-        qprint("\tUUID128s found:")
+        qprint(f"{i1}UUID128s found:")
 
     # Process EIR_bdaddr_to_UUID128s results
     for list_type, str_UUID128s in eir_UUID128s_result:
@@ -94,17 +95,17 @@ def print_uuid128s(bdaddr):
 
         # Then human UI output
         if(str_UUID128s == ""):
-            qprint("\t\tEmpty list present")
+            qprint(f"{i2}Empty list present")
         else:
             str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
             for uuid128 in str_UUID128s_list:
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
                 uuid_str = f"{get_custom_uuid128_string(uuid128)}"
-                qprint(f"\t\tUUID128 {dashed_uuid128} ({uuid_str})")
+                qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
                 if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
                     unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
-        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID128s)")
+        vprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID128s)")
 
     # Process LE_bdaddr_to_UUID128s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID128s in le_UUID128s_result:
@@ -121,31 +122,31 @@ def print_uuid128s(bdaddr):
 
         # Then human UI output
         if(str_UUID128s == ""):
-            qprint("\t\tEmpty list present")
+            qprint(f"{i2}Empty list present")
         else:
             str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
             for uuid128 in str_UUID128s_list:
                 uuid128 = uuid128.strip().lower()
                 dashed_uuid128 = add_dashes_to_UUID128(uuid128)
                 uuid_str = f"{get_custom_uuid128_string(uuid128)}"
-                qprint(f"\t\tUUID128 {dashed_uuid128} ({uuid_str})")
+                qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
                 if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
                     # In general the UUIDs in advertisements should be services, not characteristics, so set the type to 1
                     unknown_UUID128_hash[uuid128] = ("Service", "\t\t\t")
-        qprint(f"\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
 
     if(not TME.TME_glob.hideBLEScopedata and len(unknown_UUID128_hash) > 0):
         match_found = False
-        qprint("\t\tBLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
+        qprint(f"{i2}BLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
         for UUID in unknown_UUID128_hash.keys():
             if(UUID.replace('-','') == "00000000000000000000000000000000"):
                     continue
             (type, indent) = unknown_UUID128_hash[UUID]
             match_found = print_associated_android_package_names(type, indent, UUID)
         if(not match_found):
-            qprint("\t\t\tNo matches found\n")
+            qprint(f"{i3}No matches found\n")
 
     qprint("")
 
@@ -156,22 +157,22 @@ def print_uuid128s_service_solicit(bdaddr):
     le_UUID128s_result = execute_query(le_UUID128s_query, values)
 
     if(len(le_UUID128s_result) == 0):
-        vprint("\tNo Service Solicit UUID128s found.")
+        vprint(f"{i1}No Service Solicit UUID128s found.")
         return
     else:
-        qprint("\tService Solicit UUID128s found:")
+        qprint(f"{i1}Service Solicit UUID128s found:")
 
     for bdaddr_random, le_evt_type, str_UUID128s in le_UUID128s_result:
         str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
         for uuid128 in str_UUID128s_list:
             uuid128 = uuid128.strip().lower()
             if(uuid128 == ''):
-                qprint("\t\tEmpty list present")
+                qprint(f"{i2}Empty list present")
                 continue
             dashed_uuid128 = add_dashes_to_UUID128(uuid128)
-            qprint(f"\t\tUUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
-        qprint("\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128_service_solicit), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
-        qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+            qprint(f"{i2}UUID128 {dashed_uuid128} ({get_custom_uuid128_string(uuid128)})")
+        qprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID128_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -189,10 +190,10 @@ def print_uuid128_service_data(bdaddr):
     le_uuid128_service_data_result = execute_query(le_uuid128_service_data_query, values)
 
     if(len(le_uuid128_service_data_result) == 0):
-        vprint("\tNo UUID128 service data found.")
+        vprint(f"{i1}No UUID128 service data found.")
         return
     else:
-        qprint("\tUUID128 service data found:")
+        qprint(f"{i1}UUID128 service data found:")
 
     for bdaddr_random, le_evt_type, UUID128_hex_str, service_data_hex_str in le_uuid128_service_data_result:
         # Export BTIDES data first
@@ -203,11 +204,11 @@ def print_uuid128_service_data(bdaddr):
 
         # Then human UI output
         custom_uuid128 = get_custom_uuid128_string(UUID128_hex_str)
-        qprint(f"\t\tUUID128 {dashed_uuid128} ({custom_uuid128})")
-        qprint(f"\t\tRaw service data: {service_data_hex_str}")
+        qprint(f"{i2}UUID128 {dashed_uuid128} ({custom_uuid128})")
+        qprint(f"{i2}Raw service data: {service_data_hex_str}")
         print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, "\t\t")
 
-        qprint(f"\t\t\tFound in BLE data (DB:LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

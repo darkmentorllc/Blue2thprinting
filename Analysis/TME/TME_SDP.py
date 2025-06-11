@@ -3,16 +3,17 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-#import os
-import re
+# import os
+# import re
+# import TME.TME_glob
 import struct
-import TME.TME_glob
 from TME.TME_helpers import *
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_SDP import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
 from TME.TME_GATT import match_known_GATT_UUID_or_custom_UUID
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 from colorama import Fore, Back, Style, init
 from scapy_to_BTIDES_common import bytes_to_hex_str, bytes_reversed_to_hex_str, bytes_to_utf8
@@ -235,7 +236,7 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, p
 
     if(len(byte_values) == 1):
         ContinuationState, = struct.unpack(">B", byte_values)
-        qprint(f"\t\t\t\tContinuationState: 0x{ContinuationState:02x}")
+        qprint(f"{i4}ContinuationState: 0x{ContinuationState:02x}")
 
     return
 
@@ -274,9 +275,9 @@ def print_SDP_info(bdaddr):
 
     # Now print what we want users to see
     if (SDP_result or SDP_result2):
-        qprint("\tService Discovery Protocol (SDP) data found:")
+        qprint(f"{i1}Service Discovery Protocol (SDP) data found:")
     else:
-        vprint("\tNo SDP data found.")
+        vprint(f"{i1}No SDP data found.")
         return
 
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:

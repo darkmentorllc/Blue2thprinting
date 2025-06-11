@@ -12,6 +12,7 @@ from TME.TME_UUID16 import *
 from TME.TME_UUID32 import *
 from TME.TME_UUID128 import *
 from TME.TME_EIR import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 #####################################################
 # CONNECT_IND (which is in the Advertisement Channel)
@@ -68,20 +69,20 @@ def print_transmit_power(bdaddr, nametype):
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
-        vprint("\tNo transmit power found.")
+        vprint(f"{i1}No transmit power found.")
         return
 
     for (device_tx_power,) in eir_result:
-        qprint(f"\tTransmit Power: {device_tx_power}dB")
-        vprint(f"\t\tIn BT Classic Data (DB:EIR_bdaddr_to_tx_power)")
+        qprint(f"{i1}Transmit Power: {device_tx_power}dB")
+        vprint(f"{i2}In BT Classic Data (DB:EIR_bdaddr_to_tx_power)")
 
         data = {"length": 2, "tx_power": device_tx_power}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_TxPower, data)
 
     for device_tx_power, random, le_evt_type in le_result:
-        qprint(f"\tTransmit Power: {device_tx_power}dB")
-        vprint(f"\t\tIn BLE Data (DB:LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i1}Transmit Power: {device_tx_power}dB")
+        vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
         data = {"length": 2, "tx_power": device_tx_power}
         BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_TxPower, data)
@@ -102,30 +103,30 @@ def print_flags(bdaddr):
     le_result = execute_query(le_query, values)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
-        vprint("\tNo flags found.")
+        vprint(f"{i1}No flags found.")
         return
     else:
-        qprint("\tFlags found:")
+        qprint(f"{i1}Flags found:")
 
     for (le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in eir_result:
-        qprint(f"\tIn BT Classic Data (DB:EIR_bdaddr_to_flags)")
-        qprint(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
-        qprint(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
-        qprint(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
-        qprint(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
-        qprint(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        qprint(f"{i1}In BT Classic Data (DB:EIR_bdaddr_to_flags)")
+        qprint(f"{i2}BLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
+        qprint(f"{i2}BLE General Discoverable Mode: {le_general_discoverable_mode}")
+        qprint(f"{i2}BR/EDR Not Supported: {bredr_not_supported}")
+        qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
+        qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
 
         flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
         data = {"length": 2, "flags_hex_str": flags_hex_str}
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_Flags, data)
 
     for (bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in le_result:
-        qprint(f"\tIn BLE Data (DB:LE_bdaddr_to_flags)")
-        qprint(f"\t\tBLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
-        qprint(f"\t\tBLE General Discoverable Mode: {le_general_discoverable_mode}")
-        qprint(f"\t\tBR/EDR Not Supported: {bredr_not_supported}")
-        qprint(f"\t\tSimultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
-        qprint(f"\t\tSimultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        qprint(f"{i1}In BLE Data (DB:LE_bdaddr_to_flags)")
+        qprint(f"{i2}BLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
+        qprint(f"{i2}BLE General Discoverable Mode: {le_general_discoverable_mode}")
+        qprint(f"{i2}BR/EDR Not Supported: {bredr_not_supported}")
+        qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
+        qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
 
         flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
         data = {"length": 2, "flags_hex_str": flags_hex_str}
@@ -335,10 +336,10 @@ def print_URI(bdaddr):
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
-        vprint("\tNo URI found.")
+        vprint(f"{i1}No URI found.")
         return
     else:
-        qprint("\tURI found:")
+        qprint(f"{i1}URI found:")
 
     for (bdaddr_random, le_evt_type, uri_hex_str) in le_result:
 
@@ -350,8 +351,8 @@ def print_URI(bdaddr):
             uri_part = get_utf8_string_from_hex_string(uri_hex_str[2:])
             uri_str = uri_scheme_prefixes[type_part] + uri_part
 
-        qprint(f"\t\tURI: {uri_str}")
-        qprint(f"\t\tIn BLE Data (DB:LE_bdaddr_to_URI)")
+        qprint(f"{i2}URI: {uri_str}")
+        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_URI)")
 
         # Export to BTIDES
         length = int(len(uri_hex_str) / 2)
@@ -379,14 +380,14 @@ def print_role(bdaddr):
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
-        vprint("\tNo LE Role found.")
+        vprint(f"{i1}No LE Role found.")
         return
     else:
-        qprint("\tLE Role found:")
+        qprint(f"{i1}LE Role found:")
 
     for (bdaddr_random, le_evt_type, role) in le_result:
-        qprint(f"\t\tLE Role: {role}: {role_dict[role]}")
-        qprint(f"\t\tIn BLE Data (DB:LE_bdaddr_to_role)")
+        qprint(f"{i2}LE Role: {role}: {role_dict[role]}")
+        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_role)")
 
         # Export to BTIDES
         data = {"length": 2, "role": role}
@@ -426,15 +427,15 @@ def print_3DInfoData(bdaddr):
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0 and len(eir_result) == 0):
-        vprint("\tNo 3D Info Data found.")
+        vprint(f"{i1}No 3D Info Data found.")
         return
     else:
-        qprint("\t3D Info Data found:")
+        qprint(f"{i1}3D Info Data found:")
 
     for (byte1, path_loss) in eir_result:
-        qprint(f"\t\tPath Loss Threshold: {path_loss}dB")
+        qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
         print_3d_info_bit_fields("\t\t", byte1)
-        qprint(f"\t\tIn BLE Data (DB:EIR_bdaddr_to_3d_info)")
+        qprint(f"{i2}In BLE Data (DB:EIR_bdaddr_to_3d_info)")
 
         # Export to BTIDES
         data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
@@ -442,9 +443,9 @@ def print_3DInfoData(bdaddr):
 
 
     for (bdaddr_random, le_evt_type, byte1, path_loss) in le_result:
-        qprint(f"\t\tPath Loss Threshold: {path_loss}dB")
+        qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
         print_3d_info_bit_fields("\t\t", byte1)
-        qprint(f"\t\tIn BLE Data (DB:LE_bdaddr_to_3d_info)")
+        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_3d_info)")
 
         # Export to BTIDES
         data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
@@ -532,7 +533,7 @@ def print_microsoft_MSD(indent, manufacturer_specific_data):
         BTC_BDADDR_bytes = bytes.fromhex(manufacturer_specific_data[6:18])
         BTC_BDADDR_str = f"{BTC_BDADDR_bytes[5]:02x}:{BTC_BDADDR_bytes[4]:02x}:{BTC_BDADDR_bytes[3]:02x}:{BTC_BDADDR_bytes[2]:02x}:{BTC_BDADDR_bytes[1]:02x}:{BTC_BDADDR_bytes[0]:02x}"
         qprint(f"{indent}\tBluetooth Classic BDADDR embedded in MSD = {BTC_BDADDR_str}")
-        print_company_name_from_bdaddr("\t\t\t\t", BTC_BDADDR_str, False)
+        print_company_name_from_bdaddr(f"{i4}", BTC_BDADDR_str, False)
     # Print other Microsoft beacon information (format from https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569)
     if(manufacturer_specific_data[0:2] == "01"):
         qprint(f"{indent}Microsoft Beacon:")
@@ -608,30 +609,30 @@ def print_manufacturer_data(bdaddr):
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
-        vprint("\tNo Manufacturer-specific Data found.")
+        vprint(f"{i1}No Manufacturer-specific Data found.")
         return
     elif (len(eir_result) != 0 or len(le_result) != 0):
-        qprint("\tManufacturer-specific Data:")
+        qprint(f"{i1}Manufacturer-specific Data:")
 
     for device_BT_CID, manufacturer_specific_data in eir_result:
         company_name = BT_CID_to_company_name(device_BT_CID)
-        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
+        qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(company_name == "No Match"):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"\t\t\t Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
-        qprint(f"\t\tRaw Data: {manufacturer_specific_data}")
+            qprint(f"{i3}Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+        qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
-        vprint(f"\t\t\tIn BT Classic Data (DB:EIR_bdaddr_to_MSD)")
+        vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_MSD)")
 
     for le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data in le_result:
         company_name = BT_CID_to_company_name(device_BT_CID)
-        qprint(f"\t\tDevice Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
+        qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(company_name == "No Match"):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"\t\t\t Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
-        qprint(f"\t\tRaw Data: {manufacturer_specific_data}")
+            qprint(f"{i3}Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+        qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
         # Print Apple iBeacon information
         if(device_BT_CID == 76):
@@ -643,8 +644,8 @@ def print_manufacturer_data(bdaddr):
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 
-        qprint(f"\t\t\tIn BLE Data (DB:LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 

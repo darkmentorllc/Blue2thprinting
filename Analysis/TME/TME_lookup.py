@@ -3,9 +3,10 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-import re
-import TME.TME_glob
+# import re
+# import TME.TME_glob
 from TME.TME_helpers import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # Lookup helpers
@@ -432,9 +433,9 @@ def get_bdaddrs_by_company_regex(companyregex):
             for (bdaddr,) in oui_search_result:
                 bdaddr_hash[bdaddr] = 1
 
-            qprint(f"\t{len(oui_search_result)} results found in all scanned tables")
+            qprint(f"{i1}{len(oui_search_result)} results found in all scanned tables")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
-            qprint(f"\tbdaddr_hash current length = {len(bdaddr_hash.keys())}")
+            qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash.keys())}")
 
     if(enable_CLUES_lookup):
         UUIDs_to_company_map = {}
@@ -448,8 +449,8 @@ def get_bdaddrs_by_company_regex(companyregex):
             if(bdaddrs_tmp is not None):
                 for bdaddr in bdaddrs_tmp:
                     bdaddr_hash[bdaddr] = 1
-                qprint(f"\t{len(bdaddrs_tmp)} results found for UUID {UUID}")
-                qprint(f"\tbdaddr_hash current length = {len(bdaddr_hash.keys())}")
+                qprint(f"{i1}{len(bdaddrs_tmp)} results found for UUID {UUID}")
+                qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash.keys())}")
 
 # TODO! Add the capability to search within the read values from GATT "Manufacturer Name" characteristics (will require interpreting as string within MySQL)
 #    if(enable_GATT_manufacturer_lookup):

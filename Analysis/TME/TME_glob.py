@@ -6,6 +6,14 @@
 #########################################
 # My specific data types
 #########################################
+
+# Indendation (so I can change formatting in a centralized way later)
+i1 = "\t"
+i2 = "\t\t"
+i3 = "\t\t\t"
+i4 = "\t\t\t\t"
+i5 = "\t\t\t\t\t"
+
 # Metadata_v1 globals
 custom_uuid128_hash = {}
 # Metadata_v2 globals

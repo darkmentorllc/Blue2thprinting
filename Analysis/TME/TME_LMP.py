@@ -3,10 +3,10 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-#import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_BTIDES_LMP import *
 from TME.TME_BTIDES_HCI import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # LMP Info
@@ -93,10 +93,10 @@ def print_LMP_info(bdaddr):
     name_result = execute_query(name_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
-        vprint("\tNo BTC LMP Info found.")
+        vprint(f"{i1}No BTC LMP Info found.")
         return
     else:
-        qprint("\tBTC LMP Info:")
+        qprint(f"{i1}BTC LMP Info:")
 
     indent = "\t\t"
     for lmp_version, lmp_sub_version, device_BT_CID in version_result:

@@ -3,9 +3,10 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-from TME.TME_helpers import *
 #TODO: create the necessary UUID32 lookups in here: from TME.TME_GATT import *
+from TME.TME_helpers import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # UUID32s
@@ -23,10 +24,10 @@ def print_uuid32s(bdaddr):
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
-        vprint("\tNo UUID32s found.")
+        vprint(f"{i1}No UUID32s found.")
         return
     else:
-        qprint("\tUUID32s found:")
+        qprint(f"{i1}UUID32s found:")
 
     # Process EIR_bdaddr_to_UUID32s results
     for list_type, str_UUID32s in eir_uuid32s_result:
@@ -47,9 +48,9 @@ def print_uuid32s(bdaddr):
         for uuid32 in str_UUID32s_list:
             uuid32 = uuid32.strip()
             if(uuid32 == ''):
-                qprint("\t\tEmpty list present")
+                qprint(f"{i2}Empty list present")
                 continue
-            qprint(f"\t\tUUID32 {uuid32} (Unknown)")
+            qprint(f"{i2}UUID32 {uuid32} (Unknown)")
             # TODO: Create the below UUID32 lookup options
             '''
             service_by_uuid32 = get_uuid32_service_string(uuid32)
@@ -57,17 +58,17 @@ def print_uuid32s(bdaddr):
             protocol_by_uuid32 = get_uuid32_protocol_string(uuid32)
             company_by_uuid32 = get_company_by_uuid32(uuid32)
             if(service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Service ID: {service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Service ID: {service_by_uuid32})")
             elif(gatt_service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
             elif(protocol_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
             elif(company_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Company ID: {company_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Company ID: {company_by_uuid32})")
             else:
-                qprint(f"\t\tUUID32 {uuid32} (No matches)")
+                qprint(f"{i2}UUID32 {uuid32} (No matches)")
             '''
-        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID32s)")
+        vprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID32s)")
 
     # Process LE_bdaddr_to_UUID32s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID32s in le_uuid32s_result:
@@ -85,9 +86,9 @@ def print_uuid32s(bdaddr):
         for uuid32 in str_UUID32s_list:
             uuid32 = uuid32.strip()
             if(uuid32 == ''):
-                qprint("\t\tEmpty list present")
+                qprint(f"{i2}Empty list present")
                 continue
-            qprint(f"\t\tUUID32 {uuid32} (Unknown)")
+            qprint(f"{i2}UUID32 {uuid32} (Unknown)")
             # TODO: Create the below UUID32 lookup options
             '''
             service_by_uuid32 = get_uuid32_service_string(uuid32)
@@ -96,19 +97,19 @@ def print_uuid32s(bdaddr):
             company_by_uuid32 = get_company_by_uuid32(uuid32)
             # TODO: Create a function that looks up a more-specific name for a service given a company ID
             if(service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Service ID: {service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Service ID: {service_by_uuid32})")
             elif(gatt_service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
             elif(protocol_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
             elif(company_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Company ID: {company_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Company ID: {company_by_uuid32})")
             else:
-                qprint(f"\t\tUUID32 {uuid32} (No matches)")
+                qprint(f"{i2}UUID32 {uuid32} (No matches)")
             '''
 
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -119,10 +120,10 @@ def print_service_solicit_uuid32s(bdaddr):
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(le_uuid32s_result) == 0):
-        vprint("\tNo Service Solicit UUID32s found.")
+        vprint(f"{i1}No Service Solicit UUID32s found.")
         return
     else:
-        qprint("\tService solicit UUID32s found:")
+        qprint(f"{i1}Service solicit UUID32s found:")
 
     # Process LE_bdaddr_to_UUID32s_list results
     for bdaddr_random, le_evt_type, str_UUID32s in le_uuid32s_result:
@@ -130,9 +131,9 @@ def print_service_solicit_uuid32s(bdaddr):
         for uuid32 in str_UUID32s_list:
             uuid32 = uuid32.strip()
             if(uuid32 == ''):
-                qprint("\t\tEmpty list present")
+                qprint(f"{i2}Empty list present")
                 continue
-            qprint(f"\t\tUUID32 {uuid32} (Unknown)")
+            qprint(f"{i2}UUID32 {uuid32} (Unknown)")
             # TODO: Create the below UUID32 lookup options
             '''
             service_by_uuid32 = get_uuid32_service_string(uuid32)
@@ -141,18 +142,18 @@ def print_service_solicit_uuid32s(bdaddr):
             company_by_uuid32 = get_company_by_uuid32(uuid32)
             # TODO: Create a function that looks up a more-specific name for a service given a company ID
             if(service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Service ID: {service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Service ID: {service_by_uuid32})")
             elif(gatt_service_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
             elif(protocol_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
             elif(company_by_uuid32 != "Unknown"):
-                qprint(f"\t\tUUID32 {uuid32} (Company ID: {company_by_uuid32})")
+                qprint(f"{i2}UUID32 {uuid32} (Company ID: {company_by_uuid32})")
             else:
-                qprint(f"\t\tUUID32 {uuid32} (No matches)")
+                qprint(f"{i2}UUID32 {uuid32} (No matches)")
             '''
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -163,10 +164,10 @@ def print_uuid32_service_data(bdaddr):
     le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query, values)
 
     if(len(le_uuid32_service_data_result) == 0):
-        vprint("\tNo UUID32 service data found.")
+        vprint(f"{i1}No UUID32 service data found.")
         return
     else:
-        qprint("\tUUID32 service data found:")
+        qprint(f"{i1}UUID32 service data found:")
 
     for bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str in le_uuid32_service_data_result:
         # Export BTIDES data first
@@ -175,7 +176,7 @@ def print_uuid32_service_data(bdaddr):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID32ServiceData, data)
 
         # Then human UI output
-        qprint(f"\t\tUUID32 {UUID32_hex_str} (Unknown)")
+        qprint(f"{i2}UUID32 {UUID32_hex_str} (Unknown)")
         # TODO: Create the below UUID32 lookup options
         '''
         service_by_uuid32 = get_uuid32_service_string(uuid32)
@@ -184,20 +185,20 @@ def print_uuid32_service_data(bdaddr):
         company_by_uuid32 = get_company_by_uuid32(uuid32)
         # TODO: Create a function that looks up a more-specific name for a service given a company ID
         if(service_by_uuid32 != "Unknown"):
-            qprint(f"\t\tUUID32 {uuid32} (Service ID: {service_by_uuid32})")
+            qprint(f"{i2}UUID32 {uuid32} (Service ID: {service_by_uuid32})")
         elif(gatt_service_by_uuid32 != "Unknown"):
-            qprint(f"\t\tUUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
+            qprint(f"{i2}UUID32 {uuid32} (GATT Service ID: {gatt_service_by_uuid32})")
         elif(protocol_by_uuid32 != "Unknown"):
-            qprint(f"\t\tUUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
+            qprint(f"{i2}UUID32 {uuid32} (Protocol ID: {protocol_by_uuid32})")
         elif(company_by_uuid32 != "Unknown"):
-            qprint(f"\t\tUUID32 {uuid32} (Company ID: {company_by_uuid32})")
+            qprint(f"{i2}UUID32 {uuid32} (Company ID: {company_by_uuid32})")
         else:
-            qprint(f"\t\tUUID32 {uuid32} (No matches)")
+            qprint(f"{i2}UUID32 {uuid32} (No matches)")
         '''
 
-        qprint(f"\t\tRaw service data: {service_data_hex_str}")
+        qprint(f"{i2}Raw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

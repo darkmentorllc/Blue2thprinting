@@ -6,6 +6,7 @@
 from TME.TME_helpers import *
 from TME.TME_GATT import *
 from TME.TME_BTIDES_AdvData import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ########################################
 # UUID16s
@@ -19,21 +20,21 @@ def colored_print_name_for_UUID16(uuid16):
     custom_by_uuid16 = get_custom_by_uuid16(uuid16)
     if(service_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Service ID: {service_by_uuid16}" + Style.RESET_ALL
-        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     elif(gatt_service_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"GATT Service ID: {gatt_service_by_uuid16}" + Style.RESET_ALL
-        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     elif(protocol_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
-        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     elif(custom_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
-        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     elif(company_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company ID: {company_by_uuid16}" + Style.RESET_ALL
-        qprint(f"\t\tUUID16 {uuid16} ({colored_str})")
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     else:
-        qprint(f"\t\tUUID16 {uuid16} (No matches)")
+        qprint(f"{i2}UUID16 {uuid16} (No matches)")
 
 # Function to print UUID16s for a given bdaddr
 def print_uuid16s(bdaddr):
@@ -47,10 +48,10 @@ def print_uuid16s(bdaddr):
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(eir_uuid16s_result) == 0 and len(le_uuid16s_result) == 0):
-        vprint("\tNo UUID16s found.")
+        vprint(f"{i1}No UUID16s found.")
         return
     else:
-        qprint("\tUUID16s found:")
+        qprint(f"{i1}UUID16s found:")
 
     # Process EIR_bdaddr_to_UUID16s results
     for list_type, str_UUID16s in eir_uuid16s_result:
@@ -67,16 +68,16 @@ def print_uuid16s(bdaddr):
 
         # Then human UI output
         if(str_UUID16s == ""):
-            qprint("\t\tEmpty list present")
+            qprint(f"{i2}Empty list present")
         else:
             str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
             for uuid16 in str_UUID16s_list:
                 uuid16 = uuid16.strip()
                 if(uuid16 == ''):
-                    qprint("\t\tEmpty entry present")
+                    qprint(f"{i2}Empty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        vprint("\t\t\tFound in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
+        vprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
 
     # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID16s in le_uuid16s_result:
@@ -93,17 +94,17 @@ def print_uuid16s(bdaddr):
 
         # Then human UI output
         if(str_UUID16s == ""):
-            qprint("\t\tEmpty list present")
+            qprint(f"{i2}Empty list present")
         else:
             str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
             for uuid16 in str_UUID16s_list:
                 uuid16 = uuid16.strip()
                 if(uuid16 == ''):
-                    qprint("\t\tEmpty entry present")
+                    qprint(f"{i2}Empty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -114,10 +115,10 @@ def print_uuid16s_service_solicit(bdaddr):
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(le_uuid16s_result) == 0):
-        vprint("\tNo Service Solicit UUID16s found.")
+        vprint(f"{i1}No Service Solicit UUID16s found.")
         return
     else:
-        qprint("\tService solicit UUID16s found:")
+        qprint(f"{i1}Service solicit UUID16s found:")
 
     # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, str_UUID16s in le_uuid16s_result:
@@ -125,11 +126,11 @@ def print_uuid16s_service_solicit(bdaddr):
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             if(uuid16 == ''):
-                qprint("\t\tEmpty list present")
+                qprint(f"{i2}Empty list present")
                 continue
             colored_print_name_for_UUID16(uuid16)
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -140,10 +141,10 @@ def print_uuid16_service_data(bdaddr):
     le_uuid16_service_data_result = execute_query(le_uuid16_service_data_query, values)
 
     if(len(le_uuid16_service_data_result) == 0):
-        vprint("\tNo UUID16 service data found.")
+        vprint(f"{i1}No UUID16 service data found.")
         return
     else:
-        qprint("\tUUID16 service data found:")
+        qprint(f"{i1}UUID16 service data found:")
 
     for bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str in le_uuid16_service_data_result:
         # Export BTIDES data first
@@ -154,9 +155,9 @@ def print_uuid16_service_data(bdaddr):
         # Then human UI output
         # Lookup the UUID16 and see if it matches any well-known UUID16s
         colored_print_name_for_UUID16(UUID16_hex_str)
-        qprint(f"\t\tRaw service data: {service_data_hex_str}")
+        qprint(f"{i2}Raw service data: {service_data_hex_str}")
 
-        vprint(f"\t\t\t Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"\t\tThis was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

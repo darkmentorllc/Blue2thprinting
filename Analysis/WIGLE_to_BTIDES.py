@@ -22,6 +22,7 @@ from scapy_to_BTIDES_common import *
 
 # BTIDES format related
 import TME.TME_glob
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 from TME.TME_helpers import qprint, vprint
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
@@ -150,20 +151,20 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         data = {"time": {"unix_time_milli": time}}
 
         if(best_lat and best_lon):
-            vprint(f"\t Best GPS location: lat: {best_lat}, lon: {best_lon}")
+            vprint(f"{i1}Best GPS location: lat: {best_lat}, lon: {best_lon}")
             data["lat"] = best_lat
             data["lon"] = best_lon
         elif(last_lat and last_lon):
-            vprint(f"\t Last GPS location: lat: {last_lat}, lon: {last_lon}")
+            vprint(f"{i1}Last GPS location: lat: {last_lat}, lon: {last_lon}")
             data["lat"] = last_lat
             data["lon"] = last_lon
         else:
-            vprint(f"\t No GPS location found")
+            vprint(f"{i1}No GPS location found")
             continue
 
         # Check for invalid GPS coordinates and skip if found (apparently these can exist in the DB. Not sure why though.)
         if data["lat"] > 90.0 or data["lat"] < -90.0 or data["lon"] > 180.0 or data["lon"] < -180.0:
-            vprint(f"\t Invalid GPS coordinates found, skipping")
+            vprint(f"{i1}Invalid GPS coordinates found, skipping")
             continue
 
         # See if there's any RSSI in the location table for this exact GPS coordinate (irrespective of time)
@@ -182,7 +183,7 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
 
         if(name != ""):
-            vprint(f"\t Name: {name}")
+            vprint(f"{i1}Name: {name}")
             # Just going to hardcode a HCI_Remote_Name_Request_Complete since it's an example where we
             # have the name but not much else to go on...
             export_Remote_Name_Request_Complete(bdaddr, str_to_hex_str(name))

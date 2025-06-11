@@ -6,6 +6,7 @@
 from TME.TME_helpers import *
 from TME.TME_metadata import *
 from TME.TME_AdvChan import *
+from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 ###########################################
 # Unique ID / Potential Trackability Report
@@ -19,10 +20,10 @@ def print_UniqueIDReport(bdaddr):
     #================#
     # BDADDR data #
     #================#
-    qprint("\tUnique ID / Potential Trackability Report:")
+    qprint(f"{i1}Unique ID / Potential Trackability Report:")
     type = get_bdaddr_type(bdaddr, -1)
     if(type == "Classic" or type == "Public" or type == "Random Static"):
-        qprint(f"\t\tUnique ID: BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
+        qprint(f"{i2}Unique ID: BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
         no_results_found = False
 
     # Or if it has Classic BDADDR embedded in Microsoft Swift Pair MSD
@@ -35,7 +36,7 @@ def print_UniqueIDReport(bdaddr):
         for(le_evt_type, manufacturer_specific_data) in le_result:
             BTC_BDADDR_bytes = bytes.fromhex(manufacturer_specific_data[6:18])
             BTC_BDADDR_str = f"{BTC_BDADDR_bytes[5]:02x}:{BTC_BDADDR_bytes[4]:02x}:{BTC_BDADDR_bytes[3]:02x}:{BTC_BDADDR_bytes[2]:02x}:{BTC_BDADDR_bytes[1]:02x}:{BTC_BDADDR_bytes[0]:02x}"
-            qprint(f"\t\tUnique ID: Bluetooth Classic BDADDR, which is not randomized over time, of value {BTC_BDADDR_str} is embedded in Microsoft Swift Pair advertised Manufacturer-Specific Data, and therefore can be used to track the device.")
+            qprint(f"{i2}Unique ID: Bluetooth Classic BDADDR, which is not randomized over time, of value {BTC_BDADDR_str} is embedded in Microsoft Swift Pair advertised Manufacturer-Specific Data, and therefore can be used to track the device.")
 
     #===================================================#
     # GATT "Serial Number" (0x2a25) Characteristic data #
@@ -57,10 +58,10 @@ def print_UniqueIDReport(bdaddr):
             # Remove dashes and make lowercase
 #            UUID_db_ = UUID_db.replace('-','').lower()
             if(check_if_UUIDs_match(UUID_db, "2a25")):
-                qprint(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                qprint(f"{i2}Unique ID: This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 no_results_found = False
             if(check_if_UUIDs_match(UUID_db, "2bff")):
-                qprint(f"\t\tUnique ID: This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                qprint(f"{i2}Unique ID: This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 no_results_found = False
 
     # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
@@ -72,7 +73,7 @@ def print_UniqueIDReport(bdaddr):
     # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
     str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
     if(str[2:6] == "True"):
-        qprint(f"\t\tUnique ID: The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
+        qprint(f"{i2}Unique ID: The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
         no_results_found = False
         NamePrint_match = True
 
@@ -89,24 +90,24 @@ def print_UniqueIDReport(bdaddr):
         eir_result = execute_query(eir_query, values)
         for (name_hex_str,) in eir_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-            qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Classic Extended Inquiry Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
         hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
         hci_result = execute_query(hci_query, values)
         for (name_hex_str,) in hci_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-            qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Scan Responses. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
         le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
         for name_hex_str, le_evt_type in le_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-            qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+            qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{name}\" found via Bluetooth Low Energy Advertisements. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+            qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
             no_results_found = False
 
         chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
@@ -114,8 +115,8 @@ def print_UniqueIDReport(bdaddr):
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
                 name = byte_values.decode('utf-8', 'ignore')
-                qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{name}\" found via GATT. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-                qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+                qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{name}\" found via GATT. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+                qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
                 no_results_found = False
 
         ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
@@ -123,8 +124,8 @@ def print_UniqueIDReport(bdaddr):
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
             if(len(ms_msd_name) > 0):
-                qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{ms_msd_name}\" found via Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-                qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+                qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{ms_msd_name}\" found via Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+                qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
                 no_results_found = False
 
         regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
@@ -137,11 +138,11 @@ def print_UniqueIDReport(bdaddr):
             except:
                 ms_msd_name2 = ""
             if(len(ms_msd_name2) > 0):
-                qprint(f"\t\t*Possible* Unique ID:\tThis device contains a name \"{ms_msd_name2}\" found via Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-                qprint(f"\t\t\t\t\tIt is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
+                qprint(f"{i2}*Possible* Unique ID:\tThis device contains a name \"{ms_msd_name2}\" found via Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+                qprint(f"{i5}It is left to the user to investigate whether this name represents a unique ID or not. E.g. look for other instances of this name in your own data via the --nameregex option, or search by name at wigle.net.")
                 no_results_found = False
 
     if(no_results_found):
-        qprint("\t\tNo privacy report results found. (But current checks are far from exhaustive.)")
+        qprint(f"{i2}No privacy report results found. (But current checks are far from exhaustive.)")
 
     qprint("")
