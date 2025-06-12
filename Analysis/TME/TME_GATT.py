@@ -401,7 +401,9 @@ def print_GATT_info(bdaddr):
                     (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-                    qprint(f"{i3}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})\n\t      Characteristic Value UUID: {UUID} ({UUID128_description})\n\t      Characteristic Value Handle: {char_value_handle:03}")
+                    qprint(f"{i4}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
+                    qprint(f"{i4}Characteristic Value UUID: {UUID} ({UUID128_description})")
+                    qprint(f"{i4}Characteristic Value Handle: {char_value_handle:03}")
                     if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic",f"{i1}    ")
                     if(not any(key[0] == char_value_handle for key in char_value_handles_dict.keys()) and (char_properties & 0x2 == 0x02)):

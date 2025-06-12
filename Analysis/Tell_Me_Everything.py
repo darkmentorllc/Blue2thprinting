@@ -345,7 +345,7 @@ def main():
         qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
 
     if(args.NOT_UUID_regex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_uuid_regex(args.UUID_regex)
+        bdaddrs_to_remove = get_bdaddrs_by_uuid_regex(args.NOT_UUID_regex)
         qprint(bdaddrs_to_remove)
         updated_bdaddrs = []
         for value in bdaddrs:
