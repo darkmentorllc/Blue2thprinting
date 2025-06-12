@@ -107,10 +107,12 @@ def print_uuid128s(bdaddr):
                     if(len(test_uuid16) == 4):
                         test_uuid16_name = return_name_for_UUID16(test_uuid16)
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({test_uuid16_name})")
+                    else:
+                        qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
+                        if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
+                            unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
                 else:
                     qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
-                    if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
-                        unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
         vprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID128s)")
 
     # Process LE_bdaddr_to_UUID128s_list results
@@ -140,11 +142,12 @@ def print_uuid128s(bdaddr):
                     if(len(test_uuid16) == 4):
                         test_uuid16_name = return_name_for_UUID16(test_uuid16)
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({test_uuid16_name})")
+                    else:
+                        qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
+                        if(not TME.TME_glob.hideBLEScopedata):
+                            unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
                 else:
                     qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
-                    if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
-                        # In general the UUIDs in advertisements should be services, not characteristics, so set the type to 1
-                        unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
         qprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID128s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
