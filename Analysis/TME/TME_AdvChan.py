@@ -478,7 +478,7 @@ def extract_ms_msd_name(manufacturer_specific_data):
 # Print Apple Manufacturer-Specific Data information, where known
 # Find My information from
 def print_apple_MSD(indent, manufacturer_specific_data):
-    if(manufacturer_specific_data[0:4] == "0215"):
+    if(manufacturer_specific_data[0:4] == "0215" and len(manufacturer_specific_data) >= 46):
         qprint(f"{indent}Apple iBeacon:")
         UUID128 = f"{manufacturer_specific_data[4:12]}-{manufacturer_specific_data[12:16]}-{manufacturer_specific_data[16:20]}-{manufacturer_specific_data[20:24]}-{manufacturer_specific_data[24:36]}"
         major = f"{manufacturer_specific_data[36:40]}"
