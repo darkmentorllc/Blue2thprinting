@@ -109,7 +109,7 @@ def print_uuid32s(bdaddr):
             '''
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -153,7 +153,7 @@ def print_service_solicit_uuid32s(bdaddr):
                 qprint(f"{i2}UUID32 {uuid32} (No matches)")
             '''
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -199,6 +199,6 @@ def print_uuid32_service_data(bdaddr):
         qprint(f"{i2}Raw service data: {service_data_hex_str}")
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID32_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

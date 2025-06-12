@@ -235,6 +235,7 @@ def main():
     import_bt_member_UUID16s_to_names()
     import_bt_spec_version_numbers_to_names()
     import_uuid16_service_names()
+    import_uuid16_standards_organizations_names()
     import_uuid16_protocol_names()
     import_gatt_services_uuid16_names()
     import_gatt_declarations_uuid16_names()

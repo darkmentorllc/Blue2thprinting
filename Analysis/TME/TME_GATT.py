@@ -354,14 +354,13 @@ def print_GATT_info(bdaddr):
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
             unknown_UUID128_hash[UUID] = ("Service",f"{i1}    ")
-        indent = "\t  "
         if(service_type == 0):
             type = "2800 (" + match_known_GATT_UUID_or_custom_UUID("2800") + ")"
         elif(service_type == 1):
             type = "2801 (" + match_known_GATT_UUID_or_custom_UUID("2801") + ")"
-        qprint(f"{indent}{type} Attribute Handle: {svc_begin_handle:03}")
-        qprint(f"{i1} Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
-        qprint(f"{i1} Service Value: {UUID} ({UUID128_description}):")
+        qprint(f"{i1}{type} Attribute Handle: {svc_begin_handle:03}")
+        qprint(f"{i2}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
+        qprint(f"{i2}Service Value: {UUID} ({UUID128_description}):")
 
         # Iterate through all known handles, so nothing gets missed
         for handle, in GATT_all_known_handles_result:

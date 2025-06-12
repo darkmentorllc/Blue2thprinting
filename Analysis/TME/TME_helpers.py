@@ -452,6 +452,16 @@ def get_company_by_uuid16(uuid16):
     result = execute_query(company_query, values)
     return result[0][0] if result else "Unknown"
 
+
+# Function to get the company name by UUID16 from UUID16_to_company table
+def get_standards_org_by_uuid16(uuid16):
+    uuid16_int = int(uuid16.strip(), 16)
+    if(uuid16_int in TME.TME_glob.uuid16_standards_organizations_names.keys()):
+        return TME.TME_glob.uuid16_standards_organizations_names[uuid16_int]
+    else:
+        return "Unknown"
+
+
 # Look up company name based on 16-bit BT Company ID (CID)
 def BT_CID_to_company_name(device_BT_CID):
     s = "No Match"
@@ -819,8 +829,9 @@ def colored_print_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)
     gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
     protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
-    company_by_uuid16 = get_company_by_uuid16(uuid16)
+    standards_org_by_uuid16 = get_standards_org_by_uuid16(uuid16)
     custom_by_uuid16 = get_custom_by_uuid16(uuid16)
+    company_by_uuid16 = get_company_by_uuid16(uuid16)
     if(service_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Service ID: {service_by_uuid16}" + Style.RESET_ALL
         qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
@@ -833,6 +844,10 @@ def colored_print_name_for_UUID16(uuid16):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
         qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
         return colored_str
+    elif(standards_org_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Standards Development Organization UUID: {standards_org_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    # We do custom before company, because we might have better info in CLUES
     elif(custom_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
         qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
@@ -840,7 +855,6 @@ def colored_print_name_for_UUID16(uuid16):
     elif(company_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company ID: {company_by_uuid16}" + Style.RESET_ALL
         return colored_str
-        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
     else:
         qprint(f"{i2}UUID16 {uuid16} (No matches)")
         return f"\t\tUUID16 {uuid16} (No matches)"
@@ -849,8 +863,9 @@ def return_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)
     gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
     protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
-    company_by_uuid16 = get_company_by_uuid16(uuid16)
+    standards_org_by_uuid16 = get_standards_org_by_uuid16(uuid16)
     custom_by_uuid16 = get_custom_by_uuid16(uuid16)
+    company_by_uuid16 = get_company_by_uuid16(uuid16)
     if(service_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Service ID: {service_by_uuid16}" + Style.RESET_ALL
         return colored_str
@@ -860,6 +875,10 @@ def return_name_for_UUID16(uuid16):
     elif(protocol_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
         return colored_str
+    elif(standards_org_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Standards Development Organization UUID: {standards_org_by_uuid16}" + Style.RESET_ALL
+        return colored_str
+    # We do custom before company, because we might have better info in CLUES
     elif(custom_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
         return colored_str

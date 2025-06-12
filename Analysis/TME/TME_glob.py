@@ -107,6 +107,12 @@ uuid16_protocol_names = {}
 uuid16_service_names = {}
 
 #########################################
+# Data from sdo.yaml
+#########################################
+# Global dictionary to store uuid16 to Standards Development Organization name mappings
+uuid16_standards_organizations_names = {}
+
+#########################################
 # Data from universal_attributes.yaml
 #########################################
 # Global dictionary to store SDP uuid16 to

@@ -369,6 +369,24 @@ def import_uuid16_service_names():
     #qprint(TME.TME_glob.uuid16_service_names)
 
 #########################################
+# Get data from sdo.yaml
+#########################################
+# NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git
+# repository has been cloned to the same directory as this file.
+# All paths are written under that assumption
+def import_uuid16_standards_organizations_names():
+    global uuid16_standards_organizations_names
+    with open('./public/assigned_numbers/uuids/sdo_uuids.yaml', 'r') as file:
+        data = yaml.safe_load(file)
+
+    for entry in data['uuids']:
+        uuid = entry['uuid']
+        name = entry['name']
+        TME.TME_glob.uuid16_standards_organizations_names[uuid] = name
+
+    # qprint(TME.TME_glob.uuid16_standards_organizations_names)
+
+#########################################
 # Get data from universal_attributes.yaml
 #########################################
 # NOTE: This code assumes that the https://bitbucket.org/bluetooth-SIG/public.git

@@ -16,6 +16,7 @@ def colored_print_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)
     gatt_service_by_uuid16 = get_uuid16_gatt_service_string(uuid16)
     protocol_by_uuid16 = get_uuid16_protocol_string(uuid16)
+    standards_org_by_uuid16 = get_standards_org_by_uuid16(uuid16)
     company_by_uuid16 = get_company_by_uuid16(uuid16)
     custom_by_uuid16 = get_custom_by_uuid16(uuid16)
     if(service_by_uuid16 != "Unknown"):
@@ -27,6 +28,10 @@ def colored_print_name_for_UUID16(uuid16):
     elif(protocol_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Protocol ID: {protocol_by_uuid16}" + Style.RESET_ALL
         qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
+    elif(standards_org_by_uuid16 != "Unknown"):
+        colored_str = Fore.CYAN + Style.BRIGHT + f"Standards Development Organization UUID: {standards_org_by_uuid16}" + Style.RESET_ALL
+        qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
+    # We do custom before company, because we might have better info in CLUES
     elif(custom_by_uuid16 != "Unknown"):
         colored_str = Fore.CYAN + Style.BRIGHT + f"Company-specific Service UUID: {custom_by_uuid16}" + Style.RESET_ALL
         qprint(f"{i2}UUID16 {uuid16} ({colored_str})")
@@ -104,7 +109,7 @@ def print_uuid16s(bdaddr):
                     continue
                 colored_print_name_for_UUID16(uuid16)
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -130,7 +135,7 @@ def print_uuid16s_service_solicit(bdaddr):
                 continue
             colored_print_name_for_UUID16(uuid16)
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -158,6 +163,6 @@ def print_uuid16_service_data(bdaddr):
         qprint(f"{i2}Raw service data: {service_data_hex_str}")
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

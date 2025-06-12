@@ -63,13 +63,12 @@ def print_GPS(bdaddr):
     select_query = f"SELECT bdaddr_random, time, time_type, rssi, lat, lon FROM bdaddr_to_GPS WHERE bdaddr = %s;"
     select_results = execute_query(select_query, values)
 
-    indent = "\t\t"
     if (len(select_results) == 0):
-        vprint(f"{indent}No GPS data present for this device.)")
+        vprint(f"{i2}No GPS data present for this device.)")
         return
     else:
         qprint(f"{i1}GPS coordinates:")
 
-    print_GPS_entries(indent, select_results, bdaddr)
+    print_GPS_entries(f"{i2}", select_results, bdaddr)
 
     qprint("")
