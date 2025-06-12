@@ -99,7 +99,7 @@ def print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max
     elif(oob_data == 1):
         qprint(f"{i3}Out-of-Band (OOB) authentication data: present.")
     else:
-        qprint(Fore.YELLOW + Style.BRIGHT + "\t\t\tWARNING: OOB data has an invalid value (!= 0 or 1) sent. (This may be an off-spec implementation, or a corrupt packet.)")
+        qprint(Fore.YELLOW + Style.BRIGHT + f"{i3}WARNING: OOB data has an invalid value (!= 0 or 1) sent. (This may be an off-spec implementation, or a corrupt packet.)")
 
     qprint(f"{i3}Initiator Key Distribution:")
     key_dist_print("Initiator", initiator_key_dist)

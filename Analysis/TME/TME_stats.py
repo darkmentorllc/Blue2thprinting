@@ -118,7 +118,7 @@ def get_uuid128_stats(arg):
         qprint(f"{len(seen_btc_uuid128s_hash)} unique UUID128s found")
 #            qprint(seen_btc_uuid128s_hash)
         sorted_items = sorted(seen_btc_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)
-        qprint(f"count \t uuid128 \t\t\t\t known info")
+        qprint(f"count \t uuid128 {i4} known info")
         for item in sorted_items:
             (uuid128,count) = item
 #                qprint(item)
@@ -164,7 +164,7 @@ def get_uuid128_stats(arg):
         qprint(f"{len(seen_le_uuid128s_hash)} unique UUID128s found")
 #            qprint(seen_le_uuid128s_hash)
         sorted_items = sorted(seen_le_uuid128s_hash.items(), key=lambda item: item[1], reverse=True)
-        qprint(f"count \t uuid128 \t\t\t\t known info")
+        qprint(f"count \t uuid128 {i4} known info")
         for item in sorted_items:
             (uuid128,count) = item
 #                qprint(item)
