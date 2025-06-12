@@ -82,7 +82,8 @@ def print_uuid16s(bdaddr):
                     qprint(f"{i2}Empty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        vprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
+        qprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
+
 
     # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, list_type, str_UUID16s in le_uuid16s_result:
