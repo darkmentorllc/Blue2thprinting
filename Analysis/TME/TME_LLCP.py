@@ -74,7 +74,6 @@ def print_LLCP_info(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
-
     version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
 
