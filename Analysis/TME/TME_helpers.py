@@ -787,6 +787,7 @@ def print_device_names(bdaddr, nametype):
         device_name = get_utf8_string_from_hex_string(name_hex_str)
         color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
         qprint(f"{i1}DeviceName: {color_name}")
+        qprint(f"{i2}DeviceNameType: HCI Remote Name Response")
         vprint(f"{i2}In BT Classic Data (DB:HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
         remote_name_hex_str = device_name.encode('utf-8').hex()
@@ -798,8 +799,8 @@ def print_device_names(bdaddr, nametype):
         qprint(f"{i1}DeviceName: {color_name}")
         qprint(f"{i2}DeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        find_nameprint_match(device_name)
         vprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        find_nameprint_match(device_name)
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}

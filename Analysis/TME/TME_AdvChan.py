@@ -122,12 +122,12 @@ def print_flags(bdaddr):
         BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_Flags, data)
 
     for (bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in le_result:
-        qprint(f"{i1}In BLE Data (DB:LE_bdaddr_to_flags)")
         qprint(f"{i2}BLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
         qprint(f"{i2}BLE General Discoverable Mode: {le_general_discoverable_mode}")
         qprint(f"{i2}BR/EDR Not Supported: {bredr_not_supported}")
         qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
         qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_flags)")
 
         flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
         data = {"length": 2, "flags_hex_str": flags_hex_str}
@@ -353,7 +353,7 @@ def print_URI(bdaddr):
             uri_str = uri_scheme_prefixes[type_part] + uri_part
 
         qprint(f"{i2}URI: {uri_str}")
-        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_URI)")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_URI)")
 
         # Export to BTIDES
         length = int(len(uri_hex_str) / 2)
@@ -388,7 +388,7 @@ def print_role(bdaddr):
 
     for (bdaddr_random, le_evt_type, role) in le_result:
         qprint(f"{i2}LE Role: {role}: {role_dict[role]}")
-        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_role)")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_role)")
 
         # Export to BTIDES
         data = {"length": 2, "role": role}
@@ -436,7 +436,7 @@ def print_3DInfoData(bdaddr):
     for (byte1, path_loss) in eir_result:
         qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
         print_3d_info_bit_fields("\t\t", byte1)
-        qprint(f"{i2}In BLE Data (DB:EIR_bdaddr_to_3d_info)")
+        vprint(f"{i4}In BLE Data (DB:EIR_bdaddr_to_3d_info)")
 
         # Export to BTIDES
         data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
@@ -446,7 +446,7 @@ def print_3DInfoData(bdaddr):
     for (bdaddr_random, le_evt_type, byte1, path_loss) in le_result:
         qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
         print_3d_info_bit_fields("\t\t", byte1)
-        qprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_3d_info)")
+        vprint(f"{i4}In BLE Data (DB:LE_bdaddr_to_3d_info)")
 
         # Export to BTIDES
         data = {"length": 3, "byte1": byte1, "path_loss": path_loss}
@@ -645,7 +645,7 @@ def print_manufacturer_data(bdaddr):
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 
-        qprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
