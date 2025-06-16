@@ -179,6 +179,15 @@ def print_uuid128s_service_solicit(bdaddr):
 
     for bdaddr_random, le_evt_type, str_UUID128s in le_UUID128s_result:
         str_UUID128s_list = [token.strip() for token in str_UUID128s.split(',')]
+        # Export BTIDES data first
+        # Include the dashes in the UUID128s for extra readability
+        BTIDES_UUID128_list = []
+        for entry in str_UUID128s_list:
+            BTIDES_UUID128_list.append(add_dashes_to_UUID128(entry))
+        length = 1 + 16 * len(BTIDES_UUID128_list) # 1 byte for opcode, 16 bytes for each UUID128
+        data = {"length": length, "UUID128List": BTIDES_UUID128_list}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID128ListServiceSolicitation, data)
+
         for uuid128 in str_UUID128s_list:
             uuid128 = uuid128.strip().lower()
             if(uuid128 == ''):
