@@ -658,7 +658,7 @@ def print_all_advdata(bdaddr, nametype):
     print_device_names(bdaddr, nametype)
     print_uuid16s(bdaddr)                               # Includes BTIDES export
     print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
-    print_uuid16s_service_solicit(bdaddr)
+    print_uuid16s_service_solicit(bdaddr)               # Includes BTIDES export
     print_uuid32s(bdaddr)                               # Includes BTIDES export
     print_uuid32_service_data(bdaddr)                   # Includes BTIDES export
     print_uuid128s(bdaddr)                              # Includes BTIDES export

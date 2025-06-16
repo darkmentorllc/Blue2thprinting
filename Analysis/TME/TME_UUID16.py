@@ -129,6 +129,11 @@ def print_uuid16s_service_solicit(bdaddr):
     # Process LE_bdaddr_to_UUID16s_list results
     for bdaddr_random, le_evt_type, str_UUID16s in le_uuid16s_result:
         str_UUID16s_list = [token.strip() for token in str_UUID16s.split(',')]
+        # Export BTIDES data first
+        length = 1 + 2 * len(str_UUID16s_list) # 1 byte for opcode, 2 bytes for each UUID16
+        data = {"length": length, "UUID16List": str_UUID16s_list}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_UUID16ListServiceSolicitation, data)
+
         for uuid16 in str_UUID16s_list:
             uuid16 = uuid16.strip()
             if(uuid16 == ''):
