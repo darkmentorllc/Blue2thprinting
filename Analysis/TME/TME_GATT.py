@@ -500,6 +500,6 @@ def print_GATT_info(bdaddr):
                 (type, indent) = unknown_UUID128_hash[UUID]
                 match_found = print_associated_android_package_names(type, indent, UUID)
             if(not match_found):
-                qprint(f"{i3}No matches found\n")
+                qprint(f"{i3}No matches found")
 
     qprint("")

@@ -83,7 +83,7 @@ def print_transmit_power(bdaddr, nametype):
     for device_tx_power, random, le_evt_type in le_result:
         qprint(f"{i1}Transmit Power: {device_tx_power}dB")
         vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_tx_power), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
         data = {"length": 2, "tx_power": device_tx_power}
         BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_TxPower, data)
@@ -110,12 +110,12 @@ def print_flags(bdaddr):
         qprint(f"{i1}Flags found:")
 
     for (le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host) in eir_result:
-        qprint(f"{i1}In BT Classic Data (DB:EIR_bdaddr_to_flags)")
         qprint(f"{i2}BLE Limited Discoverable Mode: {le_limited_discoverable_mode}")
         qprint(f"{i2}BLE General Discoverable Mode: {le_general_discoverable_mode}")
         qprint(f"{i2}BR/EDR Not Supported: {bredr_not_supported}")
         qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Controller: {le_bredr_support_controller}")
         qprint(f"{i2}Simultaneous BLE and BR/EDR Supported by Host: {le_bredr_support_controller}")
+        vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_flags)")
 
         flags_hex_str = get_flags_hex_str(le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host)
         data = {"length": 2, "flags_hex_str": flags_hex_str}
@@ -646,7 +646,7 @@ def print_manufacturer_data(bdaddr):
         # TODO: Parse Eddystone even though it's deprecated?
 
         qprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_MSD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 

@@ -607,7 +607,7 @@ def print_appearance(bdaddr, nametype):
         # Then human UI output
         qprint(f"{i1}Appearance: {appearance_uint16_to_string(appearance)}")
         vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_appearance), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -724,7 +724,7 @@ def print_class_of_device(bdaddr):
         # Then human UI output
         qprint(f"{i2}Class of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
-        qprint(f"{i2}In BT Classic Data (DB:EIR_bdaddr_to_CoD)")
+        vprint(f"{i4}In BT Classic Data (DB:EIR_bdaddr_to_CoD)")
 
     for bdaddr_random, le_evt_type, class_of_device in le_result:
         # Export BTIDES data first
@@ -736,9 +736,8 @@ def print_class_of_device(bdaddr):
         # Then human UI output
         qprint(f"{i2}Class of Device: 0x{class_of_device:04x}")
         print_CoD_to_names(class_of_device)
-        vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        #DELETEME? Copy/paste error? - find_nameprint_match(name)
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_CoD), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -777,7 +776,7 @@ def print_device_names(bdaddr, nametype):
         color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
         qprint(f"{i1}DeviceName: {color_name}")
         qprint(f"{i2}DeviceNameType: {name_type_translation[device_name_type]}")
-        qprint(f"{i2}In BT Classic Data (DB:EIR_bdaddr_to_name)")
+        vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_name)")
         find_nameprint_match(device_name)
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
@@ -788,7 +787,7 @@ def print_device_names(bdaddr, nametype):
         device_name = get_utf8_string_from_hex_string(name_hex_str)
         color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
         qprint(f"{i1}DeviceName: {color_name}")
-        qprint(f"{i2}In BT Classic Data (DB:HCI_bdaddr_to_name)")
+        vprint(f"{i2}In BT Classic Data (DB:HCI_bdaddr_to_name)")
         find_nameprint_match(device_name)
         remote_name_hex_str = device_name.encode('utf-8').hex()
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
@@ -800,7 +799,7 @@ def print_device_names(bdaddr, nametype):
         qprint(f"{i2}DeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         find_nameprint_match(device_name)
-        qprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
         length = 1 + int(len(name_hex_str)/2) # 1 bytes for opcode + length of the string
         data = {"length": length, "utf8_name": device_name, "name_hex_str": name_hex_str}

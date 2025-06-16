@@ -82,7 +82,7 @@ def print_uuid16s(bdaddr):
                     qprint(f"{i2}Empty entry present")
                     continue
                 colored_print_name_for_UUID16(uuid16)
-        qprint(f"{i3}Found in BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
+        vprint(f"{i3}In BT Classic data (DB:EIR_bdaddr_to_UUID16s)")
 
 
     # Process LE_bdaddr_to_UUID16s_list results
@@ -110,7 +110,7 @@ def print_uuid16s(bdaddr):
                     continue
                 colored_print_name_for_UUID16(uuid16)
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16s_list), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -136,7 +136,7 @@ def print_uuid16s_service_solicit(bdaddr):
                 continue
             colored_print_name_for_UUID16(uuid16)
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_solicit), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")
 
@@ -164,6 +164,6 @@ def print_uuid16_service_data(bdaddr):
         qprint(f"{i2}Raw service data: {service_data_hex_str}")
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
-        qprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
     qprint("")

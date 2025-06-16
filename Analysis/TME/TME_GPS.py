@@ -49,7 +49,6 @@ def print_GPS_entries(indent, results, bdaddr):
         print_RSSI(indent, rssi)
         qprint(f"{indent}Latitude, Longitude: {lat}, {lon}")
         qprint(f"{indent}https://www.google.com/maps/place/{lat},{lon}")
-        qprint("")
         # Export as BTIDES
         if(time_type == 1):
             time_dict = {"unix_time_milli": time}
