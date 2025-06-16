@@ -4,6 +4,7 @@
 ########################################
 
 import struct
+import re
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_helpers import *
@@ -618,9 +619,9 @@ def print_manufacturer_data(bdaddr):
         company_name = BT_CID_to_company_name(device_BT_CID)
         qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
-        if(company_name == "No Match"):
+        if(re.search("No Match", company_name)):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"{i3}Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
         qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
         vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_MSD)")
@@ -629,9 +630,9 @@ def print_manufacturer_data(bdaddr):
         company_name = BT_CID_to_company_name(device_BT_CID)
         qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
-        if(company_name == "No Match"):
+        if(re.search("No Match", company_name)):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"{i3}Endianness-flipped device company ID (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
         qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
         # Print Apple iBeacon information
