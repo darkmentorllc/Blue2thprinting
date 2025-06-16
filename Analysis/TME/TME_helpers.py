@@ -857,7 +857,7 @@ def colored_print_name_for_UUID16(uuid16):
         return colored_str
     else:
         qprint(f"{i2}UUID16 {uuid16} (No matches)")
-        return f"\t\tUUID16 {uuid16} (No matches)"
+        return f"{i2}UUID16 {uuid16} (No matches)"
 
 def return_name_for_UUID16(uuid16):
     service_by_uuid16 = get_uuid16_service_string(uuid16)

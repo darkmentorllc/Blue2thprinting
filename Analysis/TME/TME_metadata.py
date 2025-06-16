@@ -90,28 +90,28 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                     for (name_hex_str,) in eir_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:EIR_bdaddr_to_name)"
+                            return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:EIR_bdaddr_to_name)"
                 if(len(hci_result) > 0):
                     for (name_hex_str,) in hci_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:HCI_bdaddr_to_name)"
+                            return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:HCI_bdaddr_to_name)"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:LE_bdaddr_to_name, le_evt_type = {get_le_event_type_string(le_evt_type)})"
+                            return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:LE_bdaddr_to_name, le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
                         name = byte_values.decode('utf-8', 'ignore',)
                         if re.search(regex_pattern, name):
-                            return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:GATT_characteristics & DB:GATT_characteristics_values)"
+                            return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (DB:GATT_characteristics & DB:GATT_characteristics_values)"
                 if(ms_msd_name_present):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
                         ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
                         if(len(ms_msd_name) > 0):
                             if re.search(regex_pattern, ms_msd_name):
-                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Swift Pair data in DB:LE_bdaddr_to_MSD)"
+                                return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Swift Pair data in DB:LE_bdaddr_to_MSD)"
                 if(ms_msd_name_present2):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
                         try:
@@ -120,7 +120,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                             ms_msd_name2 = ""
                         if(len(ms_msd_name2) > 0):
                             if re.search(regex_pattern, ms_msd_name2):
-                                return f"\t\t{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data in DB:LE_bdaddr_to_MSD)"
+                                return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data in DB:LE_bdaddr_to_MSD)"
 
     # Else return an empty string to indicate we have no name or no match
     return ""
@@ -158,7 +158,7 @@ def lookup_ChipPrint_by_GATT(bdaddr):
                                 # FIXME: I think this is probably an insufficient matching criteria. E.g. a "Jabra Evolve 65e" device might match "Jabra Elite Active" metadata and then the printout would be a bit confusing
                                 if(tmpstr == metadata['2thprint_Chip_GATT_Model_Number']):
                                     model_name_match = 1
-                                    s = f"\t\t{metadata['2thprint_Chip']} -> From GATT \"Model/Hardware Number String\" match with '{metadata['2thprint_Device_Model']}' device metadata (DB:GATT_characteristics & DB:GATT_characteristics_values & metadata_v2)"
+                                    s = f"{i2}{metadata['2thprint_Chip']} -> From GATT \"Model/Hardware Number String\" match with '{metadata['2thprint_Device_Model']}' device metadata (DB:GATT_characteristics & DB:GATT_characteristics_values & metadata_v2)"
 
     # Return something appropriate for printing, or an empty string if no match
     return s

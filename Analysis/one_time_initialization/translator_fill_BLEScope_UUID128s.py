@@ -8,6 +8,9 @@ import json
 import yaml
 import mysql.connector
 
+i1 = "  "
+i2 = "    "
+
 # Dictionaries to store unknown services and characteristics
 vendor_specific_services = {}
 vendor_specific_characteristics = {}
@@ -148,7 +151,7 @@ print("Unknown Services:")
 for uuid, pkg_dict in vendor_specific_services.items():
     print(uuid + ":")
     for pkg, value in pkg_dict.items():
-        print(f"\t{pkg}: {value}")
+        print(f"{i1}{pkg}: {value}")
         uuid = uuid.replace('-','')
         values = (pkg, 1, uuid)
         cursor.execute(sql_BLEScope_UUID128s, values)
@@ -160,7 +163,7 @@ print("\nUnknown Characteristics:")
 for uuid, pkg_dict in vendor_specific_characteristics.items():
     print(uuid + ":")
     for pkg, value in pkg_dict.items():
-        print(f"\t{pkg}: {value}")
+        print(f"{i1}{pkg}: {value}")
         uuid = uuid.replace('-','')
         values = (pkg, 2, uuid)
         cursor.execute(sql_BLEScope_UUID128s, values)
