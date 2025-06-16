@@ -258,6 +258,7 @@ def import_AdvData_UUID16ListServiceSolicit(bdaddr, random, db_type, leaf):
         return
     else:
         values = (bdaddr, random, le_evt_type, str_UUID16s)
+
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_UUID16_service_solicit (bdaddr, bdaddr_random, le_evt_type, str_UUID16s) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 

@@ -224,7 +224,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     s = string_yellow_bright(metadata[metadata_output_type])
                                 else:
                                     s = metadata[metadata_output_type]
-                                str_list.append(f"\t\t{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_services)")
+                                str_list.append(f"{i2}{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_services)")
 
                     if(len(chars_result) > 0):
                         # Iterate through every UUID128 from the GATT_Characteristics database query
@@ -236,7 +236,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                     s = string_yellow_bright(metadata[metadata_output_type])
                                 else:
                                     s = metadata[metadata_output_type]
-                                str_list.append(f"\t\t{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_characteristics)")
+                                str_list.append(f"{i2}{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:GATT_characteristics)")
 
                             # While we're here, check if this device has a "Manufacturer Name String" characteristic
                             if(UUID128_db_ == "00002a2900001000800000805f9b34fb" and manufacturer_name_match == 0):
@@ -255,7 +255,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                                 s = string_yellow_bright(tmpstr)
                                             else:
                                                 s = tmpstr
-                                            str_list.append(f"\t\t{s} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (DB:GATT_characteristics & DB:GATT_characteristics_values)")
+                                            str_list.append(f"{i2}{s} -> From GATT \"Manufacturer Name String\" regex-based match with {match} (DB:GATT_characteristics & DB:GATT_characteristics_values)")
 
                     if(len(le_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -271,7 +271,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                             s = string_yellow_bright(metadata[metadata_output_type])
                                         else:
                                             s = metadata[metadata_output_type]
-                                        str_list.append(f"\t\t{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128s_list)")
+                                        str_list.append(f"{i2}{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128s_list)")
 
                     if(len(le_adv2_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -287,7 +287,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                             s = string_yellow_bright(metadata[metadata_output_type])
                                         else:
                                             s = metadata[metadata_output_type]
-                                        str_list.append(f"\t\t{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128_service_solicit)")
+                                        str_list.append(f"{i2}{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:LE_bdaddr_to_UUID128_service_solicit)")
 
                     if(len(eir_adv_result) > 0):
                         # Iterate through every UUID128 from the LE_bdaddr_to_UUID128s_list database query
@@ -303,7 +303,7 @@ def lookup_metadata_by_GATTprint(bdaddr, metadata_input_type, metadata_output_ty
                                             s = string_yellow_bright(metadata[metadata_output_type])
                                         else:
                                             s = metadata[metadata_output_type]
-                                        str_list.append(f"\t\t{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:EIR_bdaddr_to_UUID128s)")
+                                        str_list.append(f"{i2}{s} -> From GATTprint match on {UUID128_metadata} = \"{metadata['Vendor_Specific_UUIDs'][UUID128_metadata]}\" (DB:EIR_bdaddr_to_UUID128s)")
 
     # Else return an empty list to indicate we have no name or no match
     return str_list
