@@ -594,7 +594,7 @@
 		"2thprint_NamePrint": "^eDynamo-B[A-F0-9]{6}$",
 		"short_description": "MagTek eDynamo credit card reader",
 		"comment": "I just wanted to capture this evidence URL which has nearby GATT UUIDs in it that I stumbled across.",
-		"evidence_URL": "https://www.magtek.com/content/documentationfiles/d99875629.pdf",
+		"evidence_URL": "https://web.archive.org/web/20240629043838/https://www.magtek.com/content/documentationfiles/d99875629.pdf",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"confirmed_by": "Xeno Kovah",

@@ -230,7 +230,7 @@ def print_uuid128_service_data(bdaddr):
         custom_uuid128 = get_custom_uuid128_string(UUID128_hex_str)
         qprint(f"{i2}UUID128 {dashed_uuid128} ({custom_uuid128})")
         qprint(f"{i2}Raw service data: {service_data_hex_str}")
-        print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, "\t\t")
+        print_service_data_interpretation(UUID128_hex_str, service_data_hex_str, f"{i3}")
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID128_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")

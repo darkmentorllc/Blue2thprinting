@@ -156,7 +156,7 @@ def print_UniqueIDReport(bdaddr):
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
             if(len(ms_msd_name) > 0):
-                if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
+                if(name_matches_nonunique_nameprint(ms_msd_name)): # Don't bother users with names which are known to be non-unique
                     continue
                 print_possible_unique_ID_header_if_needed()
                 qprint(f"{i3}This device contains a name \"{ms_msd_name}\" found via Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets. The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
