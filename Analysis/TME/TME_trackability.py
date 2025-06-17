@@ -29,6 +29,7 @@ def print_possible_unique_ID_header_if_needed():
         printed_possible_unique_id_header = True
 
 def print_possible_unique_ID_warning(indent, name, data_source):
+    print_possible_unique_ID_header_if_needed()
     qprint(f"{indent}This device contains a name \"{name}\" found via {data_source}.")
     qprint(f"{indent}The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
     qprint(f"{indent}{i1}It is left to the user to investigate whether this name represents a unique ID or not.")
@@ -118,7 +119,6 @@ def print_UniqueIDReport(bdaddr):
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            print_possible_unique_ID_header_if_needed()
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Classic Extended Inquiry Responses")
             no_results_found = False
 
@@ -128,7 +128,6 @@ def print_UniqueIDReport(bdaddr):
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            print_possible_unique_ID_header_if_needed()
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Scan Responses")
             no_results_found = False
 
@@ -138,7 +137,6 @@ def print_UniqueIDReport(bdaddr):
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            print_possible_unique_ID_header_if_needed()
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Advertisements")
             no_results_found = False
 
@@ -149,7 +147,6 @@ def print_UniqueIDReport(bdaddr):
                 name = byte_values.decode('utf-8', 'ignore')
                 if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                     continue
-                print_possible_unique_ID_header_if_needed()
                 print_possible_unique_ID_warning(f"{i3}", name, "GATT")
                 no_results_found = False
 
@@ -160,7 +157,6 @@ def print_UniqueIDReport(bdaddr):
             if(len(ms_msd_name) > 0):
                 if(name_matches_nonunique_nameprint(ms_msd_name)): # Don't bother users with names which are known to be non-unique
                     continue
-                print_possible_unique_ID_header_if_needed()
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name, f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
                 no_results_found = False
 
@@ -176,7 +172,6 @@ def print_UniqueIDReport(bdaddr):
             if(len(ms_msd_name2) > 0):
                 if(name_matches_nonunique_nameprint(ms_msd_name2)): # Don't bother users with names which are known to be non-unique
                     continue
-                print_possible_unique_ID_header_if_needed()
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name2, f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
                 no_results_found = False
 
