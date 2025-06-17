@@ -452,11 +452,11 @@ def print_ChipMakerPrint(bdaddr):
     eir_UUID16_query = "SELECT str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
     EIR_bdaddr_to_UUID16s_result = execute_query(eir_UUID16_query, values)
 
-    if(print_ChipMakerPrint_helper_UUID16("\t\t", LE_bdaddr_to_UUID16_service_data_result, "LE_bdaddr_to_UUID16_service_data")):
+    if(print_ChipMakerPrint_helper_UUID16(f"{i2}", LE_bdaddr_to_UUID16_service_data_result, "LE_bdaddr_to_UUID16_service_data")):
         no_results_found = False
-    if(print_ChipMakerPrint_helper_UUID16("\t\t", LE_bdaddr_to_UUID16s_list_result, "LE_bdaddr_to_UUID16s_list")):
+    if(print_ChipMakerPrint_helper_UUID16(f"{i2}", LE_bdaddr_to_UUID16s_list_result, "LE_bdaddr_to_UUID16s_list")):
         no_results_found = False
-    if(print_ChipMakerPrint_helper_UUID16("\t\t", EIR_bdaddr_to_UUID16s_result, "EIR_bdaddr_to_UUID16s")):
+    if(print_ChipMakerPrint_helper_UUID16(f"{i2}", EIR_bdaddr_to_UUID16s_result, "EIR_bdaddr_to_UUID16s")):
         no_results_found = False
 
     if(time_profile): qprint(f"MSD BTC = {time.time()}")

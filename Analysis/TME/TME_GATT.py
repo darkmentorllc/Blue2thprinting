@@ -480,15 +480,15 @@ def print_GATT_info(bdaddr):
             qprint(f"\n{i2}GATTPrint:")
             for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
                 UUID = add_dashes_to_UUID128(UUID)
-                qprint(f"{i3}{UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)}:")
-                qprint(f"{i3}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
-                #qprint(f"{i1} GATT Service: Begin Handle: {svc_begin_handle:03}\tEnd Handle: {svc_end_handle:03}   \tUUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
-            for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
-                UUID128_2 = add_dashes_to_UUID128(UUID128_2)
-                qprint(f"{i3}GATT Descriptor: Attribute Handle: {attribute_handle:03},\t{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
+                # qprint(f"{i3}{UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)}:")
+                # qprint(f"{i3}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
+                qprint(f"{i3}Service: Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}, UUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
             for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
                 UUID = add_dashes_to_UUID128(UUID)
-                qprint(f"{i3}GATT Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
+                qprint(f"{i3}Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
+            for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+                UUID128_2 = add_dashes_to_UUID128(UUID128_2)
+                qprint(f"{i3}Attribute List: Attribute Handle: {attribute_handle:03}, {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
             qprint("")
 
         if(not TME.TME_glob.hideBLEScopedata and len(unknown_UUID128_hash) > 0):

@@ -435,7 +435,7 @@ def print_3DInfoData(bdaddr):
 
     for (byte1, path_loss) in eir_result:
         qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
-        print_3d_info_bit_fields("\t\t", byte1)
+        print_3d_info_bit_fields(f"{i2}", byte1)
         vprint(f"{i4}In BLE Data (DB:EIR_bdaddr_to_3d_info)")
 
         # Export to BTIDES
@@ -445,7 +445,7 @@ def print_3DInfoData(bdaddr):
 
     for (bdaddr_random, le_evt_type, byte1, path_loss) in le_result:
         qprint(f"{i2}Path Loss Threshold: {path_loss}dB")
-        print_3d_info_bit_fields("\t\t", byte1)
+        print_3d_info_bit_fields(f"{i2}", byte1)
         vprint(f"{i4}In BLE Data (DB:LE_bdaddr_to_3d_info)")
 
         # Export to BTIDES
@@ -637,11 +637,11 @@ def print_manufacturer_data(bdaddr):
 
         # Print Apple iBeacon information
         if(device_BT_CID == 76):
-            print_apple_MSD("\t\t", manufacturer_specific_data)
+            print_apple_MSD(f"{i2}", manufacturer_specific_data)
         elif(device_BT_CID == 6):
-            print_microsoft_MSD("\t\t", manufacturer_specific_data)
+            print_microsoft_MSD(f"{i2}", manufacturer_specific_data)
         elif(device_BT_CID == 0x058e):
-            print_meta_MSD("\t\t", manufacturer_specific_data)
+            print_meta_MSD(f"{i2}", manufacturer_specific_data)
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 

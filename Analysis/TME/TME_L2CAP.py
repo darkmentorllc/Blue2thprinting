@@ -73,7 +73,7 @@ def print_L2CAP_info(bdaddr):
                 data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(direction, pkt_id, data_len, interval_min, interval_max, latency, timeout)
                 BTIDES_export_L2CAP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
                 # Then print UI
-                print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ("\t\t", direction, pkt_id, data_len, interval_min, interval_max, latency, timeout)
+                print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(f"{i2}", direction, pkt_id, data_len, interval_min, interval_max, latency, timeout)
 
     if(l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):
         for bdaddr_random, direction, code, pkt_id, data_len, result in l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result:
@@ -82,6 +82,6 @@ def print_L2CAP_info(bdaddr):
                 data = ff_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(direction, pkt_id, data_len, result)
                 BTIDES_export_L2CAP_packet(bdaddr=bdaddr, random=bdaddr_random, data=data)
                 # Then print UI
-                print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP("\t\t", direction, pkt_id, data_len, result)
+                print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(f"{i2}", direction, pkt_id, data_len, result)
 
     qprint("")
