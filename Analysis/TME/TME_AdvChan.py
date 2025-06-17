@@ -621,7 +621,18 @@ def print_manufacturer_data(bdaddr):
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(re.search("No Match", company_name)):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+            flipped_company_name = BT_CID_to_company_name(flipped_endian)
+            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, flipped_company_name))
+            if(re.search("No Match", flipped_company_name)):
+                hex_CID = f"{device_BT_CID:04x}"
+                # Reverse the endianness of the company ID
+                msd_with_companyid = bytes.fromhex(hex_CID)[::-1] + bytes.fromhex(manufacturer_specific_data)
+                try:
+                    string_interpretation = string_yellow_bright(msd_with_companyid.decode("utf-8", 'ignore'))
+                    qprint(f"{i4}No match on company name in either endianness. Possible MSD string interpretation: {string_interpretation}")
+                except:
+                    # If we get a fatal decoding issue, just don't bother with printing the possible string
+                    pass
         qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
         vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_MSD)")
@@ -632,7 +643,18 @@ def print_manufacturer_data(bdaddr):
         # Only print the flipped endian if there was a failure to match on the correct endianness
         if(re.search("No Match", company_name)):
             flipped_endian = (device_BT_CID & 0xFF) << 8 | (device_BT_CID >> 8)
-            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, BT_CID_to_company_name(flipped_endian)))
+            flipped_company_name = BT_CID_to_company_name(flipped_endian)
+            qprint(f"{i3}Endianness-flipped device company ID possibility (in case the vendor used the wrong endianness): 0x%04x (%s)" % (flipped_endian, flipped_company_name))
+            if(re.search("No Match", flipped_company_name)):
+                hex_CID = f"{device_BT_CID:04x}"
+                # Reverse the endianness of the company ID
+                msd_with_companyid = bytes.fromhex(hex_CID)[::-1] + bytes.fromhex(manufacturer_specific_data)
+                try:
+                    string_interpretation = string_yellow_bright(msd_with_companyid.decode("utf-8", 'ignore'))
+                    qprint(f"{i4}No match on company name in either endianness. Possible MSD string interpretation: {string_interpretation}")
+                except:
+                    # If we get a fatal decoding issue, just don't bother with printing the possible string
+                    pass
         qprint(f"{i2}Raw Data: {manufacturer_specific_data}")
 
         # Print Apple iBeacon information

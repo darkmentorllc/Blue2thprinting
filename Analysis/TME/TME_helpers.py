@@ -922,3 +922,6 @@ def bdaddr_found_in_any_table(bdaddr):
     except Exception as e:
         print(f"Error checking tables: {e}")
         return False
+
+def string_yellow_bright(s):
+    return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL

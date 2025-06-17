@@ -635,9 +635,6 @@ def chip_by_sub_version(sub_version, device_BT_CID):
     # If we get here, return empty string denoting nothing found
     return ""
 
-def string_yellow_bright(s):
-    return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL
-
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipPrint(bdaddr):
