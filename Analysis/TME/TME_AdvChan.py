@@ -362,9 +362,11 @@ def print_URI(bdaddr):
 
     qprint("")
 
-########################################
+################################################################################
 # LE Role (0x1C)
-########################################
+# Technically not supposed to be present, except in OOB data,
+# but yet some things include it in OTA advertisements
+################################################################################
 
 role_dict = {
     0: "Only Peripheral Role supported",
@@ -507,6 +509,39 @@ def print_random_target_address(bdaddr):
         # Export to BTIDES
         data = {"length": 7, "random_bdaddr": random_bdaddr}
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_RandomTargetAddress, data)
+
+    qprint("")
+
+################################################################################
+# LE Bluetooth Device Address (0x1B)
+# Technically not supposed to be present, except in OOB data,
+# but yet some things include it in OTA advertisements
+################################################################################
+
+def print_le_bluetooth_device_address(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    le_query = "SELECT bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0):
+        vprint(f"{i1}No 'LE Bluetooth Device Address' advertisement data found.")
+        return
+    else:
+        qprint(f"{i1}LE Bluetooth Device Address advertisement data found:")
+
+    for (bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random) in le_result:
+        qprint(f"{i2}Advertised address: {other_bdaddr}")
+        qprint(f"{i2}Address type: {"Random" if other_bdaddr_random else "Public"}")
+        if(not other_bdaddr_random):
+            print_company_name_from_bdaddr(f"{i3}", other_bdaddr, False)
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_other_le_bdaddr)")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+        # Export to BTIDES
+        data = {"length": 8, "le_bdaddr": other_bdaddr, "bdaddr_type": other_bdaddr_random}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_LE_BDADDR, data)
 
     qprint("")
 
@@ -695,7 +730,7 @@ def print_manufacturer_data(bdaddr):
                 # Reverse the endianness of the company ID
                 msd_with_companyid = bytes.fromhex(hex_CID)[::-1] + bytes.fromhex(manufacturer_specific_data)
                 try:
-                    string_interpretation = string_yellow_bright(msd_with_companyid.decode("utf-8", 'ignore'))
+                    string_interpretation = string_magenta_bright(msd_with_companyid.decode("utf-8", 'ignore'))
                     qprint(f"{i4}No match on company name in either endianness. Possible MSD string interpretation: {string_interpretation}")
                 except:
                     # If we get a fatal decoding issue, just don't bother with printing the possible string
@@ -717,7 +752,7 @@ def print_manufacturer_data(bdaddr):
                 # Reverse the endianness of the company ID
                 msd_with_companyid = bytes.fromhex(hex_CID)[::-1] + bytes.fromhex(manufacturer_specific_data)
                 try:
-                    string_interpretation = string_yellow_bright(msd_with_companyid.decode("utf-8", 'ignore'))
+                    string_interpretation = string_magenta_bright(msd_with_companyid.decode("utf-8", 'ignore'))
                     qprint(f"{i4}No match on company name in either endianness. Possible MSD string interpretation: {string_interpretation}")
                 except:
                     # If we get a fatal decoding issue, just don't bother with printing the possible string
@@ -763,6 +798,7 @@ def print_all_advdata(bdaddr, nametype):
     print_PSRM(bdaddr)                                  # Includes BTIDES export
     print_public_target_address(bdaddr)                 # Includes BTIDES export
     print_random_target_address(bdaddr)                 # Includes BTIDES export
+    print_le_bluetooth_device_address(bdaddr)           # Includes BTIDES export
     print_URI(bdaddr)                                   # Includes BTIDES export
     print_role(bdaddr)                                  # Includes BTIDES export
     print_3DInfoData(bdaddr)                            # Includes BTIDES export

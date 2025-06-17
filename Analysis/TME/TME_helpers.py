@@ -773,7 +773,7 @@ def print_device_names(bdaddr, nametype):
 
     for device_name_type, name_hex_str in eir_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        color_name = string_magenta_bright(f"{device_name}")
         qprint(f"{i1}DeviceName: {color_name}")
         qprint(f"{i2}DeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_name)")
@@ -785,7 +785,7 @@ def print_device_names(bdaddr, nametype):
 
     for name_hex_str, in hci_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        color_name = string_magenta_bright(f"{device_name}")
         qprint(f"{i1}DeviceName: {color_name}")
         qprint(f"{i2}DeviceNameType: HCI Remote Name Response")
         vprint(f"{i2}In BT Classic Data (DB:HCI_bdaddr_to_name)")
@@ -795,7 +795,7 @@ def print_device_names(bdaddr, nametype):
 
     for bdaddr_random, le_evt_type, device_name_type, name_hex_str in le_result:
         device_name = get_utf8_string_from_hex_string(name_hex_str)
-        color_name = Fore.MAGENTA + Style.BRIGHT + f"{device_name}"
+        color_name = string_magenta_bright(f"{device_name}")
         qprint(f"{i1}DeviceName: {color_name}")
         qprint(f"{i2}DeviceNameType: {name_type_translation[device_name_type]}")
         vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_name), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
@@ -925,3 +925,6 @@ def bdaddr_found_in_any_table(bdaddr):
 
 def string_yellow_bright(s):
     return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL
+
+def string_magenta_bright(s):
+    return Fore.MAGENTA + Style.BRIGHT + s + Style.RESET_ALL
