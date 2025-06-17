@@ -486,6 +486,29 @@ def print_public_target_address(bdaddr):
 # Random Target Address (0x18)
 ########################################
 
+def print_random_target_address(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    le_query = "SELECT bdaddr_random, le_evt_type, random_bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0):
+        vprint(f"{i1}No 'Random Target Address' advertisement data found.")
+        return
+    else:
+        qprint(f"{i1}Random Target Address advertisement data found:")
+
+    for (bdaddr_random, le_evt_type, random_bdaddr) in le_result:
+        qprint(f"{i2}Random address for bonded target of advertisement: {random_bdaddr}")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_public_target_bdaddr)")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+        # Export to BTIDES
+        data = {"length": 7, "random_bdaddr": random_bdaddr}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_RandomTargetAddress, data)
+
+    qprint("")
 
 ########################################
 # Manufacturer-specific Data
@@ -739,6 +762,7 @@ def print_all_advdata(bdaddr, nametype):
     print_class_of_device(bdaddr)                       # Includes BTIDES export
     print_PSRM(bdaddr)                                  # Includes BTIDES export
     print_public_target_address(bdaddr)                 # Includes BTIDES export
+    print_random_target_address(bdaddr)                 # Includes BTIDES export
     print_URI(bdaddr)                                   # Includes BTIDES export
     print_role(bdaddr)                                  # Includes BTIDES export
     print_3DInfoData(bdaddr)                            # Includes BTIDES export

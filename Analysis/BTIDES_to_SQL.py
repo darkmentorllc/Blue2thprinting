@@ -329,7 +329,7 @@ def import_AdvData_RandomTargetAddress(bdaddr, random, db_type, leaf):
         return
     else:
         values = (bdaddr, random, le_evt_type, random_bdaddr)
-        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_public_target_bdaddr (bdaddr, bdaddr_random, le_evt_type, random_bdaddr) VALUES (%s, %s, %s, %s);"
+        le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_random_target_bdaddr (bdaddr, bdaddr_random, le_evt_type, random_bdaddr) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
 
