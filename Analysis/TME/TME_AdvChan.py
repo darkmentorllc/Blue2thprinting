@@ -600,6 +600,17 @@ def print_meta_MSD(indent, manufacturer_specific_data):
         manufacturer_specific_data_str = bytes.fromhex(manufacturer_specific_data).decode("utf-8")
         qprint(f"{indent}Meta Quest Serial Number: {manufacturer_specific_data_str}")
 
+def print_Samsung_MSD(indent, manufacturer_specific_data):
+    # Based on looking at data in the SQL DB, it seems that the Samsung MSD is most often interpretable
+    # as a string if it starts with 0112.
+    # TODO: find a RE-based citation which describes why
+    if(manufacturer_specific_data[0:4] == "0112"):
+        try:
+            manufacturer_specific_data_str = bytes.fromhex(manufacturer_specific_data[4:]).decode("utf-8", "ignore")
+            qprint(f"{indent}Samsung string interpretation: {manufacturer_specific_data_str}")
+        except:
+            pass
+
 def print_manufacturer_data(bdaddr):
     bdaddr = bdaddr.strip().lower()
 
@@ -664,6 +675,8 @@ def print_manufacturer_data(bdaddr):
             print_microsoft_MSD(f"{i2}", manufacturer_specific_data)
         elif(device_BT_CID == 0x058e):
             print_meta_MSD(f"{i2}", manufacturer_specific_data)
+        elif(device_BT_CID == 117):
+            print_Samsung_MSD(f"{i3}", manufacturer_specific_data)
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 
