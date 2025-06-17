@@ -520,7 +520,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
                 qprint(f"{indent}{i1}BDADDR is Bluetooth Classic")
             else:
                 qprint(f"{indent}{i1}BDADDR is Bluetooth Low Energy Public")
-        qprint("")
+        # qprint("")
 
 ###################################################################################
 # Ideally should be in TME_names, but I don't want to introduce cyclic dependancies

@@ -57,7 +57,7 @@ def ff_CONNECT_IND_placeholder():
     )
 
 ########################################
-# Transmit Power
+# Transmit Power (0x0A)
 ########################################
 
 def print_transmit_power(bdaddr, nametype):
@@ -91,7 +91,7 @@ def print_transmit_power(bdaddr, nametype):
     qprint("")
 
 ########################################
-# Flags
+# Flags (0x01)
 ########################################
 
 def print_flags(bdaddr):
@@ -136,7 +136,7 @@ def print_flags(bdaddr):
     qprint("")
 
 ########################################
-# URI
+# URI (0x24)
 ########################################
 
 uri_scheme_prefixes = {
@@ -363,7 +363,7 @@ def print_URI(bdaddr):
     qprint("")
 
 ########################################
-# LE Role
+# LE Role (0x1C)
 ########################################
 
 role_dict = {
@@ -396,9 +396,9 @@ def print_role(bdaddr):
 
     qprint("")
 
-####################################################
-# 3D Information Data (used for 3D displays/glasses)
-####################################################
+###########################################################
+# 3D Information Data (used for 3D displays/glasses) (0x3D)
+###########################################################
 
 def print_3d_info_bit_fields(indent, byte1):
 
@@ -453,6 +453,39 @@ def print_3DInfoData(bdaddr):
         BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_3DInfoData, data)
 
     qprint("")
+
+########################################
+# Public Target Address (0x17)
+########################################
+
+def print_public_target_address(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+
+    values = (bdaddr,)
+    le_query = "SELECT bdaddr_random, le_evt_type, public_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0):
+        vprint(f"{i1}No 'Public Target Address' advertisement data found.")
+        return
+    else:
+        qprint(f"{i1}Public Target Address advertisement data found:")
+
+    for (bdaddr_random, le_evt_type, public_bdaddr) in le_result:
+        qprint(f"{i2}Public address for bonded target of advertisement: {public_bdaddr}")
+        vprint(f"{i3}In BLE Data (DB:LE_bdaddr_to_public_target_bdaddr)")
+        vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+        # Export to BTIDES
+        data = {"length": 7, "public_bdaddr": public_bdaddr}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_PublicTargetAddress, data)
+
+    qprint("")
+
+########################################
+# Random Target Address (0x18)
+########################################
+
 
 ########################################
 # Manufacturer-specific Data
@@ -705,6 +738,7 @@ def print_all_advdata(bdaddr, nametype):
     print_manufacturer_data(bdaddr)
     print_class_of_device(bdaddr)                       # Includes BTIDES export
     print_PSRM(bdaddr)                                  # Includes BTIDES export
+    print_public_target_address(bdaddr)                 # Includes BTIDES export
     print_URI(bdaddr)                                   # Includes BTIDES export
     print_role(bdaddr)                                  # Includes BTIDES export
     print_3DInfoData(bdaddr)                            # Includes BTIDES export

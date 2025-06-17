@@ -63,7 +63,7 @@ def print_GPS(bdaddr):
     select_results = execute_query(select_query, values)
 
     if (len(select_results) == 0):
-        vprint(f"{i2}No GPS data present for this device.)")
+        vprint(f"{i1}No GPS data present for this device.")
         return
     else:
         qprint(f"{i1}GPS coordinates:")
