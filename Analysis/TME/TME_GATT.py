@@ -401,7 +401,9 @@ def print_GATT_info(bdaddr):
                     (char_properties, char_value_handle, UUID) = characteristic_declaration_handles_dict[handle]
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
-                    qprint(f"{i4}2803 ({match_known_GATT_UUID_or_custom_UUID('2803')}), Attribute Handle: {handle:03}")
+                    # Print out the header if it was not printed above (for weird stuff where were have inconsistent data)
+                    if(handle not in attribute_handles_dict.keys()):
+                        qprint(f"{i3}2803 ({match_known_GATT_UUID_or_custom_UUID('2803')}), Attribute Handle: {handle:03}")
                     qprint(f"{i4}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                     qprint(f"{i4}Characteristic Value UUID: {UUID} ({UUID128_description})")
                     qprint(f"{i4}Characteristic Value Handle: {char_value_handle:03}")
