@@ -417,6 +417,16 @@ def print_ChipMakerPrint(bdaddr):
         no_results_found = False
 
     if(time_profile): qprint(f"OUI = {time.time()}")
+    #=============================#
+    # GATT known chip-maker UUIDs #
+    #=============================#
+    str_list = lookup_metadata_by_GATTprint(bdaddr, '2thprint_ChipMaker_GATTprint', '2thprint_Chip_Maker')
+    if(len(str_list) > 0):
+        no_results_found = False
+        for s in str_list:
+            print_ChipMakerPrint_header_if_needed()
+            qprint(s)
+
     #===============#
     # IEEE OUI data #
     #===============#
@@ -438,19 +448,10 @@ def print_ChipMakerPrint(bdaddr):
                 no_results_found = False
 
     if(time_profile): qprint(f"GATT = {time.time()}")
-    #=============================#
-    # GATT known chip-maker UUIDs #
-    #=============================#
-    str_list = lookup_metadata_by_GATTprint(bdaddr, '2thprint_ChipMaker_GATTprint', '2thprint_Chip_Maker')
-    if(len(str_list) > 0):
-        no_results_found = False
-        for s in str_list:
-            print_ChipMakerPrint_header_if_needed()
-            qprint(s)
 
-    #=============================#
-    # Known chip-maker UUID16s    #
-    #=============================#
+    #============================================#
+    # Known chip-maker UUID16s in advertisements #
+    #============================================#
     le_UUID16_query = "SELECT UUID16_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
     LE_bdaddr_to_UUID16_service_data_result = execute_query(le_UUID16_query, values)
     le_UUID16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
@@ -466,6 +467,7 @@ def print_ChipMakerPrint(bdaddr):
         no_results_found = False
 
     if(time_profile): qprint(f"MSD BTC = {time.time()}")
+
     #========================================#
     # Manufacturer-Specific Data (MSD) - BTC #
     #========================================#
@@ -489,7 +491,6 @@ def print_ChipMakerPrint(bdaddr):
                     print_ChipMakerPrint_header_if_needed()
                     qprint(f"{i2}{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From BT Classic Extended Inquiry Response Manufacturer-Specific Data Company ID{" (DB:EIR_bdaddr_to_MSD)" if TME.TME_glob.verbose_print else ""}")
                     no_results_found = False
-
 
     if(time_profile): qprint(f"MSD BLE = {time.time()}")
     #========================================#
