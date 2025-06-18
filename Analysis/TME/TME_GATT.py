@@ -272,7 +272,7 @@ def print_GATT_info(bdaddr):
 
     query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
-    declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
+    characteristic_declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
     for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
@@ -394,13 +394,14 @@ def print_GATT_info(bdaddr):
 
 
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
-            if(handle in declaration_handles_dict.keys()):
+            if(handle in characteristic_declaration_handles_dict.keys()):
                 declaration_handle = handle
                 if(handle <= svc_end_handle and handle >= svc_begin_handle):
                     service_match_dict[handle] = 1
-                    (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
+                    (char_properties, char_value_handle, UUID) = characteristic_declaration_handles_dict[handle]
                     UUID = add_dashes_to_UUID128(UUID)
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
+                    qprint(f"{i4}2803 ({match_known_GATT_UUID_or_custom_UUID('2803')}), Attribute Handle: {handle:03}")
                     qprint(f"{i4}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                     qprint(f"{i4}Characteristic Value UUID: {UUID} ({UUID128_description})")
                     qprint(f"{i4}Characteristic Value Handle: {char_value_handle:03}")
@@ -457,9 +458,9 @@ def print_GATT_info(bdaddr):
                 qprint(f"{i2}{UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)}), Attribute Handle: {attribute_handle:03}")
 
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
-            if(handle in declaration_handles_dict.keys()):
+            if(handle in characteristic_declaration_handles_dict.keys()):
                 declaration_handle = handle
-                (char_properties, char_value_handle, UUID) = declaration_handles_dict[handle]
+                (char_properties, char_value_handle, UUID) = characteristic_declaration_handles_dict[handle]
                 UUID = add_dashes_to_UUID128(UUID)
                 UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
                 qprint(f"{i3}GATT Characteristic declaration:\t{UUID} ({UUID128_description})\n\t        Handle: {declaration_handle:03}\n\t        Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
