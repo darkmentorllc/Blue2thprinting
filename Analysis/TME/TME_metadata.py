@@ -326,12 +326,18 @@ def create_ChipMaker_OUI_hash():
     #qprint(ChipMaker_OUI_hash)
 
 
-g_printed_ChipMakerPrint_header = False
+def print_ChipPrint_header_if_needed():
+    global g_printed_ChipPrint_header
+    if(not TME.TME_glob.g_printed_ChipPrint_header):
+        qprint(f"{i1}2thprint_ChipPrint:")
+        TME.TME_glob.g_printed_ChipPrint_header = True
+
+
 def print_ChipMakerPrint_header_if_needed():
     global g_printed_ChipMakerPrint_header
-    if(not g_printed_ChipMakerPrint_header):
+    if(not TME.TME_glob.g_printed_ChipMakerPrint_header):
         qprint(f"{i1}2thprint_ChipMakerPrint:")
-        g_printed_ChipMakerPrint_header = True
+        TME.TME_glob.g_printed_ChipMakerPrint_header = True
 
 
 def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
@@ -521,7 +527,7 @@ def print_ChipMakerPrint(bdaddr):
         vprint(f"{i2}No ChipMakerPrint(s) found.")
 
     # Final padding print of print_ChipMakerPrint()
-    if(g_printed_ChipMakerPrint_header):
+    if(TME.TME_glob.g_printed_ChipMakerPrint_header):
         qprint("")
     else:
         vprint("")
@@ -638,7 +644,7 @@ def chip_by_sub_version(sub_version, device_BT_CID):
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
 def print_ChipPrint(bdaddr):
-    printed_header = False
+    global g_printed_ChipPrint_header
     bdaddr = bdaddr.strip().lower()
 
     no_results_found = True
@@ -660,9 +666,7 @@ def print_ChipPrint(bdaddr):
         for (ll_sub_version,device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(ll_sub_version, device_BT_CID)
             if(chip_name != ""):
-                if(not printed_header):
-                    qprint(f"{i1}2thprint_ChipPrint:")
-                    printed_header = True
+                print_ChipPrint_header_if_needed()
                 qprint(f"{i2}{string_yellow_bright(chip_name)} -> From LL_VERSION_IND info{" (DB:LL_VERSION_IND)" if TME.TME_glob.verbose_print else ""}")
 
     #==========================#
@@ -681,9 +685,7 @@ def print_ChipPrint(bdaddr):
         for (lmp_sub_version, device_BT_CID) in version_result:
             chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
             if(chip_name != ""):
-                if(not printed_header):
-                    qprint(f"{i1}2thprint_ChipPrint:")
-                    printed_header = True
+                print_ChipPrint_header_if_needed()
                 qprint(f"{i2}{string_yellow_bright(chip_name)} -> From LMP_VERSION_REQ/RSP info{" (DB:LMP_VERSION_RES)" if TME.TME_glob.verbose_print else ""}")
 
     #================#
@@ -699,9 +701,7 @@ def print_ChipPrint(bdaddr):
     #======================#
     str = lookup_ChipPrint_by_GATT(bdaddr)
     if(str != ""):
-        if(not printed_header):
-            qprint(f"{i1}2thprint_ChipPrint:")
-            printed_header = True
+        print_ChipPrint_header_if_needed()
         qprint(string_yellow_bright(str))
         no_results_found = False
 
@@ -709,7 +709,7 @@ def print_ChipPrint(bdaddr):
         vprint(f"{i1}2thprint_ChipPrint:")
         vprint(f"{i2}No ChipPrint(s) found.")
 
-    if(not printed_header):
+    if(not TME.TME_glob.g_printed_ChipPrint_header):
         vprint("")
     else:
         qprint("")

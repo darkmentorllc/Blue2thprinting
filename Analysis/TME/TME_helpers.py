@@ -500,8 +500,8 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
         random = is_bdaddr_le_and_random(bdaddr)
 
     if(random):
-        vprint(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
-        vprint("")
+        qprint(f"{indent}Company Name by IEEE OUI: Not Applicable because this is a {get_bdaddr_type(bdaddr, random)} address")
+        #vprint("")
     else:
         # Query the database for the company_name based on the first 3 octets
         values = (first_three_octets,)

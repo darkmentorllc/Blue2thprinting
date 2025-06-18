@@ -149,8 +149,13 @@ use_test_db = False
 insert_count = 0
 duplicate_count = 0
 
-
 ###############################################
 # For making the output more terse
 ###############################################
 hideBLEScopedata = False
+
+############################################################
+# For hiding the ChipMakerPrint header when nothing is found
+############################################################
+g_printed_ChipPrint_header = False
+g_printed_ChipMakerPrint_header = False
