@@ -185,7 +185,7 @@
 		"confirmation_confidence": "2/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fef5": "Service/Advertisement: Renesas: Software Update Over-The-Air (OTA) Receiver (SUOTAR))"
+			"fef5": "Service/Advertisement: Renesas: Software Update Over-The-Air (OTA) Receiver (SUOTAR)) for firmware updates."
 		},
 		"comment": "The UUID fef5 was originally assigned to Dialog per the member_uuids.yaml, but it's documented in CLUES how it's used by Renesas currently"
 	},

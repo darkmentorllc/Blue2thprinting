@@ -21,40 +21,31 @@ def match_known_GATT_UUID_or_custom_UUID(UUID):
     # Try to see if it's a known GATT Service
     str_name = get_uuid16_gatt_service_string(UUID)
     if(str_name != "Unknown"):
-        colored_str = Fore.CYAN + Style.BRIGHT + f"Service: {str_name}" + Style.RESET_ALL
-        return colored_str
+        return string_cyan_bright(f"Service: {str_name}")
     else:
         # Try to see if it's a known Characteristic
         str_name = get_uuid16_gatt_characteristic_string(UUID)
         if(str_name != "Unknown"):
-            colored_str = Fore.CYAN + Style.BRIGHT + f"Characteristic Value: {str_name}" + Style.RESET_ALL
-            return colored_str
-            # return f"Characteristic Value: {str_name}"
+            return string_cyan_bright(f"Characteristic Value: {str_name}")
         else:
             # Try to see if it's a known Declaration
             str_name = get_uuid16_gatt_declaration_string(UUID)
             if(str_name != "Unknown"):
-                colored_str = Fore.GREEN + Style.BRIGHT + f"Declaration: {str_name}" + Style.RESET_ALL
-                return colored_str
-                #return f"Declaration: {str_name}"
+                return string_green_bright(f"Declaration: {str_name}")
             else:
                 # Try to see if it's a known Descriptor
                 str_name = get_uuid16_gatt_descriptor_string(UUID)
                 if(str_name != "Unknown"):
-                    colored_str = Fore.CYAN + Style.BRIGHT + f"Descriptor: {str_name}" + Style.RESET_ALL
-                    return colored_str
-                    # return f"Descriptor: {str_name}"
+                    return string_cyan_bright(f"Descriptor: {str_name}")
                 else:
                     if(len(UUID) == 4):
                         str = return_name_for_UUID16(UUID)
                     else:
                         str = get_custom_uuid128_string(UUID)
                     if(str == "Unknown UUID128"):
-                        colored_str = Fore.RED + Style.BRIGHT + "This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml" + Style.RESET_ALL
-                        return colored_str
+                        return string_red_bright("This is a standardized UUID128, but it is not in our database. Check for an update to characteristic_uuids.yaml")
                     else:
-                        colored_str = Fore.CYAN + Style.BRIGHT + str + Style.RESET_ALL
-                        return colored_str
+                        return string_cyan_bright(str)
 
 def characteristic_properties_to_string(number):
     str = ""
@@ -250,6 +241,23 @@ def descriptor_print(indent, UUID, operation, byte_values):
     elif(UUID == "2905"):
         print("2905-specific stuff")
 
+# This only prints out if --verbose-print is given
+def print_CLUES_UUID_purpose_if_necessary(indent, UUID):
+    if(not TME.TME_glob.verbose_print):
+        return
+
+    UUID_no_dash = UUID.replace("-","")
+    if(UUID_no_dash in TME.TME_glob.clues.keys()):
+        clues_description = TME.TME_glob.clues[UUID_no_dash]['UUID_purpose']
+        vprint(f"{indent}UUID purpose according to CLUES: {string_yellow_bright(clues_description)}")
+    else:
+        for UUID_regex in TME.TME_glob.clues_regexed.keys():
+            replaced_UUID_regex = UUID_regex.replace('-','').replace('x','[0-9a-fA-F]')
+            if re.match(replaced_UUID_regex, UUID_no_dash):
+                clues_description = TME.TME_glob.clues_regexed[UUID_regex]['UUID_purpose']
+                vprint(f"{indent}UUID purpose according to CLUES: {string_yellow_bright(clues_description)}")
+
+
 def print_GATT_info(bdaddr):
     # Query the database for all GATT services
     values = (bdaddr,)
@@ -353,7 +361,7 @@ def print_GATT_info(bdaddr):
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
         # If BLEScope data output is enabled, and we see an Unknown UUID128, save it to analyze later
         if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-            unknown_UUID128_hash[UUID] = ("Service",f"{i1}    ")
+            unknown_UUID128_hash[UUID] = ("Service",f"{i3}")
         if(service_type == 0):
             type = "2800 (" + match_known_GATT_UUID_or_custom_UUID("2800") + ")"
         elif(service_type == 1):
@@ -361,6 +369,7 @@ def print_GATT_info(bdaddr):
         qprint(f"{i1}{type} Attribute Handle: {svc_begin_handle:03}")
         qprint(f"{i2}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
         qprint(f"{i2}Service Value: {UUID} ({UUID128_description}):")
+        print_CLUES_UUID_purpose_if_necessary(f"{i3}", UUID)
 
         # Iterate through all known handles, so nothing gets missed
         for handle, in GATT_all_known_handles_result:
@@ -392,7 +401,6 @@ def print_GATT_info(bdaddr):
                         qprint(f"{i1}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
                         qprint(f"{i1}Service: {UUID} ({UUID128_description}):")
 
-
             # Check if this handle is found in the GATT_characteristics table, and if so, print that info
             if(handle in characteristic_declaration_handles_dict.keys()):
                 declaration_handle = handle
@@ -403,15 +411,15 @@ def print_GATT_info(bdaddr):
                     UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
                     # Print out the header if it was not printed above (for weird stuff where were have inconsistent data)
                     if(handle not in attribute_handles_dict.keys()):
-
                         qprint(f"{i3}2803 ({match_known_GATT_UUID_or_custom_UUID('2803')}), Attribute Handle: {handle:03}")
                     qprint(f"{i4}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                     qprint(f"{i4}Characteristic Value UUID: {UUID} ({UUID128_description})")
+                    print_CLUES_UUID_purpose_if_necessary(f"{i5}", UUID)
                     qprint(f"{i4}Characteristic Value Handle: {char_value_handle:03}")
                     # Fill in the UUID for a Characteristic Value, just in case it isn't in the database
                     attribute_handles_dict[char_value_handle] = UUID
                     if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
-                        unknown_UUID128_hash[UUID] = ("Characteristic",f"{i1}    ")
+                        unknown_UUID128_hash[UUID] = ("Characteristic",f"{i3}")
                     if(not any(key[0] == char_value_handle for key in char_value_handles_dict.keys()) and (char_properties & 0x2 == 0x02)):
                         qprint(f"{i4}GATT Characteristic Value not successfully read, despite having readable permissions.")
             else:

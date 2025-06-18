@@ -626,11 +626,9 @@ def get_custom_uuid128_string(uuid128):
             name = entry['UUID_name']
         else:
             name = "Unknown"
-        colored_str = Fore.CYAN + Style.BRIGHT + f"Custom UUID128: company: {entry['company']}, name: {name}" + Style.RESET_ALL
-        return colored_str
+        return string_cyan_bright(f"Custom UUID128: company: {entry['company']}, name: {name}")
     elif(uuid128_no_dash in TME.TME_glob.bt_member_UUID16_as_UUID128_to_names.keys()):
-        colored_str = Fore.CYAN + Style.BRIGHT + f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}" + Style.RESET_ALL
-        return colored_str
+        return string_cyan_bright(f"Company UUID128: {TME.TME_glob.bt_member_UUID16_as_UUID128_to_names[uuid128_no_dash]}")
     else:
         for UUID_regex in TME.TME_glob.clues_regexed.keys():
             replaced_UUID_regex = UUID_regex.replace('-','').replace('x','[0-9a-fA-F]')
@@ -640,13 +638,10 @@ def get_custom_uuid128_string(uuid128):
                     name = entry['UUID_name']
                 else:
                     name = "Unknown"
-                colored_str = Fore.CYAN + Style.BRIGHT + f"Custom UUID128: company: {entry['company']}, name: {name}" + Style.RESET_ALL
-                return colored_str
+                return string_cyan_bright(f"Custom UUID128: company: {entry['company']}, name: {name}")
 
     # TODO: Add lookup in Metadata_v2
-
-    colored_str = Fore.RED + Style.BRIGHT + f"Unknown UUID128" + Style.RESET_ALL
-    return colored_str
+    return string_red_bright(f"Unknown UUID128")
 
 ################################################################################
 # Class of Device (This is in here because it comes up in both BLE and BTC)
@@ -928,3 +923,12 @@ def string_yellow_bright(s):
 
 def string_magenta_bright(s):
     return Fore.MAGENTA + Style.BRIGHT + s + Style.RESET_ALL
+
+def string_cyan_bright(s):
+    return Fore.CYAN + Style.BRIGHT + s + Style.RESET_ALL
+
+def string_green_bright(s):
+    return Fore.GREEN + Style.BRIGHT + s + Style.RESET_ALL
+
+def string_red_bright(s):
+    return Fore.RED + Style.BRIGHT + s + Style.RESET_ALL
