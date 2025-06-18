@@ -93,10 +93,10 @@ def print_LLCP_info(bdaddr):
     unknown_result = execute_query(unknown_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
-        vprint(f"{i1}No LL Control Protocol info found.")
+        vprint(f"{i1}No Link Layer Control Protocol (LLCP) info found.")
         return
     else:
-        qprint(f"{i1}LL Control Protocol info:")
+        qprint(f"{i1}Link Layer Control Protocol (LLCP) info:")
 
     # FIXME: for now the direction in all my DB data is P2C, so I'm hardcoding it here, but this needs to be fixed in the future once the DB is updated
     direction = type_BTIDES_direction_P2C
