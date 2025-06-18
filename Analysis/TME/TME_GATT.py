@@ -405,34 +405,39 @@ def print_GATT_info(bdaddr):
                     qprint(f"{i4}Properties: 0x{char_properties:02x} ({characteristic_properties_to_string(char_properties)})")
                     qprint(f"{i4}Characteristic Value UUID: {UUID} ({UUID128_description})")
                     qprint(f"{i4}Characteristic Value Handle: {char_value_handle:03}")
+                    # Fill in the UUID for a Characteristic Value, just in case it isn't in the database
+                    attribute_handles_dict[char_value_handle] = UUID
                     if(not TME.TME_glob.hideBLEScopedata and (UUID128_description == "Unknown UUID128")):
                         unknown_UUID128_hash[UUID] = ("Characteristic",f"{i1}    ")
                     if(not any(key[0] == char_value_handle for key in char_value_handles_dict.keys()) and (char_properties & 0x2 == 0x02)):
                         qprint(f"{i4}GATT Characteristic Value not successfully read, despite having readable permissions.")
+            else:
+                # Made this an else condition so we don't try to look up possible Characteristic values that were read
+                # since we've already printed what we want to print about them above
 
-            # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
-            if any(key[0] == handle for key in char_value_handles_dict.keys()):
-                char_value_handle = handle
-                if any(key[0] == handle and key[1] == type_ATT_ERROR_RSP for key in char_value_handles_dict.keys()):
-                    for byte_values in char_value_handles_dict[(handle, type_ATT_ERROR_RSP)]:
-                        if(handle <= svc_end_handle and handle >= svc_begin_handle):
-                            service_match_dict[handle] = 1
-                            error_code = int.from_bytes(byte_values)
-                            fmt_byte_values = Fore.RED + Style.BRIGHT + f"{att_error_strings[error_code]}"
-                            qprint(f"{i5}GATT error received when attempting read: {fmt_byte_values}")
-                if any(key[0] == handle and key[1] == type_ATT_READ_RSP for key in char_value_handles_dict.keys()):
-                    for byte_values in char_value_handles_dict[(handle, type_ATT_READ_RSP)]:
-                        if(handle <= svc_end_handle and handle >= svc_begin_handle and handle not in descriptor_handles_dict.keys()):
-                            service_match_dict[handle] = 1
-                            fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
-                            qprint(f"{i5}GATT Characteristic Value read as {fmt_byte_values}")
-                            if(handle in attribute_handles_dict.keys()):
-                                characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values)
+                # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
+                if any(key[0] == handle for key in char_value_handles_dict.keys()):
+                    char_value_handle = handle
+                    if any(key[0] == handle and key[1] == type_ATT_ERROR_RSP for key in char_value_handles_dict.keys()):
+                        for byte_values in char_value_handles_dict[(handle, type_ATT_ERROR_RSP)]:
+                            if(handle <= svc_end_handle and handle >= svc_begin_handle):
+                                service_match_dict[handle] = 1
+                                error_code = int.from_bytes(byte_values)
+                                fmt_byte_values = Fore.RED + Style.BRIGHT + f"{att_error_strings[error_code]}"
+                                qprint(f"{i5}GATT error received when attempting read: {fmt_byte_values}")
+                    if any(key[0] == handle and key[1] == type_ATT_READ_RSP for key in char_value_handles_dict.keys()):
+                        for byte_values in char_value_handles_dict[(handle, type_ATT_READ_RSP)]:
+                            if(handle <= svc_end_handle and handle >= svc_begin_handle and handle not in descriptor_handles_dict.keys()):
+                                service_match_dict[handle] = 1
+                                fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
+                                qprint(f"{i5}GATT Characteristic Value read as {fmt_byte_values}")
+                                if(handle in attribute_handles_dict.keys()):
+                                    characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values)
 
-            # Check if this handle is found in the GATT_characteristic_descriptor_values table, and if so, print that info
-            if(handle in descriptor_handles_dict.keys()):
-                (UUID, operation, byte_values) = descriptor_handles_dict[handle][0]
-                descriptor_print(f"{i5}", UUID, operation, byte_values)
+                # Check if this handle is found in the GATT_characteristic_descriptor_values table, and if so, print that info
+                if(handle in descriptor_handles_dict.keys()):
+                    (UUID, operation, byte_values) = descriptor_handles_dict[handle][0]
+                    descriptor_print(f"{i5}", UUID, operation, byte_values)
 
             if(handle == svc_end_handle):
                 break
