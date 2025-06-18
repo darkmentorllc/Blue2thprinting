@@ -94,6 +94,8 @@ def main():
     requirement_group.add_argument('--require-GPS', action='store_true', help='Pass this argument to only print out information for devices which have at least 1 associated GPS coordinate.')
     requirement_group.add_argument('--require-GATT-any', action='store_true', help='Pass this argument to only print out information for devices which have *some* GATT info.')
     requirement_group.add_argument('--require-GATT-values', action='store_true', help='Pass this argument to only print out information for devices which successfully read some GATT values.')
+    requirement_group.add_argument('--require-SMP', action='store_true', help='Pass this argument to only print out information for devices which have *some* SMP info.')
+    requirement_group.add_argument('--require-SMP-legacy-pairing', action='store_true', help='Pass this argument to only print out information for devices which have SMP info indicating they will perform Legacy Pairing.')
     requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
     requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data.')
 
@@ -399,6 +401,12 @@ def main():
                 continue
         if(args.require_GATT_values):
             if(not device_has_GATT_values(bdaddr)):
+                continue
+        if(args.require_SMP):
+            if(not device_has_SMP_info(bdaddr)):
+                continue
+        if(args.require_SMP_legacy_pairing):
+            if(not device_SMP_legacy_pairing(bdaddr)):
                 continue
         if(args.require_LL_VERSION_IND):
             if(not device_has_LL_VERSION_IND_info(bdaddr)):

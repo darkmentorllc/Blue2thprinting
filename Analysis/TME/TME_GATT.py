@@ -241,22 +241,6 @@ def descriptor_print(indent, UUID, operation, byte_values):
     elif(UUID == "2905"):
         print("2905-specific stuff")
 
-# This only prints out if --verbose-print is given
-def print_CLUES_UUID_purpose_if_necessary(indent, UUID):
-    if(not TME.TME_glob.verbose_print):
-        return
-
-    UUID_no_dash = UUID.replace("-","")
-    if(UUID_no_dash in TME.TME_glob.clues.keys()):
-        clues_description = TME.TME_glob.clues[UUID_no_dash]['UUID_purpose']
-        vprint(f"{indent}UUID purpose according to CLUES: {string_yellow_bright(clues_description)}")
-    else:
-        for UUID_regex in TME.TME_glob.clues_regexed.keys():
-            replaced_UUID_regex = UUID_regex.replace('-','').replace('x','[0-9a-fA-F]')
-            if re.match(replaced_UUID_regex, UUID_no_dash):
-                clues_description = TME.TME_glob.clues_regexed[UUID_regex]['UUID_purpose']
-                vprint(f"{indent}UUID purpose according to CLUES: {string_yellow_bright(clues_description)}")
-
 
 def print_GATT_info(bdaddr):
     # Query the database for all GATT services

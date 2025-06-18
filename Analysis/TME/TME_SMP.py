@@ -17,7 +17,18 @@ init(autoreset=True)
 
 # Returns 0 if there is no SMP info for this BDADDR in any of the SMP tables, else returns 1
 def device_has_SMP_info(bdaddr):
-    # Query the database for all GATT services
+    # Query the database for SMP info
+    values = (bdaddr,)
+    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
+    SMP_result = execute_query(query, values)
+    if(len(SMP_result) != 0):
+        return 1;
+
+    return 0;
+
+# Returns 1 if this device did not request Secure Connections,
+# which would lead to it using legacy pairing even when an eavesdropper isn't trying to force it
+def device_SMP_legacy_pairing(bdaddr):
     values = (bdaddr,)
     query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_result = execute_query(query, values)
