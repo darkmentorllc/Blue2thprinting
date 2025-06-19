@@ -539,6 +539,7 @@ def find_nameprint_match(name_string):
         if re.search(regex_pattern, name_string):
             qprint(f"{i3}NamePrint: match found for {key}: {value}")
 
+
 def name_matches_nonunique_nameprint(name_string):
     for key, value in TME.TME_glob.nonunique_nameprint_data.items():
         #regex_pattern = key
@@ -549,6 +550,19 @@ def name_matches_nonunique_nameprint(name_string):
             return True
 
     return False
+
+
+# This is for nameprints which have natural variability and thus are presumed to represent unique names
+def name_matches_presumed_unique_nameprint(name_string):
+    for key, value in TME.TME_glob.presumed_unique_nameprint_data.items():
+        #regex_pattern = key
+        # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
+        regex_pattern = key.replace('\\\\\\', '\\')
+        #qprint(f"regex_pattern = {regex_pattern}")
+        if re.search(regex_pattern, name_string):
+            return regex_pattern
+
+    return None
 
 ##################################################################################
 # Appearance (This is in here because it comes up in both advertisements and GATT)

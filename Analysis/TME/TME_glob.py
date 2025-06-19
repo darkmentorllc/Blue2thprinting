@@ -32,7 +32,9 @@ clues = {}
 clues_regexed = {}
 # NamePrint data
 full_nameprint_data = {}
+presumed_unique_nameprint_data = {}
 nonunique_nameprint_data = {}
+privacy_report_no_results_found = True
 
 #########################################
 # Data from formattypes.yaml

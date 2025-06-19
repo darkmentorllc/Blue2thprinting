@@ -139,8 +139,25 @@ def name_contains_bdaddr(indent, name, bdaddr, name_source):
     return False
 
 
+# First parameter of tuple is whether the caller should continue
+# Second parameter is whether a result was found or not
+def check_name_for_most_specific_match(indent, name_string, bdaddr, name_source):
+    global privacy_report_no_results_found
+    if(name_matches_nonunique_nameprint(name_string)): # Don't bother users with names which are known to be non-unique
+        return True
+    pattern = name_matches_presumed_unique_nameprint(name_string)
+    if(pattern != None):
+        qprint(f"{indent}* Name '{name_string}' from {name_source} matches regex pattern {pattern} which is believed to represent a unique ID.")
+        TME.TME_glob.privacy_report_no_results_found = False
+        return True
+    if(name_contains_bdaddr(indent, name_string, bdaddr, name_source)):
+        TME.TME_glob.privacy_report_no_results_found = False
+        return True
+    return False
+
+
 def print_UniqueIDReport(bdaddr):
-    no_results_found = True
+    global privacy_report_no_results_found
 
     #================#
     # BDADDR data #
@@ -150,7 +167,7 @@ def print_UniqueIDReport(bdaddr):
     if(type == "Classic" or type == "Public" or type == "Random Static"):
         print_unique_ID_header_if_needed()
         qprint(f"{i3}* BDADDR is of type *{type}*, which is not randomized over time, and therefore can be used to track the device.")
-        no_results_found = False
+        TME.TME_glob.privacy_report_no_results_found = False
 
     # Or if it has Classic BDADDR embedded in Microsoft Swift Pair MSD
     values = (bdaddr,)
@@ -186,11 +203,11 @@ def print_UniqueIDReport(bdaddr):
             if(check_if_UUIDs_match(UUID_db, "2a25")):
                 print_unique_ID_header_if_needed()
                 qprint(f"{i3}This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
-                no_results_found = False
+                TME.TME_glob.privacy_report_no_results_found = False
             if(check_if_UUIDs_match(UUID_db, "2bff")):
                 print_unique_ID_header_if_needed()
                 qprint(f"{i3}This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
-                no_results_found = False
+                TME.TME_glob.privacy_report_no_results_found = False
 
     # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
 
@@ -204,7 +221,7 @@ def print_UniqueIDReport(bdaddr):
     if(str[2:6] == "True"):
         print_unique_ID_header_if_needed()
         qprint(f"{i3}The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
-        no_results_found = False
+        TME.TME_glob.privacy_report_no_results_found = False
         NamePrint_match = True
 
     # FIXME: now that we have separated the NAMEPRINT_DB.csv from NAMEPRINT_NONUNIQUE_DB.csv
@@ -225,39 +242,30 @@ def print_UniqueIDReport(bdaddr):
         name_source = "Bluetooth Classic Extended Inquiry Responses"
         for (name_hex_str,) in eir_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
-                continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                no_results_found = False
+            if(check_name_for_most_specific_match(f"{i3}", name, bdaddr, name_source)):
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, name_source)
-            no_results_found = False
+            TME.TME_glob.privacy_report_no_results_found = False
 
         hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
         hci_result = execute_query(hci_query, values)
         name_source = "Bluetooth Low Energy Scan Responses"
         for (name_hex_str,) in hci_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
-                continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                no_results_found = False
+            if(check_name_for_most_specific_match(f"{i3}", name, bdaddr, name_source)):
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, name_source)
-            no_results_found = False
+            TME.TME_glob.privacy_report_no_results_found = False
 
         le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
         name_source = "Bluetooth Low Energy Advertisements"
         for name_hex_str, le_evt_type in le_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
-            if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
-                continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                no_results_found = False
+            if(check_name_for_most_specific_match(f"{i3}", name, bdaddr, name_source)):
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, name_source)
-            no_results_found = False
+            TME.TME_glob.privacy_report_no_results_found = False
 
         chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
         chars_result = execute_query(chars_query, values)
@@ -265,48 +273,39 @@ def print_UniqueIDReport(bdaddr):
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
                 name = byte_values.decode('utf-8', 'ignore')
-                if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
-                    continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                    no_results_found = False
+                if(check_name_for_most_specific_match(f"{i3}", name, bdaddr, name_source)):
                     continue
                 print_possible_unique_ID_warning(f"{i3}", name, name_source)
-                no_results_found = False
+                TME.TME_glob.privacy_report_no_results_found = False
 
         ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
         ms_msd_result = execute_query(ms_msd_query, values)
-        name_source = f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
+            name_source = f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
             if(len(ms_msd_name) > 0):
-                if(name_matches_nonunique_nameprint(ms_msd_name)): # Don't bother users with names which are known to be non-unique
-                    continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                    no_results_found = False
+                if(check_name_for_most_specific_match(f"{i3}", ms_msd_name, bdaddr, name_source)):
                     continue
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name, name_source)
-                no_results_found = False
+                TME.TME_glob.privacy_report_no_results_found = False
 
         regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
         values2 = (bdaddr, regex)
         ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
-        name_source = f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
+            name_source = f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
             try:
                 ms_msd_name2 = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
             except:
                 ms_msd_name2 = ""
             if(len(ms_msd_name2) > 0):
-                if(name_matches_nonunique_nameprint(ms_msd_name2)): # Don't bother users with names which are known to be non-unique
-                    continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
-                    no_results_found = False
+                if(check_name_for_most_specific_match(f"{i3}", ms_msd_name2, bdaddr, name_source)):
                     continue
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name2, name_source)
-                no_results_found = False
+                TME.TME_glob.privacy_report_no_results_found = False
 
-    if(no_results_found):
+    if(TME.TME_glob.privacy_report_no_results_found):
         qprint(f"{i2}No privacy report results found. (But current checks are far from exhaustive.)")
 
     qprint("")

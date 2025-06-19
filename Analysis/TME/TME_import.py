@@ -80,6 +80,7 @@ def import_nameprint_CSV_data():
                 key = row[1].strip()
                 value = row[0].strip()
                 TME.TME_glob.full_nameprint_data[key] = value
+                TME.TME_glob.presumed_unique_nameprint_data[key] = value
 
     # The user has the option to store private metadata in
     # this file. It will be consulted, but doesn't need to be checked in
@@ -91,6 +92,8 @@ def import_nameprint_CSV_data():
                     key = row[1].strip()
                     value = row[0].strip()
                     TME.TME_glob.full_nameprint_data[key] = value
+                    TME.TME_glob.presumed_unique_nameprint_data[key] = value
+
     except FileNotFoundError:
         pass
 
