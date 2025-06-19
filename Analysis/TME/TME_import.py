@@ -73,7 +73,7 @@ def import_private_CLUES():
 
 def import_nameprint_CSV_data():
     global full_nameprint_data
-    with open("./NAMEPRINT_DB.csv", 'r') as csvfile:
+    with open("./NAMEPRINT_UNIQUE_DB.csv", 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
         for row in csv_reader:
             if len(row) >= 2:
@@ -85,7 +85,7 @@ def import_nameprint_CSV_data():
     # The user has the option to store private metadata in
     # this file. It will be consulted, but doesn't need to be checked in
     try:
-        with open('./private/NAMEPRINT_DB_private.csv', 'r') as csvfile:
+        with open('./private/NAMEPRINT_UNIQUE_DB_private.csv', 'r') as csvfile:
             csv_reader = csv.reader(csvfile)
             for row in csv_reader:
                 if len(row) >= 2:

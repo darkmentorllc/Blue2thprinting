@@ -224,8 +224,8 @@ def print_UniqueIDReport(bdaddr):
         TME.TME_glob.privacy_report_no_results_found = False
         NamePrint_match = True
 
-    # FIXME: now that we have separated the NAMEPRINT_DB.csv from NAMEPRINT_NONUNIQUE_DB.csv
-    # we can say a name is unique if it was found in NAMEPRINT_DB.csv
+    # FIXME: now that we have separated the NAMEPRINT_UNIQUE_DB.csv from NAMEPRINT_NONUNIQUE_DB.csv
+    # we can say a name is unique if it was found in NAMEPRINT_UNIQUE_DB.csv
 
     #===========#
     # Name data #

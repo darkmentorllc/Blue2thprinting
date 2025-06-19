@@ -528,7 +528,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
 # !!!FIXME: For devices with () in their name, like "Galaxy Watch3 (0462)",
 # the nameprint to match in MySQL needs to be "^Galaxy Watch3 \\\([A-F0-9]{4}\\\)$
 # however, it only matches in Python regex if it's got 1 slash instead of 3. like "^Galaxy Watch3 \([A-F0-9]{4}\)$
-# that leads to failure to match on values from the NAMEPRINT_DB.csv, even when something could have been looked up by the nameregex
+# that leads to failure to match on values from the NAMEPRINT_UNIQUE_DB.csv, even when something could have been looked up by the nameregex
 
 def find_nameprint_match(name_string):
     for key, value in TME.TME_glob.full_nameprint_data.items():
