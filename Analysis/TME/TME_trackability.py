@@ -28,12 +28,30 @@ def print_possible_unique_ID_header_if_needed():
         qprint(f"{i2}Possible unique ID:")
         TME.TME_glob.g_printed_possible_unique_id_header = True
 
+# Check if the name contains a serial number pattern
+# TODO: are there other patterns that are safe to use which won't cause too many false positives?
+def name_possibly_contains_serial_number(name):
+    patterns = [
+        r'[0-9]{8,}',  # Numeric serial numbers of at least 8 characters
+    ]
+
+    for pattern in patterns:
+        if re.search(pattern, name, re.IGNORECASE):
+            return True
+
+    return False
+
 def print_possible_unique_ID_warning(indent, name, data_source):
     print_possible_unique_ID_header_if_needed()
-    qprint(f"{indent}This device contains a name \"{name}\" found via {data_source}.")
-    qprint(f"{indent}The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
-    qprint(f"{indent}{i1}It is left to the user to investigate whether this name represents a unique ID or not.")
-    qprint(f"{indent}{i1}E.g. look for other instances of this name in your own data via the --name-regex option, or search by name at wigle.net.")
+
+    qprint(f"{indent}* This device contains a name \"{name}\" found via {data_source}.")
+    if(name_possibly_contains_serial_number(name)):
+        qprint(f"{indent}{i1}The name contains 8 or more sequential numeric characters, which may be a unique serial number. If so, it could possibly be used to track the device.")
+        return
+    else:
+        qprint(f"{indent}{i1}The name itself does not match a known-unique-ID pattern, but that could just mean it has not been captured in our metadata yet.")
+        qprint(f"{indent}{i2}It is left to the user to investigate whether this name represents a unique ID or not.")
+        qprint(f"{indent}{i2}E.g. look for other instances of this name in your own data via the --name-regex option, or search by name at wigle.net.")
 
 
 def name_contains_bdaddr(indent, name, bdaddr):
