@@ -54,7 +54,8 @@ def print_possible_unique_ID_warning(indent, name, data_source):
         qprint(f"{indent}{i2}E.g. look for other instances of this name in your own data via the --name-regex option, or search by name at wigle.net.")
 
 
-def name_contains_bdaddr(indent, name, bdaddr):
+def name_contains_bdaddr(indent, name, bdaddr, name_source):
+    print_unique_ID_header_if_needed()
     # Check if the name contains the full 6-byte BDADDR in one of 4 formats:
     # big-endian hex, non-colon-deliminated (e.g. Triones:10020000004F, Keco-74F07DD08DE9:100, Travler 00171AB3CCF5)
     # big-endian hex, colon-deliminated (e.g. RWLS-00:07:80:C2:65:B9)
@@ -78,7 +79,7 @@ def name_contains_bdaddr(indent, name, bdaddr):
     # Check if any pattern is in the name (case insensitive)
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
-            qprint(f"{indent}* Name '{name}' matches 6-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
+            qprint(f"{indent}* Name '{name}' from {name_source} matches 6-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
             return True
 
     # Check if the name contains 3-bytes of BDADDR in one of 4 formats:
@@ -105,7 +106,7 @@ def name_contains_bdaddr(indent, name, bdaddr):
     # Check if any 3-byte pattern matches
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
-            qprint(f"{indent}* Name '{name}' matches 3-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
+            qprint(f"{indent}* Name '{name}' from {name_source} matches 3-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
             return True
 
     # Check if the name contains 2-bytes of BDADDR in one of 4 formats:
@@ -132,7 +133,7 @@ def name_contains_bdaddr(indent, name, bdaddr):
     # Check if any 2-byte pattern matches
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
-            qprint(f"{indent}* Name '{name}' matches 2-byte pattern {pattern} which is derived from the BDADDR, and is therefore highly likely to be unique.")
+            qprint(f"{indent}* Name '{name}' from {name_source} matches 2-byte pattern {pattern} which is derived from the BDADDR, and is therefore highly likely to be unique.")
             return True
 
     return False
@@ -196,6 +197,7 @@ def print_UniqueIDReport(bdaddr):
     #================#
     # NamePrint data #
     #================#
+
     NamePrint_match = False
     # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
     str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
@@ -205,81 +207,91 @@ def print_UniqueIDReport(bdaddr):
         no_results_found = False
         NamePrint_match = True
 
+    # FIXME: now that we have separated the NAMEPRINT_DB.csv from NAMEPRINT_NONUNIQUE_DB.csv
+    # we can say a name is unique if it was found in NAMEPRINT_DB.csv
+
     #===========#
     # Name data #
     #===========#
     # If a device merely has a name, we have to leave it up to the user to decide if it looks like it's a DUID or not
 
-    # TODO: This needs to be refactored into a common function across all its usages somehow. Because this sequence of looking up names is a recurring pattern, but with slightly different usage. But leaving it lazy for now since I'm not interested in premature optimization :D
+    # TODO: This needs to be refactored into a common function across all its usages somehow. Because this sequence of looking up names is a recurring pattern,
+    # but with slightly different usage. But leaving it lazy for now since I'm not interested in premature optimization :D
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
         eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
         eir_result = execute_query(eir_query, values)
+        name_source = "Bluetooth Classic Extended Inquiry Responses"
         for (name_hex_str,) in eir_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                 no_results_found = False
                 continue
-            print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Classic Extended Inquiry Responses")
+            print_possible_unique_ID_warning(f"{i3}", name, name_source)
             no_results_found = False
 
         hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
         hci_result = execute_query(hci_query, values)
+        name_source = "Bluetooth Low Energy Scan Responses"
         for (name_hex_str,) in hci_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                 no_results_found = False
                 continue
-            print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Scan Responses")
+            print_possible_unique_ID_warning(f"{i3}", name, name_source)
             no_results_found = False
 
         le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
+        name_source = "Bluetooth Low Energy Advertisements"
         for name_hex_str, le_evt_type in le_result:
             name = get_utf8_string_from_hex_string(name_hex_str)
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
-            if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+            if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                 no_results_found = False
                 continue
-            print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Advertisements")
+            print_possible_unique_ID_warning(f"{i3}", name, name_source)
             no_results_found = False
 
         chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
         chars_result = execute_query(chars_query, values)
+        name_source = "GATT"
         if(len(chars_result) > 0):
             for (bdaddr, byte_values) in chars_result:
                 name = byte_values.decode('utf-8', 'ignore')
                 if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                     continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                     no_results_found = False
                     continue
-                print_possible_unique_ID_warning(f"{i3}", name, "GATT")
+                print_possible_unique_ID_warning(f"{i3}", name, name_source)
                 no_results_found = False
 
         ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
         ms_msd_result = execute_query(ms_msd_query, values)
+        name_source = f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
             if(len(ms_msd_name) > 0):
                 if(name_matches_nonunique_nameprint(ms_msd_name)): # Don't bother users with names which are known to be non-unique
                     continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                     no_results_found = False
                     continue
-                print_possible_unique_ID_warning(f"{i3}", ms_msd_name, f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
+                print_possible_unique_ID_warning(f"{i3}", ms_msd_name, name_source)
                 no_results_found = False
 
         regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
         values2 = (bdaddr, regex)
         ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
+        name_source = f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
             try:
                 ms_msd_name2 = get_utf8_string_from_hex_string(manufacturer_specific_data[20:])
@@ -288,10 +300,10 @@ def print_UniqueIDReport(bdaddr):
             if(len(ms_msd_name2) > 0):
                 if(name_matches_nonunique_nameprint(ms_msd_name2)): # Don't bother users with names which are known to be non-unique
                     continue
-                if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                if(name_contains_bdaddr(f"{i3}", name, bdaddr, name_source)):
                     no_results_found = False
                     continue
-                print_possible_unique_ID_warning(f"{i3}", ms_msd_name2, f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
+                print_possible_unique_ID_warning(f"{i3}", ms_msd_name2, name_source)
                 no_results_found = False
 
     if(no_results_found):
