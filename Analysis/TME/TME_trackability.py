@@ -221,6 +221,7 @@ def print_UniqueIDReport(bdaddr):
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
             if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                no_results_found = False
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Classic Extended Inquiry Responses")
             no_results_found = False
@@ -232,6 +233,7 @@ def print_UniqueIDReport(bdaddr):
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
             if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                no_results_found = False
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Scan Responses")
             no_results_found = False
@@ -243,6 +245,7 @@ def print_UniqueIDReport(bdaddr):
             if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                 continue
             if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                no_results_found = False
                 continue
             print_possible_unique_ID_warning(f"{i3}", name, "Bluetooth Low Energy Advertisements")
             no_results_found = False
@@ -255,6 +258,7 @@ def print_UniqueIDReport(bdaddr):
                 if(name_matches_nonunique_nameprint(name)): # Don't bother users with names which are known to be non-unique
                     continue
                 if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                    no_results_found = False
                     continue
                 print_possible_unique_ID_warning(f"{i3}", name, "GATT")
                 no_results_found = False
@@ -267,6 +271,7 @@ def print_UniqueIDReport(bdaddr):
                 if(name_matches_nonunique_nameprint(ms_msd_name)): # Don't bother users with names which are known to be non-unique
                     continue
                 if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                    no_results_found = False
                     continue
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name, f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
                 no_results_found = False
@@ -284,6 +289,7 @@ def print_UniqueIDReport(bdaddr):
                 if(name_matches_nonunique_nameprint(ms_msd_name2)): # Don't bother users with names which are known to be non-unique
                     continue
                 if(name_contains_bdaddr(f"{i3}", name, bdaddr)):
+                    no_results_found = False
                     continue
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name2, f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets")
                 no_results_found = False
