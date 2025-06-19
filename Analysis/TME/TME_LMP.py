@@ -78,6 +78,25 @@ def decode_BTC_features(page, features, indent):
         if(features & (0b1 << 0x3d)): qprint(f"{indent}* Reserved for future use")
         if(features & (0b1 << 0x3e)): qprint(f"{indent}* Reserved for future use")
         if(features & (0b1 << 0x3f)): qprint(f"{indent}* Extended features")
+    elif(page == 1):
+        if(features & (0b1 << 0x00)): qprint(f"{indent}* Secure Simple Pairing (Host Support)")
+        if(features & (0b1 << 0x01)): qprint(f"{indent}* LE Supported (Host)")
+        if(features & (0b1 << 0x02)): qprint(f"{indent}* Previously used(Simultaneous LE and BR/EDR to Same Device Capable (Host))")
+        if(features & (0b1 << 0x03)): qprint(f"{indent}* LE Secure Connections (Host)")
+    elif(page == 2):
+        if(features & (0b1 << 0x00)): qprint(f"{indent}* Connectionless Peripheral Broadcast – Transmitter Operation")
+        if(features & (0b1 << 0x01)): qprint(f"{indent}* Connectionless Peripheral Broadcast – Receiver Operation")
+        if(features & (0b1 << 0x02)): qprint(f"{indent}* Synchronization Train")
+        if(features & (0b1 << 0x03)): qprint(f"{indent}* Synchronization Scan")
+        if(features & (0b1 << 0x04)): qprint(f"{indent}* HCI_Inquiry_Response_Notification event")
+        if(features & (0b1 << 0x05)): qprint(f"{indent}* Generalized interlaced scan")
+        if(features & (0b1 << 0x06)): qprint(f"{indent}* Coarse Clock Adjustment")
+        if(features & (0b1 << 0x07)): qprint(f"{indent}* Reserved for future use")
+        if(features & (0b1 << 0x08)): qprint(f"{indent}* Secure Connections (Controller Support)")
+        if(features & (0b1 << 0x09)): qprint(f"{indent}* Ping")
+        if(features & (0b1 << 0x0a)): qprint(f"{indent}* Slot Availability Mask")
+        if(features & (0b1 << 0x0b)): qprint(f"{indent}* Train nudging")
+
 
 def print_LMP_info(bdaddr):
     bdaddr = bdaddr.strip().lower()
@@ -88,6 +107,9 @@ def print_LMP_info(bdaddr):
 
     features_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE bdaddr = %s"
     features_result = execute_query(features_query, values)
+
+    features_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
+    features_ext_result = execute_query(features_ext_query, values)
 
     name_query = "SELECT device_name FROM LMP_NAME_RES WHERE bdaddr = %s"
     name_result = execute_query(name_query, values)
@@ -109,6 +131,11 @@ def print_LMP_info(bdaddr):
         decode_BTC_features(page, features, f"{i3}")
         BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
 
+    for page, max_page, features in features_ext_result:
+        qprint(f"{i2}BTC LMP Extended Features: 0x{features:016x}, Page: {page:02x} (MaxPage: {max_page:02x})")
+        decode_BTC_features(page, features, f"{i3}")
+        BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features)
+
     for (device_name,) in name_result:
         qprint(f"{i2}BTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
@@ -116,7 +143,7 @@ def print_LMP_info(bdaddr):
         remote_name_hex_str = device_name
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
-    if(len(version_result) != 0 or len(features_result) != 0 or len(name_result) != 0): # or len(lengths_result) != 0 or len(ping_result) != 0 or len(unknown_result) != 0):
+    if(len(version_result) != 0 or len(features_result) != 0 or len(features_ext_result) != 0 or len(name_result) != 0):
         vprint("\n\tRaw BTC LMP info:")
         for lmp_version, lmp_sub_version, device_BT_CID in version_result:
             vprint(f"{i2}\"lmp_version\",\"0x{lmp_version:02x}\"")
@@ -125,5 +152,7 @@ def print_LMP_info(bdaddr):
 
         for page, features in features_result:
             vprint(f"{i2}\"features\",\"0x{features:016x}\"")
+        for page, max_page, features in features_ext_result:
+            vprint(f"{i2}\"page\",\"0x{page:02x}\",\"max_page\",\"0x{max_page:02x}\",\"features\",\"0x{features:016x}\"")
 
     qprint("")

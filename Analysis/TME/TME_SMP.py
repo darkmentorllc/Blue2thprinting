@@ -30,7 +30,7 @@ def device_has_SMP_info(bdaddr):
 # which would lead to it using legacy pairing even when an eavesdropper isn't trying to force it
 def device_SMP_legacy_pairing(bdaddr):
     values = (bdaddr,)
-    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
+    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s";
     SMP_result = execute_query(query, values)
     if(len(SMP_result) != 0):
         return 1;
