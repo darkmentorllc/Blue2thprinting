@@ -329,14 +329,14 @@ def create_ChipMaker_OUI_hash():
 def print_ChipPrint_header_if_needed():
     global g_printed_ChipPrint_header
     if(not TME.TME_glob.g_printed_ChipPrint_header):
-        qprint(f"{i1}2thprint_ChipPrint:")
+        qprint(f"{i1}ChipPrint:")
         TME.TME_glob.g_printed_ChipPrint_header = True
 
 
 def print_ChipMakerPrint_header_if_needed():
     global g_printed_ChipMakerPrint_header
     if(not TME.TME_glob.g_printed_ChipMakerPrint_header):
-        qprint(f"{i1}2thprint_ChipMakerPrint:")
+        qprint(f"{i1}ChipMakerPrint:")
         TME.TME_glob.g_printed_ChipMakerPrint_header = True
 
 
@@ -524,7 +524,7 @@ def print_ChipMakerPrint(bdaddr):
 
     if(time_profile): qprint(f"End = {time.time()}")
     if(no_results_found):
-        vprint(f"{i1}2thprint_ChipMakerPrint:")
+        vprint(f"{i1}ChipMakerPrint:")
         vprint(f"{i2}No ChipMakerPrint(s) found.")
 
     # Final padding print of print_ChipMakerPrint()
@@ -707,7 +707,7 @@ def print_ChipPrint(bdaddr):
         no_results_found = False
 
     if(no_results_found):
-        vprint(f"{i1}2thprint_ChipPrint:")
+        vprint(f"{i1}ChipPrint:")
         vprint(f"{i2}No ChipPrint(s) found.")
 
     if(not TME.TME_glob.g_printed_ChipPrint_header):

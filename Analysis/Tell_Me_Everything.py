@@ -44,6 +44,7 @@ def validate_bdaddr(value):
         raise argparse.ArgumentTypeError("bdaddr must be in the form of a Bluetooth Device Address (e.g., AA:BB:CC:11:22:33).")
     return value
 
+
 # Main function to handle command line arguments
 def main():
     global verbose_print, verbose_BTIDES, use_test_db
@@ -422,8 +423,7 @@ def main():
             continue
 
         qprint("================================================================================")
-        TME.TME_glob.g_printed_ChipMakerPrint_header = False # Reset global for each bdaddr
-        TME.TME_glob.g_printed_ChipPrint_header = False # Reset global for each bdaddr
+        reset_per_bdaddr_globals()
         qprint(f"For bdaddr = {bdaddr}:")
         print_company_name_from_bdaddr(f"{i1}", bdaddr, True)
         print("")

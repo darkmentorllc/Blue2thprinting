@@ -159,3 +159,10 @@ hideBLEScopedata = False
 ############################################################
 g_printed_ChipPrint_header = False
 g_printed_ChipMakerPrint_header = False
+
+############################################################
+# For smarter handling of Unique ID header printing
+############################################################
+g_printed_unique_id_header = False
+g_printed_possible_unique_id_header = False
+

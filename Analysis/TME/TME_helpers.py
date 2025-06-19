@@ -936,6 +936,15 @@ def print_CLUES_UUID_purpose_if_necessary(indent, UUID):
                 vprint(f"{indent}UUID purpose according to CLUES: {string_yellow_bright(clues_description)}")
 
 
+# These are globals that control things like header prints,
+# but which therefore need to be reset if we're printring multiple BDADDRs instead of only one
+def reset_per_bdaddr_globals():
+    TME.TME_glob.g_printed_ChipMakerPrint_header = False
+    TME.TME_glob.g_printed_ChipPrint_header = False
+    TME.TME_glob.g_printed_unique_id_header = False
+    TME.TME_glob.g_printed_possible_unique_id_header = False
+
+
 def string_yellow_bright(s):
     return Fore.YELLOW + Style.BRIGHT + s + Style.RESET_ALL
 
@@ -950,3 +959,4 @@ def string_green_bright(s):
 
 def string_red_bright(s):
     return Fore.RED + Style.BRIGHT + s + Style.RESET_ALL
+
