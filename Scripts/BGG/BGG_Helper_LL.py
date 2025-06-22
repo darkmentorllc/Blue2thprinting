@@ -296,12 +296,12 @@ def incoming_LL_errors(actual_body_len, dpkt):
         vmultiprint(header_ACID, ll_len_ACID, ll_ctl_opcode, ll_field)
         if(ll_ctl_opcode == opcode_LL_UNKNOWN_RSP):
             if(globals.current_ll_ctrl_state.last_sent_ll_ctrl_pkt_opcode == opcode_LL_LENGTH_REQ and ll_field == opcode_LL_LENGTH_REQ):
-                print(f"-> LL_LENGTH* phase done, (LL_UNKNOWN_RSP received). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, (LL_UNKNOWN_RSP received). Moving to next phase")
                 update_LL_LENGTH_state(ll_ctl_opcode, "Unknown")
 
         elif(ll_ctl_opcode == opcode_LL_REJECT_IND):
             if(globals.current_ll_ctrl_state.last_sent_ll_ctrl_pkt_opcode == opcode_LL_LENGTH_REQ):
-                print(f"-> LL_LENGTH* phase done, (Rejected with reason {ll_field}). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, (Rejected with reason {ll_field}). Moving to next phase")
                 update_LL_LENGTH_state(ll_ctl_opcode, "Rejected")
 
     elif(actual_body_len == 5):
@@ -309,7 +309,7 @@ def incoming_LL_errors(actual_body_len, dpkt):
         vmultiprint(header_ACID, ll_len_ACID, ll_ctl_opcode, ll_reject_opcode, ll_error_code)
         if(ll_ctl_opcode == opcode_LL_REJECT_EXT_IND):
             if(globals.current_ll_ctrl_state.last_sent_ll_ctrl_pkt_opcode == opcode_LL_LENGTH_REQ and ll_reject_opcode == opcode_LL_LENGTH_REQ):
-                print(f"-> LL_LENGTH* phase done, (Rejected with reason {ll_field}). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, (Rejected with reason {ll_field}). Moving to next phase")
                 update_LL_LENGTH_state(ll_ctl_opcode, "Rejected")
 
     clear_pending_packet_state()
@@ -384,7 +384,7 @@ def incoming_LL_LENGTHs(actual_body_len, dpkt):
                 globals.ll_length_rsp_recv = True
                 update_LL_LENGTH_state(opcode_LL_LENGTH_RSP, "Received", ll_length_max_rx_octet=max_rx_octet, ll_length_max_tx_octet=max_tx_octet)
                 vmultiprint(header_ACID, ll_len_ACID, ll_ctl_opcode, max_rx_octet, max_rx_time, max_tx_octet, max_tx_time)
-                print(f"-> LL_LENGTH* phase done, ({LL_opcode_to_str[ll_ctl_opcode]} received). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, ({LL_opcode_to_str[ll_ctl_opcode]} received). Moving to next phase")
                 clear_pending_packet_state()
                 return True
             if(ll_ctl_opcode == opcode_LL_LENGTH_REQ):
@@ -394,7 +394,7 @@ def incoming_LL_LENGTHs(actual_body_len, dpkt):
                 globals.ll_length_req_recv = True
                 update_LL_LENGTH_state(opcode_LL_LENGTH_REQ, "Received", ll_length_max_rx_octet=max_rx_octet, ll_length_max_tx_octet=max_tx_octet)
                 vmultiprint(header_ACID, ll_len_ACID, ll_ctl_opcode, max_rx_octet, max_rx_time, max_tx_octet, max_tx_time)
-                print(f"-> LL_LENGTH* phase done, ({LL_opcode_to_str[ll_ctl_opcode]} received). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, ({LL_opcode_to_str[ll_ctl_opcode]} received). Moving to next phase")
                 globals.current_ll_ctrl_state.ll_ctrl_pkt_pending = False # FIXME: should this be set here?
                 return True
 
