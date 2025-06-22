@@ -1349,8 +1349,8 @@ def btides_to_sql(args):
         count += 1
         progress_update(total, count)
 
-    qprint(f"New db records inserted:\t\t{TME.TME_glob.insert_count}")
-    qprint(f"Duplicate db records ignored:\t{TME.TME_glob.duplicate_count}")
+    qprint(f"New db records inserted: {TME.TME_glob.insert_count}")
+    qprint(f"Duplicate db records ignored: {TME.TME_glob.duplicate_count}")
     return True
 
 ###################################
