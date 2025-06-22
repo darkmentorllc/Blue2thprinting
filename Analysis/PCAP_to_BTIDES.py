@@ -418,6 +418,10 @@ def export_BTLE_CTRL(packet):
         if_verbose_insert_std_optional_fields(data, packet)
         BTIDES_export_LLArray_entry(connect_ind_obj=connect_ind_obj, data=data)
         return True
+    elif ll_ctrl.opcode == type_LL_POWER_CONTROL_REQ or ll_ctrl.opcode == type_LL_POWER_CONTROL_RSP:
+        # We don't want to store these in the DB for now,
+        # as they're not believed to be useful for 2thprinting, as they're too naturally variable
+        return True
     elif ll_ctrl.opcode == type_LL_UNKNOWN_CUSTOM:
         try:
             #ll_ctrl.show()

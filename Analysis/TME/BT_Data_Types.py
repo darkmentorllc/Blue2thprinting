@@ -83,6 +83,8 @@ type_LL_LENGTH_RSP                = 21
 type_LL_PHY_REQ                   = 22
 type_LL_PHY_RSP                   = 23
 type_LL_PHY_UPDATE_IND            = 24
+type_LL_POWER_CONTROL_REQ         = 35
+type_LL_POWER_CONTROL_RSP         = 36
 type_LL_UNKNOWN_CUSTOM            = 255 # Invalid per the spec, but seems to be in use by Apple?
 
 ll_ctrl_pdu_opcodes_to_strings = {
@@ -109,6 +111,8 @@ ll_ctrl_pdu_opcodes_to_strings = {
     type_LL_PHY_REQ:                 "LL_PHY_REQ",
     type_LL_PHY_RSP:                 "LL_PHY_RSP",
     type_LL_PHY_UPDATE_IND:          "LL_PHY_UPDATE_IND",
+    type_LL_POWER_CONTROL_REQ:       "LL_POWER_CONTROL_REQ",
+    type_LL_POWER_CONTROL_RSP:       "LL_POWER_CONTROL_RSP",
     type_LL_UNKNOWN_CUSTOM:          "LL_UNKNOWN_CUSTOM"
 }
 

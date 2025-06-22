@@ -128,16 +128,18 @@ def characteristic_value_decoding(indent, UUID128, bytes):
                 qprint(color_str)
 
     elif(UUID == "2a50"): # PnP ID
-        company_id_type, company_id, product_id, product_version = struct.unpack('<BHHH', bytes)
-        if(company_id_type == 1 or company_id_type == 2): # Don't bother with data which doesn't conform to spec
-            if(company_id_type == 1):
-                cname = BT_CID_to_company_name(company_id)
-            else:
-                cname = USB_CID_to_company_name(company_id)
-            prod_ver_str = "{}.{}.{}".format(product_version >> 8, (product_version & 0x00F0) >> 4, (product_version & 0x000F))
-            color_str = f"{indent}PnP ID decodes as: " + Fore.BLUE + Style.BRIGHT + f"Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}" + Style.RESET_ALL
-            qprint(color_str)
-
+        if(len(bytes) == 7):
+            company_id_type, company_id, product_id, product_version = struct.unpack('<BHHH', bytes)
+            if(company_id_type == 1 or company_id_type == 2): # Don't bother with data which doesn't conform to spec
+                if(company_id_type == 1):
+                    cname = BT_CID_to_company_name(company_id)
+                else:
+                    cname = USB_CID_to_company_name(company_id)
+                prod_ver_str = "{}.{}.{}".format(product_version >> 8, (product_version & 0x00F0) >> 4, (product_version & 0x000F))
+                color_str = f"{indent}PnP ID decodes as: " + Fore.BLUE + Style.BRIGHT + f"Company({company_id_type},0x{company_id:04x}) = {cname}, Product ID = 0x{product_id:04x}, Product Version = {prod_ver_str}" + Style.RESET_ALL
+                qprint(color_str)
+        else:
+            qprint(f"{indent}PnP ID present, but length is not 7 bytes, so cannot decode. Length = {len(bytes)} bytes.")
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
 def device_has_GATT_any(bdaddr):

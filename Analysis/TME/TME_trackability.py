@@ -202,11 +202,11 @@ def print_UniqueIDReport(bdaddr):
 #            UUID_db_ = UUID_db.replace('-','').lower()
             if(check_if_UUIDs_match(UUID_db, "2a25")):
                 print_unique_ID_header_if_needed()
-                qprint(f"{i3}This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 TME.TME_glob.privacy_report_no_results_found = False
             if(check_if_UUIDs_match(UUID_db, "2bff")):
                 print_unique_ID_header_if_needed()
-                qprint(f"{i3}This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 TME.TME_glob.privacy_report_no_results_found = False
 
     # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
@@ -220,12 +220,9 @@ def print_UniqueIDReport(bdaddr):
     str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
     if(str[2:6] == "True"):
         print_unique_ID_header_if_needed()
-        qprint(f"{i3}The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
+        qprint(f"{i3}* The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
         TME.TME_glob.privacy_report_no_results_found = False
         NamePrint_match = True
-
-    # FIXME: now that we have separated the NAMEPRINT_UNIQUE_DB.csv from NAMEPRINT_NONUNIQUE_DB.csv
-    # we can say a name is unique if it was found in NAMEPRINT_UNIQUE_DB.csv
 
     #===========#
     # Name data #
