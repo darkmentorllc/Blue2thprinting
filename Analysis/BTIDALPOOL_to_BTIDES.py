@@ -187,15 +187,17 @@ def main():
     device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
     device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
-    device_group.add_argument('--UUID128-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s.')
-    device_group.add_argument('--NOT-UUID128-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID128-regex, and then remove them from the final results.')
-    device_group.add_argument('--UUID16-regex', type=str, default='', help='Value for REGEXP match against UUID16, in advertised UUID16s.')
+    device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s.')
+    device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID128-regex, and then remove them from the final results.')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD).')
 
     # Requirement arguments
     requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
+    requirement_group.add_argument('--require-GPS', action='store_true', help='Pass this argument to only print out information for devices which have at least 1 associated GPS coordinate.')
     requirement_group.add_argument('--require-GATT-any', action='store_true', help='Pass this argument to only print out information for devices which have *some* GATT info.')
     requirement_group.add_argument('--require-GATT-values', action='store_true', help='Pass this argument to only print out information for devices which successfully read some GATT values.')
+    requirement_group.add_argument('--require-SMP', action='store_true', help='Pass this argument to only print out information for devices which have *some* SMP info.')
+    requirement_group.add_argument('--require-SMP-legacy-pairing', action='store_true', help='Pass this argument to only print out information for devices which have SMP info indicating they will perform Legacy Pairing.')
     requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
     requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data.')
 
