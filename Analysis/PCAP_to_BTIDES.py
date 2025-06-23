@@ -723,6 +723,9 @@ def main():
 
     in_pcap_filename = args.input
     out_BTIDES_filename = args.output
+    if args.to_BTIDALPOOL and not out_BTIDES_filename:
+        # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
+        out_BTIDES_filename = "/tmp/pcap2btides.btides"
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES

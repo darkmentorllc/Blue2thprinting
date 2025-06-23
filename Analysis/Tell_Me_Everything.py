@@ -106,6 +106,9 @@ def main():
 
     args = parser.parse_args()
     out_filename = args.output
+    if args.to_BTIDALPOOL and not out_filename:
+        # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
+        out_filename = "/tmp/tme.btides"
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
