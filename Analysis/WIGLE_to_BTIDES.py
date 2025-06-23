@@ -208,8 +208,8 @@ def main():
     global verbose_print, verbose_BTIDES, use_test_db
     parser = argparse.ArgumentParser(description='WiGLE Database Backup file input arguments')
     parser.add_argument('--input', type=str, required=True, help='Input file name for WiGLE Database Backup file.')
-    parser.add_argument('--offset', type=str, required=True, help='Offset into the WiGLE Database Backup file to start importing from. Useful for reading large files in chunks.')
-    parser.add_argument('--limit', type=str, required=True, help='Limit of how many entries to import from the WiGLE Database Backup file. Useful for reading large files in chunks.')
+    parser.add_argument('--offset', type=str, required=False, help='Offset into the WiGLE Database Backup file to start importing from. Useful for reading large files in chunks.')
+    parser.add_argument('--limit', type=str, required=False, help='Limit of how many entries to import from the WiGLE Database Backup file. Useful for reading large files in chunks.')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
@@ -241,6 +241,11 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
+
+    if(not args.offset):
+        args.offset = 0
+    if(not args.limit):
+        args.limit = 999999999
 
     if not os.path.isfile(args.input):
         print(f"Error: file {input} does not exist.")
