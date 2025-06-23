@@ -124,6 +124,7 @@ def run_btides_to_sql(filename):
     if(btides_to_sql(b2s_args)):
         os.rename(filename, filename + ".processed")
 
+
 # args_array should be individual arguments to pass to the script
 def run_TellMeEverything(self, username, args_array, output_filename):
     # Run the TellMeEverything.py script in a new thread.
@@ -188,6 +189,7 @@ def send_back_response(self, username, type, header, text):
     self.wfile.write(text)
     self.wfile.flush()  # Ensure the response is sent
 
+
 # TODO: this entire function should be handled in a separate thread
 def handle_btides_data(self, username, json_content):
     # Parse the JSON data
@@ -235,6 +237,7 @@ def handle_btides_data(self, username, json_content):
 
     except json.JSONDecodeError:
         send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
+
 
 def handle_query(self, username, query_object):
     print(query_object)
@@ -317,13 +320,13 @@ def log_user_access(username, client_ip, post_json_data):
         log_file.write(log_line)
         log_file.flush()
 
+
 # Append a log line to the user_access.log file.
 def log_user_result(username, client_ip, result_str):
     log_line = f"{datetime.datetime.now().isoformat()} - {username},{client_ip},result: {result_str}\n"
     with log_mutex:
         log_file.write(log_line)
         log_file.flush()
-
 
 
 class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):

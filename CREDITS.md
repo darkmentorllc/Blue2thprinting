@@ -10,5 +10,3 @@
 **Analysis/one\_time\_initialization/WiGLE-ble-name-filtered.csv**  
 
 * Provided by WiGLE.net developers at [bt-name.csv](https://wigle.net/csv/bt-name.csv) and [ble-name.csv](https://wigle.net/csv/ble-name.csv) and then manually filtered by Xeno Kovah to remove entries that are believed to be unique rather than non-unique.
-
-✅
