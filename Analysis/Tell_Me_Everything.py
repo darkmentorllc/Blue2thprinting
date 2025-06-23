@@ -392,32 +392,39 @@ def main():
 
         bdaddrs = updated_bdaddrs;
 
-    # Limit the number of records output to args.max_records_output
-    if(len(bdaddrs) > args.max_records_output):
-        bdaddrs = bdaddrs[:args.max_records_output]
-
     for bdaddr in bdaddrs:
         if(args.require_GPS):
             if(not device_has_GPS(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_GATT_any):
             if(not device_has_GATT_any(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_GATT_values):
             if(not device_has_GATT_values(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_SMP):
             if(not device_has_SMP_info(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_SMP_legacy_pairing):
             if(not device_SMP_legacy_pairing(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_LL_VERSION_IND):
             if(not device_has_LL_VERSION_IND_info(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
         if(args.require_LMP_VERSION_RES):
             if(not device_has_LMP_VERSION_RES_info(bdaddr)):
+                bdaddrs.remove(bdaddr)
                 continue
+
+        # Limit the number of records output to args.max_records_output
+        if(len(bdaddrs) > args.max_records_output):
+            bdaddrs = bdaddrs[:args.max_records_output]
 
         # Check if we have no information in any table for this BDADDR
         # and if so, continue to the next BDADDR (if any)
