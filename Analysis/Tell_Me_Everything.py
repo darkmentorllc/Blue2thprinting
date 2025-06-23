@@ -54,7 +54,7 @@ def main():
     printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
     printout_group.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output (useful when you only want to use --output to export data).')
     printout_group.add_argument('--max-records-output', type=int, default=1000, required=False, help='This will limit the number of bdaddrs for which records which are printed out and exported via --output).')
-    printout_group.add_argument('--hide-BLEScope-data', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
+    printout_group.add_argument('--hide-android-data', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
@@ -113,7 +113,7 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
-    TME.TME_glob.hideBLEScopedata = args.hide_BLEScope_data
+    TME.TME_glob.hide_android_data = args.hide_android_data
 
     bdaddrs = []
 

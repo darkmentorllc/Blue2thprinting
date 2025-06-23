@@ -109,7 +109,7 @@ def print_uuid128s(bdaddr):
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({test_uuid16_name})")
                     else:
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
-                        if(not TME.TME_glob.hideBLEScopedata and uuid_str.__contains__("Unknown UUID128")):
+                        if(not TME.TME_glob.hide_android_data and uuid_str.__contains__("Unknown UUID128")):
                             unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
                 else:
                     qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
@@ -144,7 +144,7 @@ def print_uuid128s(bdaddr):
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({test_uuid16_name})")
                     else:
                         qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
-                        if(not TME.TME_glob.hideBLEScopedata):
+                        if(not TME.TME_glob.hide_android_data):
                             unknown_UUID128_hash[uuid128] = ("Service", f"{i3}")
                 else:
                     qprint(f"{i2}UUID128 {dashed_uuid128} ({uuid_str})")
@@ -152,7 +152,7 @@ def print_uuid128s(bdaddr):
         vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
 
 
-    if(not TME.TME_glob.hideBLEScopedata and len(unknown_UUID128_hash) > 0):
+    if(not TME.TME_glob.hide_android_data and len(unknown_UUID128_hash) > 0):
         match_found = False
         qprint(f"{i2}BLEScope Analysis: Vendor-specific UUIDs were found. Analyzing if there are any known associations with Android app packages based on BLEScope data.")
         for UUID in unknown_UUID128_hash.keys():

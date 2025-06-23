@@ -154,7 +154,7 @@ duplicate_count = 0
 ###############################################
 # For making the output more terse
 ###############################################
-hideBLEScopedata = False
+hide_android_data = False
 
 ############################################################
 # For hiding the ChipMakerPrint header when nothing is found
