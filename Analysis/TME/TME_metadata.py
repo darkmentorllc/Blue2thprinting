@@ -90,27 +90,32 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                     for (name_hex_str,) in eir_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
+                            print_ChipPrint_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:EIR_bdaddr_to_name)" if TME.TME_glob.verbose_print else ""}"
                 if(len(hci_result) > 0):
                     for (name_hex_str,) in hci_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
+                            print_ChipPrint_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:HCI_bdaddr_to_name)" if TME.TME_glob.verbose_print else ""}"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
+                            print_ChipPrint_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} ({"DB:LE_bdaddr_to_name, " if TME.TME_glob.verbose_print else ""}le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
                         name = byte_values.decode('utf-8', 'ignore',)
                         if re.search(regex_pattern, name):
+                            print_ChipPrint_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:GATT_characteristics & DB:GATT_characteristics_values)" if TME.TME_glob.verbose_print else ""}"
                 if(ms_msd_name_present):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
                         ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
                         if(len(ms_msd_name) > 0):
                             if re.search(regex_pattern, ms_msd_name):
+                                print_ChipPrint_header_if_needed()
                                 return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Swift Pair data{" in DB:LE_bdaddr_to_MSD" if TME.TME_glob.verbose_print else ""})"
                 if(ms_msd_name_present2):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
@@ -120,6 +125,7 @@ def lookup_metadata_by_nameprint(bdaddr, metadata_type):
                             ms_msd_name2 = ""
                         if(len(ms_msd_name2) > 0):
                             if re.search(regex_pattern, ms_msd_name2):
+                                print_ChipPrint_header_if_needed()
                                 return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} (Microsoft Beacon data{" in DB:LE_bdaddr_to_MSD" if TME.TME_glob.verbose_print else ""})"
 
     # Else return an empty string to indicate we have no name or no match
