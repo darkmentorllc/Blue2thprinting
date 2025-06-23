@@ -259,7 +259,7 @@ def main():
         upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
         lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
         if(len(upper_left_tuple) != 2 or len(lower_right_tuple) != 2):
-            print("Error: GPS exclude coordinates must be in the form of (lat,lon).")
+            print("Error: GPS exclude coordinates must be in the form of \"(lat,lon)\".")
             return
         read_WiGLE_DB(input=args.input, gps_exclude_upper_left=upper_left_tuple, gps_exclude_lower_right=lower_right_tuple, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
     else:

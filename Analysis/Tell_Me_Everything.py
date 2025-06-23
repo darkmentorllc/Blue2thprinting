@@ -130,7 +130,7 @@ def main():
         upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
         lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
         if(len(upper_left_tuple) != 2 or len(lower_right_tuple) != 2):
-            print("Error: GPS exclude coordinates must be in the form of (lat,lon).")
+            print("Error: GPS exclude coordinates must be in the form of \"(lat,lon)\".")
             return
 
     #######################################################
