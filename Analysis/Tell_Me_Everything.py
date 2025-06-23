@@ -63,6 +63,8 @@ def main():
     btides_group.add_argument('--include-centrals', action='store_true', help='Include the Central BDADDR from connections in the output.')
     btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
+    btides_group.add_argument('--GPS-exclude-upper-left', type=str, required=False, help='The coordinate for the upper left corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(39.171951,-77.615936)\"')
+    btides_group.add_argument('--GPS-exclude-lower-right', type=str, required=False, help='The coordinate for the lower right corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(38.568929,-76.385467)\"')
 
     # BTIDALPOOL arguments
     btidalpool_group = parser.add_argument_group('BTIDALPOOL (crowdsourced database) arguments')
@@ -116,6 +118,20 @@ def main():
     TME.TME_glob.hide_android_data = args.hide_android_data
 
     bdaddrs = []
+
+    if(args.GPS_exclude_upper_left and not args.GPS_exclude_lower_right or args.GPS_exclude_lower_right and not args.GPS_exclude_upper_left):
+        print("Error: If you specify either GPS exclude option, you must specify both.")
+        return
+
+    upper_left_tuple = None
+    lower_right_tuple = None
+    qprint("Reading all Bluetooth entries from WiGLE SQLite database into memory.")
+    if(args.GPS_exclude_upper_left and args.GPS_exclude_lower_right):
+        upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
+        lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
+        if(len(upper_left_tuple) != 2 or len(lower_right_tuple) != 2):
+            print("Error: GPS exclude coordinates must be in the form of (lat,lon).")
+            return
 
     #######################################################
     # If given an input file, convert it to BTIDES JSON
@@ -172,12 +188,19 @@ def main():
             query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
         if args.MSD_regex:
             query_object["MSD_regex"] = args.MSD_regex
+        if args.GPS_exclude_upper_left:
+            query_object["GPS_exclude_upper_left"] = args.GPS_exclude_upper_left
+            query_object["GPS_exclude_lower_right"] = args.GPS_exclude_lower_right
         if args.require_GPS:
             query_object["require_GPS"] = True
         if args.require_GATT_any:
             query_object["require_GATT_any"] = True
         if args.require_GATT_values:
             query_object["require_GATT_values"] = True
+        if args.require_SMP:
+            query_object["require_SMP"] = True
+        if args.require_SMP_legacy_pairing:
+            query_object["require_SMP_legacy_pairing"] = True
         if args.require_LL_VERSION_IND:
             query_object["require_LL_VERSION_IND"] = True
         if args.require_LMP_VERSION_RES:
@@ -396,6 +419,9 @@ def main():
     for bdaddr in bdaddrs:
         if(args.require_GPS):
             if(not device_has_GPS(bdaddr)):
+                continue
+        if(args.GPS_exclude_upper_left and device_has_GPS(bdaddr)):
+            if(is_GPS_coordinate_within_exclusion_box(bdaddr, upper_left_tuple, lower_right_tuple)):
                 continue
         if(args.require_GATT_any):
             if(not device_has_GATT_any(bdaddr)):

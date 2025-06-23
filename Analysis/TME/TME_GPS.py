@@ -13,6 +13,18 @@ from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within p
 # Print GPS information, if present
 ###########################################
 
+# If there exists any GPS coordinates for the given bdaddr within the exclusion box,
+# return True, otherwise return False.
+def is_GPS_coordinate_within_exclusion_box(bdaddr, gps_exclude_upper_left_tuple, gps_exclude_lower_right_tuple):
+    select_query = f"SELECT lat, lon FROM bdaddr_to_GPS WHERE bdaddr = %s;"
+    select_results = execute_query(select_query, (bdaddr,))
+    for lat, lon in select_results:
+        if (gps_exclude_upper_left_tuple[0] >= lat >= gps_exclude_lower_right_tuple[0] and
+            gps_exclude_upper_left_tuple[1] <= lon <= gps_exclude_lower_right_tuple[1]):
+            return True
+
+    return False
+
 def device_has_GPS(bdaddr):
     values = (bdaddr,)
     # The WiGLE data is not capable of distinguishing between Classic and LE,

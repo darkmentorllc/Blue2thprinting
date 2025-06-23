@@ -248,7 +248,7 @@ def handle_query(self, username, query_object):
     # Turn on hardcoded test DB usage...
     #args_array = ["--use-test-db", "--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
 
-    # Can't just loop through and use everything we're handed in query_object,
+    # Can't just loop through and use everything we're handed in query_object (for security reasons),
     # only use arguments which we are expecting, and ignore everything else
     if("bdaddr" in query_object):
         args_array.append(f"--bdaddr")
@@ -277,12 +277,22 @@ def handle_query(self, username, query_object):
     if("MSD_regex" in query_object):
         args_array.append(f"--MSD-regex")
         args_array.append(f"{query_object['MSD_regex']}")
+    if("GPS_exclude_upper_left" in query_object):
+        args_array.append(f"--GPS-exclude-upper-left")
+        args_array.append(f"{query_object['GPS_exclude_upper_left']}")
+    if("GPS_exclude_lower_right" in query_object):
+        args_array.append(f"--GPS-exclude-lower-right")
+        args_array.append(f"{query_object['GPS_exclude_lower_right']}")
     if("require_GPS" in query_object):
         args_array.append(f"--require-GPS")
     if("require_GATT_any" in query_object):
         args_array.append(f"--require-GATT-any")
     if("require_GATT_values" in query_object):
         args_array.append(f"--require-GATT-values")
+    if("require_SMP" in query_object):
+        args_array.append(f"--require-SMP")
+    if("require_SMP_legacy_pairing" in query_object):
+        args_array.append(f"--require-SMP-legacy-pairing")
     if("require_LL_VERSION_IND" in query_object):
         args_array.append(f"--require-LL_VERSION_IND")
     if("require_LMP_VERSION_RES" in query_object):
