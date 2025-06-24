@@ -29,7 +29,7 @@ The above `setup_analysis_helper*.sh` scripts should be re-run if you ever do a 
 
 ```
 cd ~/Blue2thprinting/Analysis
-./Import_all_HCI_and_PCAP.py --HCI-logs-folder ../ExampleData/ --pcaps-folder ../ExampleData/
+./Import_All_HCI_and_PCAP.py --HCI-logs-folder ../ExampleData/ --pcaps-folder ../ExampleData/
 ```
 
 **To confirm that some data was successfully imported, you can issue:**
@@ -46,7 +46,7 @@ Eventually once you have many files from your own collection that you want to pr
 
 ```
 cd ~/Blue2thprinting/Analysis
-./Import_all_HCI_and_PCAP.py --HCI-logs-folder ../Logs/btmon/ --pcaps-folder ../Logs/sniffle/
+./Import_All_HCI_and_PCAP.py --HCI-logs-folder ../Logs/btmon/ --pcaps-folder ../Logs/sniffle/
 ```
 
 
