@@ -30,9 +30,9 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-btc_2thprint_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
-gattprint_enabled = True
-sdpprint_enabled = True
+braktooth_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
+betterGATTgetter_enabled = True
+sdptool_enabled = True
 
 print_skipped = True
 print_verbose = True
@@ -60,8 +60,8 @@ username = "user"
 
 default_cwd = f"/home/{username}/"
 
-gatttool_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/BetterGATTGetter.py"
-gatttool_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
+BGG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/BetterGATTGetter.py"
+BGG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
 
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
 sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
@@ -464,7 +464,7 @@ def ble_thread_function():
 
             if(print_verbose): print(f"BLE Address: {bdaddr}")
 
-            if(gattprint_enabled):
+            if(betterGATTgetter_enabled):
                 skip_sub_process = False
                 with gatt_success_bdaddrs_lock:
                     if(bdaddr in gatt_success_bdaddrs.keys()):
@@ -484,16 +484,16 @@ def ble_thread_function():
                             (type, rssi) = ble_bdaddrs[bdaddr]
                             current_time = datetime.datetime.now()
                             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
-                            pcap_output = f"-o={gatttool_output_pcap_path}/{launch_time}_{bdaddr}_BGG_{hostname}.pcap"
+                            pcap_output = f"-o={BGG_output_pcap_path}/{launch_time}_{bdaddr}_BGG_{hostname}.pcap"
                             serial_port = f"-s={first_sniffle_serial_port_absolute_path}"
                             # -u for unbuffered python output (so it streams to log realtime)
                             if(type != "random"):
-                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
+                                gatt_cmd = ["python3", "-u", BGG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
                             else:
-                                gatt_cmd = ["python3", "-u", gatttool_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
+                                gatt_cmd = ["python3", "-u", BGG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
                             try:
                                 if(sniffle_stdout_logging):
-                                    sniffle_append_stdout = open(f"{gatttool_output_pcap_path}/Sniffle_stdout.log", "a")
+                                    sniffle_append_stdout = open(f"{BGG_output_pcap_path}/Sniffle_stdout.log", "a")
                                 else:
                                     sniffle_append_stdout = open(f"/dev/null", "a")
                                 gatt_process = launch_application(gatt_cmd, default_cwd, stdout=sniffle_append_stdout)
@@ -572,7 +572,7 @@ def btc_thread_function():
             else:
                 device_connect_attempts[bdaddr] += 1
 
-            if(btc_2thprint_enabled):
+            if(braktooth_enabled):
                 skip_sub_process = False
                 with lmp2thprint_success_bdaddrs_lock:
                     if(bdaddr in lmp2thprint_success_bdaddrs.keys()):
@@ -606,7 +606,7 @@ def btc_thread_function():
                             # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                             force_reboot()
 
-            if(sdpprint_enabled):
+            if(sdptool_enabled):
                 skip_sub_process = False
                 with sdp_success_bdaddrs_lock:
                     if(bdaddr in sdp_success_bdaddrs.keys()):

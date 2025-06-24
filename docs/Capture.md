@@ -93,13 +93,13 @@ sudo ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exp
 
 Of course, replace `AA:BB:CC:11:22:33` with the BTC BDADDR you want to target.
 
-Once you have confirmed this works, you should set `btc_2thprint_enabled = True` in `~/central_app_launcher2.py`.
+Once you have confirmed this works, you should set `braktooth_enabled = True` in `~/central_app_launcher2.py`.
 
 # Capture Scripts Setup
 
 ### Setup automatic script execution at boot:
 
-The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot (which you should have confirmed with the `sudo crontab -e` above). 
+The previous `setup_capture_helper_debian-based.sh` should have already configured your system to automatically run data capture at reboot (which you should have confirmed with the `sudo crontab -e` above).
 
 Before rebooting, run `hciconfig` and confirm you see at least one HCI Bluetooth interface (i.e. not empty output). If you don't, make sure you attach your USB Bluetooth dongle (if you don't have built-in Bluetooth passthrough capability from VMware), and attach that USB device to your VM.
 
