@@ -382,19 +382,6 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         client_ip = self.client_address[0]
 
-        # Validate OAuth token
-        username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
-        if not username:
-            send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
-            return
-
-        # Check rate limits before reading the request body
-        if not rate_limit_checks(client_ip):
-            send_back_response(self, username, 429, 'text/plain', b'Too many requests')
-            # Returning before the self.rfile.read() below will lead to the client perceiving it as a connection reset
-            # However this just saves the server from processing an unnecessary request that it knows it will reject
-            return
-
         # Get the content length
         content_length = int(self.headers['Content-Length'])
 
@@ -410,6 +397,19 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             return
         if 'command' not in post_json_data:
             send_back_response(self, username, 400, 'text/plain', b'Missing command.')
+            return
+
+        # Validate OAuth token
+        username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
+        if not username:
+            send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
+            return
+
+        # Check rate limits
+        if not rate_limit_checks(client_ip):
+            send_back_response(self, username, 429, 'text/plain', b'Too many requests')
+            # Returning before the self.rfile.read() below will lead to the client perceiving it as a connection reset
+            # However this just saves the server from processing an unnecessary request that it knows it will reject
             return
 
         # Log request
