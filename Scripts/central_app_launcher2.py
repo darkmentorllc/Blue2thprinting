@@ -30,7 +30,7 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-braktooth_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
+braktooth_enabled = True # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
 betterGATTgetter_enabled = True
 sdptool_enabled = True
 
@@ -66,8 +66,8 @@ BGG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
 sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
 
-braktooth = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter"
-brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_esp32_bluetooth_classic_attacks/wdissector/"
+braktooth = f"/home/{username}/Blue2thprinting/braktooth_minimized/bin/bt_exploiter"
+brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_minimized/"
 
 btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
 gattprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
@@ -121,16 +121,32 @@ if(retry_count == MAX_RETRY_COUNT):
     print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Fix sniffle_thread_function() or permissions.")
     exit(-1)
 
-# Construct the full pattern path
-full_pattern = os.path.join(base_dir, pattern)
+if(Sniffle_thread_enabled):
+    # Construct the full pattern path
+    full_pattern = os.path.join(base_dir, pattern)
 
-# Use glob to match the pattern
-matching_files = glob.glob(full_pattern)
+    # Use glob to match the pattern
+    matching_files = glob.glob(full_pattern)
+    if(matching_files):
+        # The first path is reserved for BetterGATTGetter.py
+        # Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
+        first_sniffle_serial_port_relative_path = os.readlink(matching_files[0])
+        first_sniffle_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sniffle_serial_port_relative_path))
+    else:
+        print(f"No Sniffle adapters found, despite code having Sniffle_thread_enabled = True. Setting to False")
+        Sniffle_thread_enabled = False
 
-# The first path is reserved for BetterGATTGetter.py
-# Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
-first_sniffle_serial_port_relative_path = os.readlink(matching_files[0])
-first_sniffle_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sniffle_serial_port_relative_path))
+if(braktooth_enabled):
+    # Now do the same to find the Braktooth serial device
+    braktooth_pattern = 'usb-FTDI_Dual_RS232-HS-if01-port0'
+    braktooth_full_pattern = os.path.join(base_dir, braktooth_pattern)
+    braktooth_matching_files = glob.glob(braktooth_full_pattern)
+    if(braktooth_matching_files):
+        braktooth_serial_port_relative_path = os.readlink(braktooth_matching_files[0])
+        braktooth_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(braktooth_matching_files[0]), braktooth_serial_port_relative_path))
+    else:
+        print(f"No Braktooth adapters found, despite code having braktooth_enabled = True. Setting to False")
+        braktooth_enabled = False
 
 ##################################################
 # Log print helpers
@@ -585,7 +601,7 @@ def btc_thread_function():
 
                 if(not skip_sub_process and bdaddr in btc_bdaddrs): # Double check that bdaddr hasn't been deleted out of btc_bdaddrs by a [DEL]
                     external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: LOG ENTRY FOR BDADDR: {bdaddr} {datetime.datetime.now()}")
-                    btc_2thprint_cmd = [braktooth, "--exploit=LMP2thprint", "--target={}".format(bdaddr)]
+                    btc_2thprint_cmd = [braktooth, "--exploit=LMP2thprint", f"--target={bdaddr}", f"--host-port={braktooth_serial_port_absolute_path}"]
                     try:
                         btc_2thprint_process = launch_application(btc_2thprint_cmd, brak_cwd) # Braktooth must be launched from its target dir, otherwise it errors out
                     except BlockingIOError as e:
