@@ -204,9 +204,12 @@ fi
 echo "======================================================="
 echo "Adding helpful command aliases (c, k, TME) to ~/.bashrc"
 echo "======================================================="
-echo "alias c=\"sudo ~/Blue2thprinting/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
-echo "alias k=\"~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
+echo "alias c=\"~/Blue2thprinting/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
+echo "alias k=\"sudo ~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
+echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
+echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
 echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
+echo "alias BGG=\"python3 BetterGATTGetter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
 echo ""

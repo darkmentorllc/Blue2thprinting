@@ -17,83 +17,24 @@ cd ~/Blue2thprinting
 sudo ./setup_capture_helper_debian-based.sh
 ```
 
-And there's comments in that script if you want to see what's being done and why.
-
-If you stopped right now and rebooted, you'd have a functional automatic-capture setup that is equivalent to the [naiveBTsniffing](https://github.com/darkmentorllc/naiveBTsniffing) repository! But keep going to set up Braktooth to get the full power of Blue2thprinting!
+There are comments in that script if you want to see what's being done and why.
 
 Run `sudo crontab -e` to review your crontab and confirm you only have a single instance of the `@reboot /home/user/Blue2thprinting/Scripts/runall.sh` command in it. If you ran the `setup_capture_helper_debian-based.sh` file multiple times, remove any extra instances of the `runall.sh` command.
 
-## Setup Braktooth
+## Optional: Setup Braktooth
+
+### **Disclaimer!**: Braktooth currently only supports Ubuntu 22.04 + x86-64. Don't try to install on other platforms! (I'm looking into replacing it in the future.)
 
 Place the Braktooth code in the location assumed by `central_app_launcher2.py`:
 
 ```
-cd ~/Downloads
-git clone https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks.git
-```
-
-You are required to setup Braktooth to work **[per the "Installation instructions" in the Braktooth repository](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks)**.
-
-**Known issues with Braktooth's given instructions:**
-
-**1)** The `wdissector.tar.zst` in the root of the folder isn't the full 300MB+ file; it instead needs to be grabbed from the [artifact release](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks/releases/download/v1.0.1/release.zip).
-
-**2)** Because the instructions are for Ubuntu 18.04, on Ubuntu 22.04 you will need to issue the following commands to install the missing "libssl.so.1.1" and "libcrypto.so.1.1" shared libraries, to make the pre-compiled `braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter` binary work:
-
-```
-wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-sudo dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
-```
-
-**3)** Modify the following file to make it so that the `LMP2thprint.cpp` will compile properly.
-
-In `~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector$ nano src/ModulesInclude.hpp`, replace all the instances of "extern", with "static", as shown below.
-
-Replace
-
-```
-extern const char *module_name();
-// Setup
-extern int setup(void *p);
-// TX Pre
-extern int tx_pre_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// TX Ppost
-extern int tx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// RX Pre
-extern int rx_pre_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// RX Post
-extern int rx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-```
-
-with
-
-```
-static const char *module_name();
-// Setup
-static int setup(void *p);
-// TX Pre
-static int tx_pre_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// TX Ppost
-static int tx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// RX Pre
-static int rx_pre_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
-// RX Post
-static int rx_post_dissection(uint8_t *pkt_buf, int pkt_length, void *p);
+cd ~/Blue2thprinting/
+git clone https://gitlab.com/opensecuritytraining/braktooth_minimized.git
 ```
 
 **Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher2.py:**
 
-If you have a username other than 'pi', update `~/Blue2thprinting/Braktooth_module/LMP2thprint.cpp` to correct the path in the `BTC2TH_LOG_PATH` variable.
-
-```
-cd ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector
-cp ~/Blue2thprinting/Braktooth_module/LMP2thprint.cpp ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/modules/exploits/bluetooth/
-sudo ~/Downloads/braktooth_esp32_bluetooth_classic_attacks/wdissector/bin/bt_exploiter --exploit=LMP2thprint --target=AA:BB:CC:11:22:33
-```
-
-Of course, replace `AA:BB:CC:11:22:33` with the BTC BDADDR you want to target.
-
-Once you have confirmed this works, you should set `braktooth_enabled = True` in `~/central_app_launcher2.py`.
+Follow the instructions [given in https://gitlab.com/opensecuritytraining/braktooth_minimized](https://gitlab.com/opensecuritytraining/braktooth_minimized.git).
 
 # Capture Scripts Setup
 

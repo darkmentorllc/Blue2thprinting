@@ -644,6 +644,9 @@ def chip_by_sub_version(sub_version, device_BT_CID):
             return "Broadcom BCM4335A0" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
         if(sub_version == 0x6607):
             return "Broadcom BCM4350C5" # from https://github.com/torvalds/linux/blob/master/drivers/bluetooth/btbcm.c, technically from bcm_usb_subver_table, but I expect it to be the same between BT & USB
+    elif(device_BT_CID == 93):
+        if(sub_version == 0x8762):
+            return "Realtek RTL8762" # from ITW data from one of these https://fccid.io/2AB73-2208A/Internal-Photos/Internal-photos-6664696.pdf
 
     # If we get here, return empty string denoting nothing found
     return ""
