@@ -125,7 +125,6 @@ def main():
 
     upper_left_tuple = None
     lower_right_tuple = None
-    qprint("Reading all Bluetooth entries from WiGLE SQLite database into memory.")
     if(args.GPS_exclude_upper_left and args.GPS_exclude_lower_right):
         upper_left_tuple = tuple(map(float, args.GPS_exclude_upper_left.strip('()').split(',')))
         lower_right_tuple = tuple(map(float, args.GPS_exclude_lower_right.strip('()').split(',')))
