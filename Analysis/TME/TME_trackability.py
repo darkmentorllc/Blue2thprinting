@@ -280,7 +280,7 @@ def print_UniqueIDReport(bdaddr):
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             name_source = f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
             ms_msd_name = extract_ms_msd_name(manufacturer_specific_data)
-            if(len(ms_msd_name) > 0):
+            if(len(ms_msd_name) > 0 and ms_msd_name != "No name found"):
                 if(check_name_for_most_specific_match(f"{i3}", ms_msd_name, bdaddr, name_source)):
                     continue
                 print_possible_unique_ID_warning(f"{i3}", ms_msd_name, name_source)
