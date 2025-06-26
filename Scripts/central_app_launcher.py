@@ -106,7 +106,7 @@ base_dir = '/dev/serial/by-id'
 # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
 pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
 
-if(Sniffle_thread_enabled or braktooth_enabled):
+if(Sniffle_thread_enabled or betterGATTgetter_enabled or braktooth_enabled):
     # Check if the base directory exists and is accessible
     # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
     retry_count = 0
@@ -120,11 +120,12 @@ if(Sniffle_thread_enabled or braktooth_enabled):
             break # It's accessible, try to access Sniffle dongles now
         if(retry_count == MAX_RETRY_COUNT):
             print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Ensure your dongles are connected.")
-            # Proceed without capabilities granted by either of these dongles
+            # Proceed without capabilities granted by these dongles
             Sniffle_thread_enabled = False
             braktooth_enabled = False
+            betterGATTgetter_enabled = False
 
-if(Sniffle_thread_enabled):
+if(Sniffle_thread_enabled or betterGATTgetter_enabled):
     # Construct the full pattern path
     full_pattern = os.path.join(base_dir, pattern)
 
@@ -133,8 +134,8 @@ if(Sniffle_thread_enabled):
     if(matching_files):
         # The first path is reserved for Better_GATT_Getter.py
         # Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
-        first_sniffle_serial_port_relative_path = os.readlink(matching_files[0])
-        first_sniffle_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sniffle_serial_port_relative_path))
+        first_sonoff_serial_port_relative_path = os.readlink(matching_files[0])
+        first_sonoff_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sonoff_serial_port_relative_path))
     else:
         print(f"No Sniffle adapters found, despite code having Sniffle_thread_enabled = True. Setting to False")
         Sniffle_thread_enabled = False
@@ -504,7 +505,7 @@ def ble_thread_function():
                             current_time = datetime.datetime.now()
                             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
                             pcap_output = f"-o={BGG_output_pcap_path}/{launch_time}_{bdaddr}_BGG_{hostname}.pcap"
-                            serial_port = f"-s={first_sniffle_serial_port_absolute_path}"
+                            serial_port = f"-s={first_sonoff_serial_port_absolute_path}"
                             # -u for unbuffered python output (so it streams to log realtime)
                             if(type != "random"):
                                 gatt_cmd = ["python3", "-u", BGG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
