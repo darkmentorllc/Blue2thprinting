@@ -140,7 +140,7 @@ def print_LMP_info(bdaddr):
         qprint(f"{i2}BTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
         # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RES fragments (it's defragmented)
-        remote_name_hex_str = device_name
+        remote_name_hex_str = str_to_hex_str(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
     if(len(version_result) != 0 or len(features_result) != 0 or len(features_ext_result) != 0 or len(name_result) != 0):

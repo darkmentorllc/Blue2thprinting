@@ -7,6 +7,7 @@
 
 import mysql.connector
 import traceback
+import sys
 
 lmp_versions = {
     0: '1.0b',
@@ -150,7 +151,9 @@ def check_args(args):
 bdaddr = "NULL"
 
 try:
-    with open("../Logs/BTC_2THPRINT.log", "rb") as file:
+    # Use command line argument if provided, otherwise use default path
+    input_file = sys.argv[1] if len(sys.argv) > 1 else "../Logs/BTC_2THPRINT.log"
+    with open(input_file, "rb") as file:
         for line in file:
             try:
                 line = line.decode("utf-8").rstrip("\n")  # Decode and remove newline character

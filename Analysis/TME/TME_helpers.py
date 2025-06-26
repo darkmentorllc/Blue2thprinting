@@ -159,6 +159,29 @@ def qprint(fmt):
 def vprint(fmt):
     if(TME.TME_glob.verbose_print): qprint(fmt)
 
+def bytes_to_hex_str(bytes):
+    return ''.join(format(byte, '02x') for byte in bytes)
+
+def str_to_hex_str(str):
+    return ''.join(format(byte, '02x') for byte in str.encode('utf-8'))
+
+def str_to_bytes(str):
+    return str.encode('utf-8', 'ignore')
+
+def bytes_reversed_to_hex_str(bytes):
+    return ''.join(format(byte, '02x') for byte in reversed(bytes))
+
+def bytes_to_utf8(hex_str):
+    return hex_str.decode('utf-8', 'ignore')
+
+def hex_str_to_utf8(hex_str):
+    bytes_object = bytes.fromhex(hex_str)
+    return bytes_to_utf8(bytes_object)
+
+def hex_str_to_bytes(hex_str):
+    bytes_object = bytes.fromhex(hex_str)
+    return bytes_object
+
 # Use the UUID16 names mapping to get the protocol ID
 def get_uuid16_protocol_string(uuid16):
     return TME.TME_glob.uuid16_protocol_names.get(int(uuid16.strip(),16), "Unknown")

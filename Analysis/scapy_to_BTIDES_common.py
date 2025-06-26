@@ -100,28 +100,28 @@ def scapy_flags_to_hex_str(entry):
     #qprint(f"flags_hex_str = {flags_hex_str}")
     return flags_hex_str
 
-def bytes_to_hex_str(bytes):
-    return ''.join(format(byte, '02x') for byte in bytes)
+# def bytes_to_hex_str(bytes):
+#     return ''.join(format(byte, '02x') for byte in bytes)
 
-def str_to_hex_str(str):
-    return ''.join(format(byte, '02x') for byte in str.encode('utf-8'))
+# def str_to_hex_str(str):
+#     return ''.join(format(byte, '02x') for byte in str.encode('utf-8'))
 
-def str_to_bytes(str):
-    return str.encode('utf-8', 'ignore')
+# def str_to_bytes(str):
+#     return str.encode('utf-8', 'ignore')
 
-def bytes_reversed_to_hex_str(bytes):
-    return ''.join(format(byte, '02x') for byte in reversed(bytes))
+# def bytes_reversed_to_hex_str(bytes):
+#     return ''.join(format(byte, '02x') for byte in reversed(bytes))
 
-def bytes_to_utf8(hex_str):
-    return hex_str.decode('utf-8', 'ignore')
+# def bytes_to_utf8(hex_str):
+#     return hex_str.decode('utf-8', 'ignore')
 
-def hex_str_to_utf8(hex_str):
-    bytes_object = bytes.fromhex(hex_str)
-    return bytes_to_utf8(bytes_object)
+# def hex_str_to_utf8(hex_str):
+#     bytes_object = bytes.fromhex(hex_str)
+#     return bytes_to_utf8(bytes_object)
 
-def hex_str_to_bytes(hex_str):
-    bytes_object = bytes.fromhex(hex_str)
-    return bytes_object
+# def hex_str_to_bytes(hex_str):
+#     bytes_object = bytes.fromhex(hex_str)
+#     return bytes_object
 
 # This is just a simple wrapper around insert_std_optional_fields to insert any
 # additional information that we may be able to glean from the packet

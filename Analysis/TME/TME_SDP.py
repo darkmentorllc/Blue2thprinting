@@ -305,8 +305,34 @@ def print_SDP_info(bdaddr):
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
             print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
 
+        # FIXME: We aren't handling the case where the PDU isn't fragmented currently
+
     reassembly_buffer = b''
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result2:
+        # First export BTIDES
+        raw_data_hex_str = bytes_to_hex_str(byte_values)
+        if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            #print_SDP_SERVICE_SEARCH_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+        elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_ATTR_REQ):
+            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_ATTR_RSP):
+            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            #print_SDP_SERVICE_SEARCH_ATTR_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
+            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            #print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+
         byte_size = len(byte_values)
         i = 0
         AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
