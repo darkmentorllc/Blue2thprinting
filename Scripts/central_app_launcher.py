@@ -106,20 +106,23 @@ base_dir = '/dev/serial/by-id'
 # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
 pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
 
-# Check if the base directory exists and is accessible
-# Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
-retry_count = 0
-MAX_RETRY_COUNT = 360
-while(retry_count < MAX_RETRY_COUNT):
-    if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
-        retry_count += 10
-        if(print_verbose): print(f"sniffle_thread_function: /dev/serial/by-id may not be accessible yet. Sleeping 10 seconds.")
-        time.sleep(10)
-    else:
-        break # It's accessible, try to access Sniffle dongles now
-if(retry_count == MAX_RETRY_COUNT):
-    print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Fix sniffle_thread_function() or permissions.")
-    exit(-1)
+if(Sniffle_thread_enabled or braktooth_enabled):
+    # Check if the base directory exists and is accessible
+    # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
+    retry_count = 0
+    MAX_RETRY_COUNT = 360
+    while(retry_count < MAX_RETRY_COUNT):
+        if (not os.path.isdir(base_dir) or not os.access(base_dir, os.R_OK)):
+            retry_count += 10
+            if(print_verbose): print(f"sniffle_thread_function: /dev/serial/by-id may not be accessible yet. Sleeping 10 seconds.")
+            time.sleep(10)
+        else:
+            break # It's accessible, try to access Sniffle dongles now
+        if(retry_count == MAX_RETRY_COUNT):
+            print(f"sniffle_thread_function: The directory {base_dir} does not exist or is not accessible and we exceeded MAX_RETRY_COUNT seconds waiting for it. Ensure your dongles are connected.")
+            # Proceed without capabilities granted by either of these dongles
+            Sniffle_thread_enabled = False
+            braktooth_enabled = False
 
 if(Sniffle_thread_enabled):
     # Construct the full pattern path
