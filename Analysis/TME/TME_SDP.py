@@ -41,7 +41,7 @@ data_element_size_to_actual_size = {
 
 def parse_SDP_data_element(indent, byte_values, i):
     if i+1 > len(byte_values):
-        print(f"{indent}Error: i is greater than the length of the byte_values array. Aborting")
+        qprint(f"{indent}Error: i is greater than the length of the byte_values array. Aborting")
         return None, None, byte_values, i  # Return gracefully if out of bounds (probable truncation)
     data_element, = struct.unpack(">B", byte_values[i:i+1])
     i+=1
@@ -58,32 +58,32 @@ def parse_SDP_data_element(indent, byte_values, i):
     elif(data_element_size == 7):
         actual_size, = struct.unpack(">I", byte_values[i:i+4])
         i+=4
-    print(f"{indent}Size of element of type {data_element_type} is {actual_size}")
+    qprint(f"{indent}Size of element of type {data_element_type} is {actual_size}")
     if(data_element_type == 1):
         if(actual_size == 1):
             integer_1b, = struct.unpack(">B", byte_values[i:i+1])
             i+=actual_size
-            print(f"{indent}Found integer: 0x{integer_1b:02x}")
+            qprint(f"{indent}Found integer: 0x{integer_1b:02x}")
         elif(actual_size == 2):
             integer_2b, = struct.unpack(">H", byte_values[i:i+2])
             i+=actual_size
             if(integer_2b in TME.TME_glob.SDP_universal_attribute_names.keys()):
-                print(f"{indent}Found integer: 0x{integer_2b:04x} ({TME.TME_glob.SDP_universal_attribute_names[integer_2b]})")
+                qprint(f"{indent}Found integer: 0x{integer_2b:04x} ({TME.TME_glob.SDP_universal_attribute_names[integer_2b]})")
             else:
-                print(f"{indent}Found integer: 0x{integer_2b:04x}")
+                qprint(f"{indent}Found integer: 0x{integer_2b:04x}")
         elif(actual_size == 4):
             integer_4b, = struct.unpack(">I", byte_values[i:i+4])
             i+=actual_size
-            print(f"{indent}Found integer: 0x{integer_4b:08x}")
+            qprint(f"{indent}Found integer: 0x{integer_4b:08x}")
         elif(actual_size == 8):
             integer_8b, = struct.unpack(">Q", byte_values[i:i+8])
             i+=actual_size
-            print(f"{indent}Found integer: 0x{integer_8b:16x}")
+            qprint(f"{indent}Found integer: 0x{integer_8b:16x}")
         elif(actual_size == 16):
             high_bytes, low_bytes = struct.unpack(">QQ", byte_values[i:i+16])
             integer_16b = (high_bytes << 64) | low_bytes
             i+=actual_size
-            print(f"{indent}Found integer: 0x{integer_16b:32x}")
+            qprint(f"{indent}Found integer: 0x{integer_16b:32x}")
     elif(data_element_type == 3):
         if(actual_size == 2):
             UUID16, = struct.unpack(">H", byte_values[i:i+2])
@@ -96,31 +96,31 @@ def parse_SDP_data_element(indent, byte_values, i):
                 UUID_name = TME.TME_glob.uuid16_service_names[UUID16]
             else:
                 UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            print(f"{indent}Found UUID16: 0x{UUID_str} ({UUID_name})")
+            qprint(f"{indent}Found UUID16: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 4):
             UUID32 = bytes_to_hex_str(byte_values[i:i+4])
             i+=actual_size
             UUID_str = f"{UUID32:08x}"
             UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            print(f"{indent}Found UUID32: 0x{UUID_str} ({UUID_name})")
+            qprint(f"{indent}Found UUID32: 0x{UUID_str} ({UUID_name})")
         elif(actual_size == 16):
             UUID128 = bytes_to_hex_str(byte_values[i:i+16])
             i+=actual_size
             UUID_str = add_dashes_to_UUID128(UUID128)
             UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            print(f"{indent}Found UUID128: 0x{UUID_str} ({UUID_name})")
+            qprint(f"{indent}Found UUID128: 0x{UUID_str} ({UUID_name})")
     elif(data_element_type == 4):
         string = bytes_to_utf8(byte_values[i:i+actual_size])
         i+=actual_size
-        print(f"{indent}Found string: {string}")
+        qprint(f"{indent}Found string: {string}")
     elif(data_element_type == 5):
         boolean = struct.unpack(">B", byte_values[i:i+1])
         i+=actual_size
-        print(f"{indent}Found boolean: {"True" if boolean else "False"}")
+        qprint(f"{indent}Found boolean: {"True" if boolean else "False"}")
     elif(data_element_type == 8):
         URL = bytes_to_utf8(byte_values[i:i+actual_size])
         i+=actual_size
-        print(f"{indent}Found URL: {URL}")
+        qprint(f"{indent}Found URL: {URL}")
 
     # If the data element is a sequence, recursively parse until we find normal data?
     elif(data_element_type == 6):
@@ -131,7 +131,7 @@ def parse_SDP_data_element(indent, byte_values, i):
             # move i and j forward by however many bytes were iterated
             diff = new_i - i_before
             if(diff == 0):
-                print(f"{indent}Error: no bytes were iterated. Exiting.")
+                qprint(f"{indent}Error: no bytes were iterated. Exiting.")
                 break
             j+= diff
             i = new_i
@@ -167,7 +167,7 @@ def print_SDP_SERVICE_SEARCH_REQ(indent, direction, l2cap_len, l2cap_cid, pdu_id
         qprint(f"{indent}SDP_SERVICE_SEARCH_REQ:")
     else:
         return
-    print(f"raw bytes: {byte_values}")
+    qprint(f"{indent}raw bytes: {byte_values}")
 
     print_SDP_Common(f"{indent}{i1}", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
 
@@ -194,7 +194,7 @@ def print_SDP_SERVICE_SEARCH_ATTR_REQ(indent, direction, l2cap_len, l2cap_cid, p
         qprint(f"{indent}SDP_SERVICE_SEARCH_ATTR_REQ:")
     else:
         return
-    print(f"raw bytes: {byte_values}")
+    qprint(f"{indent}raw bytes: {byte_values}")
 
     print_SDP_Common(f"{indent}{i1}", direction, l2cap_len, l2cap_cid, transaction_id, param_len)
 
@@ -286,7 +286,7 @@ def print_SDP_info(bdaddr):
         if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            print_SDP_SERVICE_SEARCH_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+            #print_SDP_SERVICE_SEARCH_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
         elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
@@ -299,11 +299,11 @@ def print_SDP_info(bdaddr):
         elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            print_SDP_SERVICE_SEARCH_ATTR_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+            #print_SDP_SERVICE_SEARCH_ATTR_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
         elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
+            #print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
 
         # FIXME: We aren't handling the case where the PDU isn't fragmented currently
 
