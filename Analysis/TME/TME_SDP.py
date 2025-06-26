@@ -352,10 +352,11 @@ def print_SDP_info(bdaddr):
         if(ContinuationState):
             continue
         else:
-            # Export first
-            raw_data_hex_str = bytes_to_hex_str(reassembly_buffer)
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            # DELETEME: Don't export the reassembled buffer, just keep the fragments
+            # # Export first
+            # raw_data_hex_str = bytes_to_hex_str(reassembly_buffer)
+            # data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
+            # BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
             # Then parse
             # print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, reassembly_buffer)
             i = 0
