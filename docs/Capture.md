@@ -25,14 +25,14 @@ Run `sudo crontab -e` to review your crontab and confirm you only have a single 
 
 ### **Disclaimer!**: Braktooth currently only supports Ubuntu 22.04 + x86-64. Don't try to install on other platforms! (I'm looking into replacing it in the future.)
 
-Place the Braktooth code in the location assumed by `central_app_launcher2.py`:
+Place the Braktooth code in the location assumed by `central_app_launcher.py`:
 
 ```
 cd ~/Blue2thprinting/
 git clone https://gitlab.com/opensecuritytraining/braktooth_minimized.git
 ```
 
-**Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher2.py:**
+**Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher.py:**
 
 Follow the instructions [given in https://gitlab.com/opensecuritytraining/braktooth_minimized](https://gitlab.com/opensecuritytraining/braktooth_minimized.git).
 
@@ -56,8 +56,8 @@ root        1952  0.0  0.0   3636  1008 ?        S    18:02   0:00 /usr/bin/btmo
 user        2034  0.0  0.0   9040   648 pts/0    S+   18:03   0:00 grep btmon
 user        2036  0.0  0.0   9040   720 pts/0    S+   18:03   0:00 grep bluetoothctl
 root         783  0.0  0.0   9500  3312 ?        S    18:01   0:00 /bin/bash /home/user/Blue2thprinting/Scripts/start_central_app_launcher.sh
-root        1977  0.0  0.1  11924  4624 ?        S    18:02   0:00 sudo -E python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher2.py
-root        1979 97.9  0.3 168332 11936 ?        Sl   18:02   0:44 python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher2.py
+root        1977  0.0  0.1  11924  4624 ?        S    18:02   0:00 sudo -E python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher.py
+root        1979 97.9  0.3 168332 11936 ?        Sl   18:02   0:44 python3 -u /home/user/Blue2thprinting/Scripts/central_app_launcher.py
 user        2038  0.0  0.0   9040   720 pts/0    S+   18:03   0:00 grep central_app
 ```
 From now on, whenever you reboot, the data collection will begin automatically.

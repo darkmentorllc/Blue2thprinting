@@ -80,8 +80,8 @@ if [ $USERNAME != "user" ]; then
         echo "  Correcting $i"
         sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
     done
-    sed -i "s|username = \"user\"|username = \"$USERNAME\"|" central_app_launcher2.py
-    echo "Correcting central_app_launcher2.py"
+    sed -i "s|username = \"user\"|username = \"$USERNAME\"|" central_app_launcher.py
+    echo "Correcting central_app_launcher.py"
 fi
 echo "  Done"
 
@@ -99,7 +99,7 @@ echo "====================================================================="
 #### This tries to make sure it preserves whatever is already in the crontab
 #### and it just appends an entry to run the runall.sh script at reboot
 #### which invokes the sub-scripts to run btmon (primary HCI logging),
-#### bluetoothctl (primary discovery), and central_app_launcher2.py
+#### bluetoothctl (primary discovery), and central_app_launcher.py
 #### (orchestration of GATT/SDP/LL/LMP measurements)
 if [ ! -f "/home/$USERNAME/Blue2thprinting/Scripts/.cron_added" ]; then
     cron_entry="@reboot /home/$USERNAME/Blue2thprinting/Scripts/runall.sh"
@@ -209,7 +209,7 @@ echo "alias k=\"sudo ~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/
 echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
 echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
 echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
-echo "alias BGG=\"python3 BetterGATTGetter.py\"" >> /home/$USERNAME/.bashrc
+echo "alias BGG=\"python3 Better_GATT_Getter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
 echo ""

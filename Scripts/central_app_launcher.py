@@ -60,7 +60,7 @@ username = "user"
 
 default_cwd = f"/home/{username}/"
 
-BGG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/BetterGATTGetter.py"
+BGG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/Better_GATT_Getter.py"
 BGG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
 
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
@@ -99,7 +99,7 @@ lmp2thprint_success_bdaddrs_lock = threading.Lock()
 hostname = os.popen('hostname').read().strip()
 
 #####################################################################################
-# Single global serial port list for Sniffle sniffers or BetterGATTGetter.py to share
+# Single global serial port list for Sniffle sniffers or Better_GATT_Getter.py to share
 #####################################################################################
 #
 base_dir = '/dev/serial/by-id'
@@ -128,7 +128,7 @@ if(Sniffle_thread_enabled):
     # Use glob to match the pattern
     matching_files = glob.glob(full_pattern)
     if(matching_files):
-        # The first path is reserved for BetterGATTGetter.py
+        # The first path is reserved for Better_GATT_Getter.py
         # Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
         first_sniffle_serial_port_relative_path = os.readlink(matching_files[0])
         first_sniffle_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sniffle_serial_port_relative_path))
@@ -276,7 +276,7 @@ class ApplicationThread(threading.Thread):
 def launch_application(cmd, target_cwd, stdout=None):
     try:
         process = subprocess.Popen(cmd, cwd=target_cwd, stdout=stdout)
-        print(f"PID: {process.pid}: central_app_launcher2.py: launched {cmd}")
+        print(f"PID: {process.pid}: central_app_launcher.py: launched {cmd}")
 #        raise BlockingIOError("FAKE I/O operation is blocked")
     except BlockingIOError as e:
         # Handle the exception gracefully, e.g., log the error and take appropriate action.
@@ -686,7 +686,7 @@ def sniffle_thread_function():
     adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
     create_connection_follower = True
 
-    # Skip the first serial port and leave it for BetterGATTGetter.py, by using the [1:] notation to start from matching_files[1]
+    # Skip the first serial port and leave it for Better_GATT_Getter.py, by using the [1:] notation to start from matching_files[1]
     for serial_port_filename in matching_files[1:]:
         # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
         link_target_relative_path = os.readlink(serial_port_filename)
