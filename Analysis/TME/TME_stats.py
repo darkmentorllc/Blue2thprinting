@@ -137,7 +137,7 @@ def get_uuid128_stats(arg):
 
             qprint(f"{count} \t {uuid128} \t {known_info}")
 
-        qprint(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")
+        qprint(f"*** {known_uuid_count} UUID128s are in the CLUES database ***")
         known_uuid_count = 0
 
         ################################################
@@ -183,4 +183,4 @@ def get_uuid128_stats(arg):
 
             qprint(f"{count} \t {uuid128} \t {known_info}")
 
-        qprint(f"*** {known_uuid_count} UUID128s are in the custom_uuid128s.csv database ***")
+        qprint(f"*** {known_uuid_count} UUID128s are in the CLUES database ***")
