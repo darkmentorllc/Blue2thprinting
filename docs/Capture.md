@@ -21,21 +21,6 @@ There are comments in that script if you want to see what's being done and why.
 
 Run `sudo crontab -e` to review your crontab and confirm you only have a single instance of the `@reboot /home/user/Blue2thprinting/Scripts/runall.sh` command in it. If you ran the `setup_capture_helper_debian-based.sh` file multiple times, remove any extra instances of the `runall.sh` command.
 
-## Optional: Setup Braktooth
-
-### **Disclaimer!**: Braktooth currently only supports Ubuntu 22.04 + x86-64. Don't try to install on other platforms! (I'm looking into replacing it in the future.)
-
-Place the Braktooth code in the location assumed by `central_app_launcher.py`:
-
-```
-cd ~/Blue2thprinting/
-git clone https://gitlab.com/opensecuritytraining/braktooth_minimized.git
-```
-
-**Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher.py:**
-
-Follow the instructions [given in https://gitlab.com/opensecuritytraining/braktooth_minimized](https://gitlab.com/opensecuritytraining/braktooth_minimized.git).
-
 # Capture Scripts Setup
 
 ### Setup automatic script execution at boot:
@@ -65,6 +50,23 @@ From now on, whenever you reboot, the data collection will begin automatically.
 You can cancel collection by running: `sudo ~/Blue2thprinting/Scripts/killall.sh`.
 
 If you want to manually restart the collection without a reboot, you can run: `sudo ./runall.sh` from the Scripts folder.
+
+## Optional: Setup Braktooth
+
+### **Disclaimer!**: Braktooth currently only supports Ubuntu 22.04 + x86-64. Don't try to install on other platforms! (I'm looking into replacing it in the future.)
+
+Place the Braktooth code in the location assumed by `central_app_launcher.py`:
+
+```
+cd ~/Blue2thprinting/
+git clone https://gitlab.com/opensecuritytraining/braktooth_minimized.git
+```
+
+**Manually confirm that Braktooth is working before attempting to run it from within central_app_launcher.py:**
+
+Follow the instructions [given in https://gitlab.com/opensecuritytraining/braktooth_minimized](https://gitlab.com/opensecuritytraining/braktooth_minimized.git).
+
+Once it is confirmed, change `braktooth_enabled = False` to `braktooth_enabled = True` in `~/Blue2thprinting/Scripts/central_app_launcher.py` and then reboot.
 
 # Script interactions & data flow
 

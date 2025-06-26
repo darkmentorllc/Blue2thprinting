@@ -30,7 +30,7 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-braktooth_enabled = True # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
+braktooth_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
 betterGATTgetter_enabled = True
 sdptool_enabled = True
 
