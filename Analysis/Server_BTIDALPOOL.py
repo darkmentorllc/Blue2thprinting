@@ -293,6 +293,8 @@ def handle_query(self, username, query_object):
         args_array.append(f"--require-SMP")
     if("require_SMP_legacy_pairing" in query_object):
         args_array.append(f"--require-SMP-legacy-pairing")
+    if("require_SDP" in query_object):
+        args_array.append(f"--require-SDP")
     if("require_LL_VERSION_IND" in query_object):
         args_array.append(f"--require-LL_VERSION_IND")
     if("require_LMP_VERSION_RES" in query_object):

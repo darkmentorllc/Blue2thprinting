@@ -6,38 +6,6 @@ from BGG_Helper_All import *
 from BGG_Helper_ATT import *
 from BGG_Helper_Output import *
 
-att_error_strings = {
-    1: "Invalid Handle",
-    2: "Read Not Permitted",
-    3: "Write Not Permitted",
-    4: "Invalid PDU",
-    5: "Insufficient Authentication",
-    6: "Request Not Supported",
-    7: "Invalid Offset",
-    8: "Insufficient Authorization",
-    9: "Prepare Queue Full",
-    10: "Attribute Not Found",
-    11: "Attribute Not Long",
-    12: "Encryption Key Size Too Short",
-    13: "Invalid Attribute Value Length",
-    14: "Unlikely Error",
-    15: "Insufficient Encryption",
-    16: "Unsupported Group Type",
-    17: "Insufficient Resources",
-    18: "Database Out of Sync",
-    19: "Value Not Allowed",
-    0x80: "Unknown Application Error 0",
-    0x81: "Unknown Application Error 1",
-    0x82: "Unknown Application Error 2",
-    0x83: "Unknown Application Error 3",
-    0x84: "Unknown Application Error 4",
-    0xf7: "Unknown 0xF7",
-    0xfc: "Write Request Rejected",
-    0xfd: "Client Characteristic Configuration Descriptor Improperly Configured",
-    0xfe: "Procedure Already in Progress",
-    0xff: "Out of Range"
-}
-
 ####################################################################################
 # Detect Apple devices based on
 ####################################################################################
@@ -186,7 +154,7 @@ def process_ATT_ERROR_RSP_for_ATT_READ_BY_GROUP_TYPE_REQ(actual_body_len, dpkt):
     if(matched and actual_body_len >= 11):
         req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
         vmultiprint(req_opcode_in_error, handle_in_error)
-        vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
+        vprint(f"error_code = 0x{error_code:02x} = {globals.att_errorcode_to_str[error_code]}")
         # Meta sends errorcode_10_ATT_Unsupported_Group_Type
         if(req_opcode_in_error == opcode_ATT_READ_BY_GROUP_TYPE_REQ and
            (error_code == errorcode_0A_ATT_Attribute_Not_Found) or (error_code == errorcode_10_ATT_Unsupported_Group_Type)):
@@ -319,7 +287,7 @@ def process_ATT_ERROR_RSP_for_ATT_READ_BY_TYPE_REQ(actual_body_len, dpkt):
     if(matched and actual_body_len >= 11):
         req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
         vmultiprint(req_opcode_in_error, handle_in_error)
-        vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
+        vprint(f"error_code = 0x{error_code:02x} = {globals.att_errorcode_to_str[error_code]}")
         if(req_opcode_in_error == opcode_ATT_READ_BY_TYPE_REQ and error_code == errorcode_0A_ATT_Attribute_Not_Found):
             if(handle_in_error == globals.characteristic_last_read_requested_handle):
                 globals.characteristic_read_by_type_req_all_received = True
@@ -392,12 +360,12 @@ def process_ATT_ERROR_RSP_for_ATT_READ_RSP(actual_body_len, dpkt):
     if(matched and actual_body_len >= 11):
         req_opcode_in_error, handle_in_error, error_code = unpack("<BHB", dpkt.body[7:11])
         vmultiprint(req_opcode_in_error, handle_in_error)
-        vprint(f"error_code = 0x{error_code:02x} = {att_error_strings[error_code]}")
+        vprint(f"error_code = 0x{error_code:02x} = {globals.att_errorcode_to_str[error_code]}")
         if(req_opcode_in_error == opcode_ATT_READ_REQ):
             # handle_in_error == 0 is a weird occasional error seen with from Airpods
             if(handle_in_error == globals.handle_read_last_sent_handle or handle_in_error == 0):
                 globals.handles_with_error_rsp[globals.handle_read_last_sent_handle] = error_code
-                globals.all_handles_received_values[globals.handle_read_last_sent_handle] = f"error_code 0x{error_code:02x} = {att_error_strings[error_code]}"
+                globals.all_handles_received_values[globals.handle_read_last_sent_handle] = f"error_code 0x{error_code:02x} = {globals.att_errorcode_to_str[error_code]}"
                 send_next_ATT_READ_REQ_if_applicable(globals.handle_read_last_sent_handle)
 
             # This seems to be the more correct completion criteria?

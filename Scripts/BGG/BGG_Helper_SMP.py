@@ -49,7 +49,7 @@ def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
     if(not globals.smp_legacy_pairing_req_sent):
         vprint("HANDLES WITH ERRORS")
         for handle in sorted(globals.handles_with_error_rsp.keys()):
-            #vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {att_error_strings[globals.handles_with_error_rsp[handle]]}")
+            #vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {globals.att_errorcode_to_str[globals.handles_with_error_rsp[handle]]}")
             vprint(f"Handle {handle} = error code 0x{globals.handles_with_error_rsp[handle]:02x} = {globals.handles_with_error_rsp[handle]}")
 
         io_cap = 0x03 # 04 = KeyboardDisplay # 0x03 = NINO

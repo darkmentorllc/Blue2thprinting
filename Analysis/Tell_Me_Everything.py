@@ -99,12 +99,13 @@ def main():
     requirement_group.add_argument('--require-GATT-values', action='store_true', help='Pass this argument to only print out information for devices which successfully read some GATT values.')
     requirement_group.add_argument('--require-SMP', action='store_true', help='Pass this argument to only print out information for devices which have *some* SMP info.')
     requirement_group.add_argument('--require-SMP-legacy-pairing', action='store_true', help='Pass this argument to only print out information for devices which have SMP info indicating they will perform Legacy Pairing.')
+    requirement_group.add_argument('--require-SDP', action='store_true', help='Pass this argument to only print out information for devices which have *some* SDP info.')
     requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
     requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data.')
 
     # Testing arguments
     testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
-    testing_group.add_argument('--use-test-db', action='store_true', required=False, help='This will query from an alternate database, used for testing.')
+    testing_group.add_argument('--use-test-db', action='store_true', required=False, help='This will store to / query from an alternate database, used for testing.')
 
     args = parser.parse_args()
     out_filename = args.output
@@ -200,6 +201,8 @@ def main():
             query_object["require_SMP"] = True
         if args.require_SMP_legacy_pairing:
             query_object["require_SMP_legacy_pairing"] = True
+        if args.require_SDP:
+            query_object["require_SDP"] = True
         if args.require_LL_VERSION_IND:
             query_object["require_LL_VERSION_IND"] = True
         if args.require_LMP_VERSION_RES:
@@ -433,6 +436,9 @@ def main():
                 continue
         if(args.require_SMP_legacy_pairing):
             if(not device_SMP_legacy_pairing(bdaddr)):
+                continue
+        if(args.require_SDP):
+            if(not device_has_SDP_info(bdaddr)):
                 continue
         if(args.require_LL_VERSION_IND):
             if(not device_has_LL_VERSION_IND_info(bdaddr)):

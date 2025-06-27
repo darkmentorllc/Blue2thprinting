@@ -420,7 +420,7 @@ def print_GATT_info(bdaddr):
                             if(handle <= svc_end_handle and handle >= svc_begin_handle):
                                 service_match_dict[handle] = 1
                                 error_code = int.from_bytes(byte_values)
-                                fmt_byte_values = Fore.RED + Style.BRIGHT + f"{att_error_strings[error_code]}"
+                                fmt_byte_values = Fore.RED + Style.BRIGHT + f"{TME.BT_Data_Types.att_errorcode_to_str[error_code]}"
                                 qprint(f"{i5}GATT error received when attempting read: {fmt_byte_values}")
                     if any(key[0] == handle and key[1] == type_ATT_READ_RSP for key in char_value_handles_dict.keys()):
                         for byte_values in char_value_handles_dict[(handle, type_ATT_READ_RSP)]:

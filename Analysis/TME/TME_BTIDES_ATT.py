@@ -39,8 +39,8 @@ def ff_ATT_ERROR_RSP(direction, request_opcode_in_error, attribute_handle_in_err
     }
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_ERROR_RSP]
-        if(error_code in att_error_strings):
-            obj["error_str"] = att_error_strings[error_code]
+        if(error_code in TME.BT_Data_Types.att_errorcode_to_str.keys()):
+            obj["error_str"] = TME.BT_Data_Types.att_errorcode_to_str[error_code]
         else:
             if(error_code >= 0x80 and error_code <= 0x9F):
                 obj["error_str"] = "Application Error Code"

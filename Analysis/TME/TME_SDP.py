@@ -337,16 +337,17 @@ def print_SDP_info(bdaddr):
         i = 0
         AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
         i+=2
+
         try:
             fragment_bytes = byte_values[2:2+AttributeListsByteCount]
             reassembly_buffer += fragment_bytes
             i+=AttributeListsByteCount
             if(i > byte_size):
-                print("Error: i is greater than the length of the byte_values array. Aborting.")
+                qprint("{i2}Error: i is greater than the length of the byte_values array. Aborting.")
                 break
             ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
         except Exception as e:
-            print(f"Possible out of bounds access: {e}. Aborting")
+            qprint(f"{i2}Possible out of bounds access: {e}. Aborting")
             break
 
         if(ContinuationState):
