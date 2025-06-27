@@ -304,6 +304,8 @@ att_errorcode_to_str = {
     0x82: "Unknown Application Error 0x82",
     0x83: "Unknown Application Error 0x83",
     0x84: "Unknown Application Error 0x84",
+    0xf1: "Unknown Application Error 0xf1",
+    0xf2: "Unknown Application Error 0xf2",
     0xf7: "Unknown Application Error 0xf7",
     0xfc: "Write Request Rejected",
     0xfd: "Client Characteristic Configuration Descriptor Improperly Configured",
