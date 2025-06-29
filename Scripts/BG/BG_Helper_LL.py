@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
 import globals
-from BGG_Helper_All import *
+from BG_Helper_All import *
 
 # Define opcodes and error codes we might need
 opcode_LL_TERMINATE_IND             = 0x02

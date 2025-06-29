@@ -3,7 +3,7 @@
 # Written by Xeno Kovah
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
-# BetterGATTGetter2
+# BetterGetter2
 # Replacement for using gatttool in Blue2thprinting
 # Improvements include:
 # - Awareness of Secondary Services (0x2801)
@@ -16,13 +16,13 @@
 import re
 import math
 import globals
-from BGG_Helper_All import *
-from BGG_Helper_LL import *
-from BGG_Helper_L2CAP import *
-from BGG_Helper_ATT import *
-from BGG_Helper_GATT import *
-from BGG_Helper_SMP import *
-from BGG_Helper_Output import *
+from BG_Helper_All import *
+from BG_Helper_LL import *
+from BG_Helper_L2CAP import *
+from BG_Helper_ATT import *
+from BG_Helper_GATT import *
+from BG_Helper_SMP import *
+from BG_Helper_Output import *
 
 def main():
     global target_bdaddr, target_bdaddr_type_public, verbose

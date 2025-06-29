@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
 import globals
-from BGG_Helper_All import *
+from BG_Helper_All import *
 
 def append_common(tokens):
     if(globals.target_bdaddr_type_public):

@@ -209,7 +209,7 @@ echo "alias k=\"sudo ~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/
 echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
 echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
 echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
-echo "alias BGG=\"python3 Better_GATT_Getter.py\"" >> /home/$USERNAME/.bashrc
+echo "alias BG=\"python3 Better_Getter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
 echo ""

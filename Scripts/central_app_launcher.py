@@ -60,8 +60,8 @@ username = "user"
 
 default_cwd = f"/home/{username}/"
 
-BGG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BGG/Better_GATT_Getter.py"
-BGG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGATTGetter"
+BG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BG/Better_Getter.py"
+BG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGetter"
 
 sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
 sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
@@ -99,7 +99,7 @@ lmp2thprint_success_bdaddrs_lock = threading.Lock()
 hostname = os.popen('hostname').read().strip()
 
 #####################################################################################
-# Single global serial port list for Sniffle sniffers or Better_GATT_Getter.py to share
+# Single global serial port list for Sniffle sniffers or Better_Getter.py to share
 #####################################################################################
 #
 base_dir = '/dev/serial/by-id'
@@ -132,7 +132,7 @@ if(Sniffle_thread_enabled or betterGATTgetter_enabled):
     # Use glob to match the pattern
     matching_files = glob.glob(full_pattern)
     if(matching_files):
-        # The first path is reserved for Better_GATT_Getter.py
+        # The first path is reserved for Better_Getter.py
         # Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
         first_sonoff_serial_port_relative_path = os.readlink(matching_files[0])
         first_sonoff_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sonoff_serial_port_relative_path))
@@ -504,16 +504,16 @@ def ble_thread_function():
                             (type, rssi) = ble_bdaddrs[bdaddr]
                             current_time = datetime.datetime.now()
                             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
-                            pcap_output = f"-o={BGG_output_pcap_path}/{launch_time}_{bdaddr}_BGG_{hostname}.pcap"
+                            pcap_output = f"-o={BG_output_pcap_path}/{launch_time}_{bdaddr}_BG_{hostname}.pcap"
                             serial_port = f"-s={first_sonoff_serial_port_absolute_path}"
                             # -u for unbuffered python output (so it streams to log realtime)
                             if(type != "random"):
-                                gatt_cmd = ["python3", "-u", BGG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
+                                gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
                             else:
-                                gatt_cmd = ["python3", "-u", BGG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
+                                gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
                             try:
                                 if(sniffle_stdout_logging):
-                                    sniffle_append_stdout = open(f"{BGG_output_pcap_path}/Sniffle_stdout.log", "a")
+                                    sniffle_append_stdout = open(f"{BG_output_pcap_path}/Sniffle_stdout.log", "a")
                                 else:
                                     sniffle_append_stdout = open(f"/dev/null", "a")
                                 gatt_process = launch_application(gatt_cmd, default_cwd, stdout=sniffle_append_stdout)
@@ -690,7 +690,7 @@ def sniffle_thread_function():
     adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
     create_connection_follower = True
 
-    # Skip the first serial port and leave it for Better_GATT_Getter.py, by using the [1:] notation to start from matching_files[1]
+    # Skip the first serial port and leave it for Better_Getter.py, by using the [1:] notation to start from matching_files[1]
     for serial_port_filename in matching_files[1:]:
         # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
         link_target_relative_path = os.readlink(serial_port_filename)

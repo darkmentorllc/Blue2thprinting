@@ -2,8 +2,8 @@
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
 import globals
-from BGG_Helper_All import *
-from BGG_Helper_Output import *
+from BG_Helper_All import *
+from BG_Helper_Output import *
 
 opcode_ATT_ERROR_RSP = 0x01
 opcode_ATT_EXCHANGE_MTU_REQ = 0x02
@@ -473,7 +473,7 @@ def process_ATT_ERROR_RSP_for_ATT_FIND_INFORMATION_REQ(actual_body_len, dpkt):
                     send_ATT_FIND_INFORMATION_REQ(higher_handle)
                     return True
 
-# This function is in here instead of BGG_Helper_GATT.py because there's nothing
+# This function is in here instead of BG_Helper_GATT.py because there's nothing
 # particulary GATT-y about just enumerating all ATT handles
 def incoming_handle_discovery(actual_body_len, dpkt):
     global info_req_sent, all_info_handles_recv

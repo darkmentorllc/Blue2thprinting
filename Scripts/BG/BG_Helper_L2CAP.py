@@ -3,7 +3,7 @@
 # For use in OST2 BT2701 classs https://ost2.fyi/BT2701
 
 import globals
-from BGG_Helper_All import *
+from BG_Helper_All import *
 
 # Define opcodes and error codes we might need
 opcode_L2CAP_COMMAND_REJECT                     = 0x01

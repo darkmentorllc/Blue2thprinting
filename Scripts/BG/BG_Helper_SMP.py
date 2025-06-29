@@ -2,7 +2,7 @@
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
 import globals
-from BGG_Helper_All import *
+from BG_Helper_All import *
 
 opcode_SMP_Pairing_Req = 0x01
 opcode_SMP_Pairing_Rsp = 0x02

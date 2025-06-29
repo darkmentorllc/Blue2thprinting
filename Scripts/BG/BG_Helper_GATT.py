@@ -2,9 +2,9 @@
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
 import globals
-from BGG_Helper_All import *
-from BGG_Helper_ATT import *
-from BGG_Helper_Output import *
+from BG_Helper_All import *
+from BG_Helper_ATT import *
+from BG_Helper_Output import *
 
 ####################################################################################
 # Detect Apple devices based on
