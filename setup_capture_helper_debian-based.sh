@@ -212,6 +212,11 @@ echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
 echo "alias BG=\"python3 Better_Getter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
+echo "======================================================="
+echo "Correcting permissions on the Blue2thprinting folder."
+echo "======================================================="
+sudo chown -R "$USERNAME" /home/"$USERNAME"/Blue2thprinting
+
 echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"

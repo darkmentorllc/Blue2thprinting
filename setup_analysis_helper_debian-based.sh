@@ -114,6 +114,11 @@ echo "You should see 10 mappings between UUI128s and Android package names after
 echo "============================================================================================"
 mysql -u user -pa --database='bt2' --execute="SELECT * from USB_CID_to_company order by id desc limit 10;"
 
+echo "======================================================="
+echo "Correcting permissions on the Blue2thprinting folder."
+echo "======================================================="
+sudo chown -R "$USERNAME" /home/"$USERNAME"/Blue2thprinting
+
 echo ""
 echo "[--------------------------------------------------]"
 echo "Everything seems to have completed successfully! \o/"

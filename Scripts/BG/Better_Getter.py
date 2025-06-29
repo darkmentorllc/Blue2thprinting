@@ -3,8 +3,8 @@
 # Written by Xeno Kovah
 # Copyright (c) 2024-2025 Dark Mentor LLC
 
-# BetterGetter2
-# Replacement for using gatttool in Blue2thprinting
+# Better_Getter.py
+# Replacement for using gatttool & Sweyntooth in Blue2thprinting
 # Improvements include:
 # - Awareness of Secondary Services (0x2801)
 # - Capability to read Characteristic User Description (0x2901)
@@ -12,6 +12,7 @@
 #   with an emphasis on knowing which are due to security constraints
 #   like insufficient encryption/authentication/authorization/key size
 # - Writing per-BDADDR logs, instead of a single global log file
+# - SMP data collection
 
 import re
 import math
