@@ -118,3 +118,5 @@
 "Bose (confirmed by UUID16 & BDADDR) unknown model LE-reserved_Y","^LE-reserved_Y$"
 "Bose (confirmed by UUID16 & BDADDR) unknown model LE-reserved_Z","^LE-reserved_Z$"
 "OPPO Reno7 Z 5G cell phone (https://www.oppo.com/en/smartphones/series-reno/reno7-z-5g/specs/)","^OPPO Reno7 Z 5G$"
+"Bushnell Wingman (v1) speaker remote (https://www.playbetter.com/products/bushnell-wingman-golf-gps-speaker, https://www.amazon.com/Bushnell-Wingman-Speaker-Replacement-Bluetooth/dp/B09X267FQ9)","^Wingman Rem$"
+"Bushnell Wingman (v1) speaker remote (https://www.playbetter.com/products/bushnell-wingman-golf-gps-speaker, https://www.amazon.com/Bushnell-Wingman-Speaker-Replacement-Bluetooth/dp/B09X267FQ9)","^Wingman Remote$"
