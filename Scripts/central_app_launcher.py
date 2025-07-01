@@ -31,7 +31,7 @@ BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
 braktooth_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
-betterGATTgetter_enabled = True
+better_getter_enabled = True
 sdptool_enabled = True
 
 print_skipped = True
@@ -106,7 +106,7 @@ base_dir = '/dev/serial/by-id'
 # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
 pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
 
-if(Sniffle_thread_enabled or betterGATTgetter_enabled or braktooth_enabled):
+if(Sniffle_thread_enabled or better_getter_enabled or braktooth_enabled):
     # Check if the base directory exists and is accessible
     # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
     retry_count = 0
@@ -123,9 +123,9 @@ if(Sniffle_thread_enabled or betterGATTgetter_enabled or braktooth_enabled):
             # Proceed without capabilities granted by these dongles
             Sniffle_thread_enabled = False
             braktooth_enabled = False
-            betterGATTgetter_enabled = False
+            better_getter_enabled = False
 
-if(Sniffle_thread_enabled or betterGATTgetter_enabled):
+if(Sniffle_thread_enabled or better_getter_enabled):
     # Construct the full pattern path
     full_pattern = os.path.join(base_dir, pattern)
 
@@ -484,7 +484,7 @@ def ble_thread_function():
 
             if(print_verbose): print(f"BLE Address: {bdaddr}")
 
-            if(betterGATTgetter_enabled):
+            if(better_getter_enabled):
                 skip_sub_process = False
                 with gatt_success_bdaddrs_lock:
                     if(bdaddr in gatt_success_bdaddrs.keys()):
