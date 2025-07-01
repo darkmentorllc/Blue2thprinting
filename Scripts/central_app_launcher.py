@@ -70,7 +70,7 @@ braktooth = f"/home/{username}/Blue2thprinting/braktooth_minimized/bin/bt_exploi
 brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_minimized/"
 
 btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
-gattprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
+bgprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
 sdpprint_log_path = f"/home/{username}/Blue2thprinting/Logs/SDPprint.log"
 
 sniffle_stdout_log_path = f"/home/{username}/Blue2thprinting/Logs/Sniffle_stdout.log"
@@ -210,7 +210,7 @@ class ApplicationThread(threading.Thread):
                 print(f"PID: {self.process.pid}: ApplicationThread: {self.info_type} collection for {self.bdaddr} terminated on its own with return code {retCode}")
                 if(retCode == 0): #Success!
                     if(self.info_type == "GATT"):
-                       external_log_write(gattprint_log_path, f"GATTPRINTING SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
+                       external_log_write(bgprint_log_path, f"BETTERGETTER SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
                        with gatt_success_bdaddrs_lock:
                            gatt_success_bdaddrs[self.bdaddr] = 1
                            # Should only remove from ble_bdaddrs if all BLE-type prints are done
@@ -238,7 +238,7 @@ class ApplicationThread(threading.Thread):
                        external_log_write(sdpprint_log_path, f"SNIFFLE LAUNCH SUCCESS: {self.launch_cmd} {datetime.datetime.now()}")
                 else:
                     if(self.info_type == "GATT"):
-                       external_log_write(gattprint_log_path, f"GATTPRINTING FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
+                       external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "LMP2thprint"):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "SDP"):
@@ -253,7 +253,7 @@ class ApplicationThread(threading.Thread):
             self.process.kill()
             self.is_terminated = True
             if(self.info_type == "GATT"):
-               external_log_write(gattprint_log_path, f"GATTPRINTING FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
+               external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "LMP2thprint"):
                external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "SDP"):
@@ -500,7 +500,7 @@ def ble_thread_function():
                 if(not skip_sub_process and bdaddr in ble_bdaddrs):
                     with ble_bdaddrs_lock:
                         if(bdaddr in ble_bdaddrs):
-                            external_log_write(gattprint_log_path, f"GATTPRINTING ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
+                            external_log_write(bgprint_log_path, f"BETTERGETTER ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
                             (type, rssi) = ble_bdaddrs[bdaddr]
                             current_time = datetime.datetime.now()
                             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
