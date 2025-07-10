@@ -187,11 +187,13 @@ def main():
     device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
     device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
-    device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID128, in advertised UUID128s.')
-    device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID128-regex, and then remove them from the final results.')
+    device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID, in any location UUIDs can appear. NOTE: make sure to remove dashes from UUID128s because dashes will be interpreted per their regex meaning!')
+    device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID-regex, and then remove them from the final results.')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD).')
+    device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
+    device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
 
-    # Requirement arguments
+    # Requirement arguments0
     requirement_group = parser.add_argument_group('Arguments which specify that a particular type of data is required in the printed out / exported data.')
     requirement_group.add_argument('--require-GPS', action='store_true', help='Pass this argument to only print out information for devices which have at least 1 associated GPS coordinate.')
     requirement_group.add_argument('--require-GATT-any', action='store_true', help='Pass this argument to only print out information for devices which have *some* GATT info.')
@@ -222,6 +224,10 @@ def main():
         query_object["NOT_UUID_regex"] = args.NOT_UUID_regex
     if args.MSD_regex:
         query_object["MSD_regex"] = args.MSD_regex
+    if args.LL_VERSION_IND:
+        query_object["LL_VERSION_IND"] = args.LL_VERSION_IND
+    if args.LMP_VERSION_RES:
+        query_object["LMP_VERSION_RES"] = args.LMP_VERSION_RES
     if args.require_GPS:
         query_object["require_GPS"] = True
     if args.require_GATT_any:
