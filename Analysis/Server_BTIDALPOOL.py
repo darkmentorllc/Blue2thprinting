@@ -277,6 +277,12 @@ def handle_query(self, username, query_object):
     if("MSD_regex" in query_object):
         args_array.append(f"--MSD-regex")
         args_array.append(f"{query_object['MSD_regex']}")
+    if("LL_VERSION_IND" in query_object):
+        args_array.append(f"--LL_VERSION_IND")
+        args_array.append(f"{query_object['LL_VERSION_IND']}")
+    if("LMP_VERSION_RES" in query_object):
+        args_array.append(f"--LMP_VERSION_RES")
+        args_array.append(f"{query_object['LMP_VERSION_RES']}")
     if("GPS_exclude_upper_left" in query_object):
         args_array.append(f"--GPS-exclude-upper-left")
         args_array.append(f"{query_object['GPS_exclude_upper_left']}")
