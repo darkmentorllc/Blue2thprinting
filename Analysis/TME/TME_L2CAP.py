@@ -28,7 +28,7 @@ def device_has_L2CAP_info(bdaddr):
     return 0;
 
 def print_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ(indent, direction, pkt_id, data_len, interval_min, interval_max, latency, timeout):
-    print(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_REQ:")
+    qprint(f"{indent}L2CAP_CONNECTION_PARAMETER_UPDATE_REQ:")
     if(direction == type_BTIDES_direction_C2P):
         qprint(f"{indent}{i1}Direction: Central to Peripheral")
     else:
