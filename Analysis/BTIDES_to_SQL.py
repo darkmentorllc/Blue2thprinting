@@ -199,15 +199,16 @@ def import_AdvData_TxPower(bdaddr, random, db_type, leaf):
 def import_AdvData_ClassOfDevice(bdaddr, random, db_type, leaf):
     #vprint("import_AdvData_ClassOfDevice!")
     CoD_hex_str = leaf["CoD_hex_str"]
+    CoD_int = int(CoD_hex_str, 16)
 
     le_evt_type = db_type
     if(db_type == 50):
         # EIR
-        values = (bdaddr, CoD_hex_str)
+        values = (bdaddr, CoD_int)
         eir_insert = f"INSERT IGNORE INTO EIR_bdaddr_to_CoD (bdaddr, class_of_device) VALUES (%s, %s);"
         execute_insert(eir_insert, values)
     else:
-        values = (bdaddr, random, le_evt_type, CoD_hex_str)
+        values = (bdaddr, random, le_evt_type, CoD_int)
         le_insert = f"INSERT IGNORE INTO LE_bdaddr_to_CoD (bdaddr, bdaddr_random, le_evt_type, class_of_device) VALUES (%s, %s, %s, %s);"
         execute_insert(le_insert, values)
 
