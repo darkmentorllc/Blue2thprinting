@@ -397,10 +397,10 @@ def print_ChipMakerPrint(bdaddr):
 
     if(time_profile): qprint(f"LMP_VERSION_REQ = {time.time()}")
     #==========================#
-    # LMP_VERSION_REQ/RSP data #
+    # LMP_VERSION_REQ/RES data #
     #==========================#
 
-    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+    # So far experiments have indicated that LMP_VERSION_REQ/RES company ID is the Chip Maker.
     btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM LMP_VERSION_RES WHERE bdaddr = %s"
     btc_version_result = execute_query(btc_version_query, values)
     if(len(btc_version_result) != 0):
@@ -409,7 +409,7 @@ def print_ChipMakerPrint(bdaddr):
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (lmp_version, device_BT_CID, lmp_sub_version) in btc_version_result:
             print_ChipMakerPrint_header_if_needed()
-            qprint(f"{i2}{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RSP: Company ID{" (DB:LMP_VERSION_RES)" if TME.TME_glob.verbose_print else ""}")
+            qprint(f"{i2}{BT_CID_to_company_name(device_BT_CID)} ({device_BT_CID}) -> From LMP_VERSION_REQ/RES: Company ID{" (DB:LMP_VERSION_RES)" if TME.TME_glob.verbose_print else ""}")
             BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
     if(time_profile): qprint(f"NamePrint = {time.time()}")
@@ -680,10 +680,10 @@ def print_ChipPrint(bdaddr):
                 qprint(f"{i2}{string_yellow_bright(chip_name)} -> From LL_VERSION_IND info{" (DB:LL_VERSION_IND)" if TME.TME_glob.verbose_print else ""}")
 
     #==========================#
-    # LMP_VERSION_REQ/RSP data #
+    # LMP_VERSION_REQ/RES data #
     #==========================#
 
-    # So far experiments have indicated that LMP_VERSION_REQ/RSP company ID is the Chip Maker.
+    # So far experiments have indicated that LMP_VERSION_REQ/RES company ID is the Chip Maker.
 
     version_query = "SELECT lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
     version_result = execute_query(version_query, values)
@@ -696,7 +696,7 @@ def print_ChipPrint(bdaddr):
             chip_name = chip_by_sub_version(lmp_sub_version, device_BT_CID)
             if(chip_name != ""):
                 print_ChipPrint_header_if_needed()
-                qprint(f"{i2}{string_yellow_bright(chip_name)} -> From LMP_VERSION_REQ/RSP info{" (DB:LMP_VERSION_RES)" if TME.TME_glob.verbose_print else ""}")
+                qprint(f"{i2}{string_yellow_bright(chip_name)} -> From LMP_VERSION_REQ/RES info{" (DB:LMP_VERSION_RES)" if TME.TME_glob.verbose_print else ""}")
 
     #================#
     # NamePrint data #
