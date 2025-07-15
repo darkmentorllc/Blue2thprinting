@@ -212,7 +212,11 @@ def main():
         client = AuthClient()
         if args.token_file:
             with open(args.token_file, 'r') as f:
-                token_data = json.load(f)
+                try:
+                    token_data = json.load(f)
+                except json.JSONDecodeError:
+                    print("Error: Token file is not a valid JSON file.")
+                    exit(1)
             client.set_credentials(token_data['token'], token_data['refresh_token'], token_file=args.token_file)
             if(not client.validate_credentials()):
                 print("Authentication failed.")

@@ -210,7 +210,7 @@ echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
 echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
 echo "alias TME=\"python3 Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
 echo "alias TMB=\"python3 Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL\"" >> /home/$USERNAME/.bashrc
-echo "alias TBD=\"python3 Tell_Me_Everything.py --bdaddr\"" >> /home/$USERNAME/.bashrc
+echo "alias TBD=\"python3 Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL --bdaddr\"" >> /home/$USERNAME/.bashrc
 echo "alias BG=\"python3 Better_Getter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
