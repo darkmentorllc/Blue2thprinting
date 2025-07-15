@@ -950,14 +950,16 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
             declaration_handle = handle
             char_properties = int(byte_values[0])
             char_value_handle = int.from_bytes(byte_values[1:3], byteorder='little')
-            if(len(byte_values[3:]) == 2):
-                UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):04x}"
-            else:
-                UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):032x}"
-                UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Just in case they sent us a 16 bit UUID as a 128 bit UUID for some dumb reason...
-            values = (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID)
-            insert = f"INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
-            execute_insert(insert, values)
+            # Skip invalid handles == 0 which would just cause BTIDES validation errors later anyway
+            if(char_value_handle != 0):
+                if(len(byte_values[3:]) == 2):
+                    UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):04x}"
+                else:
+                    UUID = f"{int.from_bytes(byte_values[3:], byteorder='little'):032x}"
+                    UUID = convert_UUID128_to_UUID16_if_possible(UUID) # Just in case they sent us a 16 bit UUID as a 128 bit UUID for some dumb reason...
+                values = (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID)
+                insert = f"INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
+                execute_insert(insert, values)
         else:
             if(handle != 0):
                 # Handle 0 would be invalid, so ignore any cases where we don't have a last read handle request != 0
@@ -1023,6 +1025,9 @@ def import_GATT_service_entry(bdaddr, bdaddr_random, gatt_service_entry):
                 declaration_handle = char["handle"]
                 char_properties = char["properties"]
                 char_value_handle = char["value_handle"]
+                if(declaration_handle == 0 or char_value_handle == 0):
+                    # skip invalid handles == 0 which would just cause BTIDES validation errors later anyway
+                    continue
                 UUID = convert_UUID128_to_UUID16_if_possible(char["value_uuid"])
                 values = (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID)
                 insert = f"INSERT IGNORE INTO GATT_characteristics (bdaddr, bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID) VALUES (%s, %s, %s, %s, %s, %s);"
