@@ -84,8 +84,8 @@ def main():
     device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID, in any location UUIDs can appear. NOTE: make sure to remove dashes from UUID128s because dashes will be interpreted per their regex meaning!')
     device_group.add_argument('--NOT-UUID-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --UUID-regex, and then remove them from the final results.')
     device_group.add_argument('--MSD-regex', type=str, default='', help='Value for REGEXP match against Manufacturer-Specific Data (MSD).')
-    device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
-    device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBBis the big-endian company ID, and CCCC is the big-endian sub-version.')
+    device_group.add_argument('--LL_VERSION_IND', type=str, default='', help='Value for LL_VERSION_IND search, given as AA:BBBB:CCCC where AA is the version, BBBB is the big-endian company ID, and CCCC is the big-endian sub-version.')
+    device_group.add_argument('--LMP_VERSION_RES', type=str, default='', help='Value for LMP_VERSION_RES search, given as AA:BBBB:CCCC where AA is the version, BBBB is the big-endian company ID, and CCCC is the big-endian sub-version.')
 
     # Statistics arguments
     stats_group = parser.add_argument_group('Database statistics arguments')
