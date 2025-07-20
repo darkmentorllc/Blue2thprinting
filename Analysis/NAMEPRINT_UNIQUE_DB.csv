@@ -63,6 +63,7 @@
 "Samsung Galaxy Buds Live Headphones","^Galaxy Buds Live \\\([A-F0-9]{4}\\\)$"
 "Samsung Galaxy Buds Pro Headphones","^Galaxy Buds Pro \\\([A-F0-9]{4}\\\)$"
 "Samsung Galaxy Buds+ Headphones","^Galaxy Buds\\+ \\\([A-F0-9]{4}\\\)$"
+"Samsung Galaxy Fit2","^Galaxy Fit2 \\\([A-Z0-9]{4}\\\)$"
 "Samsung Galaxy Note10 Phone","^Galaxy Note10.*$"
 "Samsung Galaxy S10 Phone","^Galaxy S10.*$"
 "Samsung Galaxy S9+ Phone","^Galaxy S9\\+$"
