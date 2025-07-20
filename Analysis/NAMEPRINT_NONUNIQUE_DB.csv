@@ -55,6 +55,8 @@
 "Furbo 360 degree dog camera (https://www.amazon.com/Furbo-Camera-with-360%C2%B0-View/dp/B09GDQZLD1)","^Furbo3-S3$"
 "General Motors passive-entry-passive-start (PEPS) system (made by ALPSALPINE CO,.LTD based on BDADDR, GM confirmed by UUID16)","^GM_PEPS_VKM[1234]$"
 "General Motors passive-entry-passive-start (PEPS) system (made by ALPSALPINE CO,.LTD based on BDADDR, GM confirmed by UUID16)","^GM_PEPS_VKM$"
+"Hyper Ice Normatec3 heated leg massage exercise recovery boots (https://web.archive.org/web/20250720120708/https://hyperice.com/products/normatec-3-legs/)","^Normatec3$"
+"Hyper Ice NormaTec Pulse compression therapy leg/hip wraps (https://www.thomasgerlach.com/2019/07/normatec-pulse-2.0-review.html, https://www.performancehealth.com/amfile/file/download/file/4700/product/140124/) ","^NormaTec Pulse$"
 "IGT Magstripe / RFID Card Reader (IGT is a casino equipment provider - https://store.igt.com/32916691)","^IGT Card Reader$"
 "Innway tracking card (https://www.amazon.com/Innway-Card-Rechargeable-Bluetooth-Backpack/dp/B07MYZWM3B)","^Innway Card$"
 "Nest camera (model unknown)","^Nest Cam$"

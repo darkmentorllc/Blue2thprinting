@@ -70,6 +70,7 @@
 "Tesla Model S","^Tesla Model S.*"
 "Tesla Model X","^Tesla Model X.*"
 "ThermoWorks ThermaPen Blue wireless food thermometer (https://www.thermoworks.com/thermapen-blue/)",^[0-9]{8} ThermapenBlue$"
+"Tinwoo T20W watch (https://www.youtube.com/watch?v=rCKgYizXBFc, note: includes 7905f431b5ce4e99a40f4b1e122d00d0 UUID128 found on many other watches)","^T20W_[0-9]{6}$"
 "Triones adjustable-color car LED headlights","^Triones.*$"
 "Unknown Bluetooth hotel door locks","^TGNODE-.*"
 "Volkswagon in-vehicle bluetooth","VW BT [0-9]{4}$"
