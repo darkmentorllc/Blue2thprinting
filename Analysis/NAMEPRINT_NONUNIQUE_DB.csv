@@ -38,6 +38,7 @@
 "Cobra SC 200 dash cam (https://www.cobra.com/products/sc200)","^SC 200$"
 "Cobra SC 201 dash cam (https://www.cobra.com/products/sc201)","^SC 201$"
 "Cobra SC 400 dash cam (https://www.cobra.com/products/sc400)","^SC 400$"
+"Directed (VOXX DEI, LLC) unknown device (possibly car alarm). Known to be Directed based on GATT Manufacturer Name String (0x2a29) == 'Directed'","^DEI-[0-9]{7}$"
 "Disney theme park BLE location beacons","^DSNYMBLE$"
 "Escort Redline 360c radar detector","^ESCORT REDLINE 360c$"
 "Fitbit Ace","^Ace(| 2| 3| 4| Lite)$"
