@@ -20,7 +20,7 @@
 "BlueRadios (https://blueradios.com/) module that has likely not been initialized by the BlueRadios customer (e.g. used on PayRange)","^BlueRadios[A-F0-9]{6}$
 "Carel BT gateway for HVAC systems (https://www.carel.com/gateway-wireless/-/journal_content/56_INSTANCE_i4q5KIMLInKK/10191/1005572)","^CAREL_[A-F0-9]{10}$"
 "Caterpillar(CAT) heavy equipment BT keyless-start (https://fccid.io/PQMA5S4/User-Manual/Exhibit-D-Users-Manual-per-2-1033-b3-3137980.pdf)","^CATBTNT-[0-9]{2} [A-Z]{3}[0-9]{5}$"
-"Cobra SC 400D dash cam (https://www.cobra.com/products/sc400d, last 4 are first 4 of BDADDR, endian-swapped, because they probably have their BDADDR backwards!)","^SC 400D-[A-F0-9]{4}
+"Cobra SC 400D dash cam (https://www.cobra.com/products/sc400d, last 4 are first 4 of BDADDR, endian-swapped, because they probably have their BDADDR backwards!)","^SC 400D-[A-F0-9]{4}$"
 "Dexcom Continuous Glucose Monitoring System (https://www.dexcom.com/, verified by UUID16 lookup and BT CID)","^Dexcom[A-Z0-9]{2}$"
 "Dexcom Continuous Glucose Monitoring System (https://www.dexcom.com/, verified by UUID16 lookup and BT CID)","^DXCM[a-zA-Z0-9]{2}$"
 "General Motors passive-entry-passive-start (PEPS) system (made by ALPSALPINE CO,.LTD based on BDADDR, GM confirmed by UUID16)","^GM_PEPS_VKM[1234]$"
