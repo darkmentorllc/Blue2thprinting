@@ -1,5 +1,6 @@
 "Created by Xeno Kovah","Copyright(c) © Dark Mentor LLC 2023-2024"
 "'Segway Ninebot ZK601LE is an loT device for shared scooter management' (https://flespi.com/devices/segway-ninebot-zk601le)","^Segway IoT$"
+"ActiveLook PONTUS21 smart glasses ()","^PONTUS21$"
 "Amazon (based on BT CID) unknown device. Most likely a Ring camera","^rnet$"
 "Apple Pencil stylus","^Apple Pencil$"
 "Behringer Flow 8 digital mixer (https://web.archive.org/web/20250708082324/https://www.behringer.com/product.html?modelCode=0603-AEW)","^FLOW 8 LE$"
