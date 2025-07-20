@@ -17,7 +17,9 @@
 "Apple MacBook, MacBook Pro, or MacBook Air",".*MacBook.*"
 "Audi Multi Media Interface (not sure why the minority uses underscores instead of spaces)","^Audi_MMI_[0-9]{4}$"
 "Audi Multi Media Interface","^Audi MMI [0-9]{4}$"
-"BlueRadios (https://blueradios.com/) module that has likely not been initialized by the BlueRadios customer (e.g. used on PayRange)","^BlueRadios[A-F0-9]{6}$
+"BlueRadios (https://blueradios.com/) module that has likely not been initialized by the BlueRadios customer (e.g. used on PayRange)","^BlueRadios[A-F0-9]{6}$"
+"Bluetti AC60 Portable Power Station (https://web.archive.org/web/20250514115529/https://www.bluettipower.com/products/ac60)","^AC60[0-9]{13}"
+"Bluetti AC70 Portable Power Station (https://web.archive.org/web/20250624002221/https://www.bluettipower.com/products/ac70)","^AC70[0-9]{13}"
 "Carel BT gateway for HVAC systems (https://www.carel.com/gateway-wireless/-/journal_content/56_INSTANCE_i4q5KIMLInKK/10191/1005572)","^CAREL_[A-F0-9]{10}$"
 "Caterpillar(CAT) heavy equipment BT keyless-start (https://fccid.io/PQMA5S4/User-Manual/Exhibit-D-Users-Manual-per-2-1033-b3-3137980.pdf)","^CATBTNT-[0-9]{2} [A-Z]{3}[0-9]{5}$"
 "Certgate AirID 2 Mini (https://fccid.io/2AOSIA2MX)","^A2MX[0-9]{10}"
