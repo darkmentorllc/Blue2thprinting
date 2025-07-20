@@ -206,6 +206,10 @@ def print_service_data_interpretation(UUID128, service_data_hex_str, indent):
     if(uuid128_no_dashes == "9ec5d2b88f514dea9cd3f3dea220b5e0"): # Taser example
         serial = get_utf8_string_from_hex_string(service_data_hex_str)
         qprint(f"{indent}Possible interpretation: Serial Number: {serial}")
+        if(serial[:3] == "X85"):
+            qprint(f"{indent}{i1}This is a front or rear Axon Fleet Power Unit connected to a camera.")
+        elif(serial[:3] == "X87"):
+            qprint(f"{indent}{i1}This is a Axon Signal Vehicle unit for the vehicle.")
 
 # Function to print UUID128s service data for a given bdaddr
 def print_uuid128_service_data(bdaddr):
