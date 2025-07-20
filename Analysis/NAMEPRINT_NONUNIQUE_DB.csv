@@ -78,6 +78,7 @@
 "Nonda ODBII-to-BT car monitor","^OBDBLE$"
 "OBD Solutions, LLC. ODBII-to-BT car monitor (https://www.obdlink.com/products/obdlink-cx/)","^OBDLink CX$"
 "OnAsset Sentinel 100 logistics tracking device (https://intelsius.com/services/logger-integration/onasset/)","^OnAsset Sentinel 100$"
+"OneWheel scooter/monocycle (https://onewheel.com/)","^ow[0-9]{6}$"
 "OPPO Reno7 Z 5G cell phone (https://www.oppo.com/en/smartphones/series-reno/reno7-z-5g/specs/)","^OPPO Reno7 Z 5G$"
 "Oral-B Toothbrush","^Oral-B Toothbrush$"
 "PayRange bluetooth-based vending payment system (https://support.payrange.com/hc/en-us/articles/360029485731-How-it-Works)","^BluKeyPayRange$"

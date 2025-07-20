@@ -58,7 +58,7 @@
 "OOLER bed-cooling system (https://sleep.me/product/ooler-sleep-system)","OOLER-[0-9]{11}"
 "Panasonic BCW4000 Body-Worn Camera (https://fcc.report/FCC-ID/ACJ9TAWV-BWC4000/4920176.pdf)","^BWC4000_[A-Z]{3}[0-9]{5}$"
 "Panasonic TW370 Body-Worn Camera (https://fcc.report/FCC-ID/ACJ9TAWV-TW370/3274793.pdf)","^TW370_[A-Z]{3}[0-9]{5}$"
-"Phillips Respironics System One CPAP sleep apnea treatment medical device","^PR BT [A-F0-9]{4}$"
+"Phillips Respironics System One CPAP sleep apnea treatment medical device (https://web.archive.org/web/20250720224822/https://www.philips.sa/en/healthcare/consumer/sleep-apnea/products/devices/system-one)","^PR BT [A-F0-9]{4}$"
 "Porsche Bluetooth","^Porsche BT [0-9]{4}$"
 "Rivian Truck","^Rivian Sensor [1-4]$"
 "Samsung Galaxy Buds Headphones","^Galaxy Buds \\\([A-F0-9]{4}\\\)$"
