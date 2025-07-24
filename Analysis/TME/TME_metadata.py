@@ -647,6 +647,8 @@ def chip_by_sub_version(sub_version, device_BT_CID):
     elif(device_BT_CID == 93):
         if(sub_version == 0x8762):
             return "Realtek RTL8762" # from ITW data from one of these https://fccid.io/2AB73-2208A/Internal-Photos/Internal-photos-6664696.pdf
+        if(sub_version == 0xd922):
+            return "Realtek RTL8761BUV" # from ITW data from one of these https://fccid.io/2BCGWUB500PLUS/Internal-Photos/2405TW0120-UI-Internal-Photograph-7446627.pdf
 
     # If we get here, return empty string denoting nothing found
     return ""
