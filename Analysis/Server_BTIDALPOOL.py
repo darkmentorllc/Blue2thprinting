@@ -204,39 +204,51 @@ def handle_btides_data(self, username, json_content):
 
         # Create the directory if it doesn't exist
         os.makedirs('./pool_files', exist_ok=True)
+        os.makedirs('./user_logs', exist_ok=True)
 
         # Generate the SHA1 hash of the json_content
         sha1_hash = hashlib.sha1(json_content_str.encode('utf-8')).hexdigest()
 
-        # Check if the file already exists
-        if sha1_hash in g_unique_files:
-            send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server. No need to upload.')
-            return
-
-        # Validate the JSON content if we don't have this file already
-        if not validate_json_content(json_content, registry):
-            send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
-            return
-
-        # Generate the filename
+        # Create a sanitized version of the username for the output filename
+        sanitized_username = username.replace('@', '_at_').replace('.', '_dot_')
         current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-        filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
 
-        # Save the JSON content to the file
-        with open(filename, 'w') as f:
-            json.dump(json_content, f)
+        # Open per-user log file
+        user_log_filename = f'./user_logs/{sanitized_username}.log'
+        with open(user_log_filename, 'a') as user_log_file:
 
-        # Update the global dictionary
-        g_unique_files[sha1_hash] = True
+            # Check if the file already exists
+            if sha1_hash in g_unique_files:
+                send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server. No need to upload.')
+                user_log_file.write(f"{current_time}: {username}: {sha1_hash}: A file with this exact content already exists on the server. No need to upload.\n")
+                return
 
-        # Spawn a new thread to run the BTIDES_to_SQL.py script
-        run_btides_to_sql(filename)
+            # Validate the JSON content if we don't have this file already
+            if not validate_json_content(json_content, registry):
+                send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data according to schema. Rejected.')
+                user_log_file.write(f"{current_time}: {username}: {sha1_hash}: Invalid JSON data according to schema. Rejected.\n")
+                return
 
-        # Send a success response
-        send_back_response(self, username, 200, 'text/plain', b'File saved successfully.')
+            # Generate the filename
+            filename = f'./pool_files/{sha1_hash}-{username}-{current_time}.json'
+
+            # Save the JSON content to the file
+            with open(filename, 'w') as f:
+                json.dump(json_content, f)
+
+            # Update the global dictionary
+            g_unique_files[sha1_hash] = True
+
+            # Spawn a new thread to run the BTIDES_to_SQL.py script
+            run_btides_to_sql(filename)
+
+            # Send a success response
+            send_back_response(self, username, 200, 'text/plain', b'File saved successfully.')
+            user_log_file.write(f"{current_time}: {username}: {filename}: File saved successfully.\n")
 
     except json.JSONDecodeError:
         send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data could not be decoded.')
+        user_log_file.write(f"{current_time}: {username}: Invalid JSON data could not be decoded.\n")
 
 
 def handle_query(self, username, query_object):
@@ -309,6 +321,17 @@ def handle_query(self, username, query_object):
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     random = os.urandom(4).hex()
     output_filename = f"/tmp/{username}-{current_time}-{random}.json"
+
+    # Create a sanitized version of the username for the output filename
+    sanitized_username = username.replace('@', '_at_').replace('.', '_dot_')
+
+    # Create the directory if it doesn't exist
+    os.makedirs('./user_logs', exist_ok=True)
+
+    # Open per-user log file
+    user_log_filename = f'./user_logs/{sanitized_username}.log'
+    with open(user_log_filename, 'a') as user_log_file:
+        user_log_file.write(f"{current_time}: {username}: Query: {query_object}\n")
 
     json_content = run_TellMeEverything(self, username, args_array, output_filename)
     if(json_content == 1): # Error
