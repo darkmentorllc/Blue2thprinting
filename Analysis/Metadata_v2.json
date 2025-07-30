@@ -357,7 +357,8 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-04-22",
 		"evidence_URL": {
-			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml"
+			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml",
+			"'DataTrans(fer)' Vendor-specific UUID": "https://web.archive.org/web/20250730111949/https://github.com/songjw0820/AmebaPro2_SDK_v9.0a/blob/7cb6eae4736e220db2165dafdb5cd4f7afdc2f25/component/bluetooth/rtk_stack/example/bt_datatrans/bt_datatrans_module_param_config.c#L38"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-04-22",
@@ -365,7 +366,8 @@
 		"confirmation_confidence": "2/10",
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
-			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data."
+			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
+			"12a24d2e-fe14-488e-93d2-173c5a010000": "Service: Realtek: DataTrans(fer) custom GATT service."
 		}
 	},
 	"Silicon Labs GATTPrints": {
