@@ -564,7 +564,7 @@ def find_nameprint_match(name_string):
             qprint(f"{i3}NamePrint: match found for {key}: {value}")
             found = True
 
-    if(not found):
+    if(not found and (name_string != "" and name_string != '\x00')):
         qprint(f"{i4}NamePrint: no match found")
         qprint(f"{i4}Do you know what device this is? If so, submit a NamePrint here: https://forms.gle/T6GwPs5NqDTxxzK36")
 
