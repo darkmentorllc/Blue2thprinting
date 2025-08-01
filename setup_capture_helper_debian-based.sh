@@ -20,19 +20,31 @@ if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thpri
     exit -1
 fi
 
+print_banner() {
+    local message="$1"
+    echo ""
+    echo "========================================================================================"
+    echo "  $message"
+    echo "========================================================================================"
+}
+
+print_tool_working() {
+    local message="$1"
+    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    echo "  $message"
+    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+}
+
 apt -v
 if [ $? != 0 ]; then
-    echo "================================================================================================================================================="
-    echo "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
-    echo "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
-    echo "================================================================================================================================================="
+    print_banner "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
+    print_banner "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
     exit -1
 fi
 
-echo ""
-echo "===================================="
-echo "Installing all prerequisite software"
-echo "===================================="
+
+print_banner "Installing all prerequisite software"
+
 sudo apt-get update
 # Suppress the faux-GUI prompt
 echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
@@ -49,10 +61,7 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector
 
-echo ""
-echo "====================================================================================================================================="
-echo "Fixing this repository when it's not cloned with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
-echo "====================================================================================================================================="
+
 #### This git repository includes the Bluetooth SIG's assigned numbers git repo under the ./public subfolder
 #### Most people would check it out before seeing that they need to pass the parameter to recurse submodules
 #### So I'm just not bothering with telling folks to do that, and just doing it here
@@ -60,10 +69,7 @@ cd /home/$USERNAME/Blue2thprinting
 git submodule update --init --recursive
 echo "  Done"
 
-echo ""
-echo "==================================================================================="
-echo "Correcting locations which include hardcoded username in a /home/username/... path."
-echo "==================================================================================="
+print_banner "Correcting locations which include hardcoded username in a /home/username/... path."
 #### There's a few places where paths are assumed to be in the user's home dir. This fixes those up.
 if [ $USERNAME != "user" ]; then
     echo "Replacing username 'user' with '$USERNAME'."
@@ -85,17 +91,11 @@ if [ $USERNAME != "user" ]; then
 fi
 echo "  Done"
 
-echo ""
-echo "================================================"
-echo "Adding execute permissions to the shell scripts."
-echo "================================================"
+print_banner "Adding execute permissions to the shell scripts."
 chmod +x *.sh
 echo "  Done"
 
-echo ""
-echo "====================================================================="
-echo "Appending entry to root crontab to run ~/Scripts/runall.sh at reboot."
-echo "====================================================================="
+print_banner "Appending entry to root crontab to run ~/Scripts/runall.sh at reboot."
 #### This tries to make sure it preserves whatever is already in the crontab
 #### and it just appends an entry to run the runall.sh script at reboot
 #### which invokes the sub-scripts to run btmon (primary HCI logging),
@@ -116,19 +116,14 @@ else
     echo "  Skipped, because already added."
 fi
 
-echo ""
-echo "================================================================="
-echo "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
-echo "================================================================="
+print_banner "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
 #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
 #### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
 #### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
 cd /home/$USERNAME/Blue2thprinting/bluez-5.66
 ### BlueZ Configuration ###
 if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/Makefile" ]; then
-    echo "  >>>>>>>>>>>>>>>>>>>>>>>>"
-    echo "  Beginning configuration."
-    echo "  <<<<<<<<<<<<<<<<<<<<<<<<"
+    print_compilation_step "  Beginning configuration."
     ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
 else
     echo "  Makefile present. Configuration already succeeded."
@@ -140,29 +135,21 @@ fi
 
 ### Compilation ###
 if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl" ]; then
-    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    echo "  Beginning compilation (this will take a while!)"
-    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    print_tool_working "  Beginning compilation (this will take a while!)"
     make -j4
-    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    echo "  Testing gatttool runs successfully. If you see the help output, it's working."
-    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
     /home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
-    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    echo "  Testing sdptool runs successfully. If you see the help output, it's working."
-    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
     /home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
-    echo "  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    echo "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
-    echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+    print_tool_working "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
     /home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl --version
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
@@ -172,10 +159,7 @@ else
     echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
 fi
 
-echo ""
-echo "===================================================================="
-echo "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
-echo "===================================================================="
+print_banner "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
 cd /home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/
 if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
     dongles=$(find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
@@ -201,9 +185,7 @@ else
     echo "  No Sonoff 921600 baud firmware file found, not attempting firmware flashing."
 fi
 
-echo "======================================================="
-echo "Adding helpful command aliases (c, k, TME) to ~/.bashrc"
-echo "======================================================="
+print_banner "Adding helpful command aliases (c, k, TME) to ~/.bashrc"
 echo "alias c=\"~/Blue2thprinting/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
 echo "alias k=\"sudo ~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
 echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
@@ -214,12 +196,7 @@ echo "alias TBB=\"python3 /.Tell_Me_Everything.py --token-file ./tf --query-BTID
 echo "alias BG=\"python3 ./Better_Getter.py\"" >> /home/$USERNAME/.bashrc
 source /home/$USERNAME/.bashrc
 
-echo "======================================================="
-echo "Correcting permissions on the Blue2thprinting folder."
-echo "======================================================="
+print_banner "Correcting permissions on the Blue2thprinting folder."
 sudo chown -R "$USERNAME" /home/"$USERNAME"/Blue2thprinting
 
-echo ""
-echo "[--------------------------------------------------]"
-echo "Everything seems to have completed successfully! \o/"
-echo "[--------------------------------------------------]"
+print_banner "Everything seems to have completed successfully! \o/"
