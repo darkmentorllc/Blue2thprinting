@@ -25,6 +25,7 @@ check_env() {
         exit -1
     fi
 }
+check_env
 
 print_banner() {
     local message="$1"
