@@ -196,8 +196,8 @@ create_aliases() {
     echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
     echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
     echo "alias TME=\"python3 ./Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
-    echo "alias TB=\"python3 /.Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL\"" >> /home/$USERNAME/.bashrc
-    echo "alias TBB=\"python3 /.Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL --bdaddr\"" >> /home/$USERNAME/.bashrc
+    echo "alias TB=\"python3 ./Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL\"" >> /home/$USERNAME/.bashrc
+    echo "alias TBB=\"python3 ./Tell_Me_Everything.py --token-file ./tf --query-BTIDALPOOL --bdaddr\"" >> /home/$USERNAME/.bashrc
     echo "alias BG=\"python3 ./Better_Getter.py\"" >> /home/$USERNAME/.bashrc
     source /home/$USERNAME/.bashrc
     print_banner "Correcting permissions on the Blue2thprinting folder."
