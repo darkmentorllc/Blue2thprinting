@@ -6,19 +6,25 @@
 ##########################################
 # Tested on Ubuntu 24.04, Raspbian Buster & Bookworm
 
-if [ "$EUID" -ne 0 ]; then
-    echo "This script needs to be run with sudo"
-    exit -1
-fi
-
-USERNAME="$SUDO_USER"
-echo "Username detected as '$USERNAME'."
-
-if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
-    echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
-    echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
-    exit -1
-fi
+check_env() {
+    if [ "$EUID" -ne 0 ]; then
+        echo "This script needs to be run with sudo"
+        exit -1
+    fi
+    USERNAME="$SUDO_USER"
+    echo "Username detected as '$USERNAME'."
+    if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
+        echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
+        echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
+        exit -1
+    fi
+    apt -v
+    if [ $? != 0 ]; then
+        print_banner "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
+        print_banner "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
+        exit -1
+    fi
+}
 
 print_banner() {
     local message="$1"
@@ -34,14 +40,6 @@ print_tool_working() {
     echo "  $message"
     echo "  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 }
-
-apt -v
-if [ $? != 0 ]; then
-    print_banner "This script assumes you're running a Debian-derivative system that uses apt (like Ubuntu)."
-    print_banner "If you want to run it on a non-debian-derivative, you will need to read this script and adjust commands & prerequisite software to your platform."
-    exit -1
-fi
-
 
 print_banner "Installing all prerequisite software"
 
