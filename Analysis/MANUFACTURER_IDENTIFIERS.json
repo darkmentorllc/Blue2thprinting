@@ -1,0 +1,2872 @@
+[
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "312",
+    "Model Name": "PowerBook G3 (1st Series, Wallstreet)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "313",
+    "Model Name": "PowerBook G3"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "314",
+    "Model Name": "PowerBook G3 (1st Series, Mainstreet)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "406",
+    "Model Name": "PowerBook G3 (2nd Series)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "510",
+    "Model Name": "Power Macintosh G3 (All-in-One) OR Power Macintosh G3 (Desktop) OR Power Macintosh G3 (Mini Tower)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ADP2,1",
+    "Model Name": "Developer Transition Kit"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ADP3,1",
+    "Model Name": "Developer Transition Kit"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ADP3,2",
+    "Model Name": "Developer Transition Kit"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ATVRemote1,1",
+    "Model Name": "Siri Remote (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ATVRemote1,2",
+    "Model Name": "Siri Remote (1st generation, Rev A)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ATVRemote1,3",
+    "Model Name": "Siri Remote (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ATVRemote1,4",
+    "Model Name": "Siri Remote (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods1,1",
+    "Model Name": "AirPods (Left, 1st generation) OR AirPods (Right, 1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods1,2",
+    "Model Name": "AirPods (Left, 2nd generation) OR AirPods (Right, 2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods1,3",
+    "Model Name": "AirPods (Left, 3rd generation) OR AirPods (Right, 3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods1,4",
+    "Model Name": "AirPods 4 (Left) OR AirPods 4 (Right) OR Charging Case for AirPods 4"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods1,5",
+    "Model Name": "AirPods 4 with Active Noise Cancellation (Left) OR AirPods 4 with Active Noise Cancellation (Right) OR Wireless Charging Case for AirPods 4 (ANC)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods2,1",
+    "Model Name": "AirPods (Left, 2nd generation) OR AirPods (Right, 2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods2,2",
+    "Model Name": "AirPods Pro (Right, 1st generation) OR AirPods Pro (Left, 1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods3,1",
+    "Model Name": "AirPods Pro (Right, 2nd generation) OR AirPods Pro (Left, 2nd generation) OR AirPods Pro (Left, 2nd generation) OR AirPods Pro (Right, 2nd generation) OR MagSafe Charging Case (USB-C) for AirPods Pro (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods3,2",
+    "Model Name": "AirPods 4 (Left) OR AirPods 4 (Right) OR Charging Case for AirPods 4"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPods3,3",
+    "Model Name": "AirPods 4 with Active Noise Cancellation (Left) OR AirPods 4 with Active Noise Cancellation (Right) OR Wireless Charging Case for AirPods 4 (ANC)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPodsMax1,1",
+    "Model Name": "AirPods Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPodsMax1,2",
+    "Model Name": "AirPods Max with USB-C"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPodsPro1,1",
+    "Model Name": "AirPods Pro (Right, 1st generation) OR AirPods Pro (Left, 1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPodsPro1,2",
+    "Model Name": "AirPods Pro (Right, 2nd generation) OR AirPods Pro (Left, 2nd generation) OR AirPods Pro (Left, 2nd generation) OR AirPods Pro (Right, 2nd generation) OR MagSafe Charging Case (USB-C) for AirPods Pro (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort10,115",
+    "Model Name": "AirPort Express 802.11n (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort4,102",
+    "Model Name": "AirPort Express 802.11g"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort4,107",
+    "Model Name": "AirPort Express 802.11n (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort5,104",
+    "Model Name": "AirPort Extreme (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort5,105",
+    "Model Name": "AirPort Extreme (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort5,108",
+    "Model Name": "AirPort Extreme (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort5,114",
+    "Model Name": "AirPort Extreme (4th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort5,117",
+    "Model Name": "AirPort Extreme (5th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirPort7,120",
+    "Model Name": "AirPort Extreme (6th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AirTag1,1",
+    "Model Name": "AirTag"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleDisplay2,1",
+    "Model Name": "Studio Display"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV1,1",
+    "Model Name": "Apple TV (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV11,1",
+    "Model Name": "Apple TV 4K (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV14,1",
+    "Model Name": "Apple TV 4K (3rd generation) Wi-Fi OR Apple TV 4K (3rd generation) Wi-Fi + Ethernet"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV14,4",
+    "Model Name": "Unreleased Apple TV"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV14,5",
+    "Model Name": "Unreleased Apple TV"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV2,1",
+    "Model Name": "Apple TV (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV3,1",
+    "Model Name": "Apple TV (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV3,2",
+    "Model Name": "Apple TV (3rd generation, Rev A)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV5,3",
+    "Model Name": "Apple TV HD (4th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AppleTV6,2",
+    "Model Name": "Apple TV 4K (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Audio2,1",
+    "Model Name": "AirPods (Left, 3rd generation) OR AirPods (Right, 3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Audio2,2",
+    "Model Name": "Beats Fit Pro Charging Case OR Beats Fit Pro (Left) OR Beats Fit Pro (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AudioAccessory1,1",
+    "Model Name": "HomePod (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AudioAccessory1,2",
+    "Model Name": "HomePod (1st generation, Unknown Model)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AudioAccessory5,1",
+    "Model Name": "HomePod mini (China Mainland) OR HomePod mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AudioAccessory6,1",
+    "Model Name": "HomePod (2nd generation) (China Mainland) OR HomePod (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "AudioAccessorySingle5,1",
+    "Model Name": "HomePod mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsFitPro1,1",
+    "Model Name": "Beats Fit Pro Charging Case OR Beats Fit Pro (Left) OR Beats Fit Pro (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsFlex1,1",
+    "Model Name": "Beats Flex"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsPill1,2",
+    "Model Name": "Beats Pill (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsSolo3,1",
+    "Model Name": "Beats Solo³ Wireless LINE Friends Edition OR Beats Solo³ Wireless Mowalola Edition OR Beats Solo³ Wireless Mickey's 90th Anniversary Edition OR Beats Solo³ NAYVA Club Collection OR Beats Solo³ Wireless New Year Special Edition OR Beats Solo³ Wireless Third Man Records Edition OR Beats Solo³ Wireless"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsSolo4,1",
+    "Model Name": "Beats Solo 4 Minecraft Edition OR Beats Solo 4 Sandy Liang Edition OR Beats Solo 4"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsSoloBuds1,1",
+    "Model Name": "Beats Solo Buds Charging Case OR Beats Solo Buds (Left) OR Beats Solo Buds (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsSoloPro1,1",
+    "Model Name": "Beats Solo Pro Eastside Golf Edition OR Beats Solo Pro Verdy Edition OR Beats Solo Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsStudio3,1",
+    "Model Name": "Beats Studio³ Wireless ACW* Edition OR Beats Studio³ Wireless Connor McGregor Edition OR Beats Studio³ Wireless Cosmophone OR Beats Studio³ Wireless DJ Khaled Edition OR Beats Studio³ Wireless FaZe Clan Edition OR Beats Studio³ Wireless Ghetto Gastro Edition OR Beats Studio³ Wireless Highground Edition OR Beats Studio³ Wireless Madhappy Edition OR Beats Studio³ Wireless NBA Collection OR Beats Studio³ Wireless Neymar Jr. Custom Edition OR Beats Studio³ Wireless Psychworld Edition OR Beats Studio³ Wireless Violet Grey Edition OR Beats Studio³ Wireless"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsStudio3,2",
+    "Model Name": "Beats Studio³ Wireless ACW* Edition OR Beats Studio³ Wireless Connor McGregor Edition OR Beats Studio³ Wireless Cosmophone OR Beats Studio³ Wireless DJ Khaled Edition OR Beats Studio³ Wireless FaZe Clan Edition OR Beats Studio³ Wireless Ghetto Gastro Edition OR Beats Studio³ Wireless Highground Edition OR Beats Studio³ Wireless Madhappy Edition OR Beats Studio³ Wireless NBA Collection OR Beats Studio³ Wireless Neymar Jr. Custom Edition OR Beats Studio³ Wireless Psychworld Edition OR Beats Studio³ Wireless Violet Grey Edition OR Beats Studio³ Wireless"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsStudioBuds1,1",
+    "Model Name": "Beats Studio Buds Charging Case OR Beats Studio Buds (Left) OR Beats Studio Buds (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsStudioBuds1,2",
+    "Model Name": "Beats Studio Buds + Charging Case OR Beats Studio Buds + (Left) OR Beats Studio Buds + (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsStudioPro1,1",
+    "Model Name": "Beats Studio Pro Atlanta United FC Edition OR Beats Studio Pro Columbus Crew Edition OR Beats Studio Pro fragment design Edition OR Beats Studio Pro Kim K Edition OR Beats Studio Pro Los Angeles FC Edition OR Beats Studio Pro Inter Miami CF Edition OR Beats Studio Pro Nashville SC Edition OR Beats Studio Pro New York City FC Edition OR Beats Studio Pro St. Louis City SC Edition OR Beats Studio Pro Stüssy Edition OR Beats Studio Pro Toronto FC Edition OR Beats Studio Pro WINDOWSEN Edition OR Beats Studio Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsX1,1",
+    "Model Name": "Beatsˣ sacai Edition OR Beatsˣ UNDEFEATED Edition OR Beatsˣ"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "BeatsX2,1",
+    "Model Name": "Beats Flex"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ComputeModule13,1",
+    "Model Name": "Private Cloud Compute Node"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ComputeModule13,3",
+    "Model Name": "Private Cloud Compute Node"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ComputeModule13,5",
+    "Model Name": "Private Cloud Compute Baseboard Management Controller"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ComputeModule14,1",
+    "Model Name": "Private Cloud Compute Node"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "ComputeModule14,2",
+    "Model Name": "Apple PCC Research Environment Virtual Machine 1"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Device1,9728",
+    "Model Name": "Beats Pill+ Devin Booker Edition OR Beats Pill+ FaZe Clan Edition OR Beats Pill+ Field Trip Recordings Edition OR Beats Pill+ KAR AUDIO SYSTEM Edition OR Beats Pill+ KITH Edition OR Beats Pill+ Madhappy Edition OR Beats Pill+ Quai 54 Edition OR Beats Pill+ Stüssy Edition OR Beats Pill+ The Malbons Edition OR Beats Pill+ UNDEFEATED Edition OR Beats Pill+"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac13,1",
+    "Model Name": "Mac Studio (M1 Max)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac13,2",
+    "Model Name": "Mac Studio (M1 Ultra)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,10",
+    "Model Name": "MacBook Pro (16-inch, M2 Pro, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,12",
+    "Model Name": "Mac mini (M2 Pro, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,13",
+    "Model Name": "Mac Studio (M2 Max, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,14",
+    "Model Name": "Mac Studio (M2 Ultra, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,15",
+    "Model Name": "MacBook Air (15-inch, M2, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,2",
+    "Model Name": "MacBook Air (M2, 2022)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,3",
+    "Model Name": "Mac mini (M2, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,5",
+    "Model Name": "MacBook Pro (14-inch, M2 Max 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,6",
+    "Model Name": "MacBook Pro (16-inch, M2 Max, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,7",
+    "Model Name": "MacBook Pro (13-inch, M2, 2022)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,8",
+    "Model Name": "Mac Pro (Rack, 2023) OR Mac Pro (2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac14,9",
+    "Model Name": "MacBook Pro (14-inch, M2 Pro, 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,10",
+    "Model Name": "MacBook Pro (14-inch, 14-core M3 Max, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,11",
+    "Model Name": "MacBook Pro (16-inch, 14-core M3 Max, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,12",
+    "Model Name": "MacBook Air (13-inch, M3, 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,13",
+    "Model Name": "MacBook Air (15-inch, M3, 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,14",
+    "Model Name": "Mac Studio (M3 Ultra, 2025)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,3",
+    "Model Name": "MacBook Pro (14-inch, M3, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,4",
+    "Model Name": "iMac (24-inch, M3, 2023, Two Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,5",
+    "Model Name": "iMac (24-inch, M3, 2023, Four Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,6",
+    "Model Name": "MacBook Pro (14-inch, M3 Pro, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,7",
+    "Model Name": "MacBook Pro (16-inch, M3 Pro, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,8",
+    "Model Name": "MacBook Pro (14-inch, 16-core M3 Max, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac15,9",
+    "Model Name": "MacBook Pro (16-inch, 16-core M3 Max, Nov 2023)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,1",
+    "Model Name": "MacBook Pro (14-inch, M4, Nov 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,10",
+    "Model Name": "Mac mini (M4, 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,11",
+    "Model Name": "Mac mini (M4 Pro, 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,12",
+    "Model Name": "MacBook Air (13-inch, M4, 2025)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,13",
+    "Model Name": "MacBook Air (15-inch, M4, 2025)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,2",
+    "Model Name": "iMac (24-inch, M4, 2024, Two Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,3",
+    "Model Name": "iMac (24-inch, M4, 2024, Four Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,5",
+    "Model Name": "MacBook Pro (16-inch, M4 Max, Nov 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,6",
+    "Model Name": "MacBook Pro (14-inch, M4 Max, Nov 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,7",
+    "Model Name": "MacBook Pro (16-inch, M4 Pro, Nov 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,8",
+    "Model Name": "MacBook Pro (14-inch, M4 Pro, Nov 2024)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Mac16,9",
+    "Model Name": "Mac Studio (M4 Max, 2025)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook1,1",
+    "Model Name": "MacBook (13-inch, Mid 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook10,1",
+    "Model Name": "MacBook (Retina, 12-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook2,1",
+    "Model Name": "MacBook (13-inch, Late 2006) OR MacBook (13-inch, Mid 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook3,1",
+    "Model Name": "MacBook (13-inch, Late 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook4,1",
+    "Model Name": "MacBook (13-inch, Early 2008) OR MacBook (13-inch, Late 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook5,1",
+    "Model Name": "MacBook (13-inch, Aluminum, Late 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook5,2",
+    "Model Name": "MacBook (13-inch, Early 2009) OR MacBook (13-inch, Mid 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook6,1",
+    "Model Name": "MacBook (13-inch, Late 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook7,1",
+    "Model Name": "MacBook (13-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook8,1",
+    "Model Name": "MacBook (Retina, 12-inch, Early 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBook9,1",
+    "Model Name": "MacBook (Retina, 12-inch, Early 2016)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir1,1",
+    "Model Name": "MacBook Air (Early 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir10,1",
+    "Model Name": "MacBook Air (M1, 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir2,1",
+    "Model Name": "MacBook Air (Late 2008) OR MacBook Air (Mid 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir3,1",
+    "Model Name": "MacBook Air (11-inch, Late 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir3,2",
+    "Model Name": "MacBook Air (13-inch, Late 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir4,1",
+    "Model Name": "MacBook Air (11-inch, Mid 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir4,2",
+    "Model Name": "MacBook Air (13-inch, Mid 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir5,1",
+    "Model Name": "MacBook Air (11-inch, Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir5,2",
+    "Model Name": "MacBook Air (13-inch, Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir6,1",
+    "Model Name": "MacBook Air (11-inch, Mid 2013) OR MacBook Air (11-inch, Early 2014)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir6,2",
+    "Model Name": "MacBook Air (13-inch, Mid 2013) OR MacBook Air (13-inch, Early 2014)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir7,1",
+    "Model Name": "MacBook Air (11-inch, Early 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir7,2",
+    "Model Name": "MacBook Air (13-inch, Early 2015) OR MacBook Air (13-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir8,1",
+    "Model Name": "MacBook Air (Retina, 13-inch, 2018)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir8,2",
+    "Model Name": "MacBook Air (Retina, 13-inch, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookAir9,1",
+    "Model Name": "MacBook Air (Retina, 13-inch, 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro1,1",
+    "Model Name": "MacBook Pro (15-inch, Early 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro1,2",
+    "Model Name": "MacBook Pro (17-inch, Early 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro10,1",
+    "Model Name": "MacBook Pro (Retina, 15-inch, Early 2013) OR MacBook Pro (Retina, 15-inch, Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro10,2",
+    "Model Name": "MacBook Pro (Retina, 13-inch, Early 2013) OR MacBook Pro (Retina, 13-inch, Late 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro11,1",
+    "Model Name": "MacBook Pro (Retina, 13-inch, Late 2013) OR MacBook Pro (Retina, 13-inch, Mid 2014)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro11,2",
+    "Model Name": "MacBook Pro (Retina, 15-inch, Late 2013, Integrated graphics) OR MacBook Pro (Retina, 15-inch, Mid 2014, Integrated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro11,3",
+    "Model Name": "MacBook Pro (Retina, 15-inch, Late 2013, Dedicated graphics) OR MacBook Pro (Retina, 15-inch, Mid 2014, Dedicated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro11,4",
+    "Model Name": "MacBook Pro (Retina, 15-inch, Mid 2015, Integrated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro11,5",
+    "Model Name": "MacBook Pro (Retina, 15-inch, Mid 2015, Dedicated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro12,1",
+    "Model Name": "MacBook Pro (Retina, 13-inch, Early 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro13,1",
+    "Model Name": "MacBook Pro (13-inch, 2016, Two Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro13,2",
+    "Model Name": "MacBook Pro (13-inch, 2016, Four Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro13,3",
+    "Model Name": "MacBook Pro (15-inch, 2016)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro14,1",
+    "Model Name": "MacBook Pro (13-inch, 2017, Two Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro14,2",
+    "Model Name": "MacBook Pro (13-inch, 2017, Four Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro14,3",
+    "Model Name": "MacBook Pro (15-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro15,1",
+    "Model Name": "MacBook Pro (15-inch, Mid 2018) OR MacBook Pro (15-inch, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro15,2",
+    "Model Name": "MacBook Pro (13-inch, 2018) OR MacBook Pro (13-inch, 2019, Four Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro15,3",
+    "Model Name": "MacBook Pro (15-inch, Late 2018, Radeon Pro Vega Graphics) OR MacBook Pro (15-inch, 2019, Radeon Pro Vega Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro15,4",
+    "Model Name": "MacBook Pro (13-inch, 2019, Two Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro16,1",
+    "Model Name": "MacBook Pro (16-inch, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro16,2",
+    "Model Name": "MacBook Pro (13-inch, 2020, Four Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro16,3",
+    "Model Name": "MacBook Pro (13-inch, 2020, Two Thunderbolt 3 ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro16,4",
+    "Model Name": "MacBook Pro (16-inch, 2019, Radeon Pro 5600M Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro17,1",
+    "Model Name": "MacBook Pro (13-inch, M1, 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro18,1",
+    "Model Name": "MacBook Pro (16-inch, M1 Pro, 2021)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro18,2",
+    "Model Name": "MacBook Pro (16-inch, M1 Max, 2021)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro18,3",
+    "Model Name": "MacBook Pro (14-inch, M1 Pro, 2021)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro18,4",
+    "Model Name": "MacBook Pro (14-inch, M1 Max, 2021)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro2,1",
+    "Model Name": "MacBook Pro (17-inch, Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro2,2",
+    "Model Name": "MacBook Pro (15-inch, Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro3,1",
+    "Model Name": "MacBook Pro (15-inch, Late 2007) OR MacBook Pro (15-inch, Mid 2007) OR MacBook Pro (17-inch, Late 2007) OR MacBook Pro (17-inch, Mid 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro4,1",
+    "Model Name": "MacBook Pro (15-inch, Early 2008) OR MacBook Pro (17-inch, Early 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro5,1",
+    "Model Name": "MacBook Pro (15-inch, Late 2008) OR MacBook Pro (15-inch, Early 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro5,2",
+    "Model Name": "MacBook Pro (17-inch, Early 2009) OR MacBook Pro (17-inch, Mid 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro5,3",
+    "Model Name": "MacBook Pro (15-inch, Mid 2009, Dedicated Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro5,4",
+    "Model Name": "MacBook Pro (15-inch, Mid 2009, Integrated Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro5,5",
+    "Model Name": "MacBook Pro (13-inch, Mid 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro6,1",
+    "Model Name": "MacBook Pro (17-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro6,2",
+    "Model Name": "MacBook Pro (15-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro7,1",
+    "Model Name": "MacBook Pro (13-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro8,1",
+    "Model Name": "MacBook Pro (13-inch, Early 2011) OR MacBook Pro (13-inch, Late 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro8,2",
+    "Model Name": "MacBook Pro (15-inch, Early 2011) OR MacBook Pro (15-inch, Late 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro8,3",
+    "Model Name": "MacBook Pro (17-inch, Early 2011) OR MacBook Pro (17-inch, Late 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro9,1",
+    "Model Name": "MacBook Pro (15-inch, Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacBookPro9,2",
+    "Model Name": "MacBook Pro (13-inch, Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro1,1",
+    "Model Name": "Mac Pro (Mid 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro2,1",
+    "Model Name": "Mac Pro (Early 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro3,1",
+    "Model Name": "Mac Pro (Early 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro4,1",
+    "Model Name": "Mac Pro (Early 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro5,1",
+    "Model Name": "Mac Pro (Late 2010) OR Mac Pro (Mid 2012) OR Mac Pro Server (Mid 2010) OR Mac Pro Server (Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro6,1",
+    "Model Name": "Mac Pro (Late 2013)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "MacPro7,1",
+    "Model Name": "Mac Pro (Rack, 2019) OR Mac Pro (2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini1,1",
+    "Model Name": "Mac mini (Early 2006) OR Mac mini (Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini10,1",
+    "Model Name": "Unreleased Mac mini (M1 Pro)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini2,1",
+    "Model Name": "Mac mini (Mid 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini3,1",
+    "Model Name": "Mac mini (Early 2009) OR Mac mini (Late 2009) OR Mac mini (Mac OS X Server)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini4,1",
+    "Model Name": "Mac mini Server (Mid 2010) OR Mac mini (Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini5,1",
+    "Model Name": "Mac mini (Mid 2011, Integrated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini5,2",
+    "Model Name": "Mac mini (Mid 2011, Dedicated graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini5,3",
+    "Model Name": "Mac mini (Mid 2011, Server)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini6,1",
+    "Model Name": "Mac mini (Late 2012, Core i5)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini6,2",
+    "Model Name": "Mac mini Server (Late 2012) OR Mac mini (Late 2012, Core i7)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini6,3",
+    "Model Name": "Unreleased Mac mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini7,1",
+    "Model Name": "Mac mini (Late 2014)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini7,2",
+    "Model Name": "Unreleased Mac mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini7,3",
+    "Model Name": "Unreleased Mac mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini8,1",
+    "Model Name": "Mac mini (Late 2018)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini8,2",
+    "Model Name": "Unreleased Mac mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Macmini9,1",
+    "Model Name": "Mac mini (M1, Late 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBeats3,1",
+    "Model Name": "Powerbeats³ Wireless Balmain Edition OR Powerbeats³ Wireless"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBeats4,1",
+    "Model Name": "Powerbeats (4th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook1,1",
+    "Model Name": "PowerBook G3 (Bronze Keyboard)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook2,1",
+    "Model Name": "iBook SE OR iBook"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook2,2",
+    "Model Name": "iBook (FireWire)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook3,1",
+    "Model Name": "PowerBook (FireWire)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook3,2",
+    "Model Name": "PowerBook G4"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook3,3",
+    "Model Name": "PowerBook G4 (Gigabit Ethernet)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook3,4",
+    "Model Name": "PowerBook G4"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook3,5",
+    "Model Name": "PowerBook G4 (1GHz/867MHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook4,1",
+    "Model Name": "iBook (Late 2001) OR iBook (Dual USB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook4,2",
+    "Model Name": "iBook (14.1-inch)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook4,3",
+    "Model Name": "iBook (32 VRAM) OR iBook (14.1-inch, 32 VRAM) OR iBook (32 VRAM) OR iBook (14.1-inch, 32 VRAM) OR iBook (Opaque 16 VRAM) OR iBook (16 VRAM) OR iBook (14.1-inch, 16 VRAM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,1",
+    "Model Name": "PowerBook G4 (17-inch)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,2",
+    "Model Name": "PowerBook G4 (15-inch FW800)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,3",
+    "Model Name": "PowerBook G4 (17-inch 1.33GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,4",
+    "Model Name": "PowerBook G4 (15-inch 1.5/1.33 GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,5",
+    "Model Name": "PowerBook G4 (17-inch 1.5GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,6",
+    "Model Name": "PowerBook G4 (15-inch 1.67/1.5 GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,7",
+    "Model Name": "PowerBook G4 (17-inch 1.67 GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,8",
+    "Model Name": "PowerBook G4 (15-inch Double Layer SD)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook5,9",
+    "Model Name": "PowerBook G4 (17-inch Double Layer SD)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,1",
+    "Model Name": "PowerBook G4 (12-inch)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,2",
+    "Model Name": "PowerBook G4 (12-inch DVI)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,3",
+    "Model Name": "iBook G4 (12-inch 1 GHz) OR iBook G4 (12-inch 800 MHz) OR iBook G4 (14-inch 1 GHz) OR iBook G4 (14-inch 800 MHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,4",
+    "Model Name": "PowerBook G4 (12-inch 1.33GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,5",
+    "Model Name": "iBook G4 (12-inch Early 2004) OR iBook G4 (14-inch Early 2004) OR iBook G4 (12-inch Late 2004) OR iBook G4 (14-inch Late 2004)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,7",
+    "Model Name": "iBook G4 (12-inch Mid 2005) OR iBook G4 (14-inch Mid 2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerBook6,8",
+    "Model Name": "PowerBook G4 (12-inch 1.5GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac1,1",
+    "Model Name": "Power Macintosh G3 (Blue & White) OR Power Macintosh G3 (Blue & White)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac1,2",
+    "Model Name": "Power Mac G4 (PCI Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac10,1",
+    "Model Name": "Mac mini (Early 2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac10,2",
+    "Model Name": "Mac mini (Late 2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac11,2",
+    "Model Name": "Power Mac G5 (Late 2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac12,1",
+    "Model Name": "iMac G5 (17-inch, iSight) OR iMac G5 (20-inch, iSight)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac2,1",
+    "Model Name": "iMac (Slot Loading) OR iMac (Slot Loading)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac2,2",
+    "Model Name": "iMac (Summer 2000) OR iMac (Summer 2000)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac3,1",
+    "Model Name": "Power Mac G4 (AGP Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac3,3",
+    "Model Name": "Power Mac G4 (Gigabit Internet)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac3,4",
+    "Model Name": "Power Mac G4 (Digital Audio)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac3,5",
+    "Model Name": "Power Mac G4 (QuickSilver) OR Power Mac G4 (QuickSilver) OR Power Mac G4 (QuickSilver 2002) OR Power Mac G4 (QuickSilver 2002ED) OR Power Mac G4 (QuickSilver 2002)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac3,6",
+    "Model Name": "Power Mac G4 (Mirrored Drive Doors) OR Power Mac G4 (FW800) OR Power Mac G4 (Mirrored Drive Doors 2003)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac4,1",
+    "Model Name": "iMac (Early 2001) OR iMac (Summer 2001)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac4,2",
+    "Model Name": "iMac (Flat Panel) OR iMac (15-inch Early 2003)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac4,4",
+    "Model Name": "eMac OR eMac (1GHz G4) OR eMac (ATI Graphics, 1 GHz) OR eMac (ATI Graphics, 800 MHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac4,5",
+    "Model Name": "iMac (17-inch Flat Panel)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac5,1",
+    "Model Name": "Power Mac G4 Cube"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac6,1",
+    "Model Name": "iMac (17-inch)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac6,3",
+    "Model Name": "iMac (15-inch USB 2.0) OR iMac (17-inch USB 2.0) OR iMac (20-inch USB 2.0)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac6,4",
+    "Model Name": "eMac (USB 2.0) OR eMac (2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac7,2",
+    "Model Name": "Power Mac G5 OR Power Mac G5 (Early 2005, dual 2.0 GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac7,3",
+    "Model Name": "Power Mac G5 (June 2004) OR Power Mac G5 (Early 2005, dual 2.3/2.7 GHz)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac8,1",
+    "Model Name": "iMac G5 (17-inch) OR iMac G5 (20-inch)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac8,2",
+    "Model Name": "iMac G5 (17-inch, ALS) OR iMac G5 (20-inch, ALS)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerMac9,1",
+    "Model Name": "Power Mac G5 (Late 2004)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Powerb3,1",
+    "Model Name": "Powerbeats Pro 2 Charging Case OR Powerbeats Pro 2 (Left) OR Powerbeats Pro 2 (Right)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Powerbeats2,1",
+    "Model Name": "Powerbeats (4th generation) OR Powerbeats Pro Charging Case OR Powerbeats Pro (Left, 2019) OR Powerbeats Pro (Right, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerbeatsPro1,1",
+    "Model Name": "Powerbeats Pro Charging Case OR Powerbeats Pro (Left, 2019) OR Powerbeats Pro (Right, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "PowerbeatsPro2,1",
+    "Model Name": "Powerbeats Pro Charging Case (2020) OR Powerbeats Pro (Left, 2020) OR Powerbeats Pro (Right, 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "RackMac1,1",
+    "Model Name": "Xserve"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "RackMac1,2",
+    "Model Name": "Xserve (Cluster Node) OR Xserve (Slot Load)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "RackMac3,1",
+    "Model Name": "Xserve G5 (Cluster Node) OR Xserve G5 OR Xserve G5 (January 2005 Cluster Node) OR Xserve G5 (January 2005)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "RealityDevice14,1",
+    "Model Name": "Vision Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Solo2,1",
+    "Model Name": "Beats Solo Pro Eastside Golf Edition OR Beats Solo Pro Verdy Edition OR Beats Solo Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "TimeCapsule6,106",
+    "Model Name": "AirPort Time Capsule (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "TimeCapsule6,109",
+    "Model Name": "AirPort Time Capsule (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "TimeCapsule6,113",
+    "Model Name": "AirPort Time Capsule (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "TimeCapsule6,116",
+    "Model Name": "AirPort Time Capsule (4th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "TimeCapsule8,119",
+    "Model Name": "AirPort Time Capsule (5th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "VirtualMac1,1",
+    "Model Name": "Apple Virtual Machine"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "VirtualMac2,1",
+    "Model Name": "Apple Virtual Machine 1"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "VirtualMac2,3",
+    "Model Name": "Apple Virtual Machine 3"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch1,1",
+    "Model Name": "Apple Watch (1st generation) (38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch1,2",
+    "Model Name": "Apple Watch (1st generation) (42mm) (Store Display Model) OR Apple Watch (1st generation) (42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,1",
+    "Model Name": "Unreleased Apple Watch Series 2 (Cellular, 38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,2",
+    "Model Name": "Unreleased Apple Watch Series 2 (Cellular, 42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,3",
+    "Model Name": "Apple Watch Series 2 (38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,4",
+    "Model Name": "Apple Watch Series 2 (42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,5",
+    "Model Name": "T1"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,6",
+    "Model Name": "Apple Watch Series 1 (38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch2,7",
+    "Model Name": "Apple Watch Series 1 (42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch3,1",
+    "Model Name": "Apple Watch Series 3 (GPS + Cellular, 38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch3,2",
+    "Model Name": "Apple Watch Series 3 (GPS + Cellular, 42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch3,3",
+    "Model Name": "Apple Watch Series 3 (GPS, 38mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch3,4",
+    "Model Name": "Apple Watch Series 3 (GPS, 42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch4,1",
+    "Model Name": "Apple Watch Series 4 (GPS, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch4,2",
+    "Model Name": "Apple Watch Series 4 (GPS, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch4,3",
+    "Model Name": "Apple Watch Series 4 (GPS + Cellular, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch4,4",
+    "Model Name": "Apple Watch Series 4 (GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,1",
+    "Model Name": "Apple Watch Series 5 (GPS, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,10",
+    "Model Name": "Apple Watch SE (1st generation, GPS, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,11",
+    "Model Name": "Apple Watch SE (1st generation, GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,12",
+    "Model Name": "Apple Watch SE (1st generation, GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,2",
+    "Model Name": "Apple Watch Series 5 (GPS, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,3",
+    "Model Name": "Apple Watch Series 5 (GPS + Cellular, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,4",
+    "Model Name": "Apple Watch Series 5 (GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch5,9",
+    "Model Name": "Apple Watch SE (1st generation, GPS, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,1",
+    "Model Name": "Apple Watch Series 6 (GPS, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,10",
+    "Model Name": "Apple Watch SE (2nd generation, GPS, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,11",
+    "Model Name": "Apple Watch SE (2nd generation, GPS, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,12",
+    "Model Name": "Apple Watch SE (2nd generation, GPS + Cellular, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,13",
+    "Model Name": "Apple Watch SE (2nd generation, GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,14",
+    "Model Name": "Apple Watch Series 8 (GPS, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,15",
+    "Model Name": "Apple Watch Series 8 (GPS, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,16",
+    "Model Name": "Apple Watch Series 8 (GPS + Cellular, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,17",
+    "Model Name": "Apple Watch Series 8 (GPS + Cellular, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,18",
+    "Model Name": "Apple Watch Ultra"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,2",
+    "Model Name": "Apple Watch Series 6 (GPS, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,3",
+    "Model Name": "Apple Watch Series 6 (GPS + Cellular, 40mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,4",
+    "Model Name": "Apple Watch Series 6 (GPS + Cellular, 44mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,6",
+    "Model Name": "Apple Watch Series 7 (GPS, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,7",
+    "Model Name": "Apple Watch Series 7 (GPS, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,8",
+    "Model Name": "Apple Watch Series 7 (GPS + Cellular, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch6,9",
+    "Model Name": "Apple Watch Series 7 (GPS + Cellular, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,1",
+    "Model Name": "Apple Watch Series 9 (GPS, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,10",
+    "Model Name": "Apple Watch Series 10 (GPS + Cellular, 42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,11",
+    "Model Name": "Apple Watch Series 10 (GPS + Cellular, 46mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,2",
+    "Model Name": "Apple Watch Series 9 (GPS, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,3",
+    "Model Name": "Apple Watch Series 9 (GPS + Cellular, 41mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,4",
+    "Model Name": "Apple Watch Series 9 (GPS + Cellular, 45mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,5",
+    "Model Name": "Apple Watch Ultra 2"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,8",
+    "Model Name": "Apple Watch Series 10 (GPS, 42mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Watch7,9",
+    "Model Name": "Apple Watch Series 10 (GPS, 46mm)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Xserve1,1",
+    "Model Name": "Xserve (Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Xserve2,1",
+    "Model Name": "Xserve (Early 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Xserve3,1",
+    "Model Name": "Xserve (Early 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "chg1,1",
+    "Model Name": "MagSafe Charger (1m) OR MagSafe Charger (2m)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iAccy1,1",
+    "Model Name": "Lightning Digital AV Adapter"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iAccy1,2",
+    "Model Name": "Lightning to VGA Adapter"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge1,1",
+    "Model Name": "T1"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,1",
+    "Model Name": "T2 (iMacPro1,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,10",
+    "Model Name": "T2 (MacBookPro15,4)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,11",
+    "Model Name": "T2 (Unknown)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,12",
+    "Model Name": "T2 (MacBookAir8,2)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,13",
+    "Model Name": "T2 (Unknown)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,14",
+    "Model Name": "T2 (MacBookPro16,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,15",
+    "Model Name": "T2 (MacBookAir9,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,16",
+    "Model Name": "T2 (MacBookPro16,2)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,19",
+    "Model Name": "T2 (iMac20,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,20",
+    "Model Name": "T2 (iMac20,2)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,21",
+    "Model Name": "T2 (MacBookPro16,3)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,22",
+    "Model Name": "T2 (MacBookPro16,4)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,3",
+    "Model Name": "T2 (MacBookPro15,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,4",
+    "Model Name": "T2 (MacBookPro15,2)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,5",
+    "Model Name": "T2 (Macmini8,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,6",
+    "Model Name": "T2 (MacPro7,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,7",
+    "Model Name": "T2 (MacBookPro15,3)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iBridge2,8",
+    "Model Name": "T2 (MacBookAir8,1)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac,1",
+    "Model Name": "iMac (Revision A) OR iMac (Revision B) OR iMac (1999)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac10,1",
+    "Model Name": "iMac (21.5-inch, Late 2009) OR iMac (27-inch, Late 2009, Core 2 Duo)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac11,1",
+    "Model Name": "iMac (27-inch, Late 2009, Core i5/i7)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac11,2",
+    "Model Name": "iMac (21.5-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac11,3",
+    "Model Name": "iMac (27-inch, Mid 2010)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac12,1",
+    "Model Name": "iMac (21.5-inch, Late 2011) OR iMac (21.5-inch, Mid 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac12,2",
+    "Model Name": "iMac (27-inch, Mid 2011)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac13,1",
+    "Model Name": "iMac (21.5-inch, Late 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac13,2",
+    "Model Name": "iMac (27-inch, Late 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac13,3",
+    "Model Name": "iMac (21.5-inch, Early 2013)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac14,1",
+    "Model Name": "iMac (21.5-inch, Late 2013, Integrated Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac14,2",
+    "Model Name": "iMac (27-inch, Late 2013)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac14,3",
+    "Model Name": "iMac (21.5-inch, Late 2013, Dedicated Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac14,4",
+    "Model Name": "iMac (21.5-inch, Mid 2014)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac15,1",
+    "Model Name": "iMac (Retina 5K, 27-inch, Late 2014) OR iMac (Retina 5K, 27-inch, Mid 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac16,1",
+    "Model Name": "iMac (21.5-inch, Late 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac16,2",
+    "Model Name": "iMac (Retina 4K, 21.5-inch, Late 2015) OR iMac (21.5-inch, Late 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac17,1",
+    "Model Name": "iMac (Retina 5K, 27-inch, Late 2015)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac18,1",
+    "Model Name": "iMac (21.5-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac18,2",
+    "Model Name": "iMac (Retina 4K, 21.5-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac18,3",
+    "Model Name": "iMac (Retina 5K, 27-inch, 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac19,1",
+    "Model Name": "iMac (Retina 5K, 27-inch, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac19,2",
+    "Model Name": "iMac (Retina 4K, 21.5-inch, 2019)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac20,1",
+    "Model Name": "iMac (Retina 5K, 27-inch, 2020)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac20,2",
+    "Model Name": "iMac (Retina 5K, 27-inch, 2020, RX 5700/XT)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac21,1",
+    "Model Name": "iMac (24-inch, M1, 2021, Four Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac21,2",
+    "Model Name": "iMac (24-inch, M1, 2021, Two Ports)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac4,1",
+    "Model Name": "iMac (17-inch, Early 2006) OR iMac (20-inch, Early 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac4,2",
+    "Model Name": "iMac (17-inch, Mid 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac5,1",
+    "Model Name": "iMac (17-inch, Late 2006, Dedicated Graphics) OR iMac (20-inch, Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac5,2",
+    "Model Name": "iMac (17-inch, Late 2006, Integrated Graphics)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac6,1",
+    "Model Name": "iMac (24-inch, Late 2006)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac7,1",
+    "Model Name": "iMac (20-inch, Mid 2007) OR iMac (24-inch, Mid 2007)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac8,1",
+    "Model Name": "iMac (20-inch, Early 2008) OR iMac (24-inch, Early 2008)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMac9,1",
+    "Model Name": "iMac (20-inch, Early 2009) OR iMac (20-inch, Mid 2009) OR iMac (24-inch, Early 2009)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iMacPro1,1",
+    "Model Name": "iMac Pro (Retina 5K, 27-inch, Late 2017)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad1,1",
+    "Model Name": "iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,1",
+    "Model Name": "iPad mini (5th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,2",
+    "Model Name": "iPad mini (5th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,3",
+    "Model Name": "iPad Air (3rd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,4",
+    "Model Name": "iPad Air (3rd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,6",
+    "Model Name": "iPad (8th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad11,7",
+    "Model Name": "iPad (8th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad12,1",
+    "Model Name": "iPad (9th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad12,2",
+    "Model Name": "iPad (9th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,1",
+    "Model Name": "iPad Air (4th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,10",
+    "Model Name": "iPad Pro 12.9-inch (5th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,11",
+    "Model Name": "iPad Pro 12.9-inch (5th generation) Wi-Fi + Cellular (1 or 2 TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,16",
+    "Model Name": "iPad Air (5th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,17",
+    "Model Name": "iPad Air (5th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,18",
+    "Model Name": "iPad (10th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,19",
+    "Model Name": "iPad (10th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,2",
+    "Model Name": "iPad Air (4th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,20",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,21",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,4",
+    "Model Name": "iPad Pro 11-inch (3rd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,5",
+    "Model Name": "iPad Pro 11-inch (3rd generation) Wi-Fi (1 or 2 TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,6",
+    "Model Name": "iPad Pro 11-inch (3rd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,7",
+    "Model Name": "iPad Pro 11-inch (3rd generation) Wi-Fi + Cellular (1 or 2 TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,8",
+    "Model Name": "iPad Pro 12.9-inch (5th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad13,9",
+    "Model Name": "iPad Pro 12.9-inch (5th generation) Wi-Fi (1 or 2 TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,1",
+    "Model Name": "iPad mini (6th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,10",
+    "Model Name": "iPad Air 13-inch (M2) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,11",
+    "Model Name": "iPad Air 13-inch (M2) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,2",
+    "Model Name": "iPad mini (6th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,3",
+    "Model Name": "iPad Pro 11-inch (4th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,4",
+    "Model Name": "iPad Pro 11-inch (4th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,5",
+    "Model Name": "iPad Pro 12.9-inch (6th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,6",
+    "Model Name": "iPad Pro 12.9-inch (6th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,8",
+    "Model Name": "iPad Air 11-inch (M2) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad14,9",
+    "Model Name": "iPad Air 11-inch (M2) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,3",
+    "Model Name": "iPad Air 11-inch (M3) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,4",
+    "Model Name": "iPad Air 11-inch (M3) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,5",
+    "Model Name": "iPad Air 13-inch (M3) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,6",
+    "Model Name": "iPad Air 13-inch (M3) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,7",
+    "Model Name": "iPad (A16) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad15,8",
+    "Model Name": "iPad (A16) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,1",
+    "Model Name": "iPad mini (A17 Pro) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,2",
+    "Model Name": "iPad mini (A17 Pro) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,3",
+    "Model Name": "iPad Pro 11-inch (M4) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,4",
+    "Model Name": "iPad Pro 11-inch (M4) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,5",
+    "Model Name": "iPad Pro 13-inch (M4) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad16,6",
+    "Model Name": "iPad Pro 13-inch (M4) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad17,1",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad17,2",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad17,3",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad17,4",
+    "Model Name": "Unreleased iPad"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,1",
+    "Model Name": "iPad 2 Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,2",
+    "Model Name": "iPad 2 Wi-Fi + 3G (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,3",
+    "Model Name": "iPad 2 Wi-Fi + 3G (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,4",
+    "Model Name": "iPad 2 Wi-Fi (Mid 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,5",
+    "Model Name": "iPad mini Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,6",
+    "Model Name": "iPad mini Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad2,7",
+    "Model Name": "iPad mini Wi-Fi + Cellular (MM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,1",
+    "Model Name": "iPad (3rd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,2",
+    "Model Name": "iPad (3rd generation) Wi-Fi + Cellular (VZ)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,3",
+    "Model Name": "iPad (3rd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,4",
+    "Model Name": "iPad (4th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,5",
+    "Model Name": "iPad (4th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad3,6",
+    "Model Name": "iPad (4th generation) Wi-Fi + Cellular (MM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,1",
+    "Model Name": "iPad Air Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,2",
+    "Model Name": "iPad Air Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,3",
+    "Model Name": "iPad Air Wi-Fi + Cellular (TD-LTE)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,4",
+    "Model Name": "iPad mini 2 Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,5",
+    "Model Name": "iPad mini 2 Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,6",
+    "Model Name": "iPad mini 2 Wi-Fi + Cellular (TD-LTE)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,7",
+    "Model Name": "iPad mini 3 Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,8",
+    "Model Name": "iPad mini 3 Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad4,9",
+    "Model Name": "iPad mini 3 Wi-Fi + Cellular (TD-LTE)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,1",
+    "Model Name": "iPad mini 4 Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,2",
+    "Model Name": "iPad mini 4 Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,3",
+    "Model Name": "iPad Air 2 Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,4",
+    "Model Name": "iPad Air 2 Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,5",
+    "Model Name": "Unreleased iPad Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad5,6",
+    "Model Name": "Unreleased iPad Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,1",
+    "Model Name": "Unreleased iPad mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,11",
+    "Model Name": "iPad (5th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,12",
+    "Model Name": "iPad (5th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,2",
+    "Model Name": "Unreleased iPad mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,3",
+    "Model Name": "iPad Pro (9.7-inch) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,4",
+    "Model Name": "iPad Pro (9.7-inch) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,7",
+    "Model Name": "iPad Pro (12.9-inch) (1st generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad6,8",
+    "Model Name": "iPad Pro (12.9-inch) (1st generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,1",
+    "Model Name": "iPad Pro (12.9-inch) (2nd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,11",
+    "Model Name": "iPad (7th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,12",
+    "Model Name": "iPad (7th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,2",
+    "Model Name": "iPad Pro (12.9-inch) (2nd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,3",
+    "Model Name": "iPad Pro (10.5-inch) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,4",
+    "Model Name": "iPad Pro (10.5-inch) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,5",
+    "Model Name": "iPad (6th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad7,6",
+    "Model Name": "iPad (6th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,1",
+    "Model Name": "iPad Pro 11-inch (1st generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,10",
+    "Model Name": "iPad Pro 11-inch (2nd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,11",
+    "Model Name": "iPad Pro 12.9-inch (4th generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,12",
+    "Model Name": "iPad Pro 12.9-inch (4th generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,2",
+    "Model Name": "iPad Pro 11-inch (1st generation) Wi-Fi (1TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,3",
+    "Model Name": "iPad Pro 11-inch (1st generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,4",
+    "Model Name": "iPad Pro 11-inch (1st generation) Wi-Fi + Cellular (1TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,5",
+    "Model Name": "iPad Pro 12.9-inch (3rd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,6",
+    "Model Name": "iPad Pro 12.9-inch (3rd generation) Wi-Fi (1TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,7",
+    "Model Name": "iPad Pro 12.9-inch (3rd generation) Wi-Fi + Cellular"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,8",
+    "Model Name": "iPad Pro 12.9-inch (3rd generation) Wi-Fi + Cellular (1TB)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPad8,9",
+    "Model Name": "iPad Pro 11-inch (2nd generation) Wi-Fi"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone1,1",
+    "Model Name": "iPhone"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone1,2",
+    "Model Name": "iPhone 3G"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,1",
+    "Model Name": "iPhone 8 (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,2",
+    "Model Name": "iPhone 8 Plus (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,3",
+    "Model Name": "iPhone X (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,4",
+    "Model Name": "iPhone 8 (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,5",
+    "Model Name": "iPhone 8 Plus (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone10,6",
+    "Model Name": "iPhone X (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone11,2",
+    "Model Name": "iPhone XS"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone11,4",
+    "Model Name": "iPhone XS Max (China mainland)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone11,6",
+    "Model Name": "iPhone XS Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone11,8",
+    "Model Name": "iPhone XR"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone12,1",
+    "Model Name": "iPhone 11"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone12,3",
+    "Model Name": "iPhone 11 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone12,5",
+    "Model Name": "iPhone 11 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone12,8",
+    "Model Name": "iPhone SE (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone13,1",
+    "Model Name": "iPhone 12 mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone13,2",
+    "Model Name": "iPhone 12"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone13,3",
+    "Model Name": "iPhone 12 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone13,4",
+    "Model Name": "iPhone 12 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,2",
+    "Model Name": "iPhone 13 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,3",
+    "Model Name": "iPhone 13 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,4",
+    "Model Name": "iPhone 13 mini"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,5",
+    "Model Name": "iPhone 13"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,6",
+    "Model Name": "iPhone SE (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,7",
+    "Model Name": "iPhone 14"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone14,8",
+    "Model Name": "iPhone 14 Plus"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone15,2",
+    "Model Name": "iPhone 14 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone15,3",
+    "Model Name": "iPhone 14 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone15,4",
+    "Model Name": "iPhone 15"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone15,5",
+    "Model Name": "iPhone 15 Plus"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone16,1",
+    "Model Name": "iPhone 15 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone16,2",
+    "Model Name": "iPhone 15 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone17,1",
+    "Model Name": "iPhone 16 Pro"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone17,2",
+    "Model Name": "iPhone 16 Pro Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone17,3",
+    "Model Name": "iPhone 16"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone17,4",
+    "Model Name": "iPhone 16 Plus"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone17,5",
+    "Model Name": "iPhone 16e"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone2,1",
+    "Model Name": "iPhone 3GS"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone3,1",
+    "Model Name": "iPhone 4 (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone3,2",
+    "Model Name": "iPhone 4 (GSM, 2012)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone3,3",
+    "Model Name": "iPhone 4 (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone4,1",
+    "Model Name": "iPhone 4S"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone5,1",
+    "Model Name": "iPhone 5 (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone5,2",
+    "Model Name": "iPhone 5 (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone5,3",
+    "Model Name": "iPhone 5c (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone5,4",
+    "Model Name": "iPhone 5c (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone6,1",
+    "Model Name": "iPhone 5s (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone6,2",
+    "Model Name": "iPhone 5s (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone7,1",
+    "Model Name": "iPhone 6 Plus"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone7,2",
+    "Model Name": "iPhone 6"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone8,1",
+    "Model Name": "iPhone 6s"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone8,2",
+    "Model Name": "iPhone 6s Plus"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone8,4",
+    "Model Name": "iPhone SE (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone9,1",
+    "Model Name": "iPhone 7 (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone9,2",
+    "Model Name": "iPhone 7 Plus (CDMA)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone9,3",
+    "Model Name": "iPhone 7 (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPhone9,4",
+    "Model Name": "iPhone 7 Plus (GSM)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod1,1",
+    "Model Name": "iPod touch (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod2,1",
+    "Model Name": "iPod touch (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod2,2",
+    "Model Name": "Unreleased iPod touch (2nd generation, Rev. A)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod3,1",
+    "Model Name": "iPod touch (3rd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod4,1",
+    "Model Name": "iPod touch (4th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod4,2",
+    "Model Name": "Unreleased iPod touch"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod5,1",
+    "Model Name": "iPod touch (5th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod7,1",
+    "Model Name": "iPod touch (6th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iPod9,1",
+    "Model Name": "iPod touch (7th generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iProd8,1",
+    "Model Name": "AirPods Pro (Right, 1st generation) OR AirPods Pro (Left, 1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iProd8,6",
+    "Model Name": "AirPods Max"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iProd9,4",
+    "Model Name": "Network Adapter"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "iSim1,1",
+    "Model Name": "Pro Display XDR"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Pencil1,1",
+    "Model Name": "Apple Pencil (1st generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "Pencil2,1",
+    "Model Name": "Apple Pencil (2nd generation)"
+  },
+  {
+    "Manufacturer Name": "Apple",
+    "Internal Identifier": "VisionPro1,1",
+    "Model Name": "Apple Vision Pro (1st generation)"
+  }
+]
