@@ -206,6 +206,7 @@ class ApplicationThread(threading.Thread):
             if self.process.poll() is None:
                 print(f"PID: {self.process.pid}: ApplicationThread: Shouldn't be able to get here. pid still running. Killing it")
                 self.process.kill()
+                self.process.wait() # This avoids defunct processes on Ubuntu 24.04
             else:
                 print(f"PID: {self.process.pid}: ApplicationThread: {self.info_type} collection for {self.bdaddr} terminated on its own with return code {retCode}")
                 if(retCode == 0): #Success!
@@ -251,6 +252,7 @@ class ApplicationThread(threading.Thread):
             if(print_verbose): print(f"PID: {self.process.pid}: ApplicationThread: TimeoutExpired")
             print(f"PID: {self.process.pid}: ApplicationThread: Killing pid")
             self.process.kill()
+            self.process.wait() # This avoids defunct processes on Ubuntu 24.04
             self.is_terminated = True
             if(self.info_type == "GATT"):
                external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
