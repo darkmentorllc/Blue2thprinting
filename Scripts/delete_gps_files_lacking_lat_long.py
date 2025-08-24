@@ -1,7 +1,7 @@
 
 ##########################################
 # Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
 import os
@@ -22,12 +22,12 @@ def main():
     # Loop through each file in the directory
     for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
-        
+
         # Check if the file is a .txt file
         if os.path.isfile(file_path) and filename.endswith(".txt"):
             with open(file_path, 'r') as file:
                 content = file.read()
-                
+
                 # Check if the content contains the specified string
                 if ',"lat":' not in content:
                     os.remove(file_path)

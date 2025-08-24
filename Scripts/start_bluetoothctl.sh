@@ -2,7 +2,7 @@
 
 ##########################################
 # Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
 #bluetoothctl is a better than hcitool lescan because it shows more info about beacons it sees

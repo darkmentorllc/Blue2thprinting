@@ -1,6 +1,6 @@
 ##########################################
 # Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
 # Takes in an argv[1] of a file path like /home/user/gpspipe/2020-05-10-18-21-23_pi4.txt

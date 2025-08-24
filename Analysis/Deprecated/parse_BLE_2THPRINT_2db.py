@@ -2,7 +2,7 @@
 
 ##########################################
 # Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
 import mysql.connector
