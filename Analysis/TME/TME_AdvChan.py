@@ -718,6 +718,12 @@ def print_manufacturer_data(bdaddr):
         qprint(f"{i1}Manufacturer-specific Data:")
 
     for device_BT_CID, manufacturer_specific_data in eir_result:
+        # Export to BTIDES first
+        company_id_hex_str = f"{device_BT_CID:04x}"
+        length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
+        data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
+        BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_MSD, data)
+
         company_name = BT_CID_to_company_name(device_BT_CID)
         qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness
@@ -740,6 +746,12 @@ def print_manufacturer_data(bdaddr):
         vprint(f"{i3}In BT Classic Data (DB:EIR_bdaddr_to_MSD)")
 
     for le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data in le_result:
+        # Export to BTIDES first
+        company_id_hex_str = f"{device_BT_CID:04x}"
+        length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
+        data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
+        BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_MSD, data)
+
         company_name = BT_CID_to_company_name(device_BT_CID)
         qprint(f"{i2}Device Company ID: 0x%04x (%s) - take with a grain of salt, not all companies populate this accurately! (e.g. Bose)" % (device_BT_CID, BT_CID_to_company_name(device_BT_CID)))
         # Only print the flipped endian if there was a failure to match on the correct endianness

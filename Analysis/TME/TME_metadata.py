@@ -485,10 +485,6 @@ def print_ChipMakerPrint(bdaddr):
         # There could be multiple results if there are multiple distinct data blobs seen
         # Print out all possible entries, just so that if there are other hints from other datatypes, the erroneous ones can be ignored
         for (device_BT_CID,manufacturer_specific_data) in MSD_result:
-            company_id_hex_str = f"{device_BT_CID:04x}"
-            length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
-            data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
-            BTIDES_export_AdvData(bdaddr, 0, 50, type_AdvData_MSD, data)
 
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
@@ -513,10 +509,6 @@ def print_ChipMakerPrint(bdaddr):
             # So we're excluding that from being a valid consideration for Chip Maker
             if(device_BT_CID == 0x004C or device_BT_CID == 0x4C00):
                 continue
-            company_id_hex_str = f"{device_BT_CID:04x}"
-            length = int(3 + (len(manufacturer_specific_data) / 2)) # 3 bytes for opcode + company ID, and length of the hex_str divided by 2 for the number of bytes
-            data = {"length": length, "company_id_hex_str": company_id_hex_str, "msd_hex_str": manufacturer_specific_data}
-            BTIDES_export_AdvData(bdaddr, bdaddr_random, le_evt_type, type_AdvData_MSD, data)
 
             # Check if this CID corresponds to a ChipMaker
             for name in ChipMaker_names_and_BT_CIDs.keys():
