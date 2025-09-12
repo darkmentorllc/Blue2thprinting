@@ -6,11 +6,22 @@
 ##########################################
 # Tested on Ubuntu 24.04, Raspbian Buster & Bookworm
 
+is_sourced() {
+    # True if script is called with source script.sh
+    [ "${BASH_SOURCE[0]}" != "$0" ]
+}
+
 check_env() {
     if [ "$EUID" -ne 0 ]; then
         echo "This script needs to be run with sudo"
-        exit -1
-    fi
+        if is_sourced; then
+            echo "Press any key to exit..."
+            read -n 1 -s
+            return 1
+        else
+            exit 1
+        fi
+    fi  
     USERNAME="$SUDO_USER"
     BASE_PATH="/home/$USERNAME/Blue2thprinting"
     echo "Username detected as '$USERNAME'."
