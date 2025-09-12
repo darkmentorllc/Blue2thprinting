@@ -12,8 +12,9 @@ check_env() {
         exit -1
     fi
     USERNAME="$SUDO_USER"
+    BASE_PATH="/home/$USERNAME/Blue2thprinting"
     echo "Username detected as '$USERNAME'."
-    if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
+    if [[ ! -d "$BASE_PATH" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
         echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
         echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
         exit -1
@@ -77,7 +78,7 @@ configure_scripts() {
         echo "Correcting bluez-5.66/tools/sdptool.c"
         sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/tools/sdptool.c
         echo "Correcting all the scripts in ./Scripts"
-        cd /home/$USERNAME/Blue2thprinting/Scripts
+        cd $BASE_PATH/Scripts
         for i in *.sh; do
             echo "  Correcting $i"
             sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
@@ -101,8 +102,8 @@ configure_scripts() {
     #### which invokes the sub-scripts to run btmon (primary HCI logging),
     #### bluetoothctl (primary discovery), and central_app_launcher.py
     #### (orchestration of GATT/SDP/LL/LMP measurements)
-    if [ ! -f "/home/$USERNAME/Blue2thprinting/Scripts/.cron_added" ]; then
-        cron_entry="@reboot /home/$USERNAME/Blue2thprinting/Scripts/runall.sh"
+    if [ ! -f "$BASE_PATH/Scripts/.cron_added" ]; then
+        cron_entry="@reboot $BASE_PATH/Scripts/runall.sh"
         echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
         sudo crontab -u root -l > /tmp/crontab.root.bak
         sudo cp /tmp/crontab.root.bak /tmp/crontab.root.new
@@ -110,8 +111,8 @@ configure_scripts() {
         echo "$cron_entry" >> /tmp/crontab.root.new
         echo "  Importing new crontab from /tmp/crontab.root.new"
         sudo cat /tmp/crontab.root.new | sudo crontab -u root -
-        echo "  Setting flag in /home/$USERNAME/Blue2thprinting/Scripts/.cron_added to avoid re-settting."
-        touch "/home/$USERNAME/Blue2thprinting/Scripts/.cron_added"
+        echo "  Setting flag in $BASE_PATH/Scripts/.cron_added to avoid re-settting."
+        touch "$BASE_PATH/Scripts/.cron_added"
     else
         echo "  Skipped, because already added."
     fi
@@ -122,9 +123,9 @@ compile_toolz() {
     #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
     #### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
     #### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
-    cd /home/$USERNAME/Blue2thprinting/bluez-5.66
+    cd $BASE_PATH/bluez-5.66
     ### BlueZ Configuration ###
-    if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/Makefile" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/Makefile" ]; then
         print_compilation_step "  Beginning configuration."
         ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
     else
@@ -135,23 +136,23 @@ compile_toolz() {
         exit
     fi
     ### Compilation ###
-    if [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool" ] || [ ! -f "/home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATHbluez-5.66/client/bluetoothctl" ]; then
     print_tool_working "  Beginning compilation (this will take a while!)"
     make -j4
     print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
-    /home/$USERNAME/Blue2thprinting/bluez-5.66/attrib/gatttool --help
+    $BASE_PATH/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
-    /home/$USERNAME/Blue2thprinting/bluez-5.66/tools/sdptool --help
+    $BASE_PATHb/luez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
     print_tool_working "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
-    /home/$USERNAME/Blue2thprinting/bluez-5.66/client/bluetoothctl --version
+    $BASE_PATH/bluez-5.66/client/bluetoothctl --version
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
@@ -163,8 +164,8 @@ compile_toolz() {
 
 flash_sniffle(){
     print_banner "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
-    cd /home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/
-    if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
+    cd $BASE_PATH/Sniffle/cc2538-bsl/
+    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
         dongles=$(find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 2Mbps dongles found. No flashing attempted."
@@ -176,7 +177,7 @@ flash_sniffle(){
         echo "  No Sonoff 2Mbps firmware file found, not attempting firmware flashing."
     fi
 
-    if [ -f "/home/$USERNAME/Blue2thprinting/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_1M.hex" ]; then
+    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_1M.hex" ]; then
         dongles=$(find /dev/serial/by-id/ -name "usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 921600 baud dongles found. No flashing attempted."
@@ -213,6 +214,7 @@ for arg in "$@"; do
             check_env
             enter_venv
             flash_sniffle
+            cd $BASE_PATH
             exit 0
             ;;
         --help)
@@ -230,5 +232,6 @@ do_all(){
     compile_toolz
     flash_sniffle
     create_aliases
+    cd $BASE_PATH
     print_banner "Everything seems to have completed successfully! \o/"
 }
