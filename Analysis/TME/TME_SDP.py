@@ -343,7 +343,7 @@ def print_SDP_info(bdaddr):
             reassembly_buffer += fragment_bytes
             i+=AttributeListsByteCount
             if(i > byte_size):
-                qprint("{i2}Error: i is greater than the length of the byte_values array. Aborting.")
+                qprint(f"{i2}Error: i is greater than the length of the byte_values array. Aborting.")
                 break
             ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
         except Exception as e:

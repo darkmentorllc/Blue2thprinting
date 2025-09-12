@@ -359,7 +359,9 @@
 		"evidence_URL": {
 			"Assigned numbers": "public/assigned_numbers/uuids/member_uuids.yaml",
 			"'DataTrans(fer)' Vendor-specific UUID": "https://web.archive.org/web/20250730111949/https://github.com/songjw0820/AmebaPro2_SDK_v9.0a/blob/7cb6eae4736e220db2165dafdb5cd4f7afdc2f25/component/bluetooth/rtk_stack/example/bt_datatrans/bt_datatrans_module_param_config.c#L38",
-			"DFU UUID": "https://web.archive.org/web/20250730221829/https://github.com/ambiot/ambz2_matter/blob/942359f7fcda6f1f8675c7ee548aa8bc08abf639/component/common/bluetooth/realtek/sdk/example/bt_ota_central_client/dfu_client.c#L45C41-L45C135"
+			"'DataTrans(fer)' alternate Vendor-specific UUID": "https://web.archive.org/web/20250731173150/https://github.com/Ameba-AIoT/ameba-rtos/blob/1b0b089ff45a26c1db85841441f622e61c49dd2b/component/bluetooth/rtk_stack/src/mesh/profile/datatrans_service.c#L16",
+			"DFU UUID": "https://web.archive.org/web/20250730221829/https://github.com/ambiot/ambz2_matter/blob/942359f7fcda6f1f8675c7ee548aa8bc08abf639/component/common/bluetooth/realtek/sdk/example/bt_ota_central_client/dfu_client.c#L45C41-L45C135",
+			"OTA UUID": "https://web.archive.org/web/20250731114339/https://github.com/Ameba-AIoT/ameba-rtos-z2/blob/main/component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/client/ota_client.h#L25"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-04-22",
@@ -369,9 +371,11 @@
 		"Vendor_Specific_UUIDs": {
 			"fec5": "Service: Realtek: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
 			"12a24d2e-fe14-488e-93d2-173c5a010000": "Service: Realtek: DataTrans(fer) custom GATT service.",
+			"12a24d2e-fe14-488e-93d2-173cffe00000": "Service: Realtek: DataTrans(fer) custom GATT service. (alt UUID)",
 			"12a24d2e-fe14-488e-93d2-173c87620000": "Service: Realtek: Device firmware update (DFU).",
 			"12a24d2e-fe14-488e-93d2-173c87630000": "Characteristic: Realtek: Device firmware update (DFU) 'data'.",
-			"12a24d2e-fe14-488e-93d2-173c87640000": "Characteristic: Realtek: Device firmware update (DFU) 'control point'."
+			"12a24d2e-fe14-488e-93d2-173c87640000": "Characteristic: Realtek: Device firmware update (DFU) 'control point'.",
+			"12a24d2e-fe14-488e-93d2-173cffd00000": "Service: Realtek: Over-the-air (OTA) firmware update."
 		}
 	},
 	"Silicon Labs GATTPrints": {

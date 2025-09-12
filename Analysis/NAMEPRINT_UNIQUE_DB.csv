@@ -1,4 +1,4 @@
-"Created by Xeno Kovah","Copyright(c) © Dark Mentor LLC 2023-2024"
+"Created by Xeno Kovah","Copyright(c) © Dark Mentor LLC 2023-2026"
 "'Flipper Zero is a portable multi-tool for pentesters and geeks' (https://flipperzero.one/)","^Flipper .*$"
 "Amazon Echo Buds Headphones","^Echo Buds [A-Z0-9]{4}$"
 "Amazon Echo Show 2","^Echo Show 2-[A-Z0-9]{3}$"

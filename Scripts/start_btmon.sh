@@ -2,7 +2,7 @@
 
 ##########################################
 # Created by Xeno Kovah
-# Copyright(c) © Dark Mentor LLC 2023-2024
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
 ERRORLOG="/tmp/runall.log"
@@ -18,5 +18,5 @@ hciconfig hci0 down
 sleep 1
 hciconfig hci0 up
 sleep 1
-RESULT=$( /home/user/Blue2thprinting/bluez-5.66/monitor/btmon -T -w ${LOGPATH}/${DATE}_${HN}.bin &>/dev/null&)
+RESULT=$( /home/user/Blue2thprinting/bluez-5.66/monitor/btmon -i 0 -T -w ${LOGPATH}/${DATE}_${HN}.bin &>/dev/null&)
 echo "start_btmon.sh end" >> $ERRORLOG
