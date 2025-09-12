@@ -15,7 +15,7 @@ check_env() {
     if [ "$EUID" -ne 0 ]; then
         echo "This script needs to be run with sudo"
         if is_sourced; then
-            echo "Press any key to exit terminal..."
+            echo "Press any key to exit terminal or Ctlr + C to continue"
             read -n 1 -s            
             exit -1
         fi
