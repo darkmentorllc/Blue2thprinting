@@ -15,12 +15,11 @@ check_env() {
     if [ "$EUID" -ne 0 ]; then
         echo "This script needs to be run with sudo"
         if is_sourced; then
-            echo "Press any key to exit..."
-            read -n 1 -s
-            return 1
-        else
-            exit 1
+            echo "Press any key to exit terminal..."
+            read -n 1 -s            
+            exit -1
         fi
+        exit -1
     fi  
     USERNAME="$SUDO_USER"
     BASE_PATH="/home/$USERNAME/Blue2thprinting"
@@ -246,3 +245,6 @@ do_all(){
     cd $BASE_PATH
     print_banner "Everything seems to have completed successfully! \o/"
 }
+
+#Execute all the default steps
+do_all
