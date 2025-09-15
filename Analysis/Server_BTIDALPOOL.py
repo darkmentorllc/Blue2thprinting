@@ -274,35 +274,35 @@ def handle_query(self, username, query_object):
             args_array.append(f"--bdaddr-regex")
             args_array.append(f"{entry}")
     if("NOT_bdaddr_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['NOT_bdaddr_regex']:
             args_array.append(f"--NOT-bdaddr-regex")
             args_array.append(f"{entry}")
     if("name_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['name_regex']:
             args_array.append(f"--name-regex")
             args_array.append(f"{entry}")
     if("NOT_name_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['NOT_name_regex']:
             args_array.append(f"--NOT-name-regex")
             args_array.append(f"{entry}")
     if("company_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['company_regex']:
             args_array.append(f"--company-regex")
             args_array.append(f"{entry}")
     if("NOT_company_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['NOT_company_regex']:
             args_array.append(f"--NOT-company-regex")
             args_array.append(f"{entry}")
     if("UUID_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['UUID_regex']:
             args_array.append(f"--UUID-regex")
             args_array.append(f"{entry}")
     if("NOT_UUID_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['NOT_UUID_regex']:
             args_array.append(f"--NOT-UUID-regex")
             args_array.append(f"{entry}")
     if("MSD_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
+        for entry in query_object['MSD_regex']:
             args_array.append(f"--MSD-regex")
             args_array.append(f"{entry}")
     if("LL_VERSION_IND" in query_object):
