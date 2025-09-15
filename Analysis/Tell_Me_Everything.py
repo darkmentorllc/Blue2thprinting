@@ -388,7 +388,7 @@ def main():
     # Process CLI arguments that remove BDADDRs from the list
     bdaddrs_to_remove = []
 
-    if(args.NOT_bdaddr != ""):
+    if(args.NOT_bdaddr != None):
         # Not taking the shortcut of just doing "bdaddrs_to_remove = args.NOT_bdaddr",
         # just in case the code gets rearranged later
         for entry in args.NOT_bdaddr:
