@@ -33,7 +33,7 @@ def device_has_LMP_VERSION_RES_info(bdaddr):
         return False
 
 def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
-    qprint(nameregex)
+    vprint(nameregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
@@ -55,7 +55,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
-    values = (nameregex, bdaddr_random)
+    values = (bdaddr_random, nameregex)
     le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
@@ -81,7 +81,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     return bdaddr_hash.keys()
 
 def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
-    qprint(bdaddrregex)
+    vprint(bdaddrregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
@@ -252,7 +252,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
             qprint(f"{len(tooth_lmp_result)} results found in DB:LMP_VERSION_RES for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            values = (key, bdaddr_random)
+            values = (bdaddr_random, key)
             tooth_ll_query = "SELECT bdaddr FROM LL_VERSION_IND WHERE bdaddr_random = %s AND device_BT_CID = %s"
             tooth_ll_result = execute_query(tooth_ll_query, values)
             for (bdaddr,) in tooth_ll_result:
@@ -272,7 +272,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                values2 = (byte_swapped_key, bdaddr_random)
+                values2 = (bdaddr_random, byte_swapped_key)
                 le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND device_BT_CID = %s"
                 le_msd_result = execute_query(le_msd_query, values2)
                 for (bdaddr,) in le_msd_result:
@@ -324,7 +324,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
             qprint(f"{len(eir_uuid16_result)} results found in DB:EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            values = (f"0x{key:04x}", bdaddr_random)
+            values = (bdaddr_random, f"0x{key:04x}")
             le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
             le_uuid16_result = execute_query(le_uuid16_query, values)
             for (bdaddr,) in le_uuid16_result:
