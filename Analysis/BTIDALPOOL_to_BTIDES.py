@@ -181,7 +181,9 @@ def main():
 
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value.')
+    device_group.add_argument('--NOT-bdaddr', type=str, default='', required=False, help='Remove them given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex).')
     device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
+    device_group.add_argument('--NOT-bdaddr-regex', type=str, default='', required=False, help='Find the bdaddrs corresponding to the regexp, the same as with --bdaddr-regex, and then remove them from the final results.')
     device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
     device_group.add_argument('--name-regex', type=str, default='', help='Value for REGEXP match against device_name.')
     device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
@@ -208,8 +210,12 @@ def main():
     query_object = {}
     if args.bdaddr:
         query_object["bdaddr"] = args.bdaddr
+    if args.NOT_bdaddr:
+        query_object["NOT_bdaddr"] = args.NOT_bdaddr
     if args.bdaddr_regex:
         query_object["bdaddr_regex"] = args.bdaddr_regex
+    if args.NOT_bdaddr_regex:
+        query_object["NOT_bdaddr_regex"] = args.NOT_bdaddr_regex
     if args.name_regex:
         query_object["name_regex"] = args.name_regex
     if args.NOT_name_regex:

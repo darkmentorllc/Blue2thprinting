@@ -75,10 +75,12 @@ def main():
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
+    device_group.add_argument('--NOT-bdaddr', type=str, default='', required=False, help='Remove them given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex).')
     device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
+    device_group.add_argument('--NOT-bdaddr-regex', type=str, default='', required=False, help='Find the bdaddrs corresponding to the regexp, the same as with --bdaddr-regex, and then remove them from the final results. (NOTE: Use --NOT-bdaddr if you can, as it is more efficient.).)')
     device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
     device_group.add_argument('--name-regex', type=str, default='', help='Value for REGEXP match against device_name.')
-    device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --name-regex, and then remove them from the final results.')
+    device_group.add_argument('--NOT-name-regex', type=str, default='', help='Find the bdaddrs corresponding to the name regexp, the same as with --name-regex, and then remove them from the final results.')
     device_group.add_argument('--company-regex', type=str, default='', help='Value for REGEXP match against company name, in IEEE OUIs, or BT Company IDs, or BT Company UUID16s.')
     device_group.add_argument('--NOT-company-regex', type=str, default='', help='Find the bdaddrs corresponding to the regexp, the same as with --company-regex, and then remove them from the final results.')
     device_group.add_argument('--UUID-regex', type=str, default='', help='Value for REGEXP match against UUID, in any location UUIDs can appear. NOTE: make sure to remove dashes from UUID128s because dashes will be interpreted per their regex meaning!')
@@ -174,8 +176,12 @@ def main():
         query_object = {}
         if args.bdaddr:
             query_object["bdaddr"] = args.bdaddr
+        if args.NOT_bdaddr:
+            query_object["NOT_bdaddr"] = args.NOT_bdaddr
         if args.bdaddr_regex:
             query_object["bdaddr_regex"] = args.bdaddr_regex
+        if args.NOT_bdaddr_regex:
+            query_object["NOT_bdaddr_regex"] = args.NOT_bdaddr_regex
         if args.name_regex:
             query_object["name_regex"] = args.name_regex
         if args.company_regex:
@@ -379,47 +385,35 @@ def main():
             bdaddrs += bdaddrs_tmp
         qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
 
-    if(args.NOT_UUID_regex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_uuid_regex(args.NOT_UUID_regex)
-        qprint(bdaddrs_to_remove)
-        updated_bdaddrs = []
-        for value in bdaddrs:
-            if(value in bdaddrs_to_remove):
-                continue
-            else:
-                updated_bdaddrs.append(value)
+    # Process CLI arguments that remove BDADDRs from the list
+    bdaddrs_to_remove = []
 
-        qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
+    if(args.NOT_bdaddr != ""):
+        bdaddrs_to_remove.append(f"{args.NOT_bdaddr}")
 
-        bdaddrs = updated_bdaddrs;
-
-    if(args.NOT_company_regex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_company_regex(args.NOT_company_regex)
-        qprint(bdaddrs_to_remove)
-        updated_bdaddrs = []
-        for value in bdaddrs:
-            if(value in bdaddrs_to_remove):
-                continue
-            else:
-                updated_bdaddrs.append(value)
-
-        qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
-
-        bdaddrs = updated_bdaddrs;
+    if(args.NOT_bdaddr_regex != ""):
+        bdaddrs_to_remove.extend(get_bdaddrs_by_bdaddr_regex(args.NOT_bdaddr_regex))
 
     if(args.NOT_name_regex != ""):
-        bdaddrs_to_remove = get_bdaddrs_by_name_regex(args.NOT_name_regex)
-        qprint(bdaddrs_to_remove)
-        updated_bdaddrs = []
-        for value in bdaddrs:
-            if(value in bdaddrs_to_remove):
-                continue
-            else:
-                updated_bdaddrs.append(value)
+        bdaddrs_to_remove.extend(get_bdaddrs_by_name_regex(args.NOT_name_regex))
 
-        qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
+    if(args.NOT_company_regex != ""):
+        bdaddrs_to_remove.extend(get_bdaddrs_by_company_regex(args.NOT_company_regex))
 
-        bdaddrs = updated_bdaddrs;
+    if(args.NOT_UUID_regex != ""):
+        bdaddrs_to_remove.extend(get_bdaddrs_by_uuid_regex(args.NOT_UUID_regex))
+
+    # Now that we have all the bdaddrs_to_remove, loop through the bdaddrs list and remove them
+    qprint(bdaddrs_to_remove)
+    updated_bdaddrs = []
+    for value in bdaddrs:
+        if(value in bdaddrs_to_remove):
+            continue
+        else:
+            updated_bdaddrs.append(value)
+
+    qprint(f"updated_bdaddrs after removals is of length {len(updated_bdaddrs)} compared to original length of bdaddrs = {len(bdaddrs)}")
+    bdaddrs = updated_bdaddrs;
 
     filtered_bdaddrs = []
     for bdaddr in bdaddrs:
