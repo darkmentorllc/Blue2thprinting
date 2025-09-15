@@ -32,7 +32,7 @@ def device_has_LMP_VERSION_RES_info(bdaddr):
     else:
         return False
 
-def get_bdaddrs_by_name_regex(nameregex):
+def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     qprint(nameregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
@@ -55,7 +55,8 @@ def get_bdaddrs_by_name_regex(nameregex):
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    values = (nameregex, bdaddr_random)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -63,8 +64,9 @@ def get_bdaddrs_by_name_regex(nameregex):
     qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00';"
-    chars_result = execute_query(chars_query, ())
+    values = (bdaddr_random, bdaddr_random)
+    chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.bdaddr_random = %s AND cv.bdaddr_random = %s AND c.UUID = '2a00';"
+    chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0):
         for (bdaddr, byte_values) in chars_result:
             tmpstr = byte_values.decode('utf-8', 'ignore')
@@ -78,57 +80,65 @@ def get_bdaddrs_by_name_regex(nameregex):
 
     return bdaddr_hash.keys()
 
-def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
+def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
     qprint(bdaddrregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    values = (bdaddrregex,)
+    values = (bdaddrregex,) + (bdaddr_random,) * 33
     bdaddr_query = (
         "SELECT DISTINCT t.bdaddr "
         "FROM ( "
         "    SELECT %s AS bdaddr_regex "
         ") AS regex "
         "CROSS JOIN ( "
-        "    SELECT bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_CoD WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_CoD WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_role WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0 "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info "
+        "    UNION ALL "
+        "    SELECT bdaddr FROM EIR_bdaddr_to_CoD "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_DevID "
         "    UNION ALL "
@@ -140,13 +150,9 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_PSRM "
         "    UNION ALL "
-        "    SELECT bdaddr FROM EIR_bdaddr_to_CoD "
-        "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_tx_power "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_URI "
-        "    UNION ALL "
-        "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info "
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_UUID128s "
         "    UNION ALL "
@@ -154,25 +160,37 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
         "    UNION ALL "
         "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND WHERE bdaddr_random = %s "
         "    UNION ALL "
         "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
         "    UNION ALL "
         "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES "
         "    UNION ALL "
         "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES "
         "    UNION ALL "
-        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_attribute_handles WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics_values WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services WHERE bdaddr_random = %s "
+        "    UNION ALL "
+        "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name "
         ") AS t "
         "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
     )
@@ -186,7 +204,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex):
 
     return bdaddr_hash.keys()
 
-def get_bdaddrs_by_company_regex(companyregex):
+def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
     global bt_CID_to_names
     global bt_member_UUID16s_to_names
     qprint(f"Your given regex was {companyregex}")
@@ -234,14 +252,15 @@ def get_bdaddrs_by_company_regex(companyregex):
             qprint(f"{len(tooth_lmp_result)} results found in DB:LMP_VERSION_RES for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            tooth_ll_query = "SELECT bdaddr FROM LL_VERSION_IND WHERE device_BT_CID = %s"
+            values = (key, bdaddr_random)
+            tooth_ll_query = "SELECT bdaddr FROM LL_VERSION_IND WHERE bdaddr_random = %s AND device_BT_CID = %s"
             tooth_ll_result = execute_query(tooth_ll_query, values)
             for (bdaddr,) in tooth_ll_result:
                 bdaddr_hash[bdaddr] = 1
             qprint(f"{len(tooth_ll_result)} results found in DB:LL_VERSION_IND for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
+            le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND device_BT_CID = %s"
             le_msd_result = execute_query(le_msd_query, values)
             for (bdaddr,) in le_msd_result:
                 bdaddr_hash[bdaddr] = 1
@@ -253,8 +272,8 @@ def get_bdaddrs_by_company_regex(companyregex):
 
             if(try_byte_swapped_bt_cid):
                 byte_swapped_key = (key & 0xFF) << 8 | (key & 0xFF00) >> 8
-                values2 = (byte_swapped_key,)
-                le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE device_BT_CID = %s"
+                values2 = (byte_swapped_key, bdaddr_random)
+                le_msd_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND device_BT_CID = %s"
                 le_msd_result = execute_query(le_msd_query, values2)
                 for (bdaddr,) in le_msd_result:
                     bdaddr_hash[bdaddr] = 1
@@ -305,7 +324,8 @@ def get_bdaddrs_by_company_regex(companyregex):
             qprint(f"{len(eir_uuid16_result)} results found in DB:EIR_bdaddr_to_UUID16s for key 0x{key:04x}")
             #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
-            le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
+            values = (f"0x{key:04x}", bdaddr_random)
+            le_uuid16_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
             le_uuid16_result = execute_query(le_uuid16_query, values)
             for (bdaddr,) in le_uuid16_result:
                 bdaddr_hash[bdaddr] = 1
@@ -334,52 +354,60 @@ def get_bdaddrs_by_company_regex(companyregex):
         for prefix in bdaddr_prefixes.keys():
 
             qprint(f"BDADDR OUI: {prefix}")
-            values = (prefix,)
+            values = (prefix,) + (bdaddr_random,) * 33
             oui_search_query = f"""
             SELECT DISTINCT t.bdaddr
             FROM (
                 SELECT %s AS bdaddr_prefix
             ) AS prefix
             CROSS JOIN (
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_CoD WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_CoD WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_role WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = 0
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_3d_info
+                UNION ALL
+                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_CoD
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_DevID
                 UNION ALL
@@ -391,13 +419,9 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_PSRM
                 UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_CoD
-                UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_tx_power
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_URI
-                UNION ALL
-                SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_3d_info
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_UUID128s
                 UNION ALL
@@ -405,25 +429,37 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UNION ALL
                 SELECT bdaddr COLLATE utf8mb4_unicode_ci AS bdaddr FROM EIR_bdaddr_to_UUID32s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_FEATUREs
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_FEATUREs WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_LENGTHs
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_LENGTHs WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PHYs
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PHYs WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PINGs
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_PINGs WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_UNKNOWN_RSP
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_VERSION_IND
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LL_VERSION_IND WHERE bdaddr_random = %s
                 UNION ALL
                 SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_FEATURES_RES
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_FEATURES_RES_EXT
                 UNION ALL
                 SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_NAME_RES
                 UNION ALL
                 SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_VERSION_RES
                 UNION ALL
-                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_services
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_attribute_handles WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_characteristics WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_characteristics_values WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM GATT_services WHERE bdaddr_random = %s
+                UNION ALL
+                SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM HCI_bdaddr_to_name
             ) AS t
             WHERE t.bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');
             """
@@ -445,7 +481,7 @@ def get_bdaddrs_by_company_regex(companyregex):
                 UUIDs_to_company_map[TME.TME_glob.clues[key]["UUID"]] = 1
 
         for UUID in UUIDs_to_company_map.keys():
-            bdaddrs_tmp = get_bdaddrs_by_uuid_regex(UUID.replace("-", ""))
+            bdaddrs_tmp = get_bdaddrs_by_uuid_regex(UUID.replace("-", ""), bdaddr_random)
             if(bdaddrs_tmp is not None):
                 for bdaddr in bdaddrs_tmp:
                     bdaddr_hash[bdaddr] = 1
@@ -457,7 +493,8 @@ def get_bdaddrs_by_company_regex(companyregex):
 
     return bdaddr_hash.keys()
 
-def get_bdaddrs_by_msd_regex(msdregex):
+# FIXME: Ticket #19
+def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     qprint(f"{msdregex} in get_bdaddrs_by_msd_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
@@ -481,7 +518,8 @@ def get_bdaddrs_by_msd_regex(msdregex):
     return bdaddr_hash.keys()
 
 
-def get_bdaddrs_by_uuid_regex(uuid_regex):
+# FIXME: Ticket #19
+def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
 
     qprint(f"{uuid_regex} in get_bdaddrs_by_uuid_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
