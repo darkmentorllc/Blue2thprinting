@@ -266,8 +266,11 @@ def handle_query(self, username, query_object):
         args_array.append(f"--bdaddr")
         args_array.append(f"{query_object['bdaddr']}")
     if("NOT_bdaddr" in query_object):
-        args_array.append(f"--NOT-bdaddr")
-        args_array.append(f"{query_object['NOT_bdaddr']}")
+        for entry in query_object['NOT_bdaddr']:
+            args_array.append(f"--NOT-bdaddr")
+            args_array.append(f"{entry}")
+        # args_array.append(f"--NOT-bdaddr")
+        # args_array.append(f"{query_object['NOT_bdaddr']}")
     if("bdaddr_regex" in query_object):
         args_array.append(f"--bdaddr-regex")
         args_array.append(f"{query_object['bdaddr_regex']}")

@@ -75,7 +75,7 @@ def main():
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
-    device_group.add_argument('--NOT-bdaddr', type=str, default='', required=False, help='Remove them given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex).')
+    device_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove them given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex).')
     device_group.add_argument('--bdaddr-regex', type=str, default='', required=False, help='Regex to match a bdaddr value.')
     device_group.add_argument('--NOT-bdaddr-regex', type=str, default='', required=False, help='Find the bdaddrs corresponding to the regexp, the same as with --bdaddr-regex, and then remove them from the final results. (NOTE: Use --NOT-bdaddr if you can, as it is more efficient.).)')
     device_group.add_argument('--bdaddr-type', type=int, default=0, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
@@ -177,7 +177,7 @@ def main():
         if args.bdaddr:
             query_object["bdaddr"] = args.bdaddr
         if args.NOT_bdaddr:
-            query_object["NOT_bdaddr"] = args.NOT_bdaddr
+            query_object["NOT_bdaddr"] = args.NOT_bdaddr # NOTE: this will now be a list!
         if args.bdaddr_regex:
             query_object["bdaddr_regex"] = args.bdaddr_regex
         if args.NOT_bdaddr_regex:
@@ -389,7 +389,10 @@ def main():
     bdaddrs_to_remove = []
 
     if(args.NOT_bdaddr != ""):
-        bdaddrs_to_remove.append(f"{args.NOT_bdaddr}")
+        # Not taking the shortcut of just doing "bdaddrs_to_remove = args.NOT_bdaddr",
+        # just in case the code gets rearranged later
+        for entry in args.NOT_bdaddr:
+            bdaddrs_to_remove.append(f"{entry}")
 
     if(args.NOT_bdaddr_regex != ""):
         bdaddrs_to_remove.extend(get_bdaddrs_by_bdaddr_regex(args.NOT_bdaddr_regex))
