@@ -16,7 +16,7 @@ from TME.TME_helpers import *
 def import_metadata_v2():
     global metadata_v2
     # Load JSON data from file
-    json_file = './Metadata_v2.json'
+    json_file = './metadata/Metadata_v2.json'
     with open(json_file, 'r') as f:
         TME.TME_glob.metadata_v2 = json.load(f)
 
@@ -26,7 +26,7 @@ def import_metadata_v2():
 # doesn't need to be checked in
 def import_private_metadata_v2():
     global metadata_v2
-    json_file = './private/Metadata_v2_private.json'
+    json_file = './metadata/private/Metadata_v2_private.json'
     try:
         with open(json_file, 'r') as f:
             TME.TME_glob.metadata_v2.update(json.load(f))
@@ -56,7 +56,7 @@ def import_CLUES():
 def import_private_CLUES():
     global clues
     global clues_regexed
-    json_file = './private/CLUES_data_private.json'
+    json_file = './metadata/private/CLUES_data_private.json'
     try:
         with open(json_file, 'r') as f:
             data = json.load(f)
@@ -73,7 +73,7 @@ def import_private_CLUES():
 
 def import_nameprint_CSV_data():
     global full_nameprint_data
-    with open("./NAMEPRINT_UNIQUE_DB.csv", 'r') as csvfile:
+    with open("./metadata/NAMEPRINT_UNIQUE_DB.csv", 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
         for row in csv_reader:
             if len(row) >= 2:
@@ -85,7 +85,7 @@ def import_nameprint_CSV_data():
     # The user has the option to store private metadata in
     # this file. It will be consulted, but doesn't need to be checked in
     try:
-        with open('./private/NAMEPRINT_UNIQUE_DB_private.csv', 'r') as csvfile:
+        with open('./metadata/private/NAMEPRINT_UNIQUE_DB_private.csv', 'r') as csvfile:
             csv_reader = csv.reader(csvfile)
             for row in csv_reader:
                 if len(row) >= 2:
@@ -100,7 +100,7 @@ def import_nameprint_CSV_data():
 def import_nonunique_nameprint_CSV_data():
     global nonunique_nameprint_data
     global full_nameprint_data
-    with open("./NAMEPRINT_NONUNIQUE_DB.csv", 'r') as csvfile:
+    with open("./metadata/NAMEPRINT_NONUNIQUE_DB.csv", 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
         for row in csv_reader:
             if len(row) >= 2:
@@ -112,7 +112,7 @@ def import_nonunique_nameprint_CSV_data():
     # The user has the option to store private metadata in
     # this file. It will be consulted, but doesn't need to be checked in
     try:
-        with open('./private/NAMEPRINT_NONUNIQUE_DB_private.csv', 'r') as csvfile:
+        with open('./metadata/private/NAMEPRINT_NONUNIQUE_DB_private.csv', 'r') as csvfile:
             csv_reader = csv.reader(csvfile)
             for row in csv_reader:
                 if len(row) >= 2:
