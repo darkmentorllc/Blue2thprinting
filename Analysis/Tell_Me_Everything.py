@@ -74,7 +74,7 @@ def main():
 
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
-    device_group.add_argument('--bdaddr-type', type=int, default=1, required=False, help='BDADDR type (0 = LE Public, 1 = LE Random (default), 2 = Classic, 3 = Any).')
+    device_group.add_argument('--bdaddr-type', type=int, default=1, required=False, help='BDADDR type (0 = LE Public, 1 = LE Random (default, but BT Classic will also be matched by default.)).')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
     device_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove the given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex). May be passed multiple times.')
     device_group.add_argument('--bdaddr-regex', action='append', required=False, help='Regex to match a bdaddr value. May be passed multiple times.')
@@ -263,6 +263,9 @@ def main():
     import_CLUES()
     import_private_CLUES()
 
+    # Import other JSON
+    import_model_metadata_by_manufacturer()
+
     # Import any data from CSV files as necessary
     import_nameprint_CSV_data()
     import_nonunique_nameprint_CSV_data()
@@ -318,21 +321,24 @@ def main():
             bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(entry, args.bdaddr_type)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
-            qprint(f"{len(bdaddrs)} bdaddrs after --bdaddr-regex processing: {bdaddrs}")
+            qprint(f"{len(bdaddrs)} bdaddrs after --bdaddr-regex processing")
+            vprint(f"{bdaddrs}")
 
     if(args.name_regex != None):
         for entry in args.name_regex:
             bdaddrs_tmp = get_bdaddrs_by_name_regex(entry, args.bdaddr_type)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
-            qprint(f"{len(bdaddrs)} bdaddrs after --name-regex processing: {bdaddrs}")
+            print(f"{len(bdaddrs)} bdaddrs after --name-regex processing")
+            vprint(f"{bdaddrs}")
 
     if(args.company_regex != None):
         for entry in args.company_regex:
             bdaddrs_tmp = get_bdaddrs_by_company_regex(entry, args.bdaddr_type)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
-            qprint(f"{len(bdaddrs)} bdaddrs after --company-regex processing: {bdaddrs}")
+            qprint(f"{len(bdaddrs)} bdaddrs after --company-regex processing")
+            vprint(f"{bdaddrs}")
 
     if(args.UUID_regex != None):
         for entry in args.UUID_regex:
@@ -340,7 +346,8 @@ def main():
             qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
-            qprint(f"{len(bdaddrs)} bdaddrs after --UUID-regex processing: {bdaddrs}")
+            qprint(f"{len(bdaddrs)} bdaddrs after --UUID-regex processing")
+            vprint(f"{bdaddrs}")
 
     if(args.MSD_regex != None):
         for entry in args.MSD_regex:
@@ -348,7 +355,8 @@ def main():
             qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
-            qprint(f"{len(bdaddrs)} bdaddrs after --MSD-regex processing: {bdaddrs}")
+            qprint(f"{len(bdaddrs)} bdaddrs after --MSD-regex processing")
+            vprint(f"{bdaddrs}")
 
     if(args.LL_VERSION_IND != ""):
         (version, company_id, subversion) = args.LL_VERSION_IND.split(":")
@@ -368,7 +376,8 @@ def main():
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after --LL_VERSION_IND processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --LL_VERSION_IND processing")
+        vprint(f"{bdaddrs}")
 
     if(args.LMP_VERSION_RES != ""):
         (version, company_id, subversion) = args.LMP_VERSION_RES.split(":")
@@ -388,7 +397,8 @@ def main():
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
-        qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing: {bdaddrs}")
+        qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing")
+        vprint(f"{bdaddrs}")
 
     # Process CLI arguments that remove BDADDRs from the list
     bdaddrs_to_remove = []
@@ -416,7 +426,8 @@ def main():
             bdaddrs_to_remove.extend(get_bdaddrs_by_uuid_regex(entry, args.bdaddr_type))
 
     # Now that we have all the bdaddrs_to_remove, loop through the bdaddrs list and remove them
-    qprint(bdaddrs_to_remove)
+    qprint(f"{len(bdaddrs_to_remove)} bdaddrs_to_remove")
+    vprint(f"bdaddrs_to_remove = {bdaddrs_to_remove}")
     updated_bdaddrs = []
     for value in bdaddrs:
         if(value in bdaddrs_to_remove):

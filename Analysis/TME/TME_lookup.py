@@ -44,7 +44,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     for (bdaddr,) in eir_result:
         bdaddr_hash[bdaddr] = 1
     qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_name")
-    qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
+    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for HCI_bdaddr_to_name table
     hci_query = "SELECT bdaddr FROM HCI_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
@@ -52,7 +52,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     for (bdaddr,) in hci_result:
         bdaddr_hash[bdaddr] = 1
     qprint(f"get_bdaddrs_by_name_regex: {len(hci_result)} results found in DB:HCI_bdaddr_to_name")
-    qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
+    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
     values = (bdaddr_random, nameregex)
@@ -61,7 +61,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in DB:LE_bdaddr_to_name")
-    qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
+    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
     values = (bdaddr_random, bdaddr_random)
@@ -73,10 +73,10 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
             #qprint(f"byte_values: {tmpstr}")
             pattern = re.compile(nameregex)
             if re.search(pattern, tmpstr):
-                qprint(f"{nameregex} matched bdaddr = {bdaddr}")
+                vprint(f"{nameregex} matched bdaddr = {bdaddr}")
                 bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in GATT_characteristics_values and GATT_characteristics")
-    qprint(f"get_bdaddrs_by_name_regex: bdaddr_hash (len = {len(bdaddr_hash)}) = {bdaddr_hash}")
+    qprint(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in DB:GATT_characteristics_values and DB:GATT_characteristics")
+    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash (len = {len(bdaddr_hash)}) = {bdaddr_hash}")
 
     return bdaddr_hash.keys()
 
@@ -280,6 +280,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
                 qprint(f"{len(le_msd_result)} results found in DB:LE_bdaddr_to_MSD for byte-swapped BT_CID for key 0x{byte_swapped_key:04x}")
                 #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
 
+            values = (key,)
             eir_msd_query = "SELECT bdaddr FROM EIR_bdaddr_to_MSD WHERE device_BT_CID = %s"
             eir_msd_result = execute_query(eir_msd_query, values)
             for (bdaddr,) in eir_msd_result:

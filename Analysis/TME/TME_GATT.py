@@ -88,7 +88,7 @@ def lookup_company_name_by_OUI(OUI):
         return ""
 
 # Decode some misc things just because they provide interesting info
-def characteristic_value_decoding(indent, UUID128, bytes):
+def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_random=None):
     UUID = convert_UUID128_to_UUID16_if_possible(UUID128)
     if(UUID == "2a00"): # Name
         utf8_str = bytes.decode('utf-8', 'ignore')
@@ -126,6 +126,25 @@ def characteristic_value_decoding(indent, UUID128, bytes):
             if(le_company_name != ""):
                 color_str = f"{indent}System ID last 3 bytes little-endian decodes as: " + Fore.BLUE + Style.BRIGHT + f"OUI = {little_endian_OUI}, Company Name = {le_company_name}" + Style.RESET_ALL
                 qprint(color_str)
+
+    elif(UUID == "2a24"): # Model Number String
+        # Check if we have a 0x2a29 (Model Number String) value
+        # which is equal to any of the keys in the model_metadata_by_manufacturer dictionary
+        base_values = (bdaddr, bdaddr_random)
+        query = "SELECT bdaddr FROM GATT_Characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s AND byte_values = %s"
+        for k in TME.TME_glob.model_metadata_by_manufacturer.keys():
+            # key_hexstr = "0x" + str_to_hex_str(key)
+            # values = base_values + (key_hexstr,)
+            key_bytes = k.encode('utf-8')
+            values = base_values + (key_bytes,)
+            result = execute_query(query, values)
+            if(len(result) >= 1):
+                metadata = TME.TME_glob.model_metadata_by_manufacturer[k]
+                char_val_str = bytes.decode('utf-8', 'ignore')
+                if(char_val_str in metadata.keys()):
+                    color_str = f"{indent}Model Number String {k}-specific supplemental name: " + Fore.BLUE + Style.BRIGHT + f"{metadata[char_val_str]}" + Style.RESET_ALL
+                    qprint(color_str)
+                    break
 
     elif(UUID == "2a50"): # PnP ID
         if(len(bytes) == 7):
@@ -429,7 +448,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
                                 fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
                                 qprint(f"{i5}GATT Characteristic Value read as {fmt_byte_values}")
                                 if(handle in attribute_handles_dict.keys()):
-                                    characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values)
+                                    characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values, bdaddr=bdaddr, bdaddr_random=bdaddr_random)
 
                 # Check if this handle is found in the GATT_characteristic_descriptor_values table, and if so, print that info
                 if(handle in descriptor_handles_dict.keys()):
