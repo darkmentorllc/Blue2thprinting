@@ -789,11 +789,12 @@ def print_manufacturer_data(bdaddr):
     qprint("")
 
 # Changing up the formatting to print all the AdvData underneath whatever advertisement/scan response it originally appeared in
-def print_all_advdata(bdaddr, nametype):
+def print_all_advdata(bdaddr, bdaddr_random):
     # TODO: Ideally I want to have information grouped by the source packet type it came in on
     # TODO: But looping through and printing only the information for a single type at a time seem like it would be inefficient in terms of db queries
     # TODO: Maybe build up the BTIDES data structure and then pretty-print that?
-    print_device_names(bdaddr, nametype)
+    # FIXME: Ticket #19
+    print_device_names(bdaddr, bdaddr_random)
     print_uuid16s(bdaddr)                               # Includes BTIDES export
     print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
     print_uuid16s_service_solicit(bdaddr)               # Includes BTIDES export
@@ -802,9 +803,9 @@ def print_all_advdata(bdaddr, nametype):
     print_uuid128s(bdaddr)                              # Includes BTIDES export
     print_uuid128_service_data(bdaddr)                  # Includes BTIDES export
     print_uuid128s_service_solicit(bdaddr)              # Includes BTIDES export
-    print_transmit_power(bdaddr, nametype)              # Includes BTIDES export
+    print_transmit_power(bdaddr, bdaddr_random)              # Includes BTIDES export
     print_flags(bdaddr)                                 # Includes BTIDES export
-    print_appearance(bdaddr, nametype)                  # Includes BTIDES export
+    print_appearance(bdaddr, bdaddr_random)                  # Includes BTIDES export
     print_manufacturer_data(bdaddr)
     print_class_of_device(bdaddr)                       # Includes BTIDES export
     print_PSRM(bdaddr)                                  # Includes BTIDES export

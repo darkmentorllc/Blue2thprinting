@@ -67,11 +67,11 @@ def print_GPS_entries(indent, results, bdaddr):
         data = {"lat": lat, "lon": lon, "time": time_dict, "rssi": rssi}
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-def print_GPS(bdaddr):
-    values = (bdaddr,)
+def print_GPS(bdaddr, bdaddr_random):
+    values = (bdaddr_random, bdaddr)
     # The WiGLE data is not capable of distinguishing between Classic and LE,
     # so we need to not constraint it based on the bdaddr_random value, to get both Classic and LE
-    select_query = f"SELECT bdaddr_random, time, time_type, rssi, lat, lon FROM bdaddr_to_GPS WHERE bdaddr = %s;"
+    select_query = f"SELECT bdaddr_random, time, time_type, rssi, lat, lon FROM bdaddr_to_GPS WHERE bdaddr_random = %s AND bdaddr = %s;"
     select_results = execute_query(select_query, values)
 
     if (len(select_results) == 0):

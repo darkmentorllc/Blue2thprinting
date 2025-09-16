@@ -244,10 +244,10 @@ def descriptor_print(indent, UUID, operation, byte_values):
         print("2905-specific stuff")
 
 
-def print_GATT_info(bdaddr):
+def print_GATT_info(bdaddr, bdaddr_random):
     # Query the database for all GATT services
-    values = (bdaddr,)
-    query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
+    values = (bdaddr_random, bdaddr)
+    query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr_random = %s AND bdaddr = %s";
     GATT_services_result = execute_query(query, values)
     for bdaddr_random, service_type, begin_handle, end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
@@ -255,7 +255,7 @@ def print_GATT_info(bdaddr):
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
         BTIDES_export_GATT_Service(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr_random = %s AND bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     attribute_handles_dict = {}
     for bdaddr_random, attribute_handle, UUID in GATT_attribute_handles_result:
@@ -264,7 +264,7 @@ def print_GATT_info(bdaddr):
         data = ff_ATT_handle_entry(attribute_handle, UUID)
         BTIDES_export_ATT_handle(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr_random = %s AND bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
     characteristic_declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
     for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
@@ -272,7 +272,7 @@ def print_GATT_info(bdaddr):
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr_random = %s AND bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
@@ -287,7 +287,7 @@ def print_GATT_info(bdaddr):
             # There wasn't already an entry, so insert a list of a single value")
             char_value_handles_dict[(char_value_handle, operation)] = [ byte_values ]
 
-    query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s AND bdaddr = %s";
     GATT_characteristic_descriptor_values_result = execute_query(query, values)
     descriptor_handles_dict = {}
     for bdaddr_random, UUID, descriptor_handle, operation, byte_values in GATT_characteristic_descriptor_values_result:
@@ -300,29 +300,29 @@ def print_GATT_info(bdaddr):
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
-    values = (bdaddr,bdaddr,bdaddr,bdaddr,bdaddr)
+    values = (bdaddr_random, bdaddr) * 5
     query = """
     SELECT DISTINCT handle_value
     FROM (
         SELECT attribute_handle AS handle_value
         FROM GATT_attribute_handles
-        WHERE bdaddr = %s
+        WHERE bdaddr_random = %s AND bdaddr = %s
         UNION
         SELECT declaration_handle AS handle_value
         FROM GATT_characteristics
-        WHERE bdaddr = %s
+        WHERE bdaddr_random = %s AND bdaddr = %s
         UNION
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics
-        WHERE bdaddr = %s
+        WHERE bdaddr_random = %s AND bdaddr = %s
         UNION
         SELECT char_value_handle AS handle_value
         FROM GATT_characteristics_values
-        WHERE bdaddr = %s
+        WHERE bdaddr_random = %s AND bdaddr = %s
         UNION
         SELECT descriptor_handle AS handle_value
         FROM GATT_characteristic_descriptor_values
-        WHERE bdaddr = %s
+        WHERE bdaddr_random = %s AND bdaddr = %s
     ) AS combined_handles
     ORDER BY handle_value ASC;
     """

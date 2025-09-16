@@ -477,18 +477,18 @@ def main():
         qprint(f"For bdaddr = {bdaddr}:")
         print_company_name_from_bdaddr(f"{i1}", bdaddr, True)
         print("")
-        print_ChipPrint(bdaddr)
-        print_ChipMakerPrint(bdaddr)                        # Includes BTIDES export
+        print_ChipPrint(bdaddr, args.bdaddr_type)
+        print_ChipMakerPrint(bdaddr, args.bdaddr_type)      # Includes BTIDES export
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
-        print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export
-        print_GATT_info(bdaddr)                             # Includes BTIDES export
+        print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export # FIXME: Ticket #19
+        print_GATT_info(bdaddr, args.bdaddr_type)           # Includes BTIDES export
         print_SMP_info(bdaddr)                              # Includes BTIDES export
-        print_LLCP_info(bdaddr)                             # Includes BTIDES export
+        print_LLCP_info(bdaddr, args.bdaddr_type)           # Includes BTIDES export
         print_LMP_info(bdaddr)                              # Includes BTIDES export
         print_SDP_info(bdaddr)                              # Includes BTIDES export
-        print_L2CAP_info(bdaddr)                            # Includes BTIDES export
-        print_GPS(bdaddr)
-        print_UniqueIDReport(bdaddr)
+        print_L2CAP_info(bdaddr, args.bdaddr_type)          # Includes BTIDES export
+        print_GPS(bdaddr, args.bdaddr_type)
+        print_UniqueIDReport(bdaddr, args.bdaddr_type)     # Includes BTIDES export# FIXME: Ticket #19
 
     if(out_filename != None and out_filename != ""):
         write_BTIDES(out_filename)

@@ -52,12 +52,12 @@ def print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(indent, direction, pkt_id, data_
     qprint(f"{indent}{i1}Result: {result} ({type_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result_strings[result]})")
 
 
-def print_L2CAP_info(bdaddr):
+def print_L2CAP_info(bdaddr, bdaddr_random):
     # Query the database for all L2CAP data
-    values = (bdaddr,)
-    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr = %s";
+    values = (bdaddr_random, bdaddr)
+    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr_random = %s AND bdaddr = %s";
     l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result = execute_query(query, values)
-    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr = %s";
+    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr_random = %s AND bdaddr = %s";
     l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result = execute_query(query, values)
 
     if (l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result or l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):

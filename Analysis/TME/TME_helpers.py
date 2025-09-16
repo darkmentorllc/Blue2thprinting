@@ -304,6 +304,10 @@ def is_bdaddr_le_and_random(bdaddr):
 
     query = """
     SELECT 1
+    FROM LE_bdaddr_to_3d_info
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
     FROM LE_bdaddr_to_appearance
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
@@ -336,6 +340,14 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
+    FROM LE_bdaddr_to_random_target_bdaddr
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
+    FROM LE_bdaddr_to_role
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
     FROM LE_bdaddr_to_tx_power
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
@@ -344,11 +356,11 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID128_service_solicit
+    FROM LE_bdaddr_to_UUID128_service_data
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID128_service_data
+    FROM LE_bdaddr_to_UUID128_service_solicit
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -356,22 +368,23 @@ def is_bdaddr_le_and_random(bdaddr):
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID32_service_solicit
+    FROM LE_bdaddr_to_UUID32_service_data
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID32_service_data
+    FROM LE_bdaddr_to_UUID32_service_solicit
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
     FROM LE_bdaddr_to_UUID32s_list
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
-    SELECT 1    FROM LE_bdaddr_to_UUID16_service_solicit
+    SELECT 1
+    FROM LE_bdaddr_to_UUID16_service_data
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
-    FROM LE_bdaddr_to_UUID16_service_data
+    FROM LE_bdaddr_to_UUID16_service_solicit
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -400,6 +413,10 @@ def is_bdaddr_le_and_random(bdaddr):
     UNION
     SELECT 1
     FROM LL_VERSION_IND
+    WHERE bdaddr = %s and bdaddr_random = 1
+    UNION
+    SELECT 1
+    FROM GATT_attribute_handles
     WHERE bdaddr = %s and bdaddr_random = 1
     UNION
     SELECT 1
@@ -785,7 +802,7 @@ def print_class_of_device(bdaddr):
 
 # Function to print device names from different tables
 # NOTE: This is sort of more like "advertised names", except that it also contains SCAN_RSP names too. But we don't want to print out GATT names here, as we'll print them in GATT section
-def print_device_names(bdaddr, nametype):
+def print_device_names(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
@@ -796,7 +813,8 @@ def print_device_names(bdaddr, nametype):
     hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
     hci_result = execute_query(hci_query, values)
     # Query for LE_bdaddr_to_name table
-    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    values = (bdaddr_random, bdaddr)
+    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND bdaddr = %s" # I think I prefer without the nametype, to always return more info
     le_result = execute_query(le_query, values)
 
     if(len(eir_result) == 0 and len(hci_result) == 0 and len(le_result)== 0):

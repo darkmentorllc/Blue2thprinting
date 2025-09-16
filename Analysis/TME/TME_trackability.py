@@ -156,7 +156,7 @@ def check_name_for_most_specific_match(indent, name_string, bdaddr, name_source)
     return False
 
 
-def print_UniqueIDReport(bdaddr):
+def print_UniqueIDReport(bdaddr, bdaddr_random):
     global privacy_report_no_results_found
 
     #================#

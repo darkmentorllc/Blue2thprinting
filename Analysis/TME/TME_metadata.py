@@ -369,7 +369,7 @@ def print_ChipMakerPrint_helper_UUID16(indent, UUID16_result, tablename):
 
 # This function consults with the various sources of information which we might have that suggest a possible ChipMaker, and prints them all
 # If there are conflicting ChipMaker possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
-def print_ChipMakerPrint(bdaddr):
+def print_ChipMakerPrint(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
     time_profile = False
 
@@ -381,8 +381,8 @@ def print_ChipMakerPrint(bdaddr):
     #=====================#
 
     # So far experiments have indicated that LL_VERSION_IND company ID is the Chip Maker.
-    values = (bdaddr,)
-    ble_version_query = "SELECT bdaddr_random, ll_version, device_BT_CID, ll_sub_version FROM LL_VERSION_IND WHERE bdaddr = %s"
+    values = (bdaddr_random, bdaddr)
+    ble_version_query = "SELECT bdaddr_random, ll_version, device_BT_CID, ll_sub_version FROM LL_VERSION_IND WHERE bdaddr_random = %s AND bdaddr = %s"
     ble_version_result = execute_query(ble_version_query, values)
     if(len(ble_version_result) != 0):
         no_results_found = False
@@ -400,6 +400,7 @@ def print_ChipMakerPrint(bdaddr):
     # LMP_VERSION_REQ/RES data #
     #==========================#
 
+    values = (bdaddr,)
     # So far experiments have indicated that LMP_VERSION_REQ/RES company ID is the Chip Maker.
     btc_version_query = "SELECT lmp_version, device_BT_CID, lmp_sub_version FROM LMP_VERSION_RES WHERE bdaddr = %s"
     btc_version_result = execute_query(btc_version_query, values)
@@ -458,10 +459,12 @@ def print_ChipMakerPrint(bdaddr):
     #============================================#
     # Known chip-maker UUID16s in advertisements #
     #============================================#
-    le_UUID16_query = "SELECT UUID16_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
+    values = (bdaddr_random, bdaddr)
+    le_UUID16_query = "SELECT UUID16_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s AND  bdaddr = %s"
     LE_bdaddr_to_UUID16_service_data_result = execute_query(le_UUID16_query, values)
-    le_UUID16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
+    le_UUID16_query = "SELECT str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND bdaddr = %s"
     LE_bdaddr_to_UUID16s_list_result = execute_query(le_UUID16_query, values)
+    values = (bdaddr,)
     eir_UUID16_query = "SELECT str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
     EIR_bdaddr_to_UUID16s_result = execute_query(eir_UUID16_query, values)
 
@@ -498,7 +501,8 @@ def print_ChipMakerPrint(bdaddr):
     #========================================#
     # Manufacturer-Specific Data (MSD) - BLE #
     #========================================#
-    MSD_query = "SELECT bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s"
+    values = (bdaddr_random, bdaddr)
+    MSD_query = "SELECT bdaddr_random, le_evt_type, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND bdaddr = %s"
     MSD_result = execute_query(MSD_query, values)
 
     if(len(MSD_result) != 0):
@@ -647,7 +651,7 @@ def chip_by_sub_version(sub_version, device_BT_CID):
 
 # This function consults with the various sources of information which we might have that suggest a possible Chip, and prints them all
 # If there are conflicting Chip possibilities, it's up to the person to look at the results and determine which source(s) of data they find the most credible
-def print_ChipPrint(bdaddr):
+def print_ChipPrint(bdaddr, bdaddr_random):
     global g_printed_ChipPrint_header
     bdaddr = bdaddr.strip().lower()
 

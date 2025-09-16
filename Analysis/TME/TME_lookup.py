@@ -493,7 +493,6 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
 
     return bdaddr_hash.keys()
 
-# FIXME: Ticket #19
 def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     qprint(f"{msdregex} in get_bdaddrs_by_msd_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
@@ -508,7 +507,8 @@ def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     qprint(f"get_bdaddrs_by_msd_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_MSD")
     qprint(f"get_bdaddrs_by_msd_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE manufacturer_specific_data REGEXP %s"
+    values = (bdaddr_random, msdregex)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND manufacturer_specific_data REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -518,7 +518,6 @@ def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     return bdaddr_hash.keys()
 
 
-# FIXME: Ticket #19
 def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
 
     qprint(f"{uuid_regex} in get_bdaddrs_by_uuid_regex")
@@ -539,7 +538,6 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     ###################################
 
     # BR/EDR advertisements
-
     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
@@ -548,22 +546,22 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
-
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE str_UUID128s REGEXP %s"
+    values = (bdaddr_random, uuid_regex)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = %s AND str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = %s AND str_UUID128s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE UUID128_hex_str REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = %s AND UUID128_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -575,7 +573,7 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     ###################################
 
     # BR/EDR advertisements
-
+    values = (uuid_regex,)
     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID32s WHERE str_UUID32s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
@@ -584,22 +582,22 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
-
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE str_UUID32s REGEXP %s"
+    values = (bdaddr_random, uuid_regex)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s AND str_UUID32s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE str_UUID32s REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s AND str_UUID32s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE UUID32_hex_str REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s AND UUID32_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -611,7 +609,7 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     ###################################
 
     # BR/EDR advertisements
-
+    values = (uuid_regex,)
     eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
     eir_result = execute_query(eir_query, values)
     for (bdaddr,) in eir_result:
@@ -620,22 +618,22 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
     # LE advertisements
-
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
+    values = (bdaddr_random, uuid_regex)
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16s_list")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16_service_solicit")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE UUID16_hex_str REGEXP %s"
+    le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s AND UUID16_hex_str REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
@@ -648,21 +646,21 @@ def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
 
     # GATT (technically LE or BR/EDR but I don't have BR/EDR-based collection)
 
-    gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
+    gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE bdaddr_random = %s AND UUID REGEXP %s"
     gatt_service_result = execute_query(gatt_service_query, values)
     for (bdaddr,) in gatt_service_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_service_result)} results found in GATT_services")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
+    gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE bdaddr_random = %s AND UUID REGEXP %s"
     gatt_char_result = execute_query(gatt_char_query, values)
     for (bdaddr,) in gatt_char_result:
         bdaddr_hash[bdaddr] = 1
     vprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_char_result)} results found in GATT_characteristics")
     vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
 
-    gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
+    gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE bdaddr_random = %s AND UUID REGEXP %s"
     gatt_desc_result = execute_query(gatt_desc_query, values)
     for (bdaddr,) in gatt_desc_result:
         bdaddr_hash[bdaddr] = 1

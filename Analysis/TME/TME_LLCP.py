@@ -70,26 +70,26 @@ def decode_BLE_features(features):
     if(features & (0b1 << 0x2b)): qprint(f"{i3}* Periodic Advertising with Responses - Advertiser")
     if(features & (0b1 << 0x2c)): qprint(f"{i3}* Periodic Advertising with Responses - Scanner")
 
-def print_LLCP_info(bdaddr):
+def print_LLCP_info(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
+    values = (bdaddr_random, bdaddr)
+    version_query = "SELECT ll_version, ll_sub_version, device_BT_CID FROM LL_VERSION_IND WHERE bdaddr_random = %s AND bdaddr = %s"
     version_result = execute_query(version_query, values)
 
-    features_query = "SELECT bdaddr_random, opcode, features FROM LL_FEATUREs WHERE bdaddr = %s"
+    features_query = "SELECT bdaddr_random, opcode, features FROM LL_FEATUREs WHERE bdaddr_random = %s AND bdaddr = %s"
     features_result = execute_query(features_query, values)
 
-    phys_query = "SELECT bdaddr_random, opcode, tx_phys, rx_phys FROM LL_PHYs WHERE bdaddr = %s"
+    phys_query = "SELECT bdaddr_random, opcode, tx_phys, rx_phys FROM LL_PHYs WHERE bdaddr_random = %s AND bdaddr = %s"
     phys_result = execute_query(phys_query, values)
 
-    lengths_query = "SELECT bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE bdaddr = %s"
+    lengths_query = "SELECT bdaddr_random, opcode, max_rx_octets, max_rx_time, max_tx_octets, max_tx_time FROM LL_LENGTHs WHERE bdaddr_random = %s AND bdaddr = %s"
     lengths_result = execute_query(lengths_query, values)
 
-    ping_query = "SELECT bdaddr_random, opcode FROM LL_PINGs WHERE bdaddr = %s"
+    ping_query = "SELECT bdaddr_random, opcode FROM LL_PINGs WHERE bdaddr_random = %s AND bdaddr = %s"
     ping_result = execute_query(ping_query, values)
 
-    unknown_query = "SELECT bdaddr_random, unknown_opcode FROM LL_UNKNOWN_RSP WHERE bdaddr = %s"
+    unknown_query = "SELECT bdaddr_random, unknown_opcode FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s AND bdaddr = %s"
     unknown_result = execute_query(unknown_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(phys_result) == 0) and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
