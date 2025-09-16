@@ -74,7 +74,7 @@ def main():
 
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
-    device_group.add_argument('--bdaddr-type', type=int, default=0, required=False, help='BDADDR type (0 = LE Public (default), 1 = LE Random, 2 = Classic, 3 = Any).')
+    device_group.add_argument('--bdaddr-type', type=int, default=1, required=False, help='BDADDR type (0 = LE Public, 1 = LE Random (default), 2 = Classic, 3 = Any).')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
     device_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove the given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex). May be passed multiple times.')
     device_group.add_argument('--bdaddr-regex', action='append', required=False, help='Regex to match a bdaddr value. May be passed multiple times.')

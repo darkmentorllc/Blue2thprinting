@@ -22,10 +22,12 @@ i3 = "      "
 i4 = "        "
 i5 = "          "
 
-# Metadata_v1 globals
-custom_uuid128_hash = {}
+# # Metadata_v1 globals
+# custom_uuid128_hash = {}
 # Metadata_v2 globals
 metadata_v2 = {}
+# Model_Metadata_by_Manufacturer.json globals
+model_metadata_by_manufacturer = {}
 # clues globals hash indexed by UUID
 clues = {}
 # clues globals hash indexed by UUID, containing a UUID meant to be interpreted as a regex

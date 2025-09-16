@@ -67,6 +67,15 @@ def import_private_CLUES():
     except FileNotFoundError:
         pass
 
+
+def import_model_metadata_by_manufacturer():
+    global model_metadata_by_manufacturer
+    # Load JSON data from file
+    json_file = './metadata/Model_Metadata_by_Manufacturer.json'
+    with open(json_file, 'r') as f:
+        TME.TME_glob.model_metadata_by_manufacturer = json.load(f)
+
+
 ########################################
 # BEGIN FILL DATA FROM CSVs ############
 ########################################
