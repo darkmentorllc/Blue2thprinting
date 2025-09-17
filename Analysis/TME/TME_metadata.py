@@ -451,7 +451,7 @@ def print_ChipMakerPrint(bdaddr, bdaddr_random):
         if(not random):
             if(oui in ChipMaker_OUI_hash.keys()):
                 print_ChipMakerPrint_header_if_needed()
-                qprint(f"{i2}{string_yellow_bright(ChipMaker_OUI_hash[oui])} -> From IEEE OUI matched with BT Classic address")
+                qprint(f"{i2}{string_yellow_bright(ChipMaker_OUI_hash[oui])} -> From IEEE OUI matched with BLE Public address")
                 no_results_found = False
 
     if(time_profile): qprint(f"GATT = {time.time()}")
