@@ -16,10 +16,14 @@ from colorama import Fore, Back, Style, init
 init(autoreset=True)
 
 # Returns 0 if there is no SMP info for this BDADDR in any of the SMP tables, else returns 1
-def device_has_SMP_info(bdaddr):
+def device_has_SMP_info(bdaddr, bdaddr_random):
     # Query the database for SMP info
-    values = (bdaddr,)
-    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_result = execute_query(query, values)
     if(len(SMP_result) != 0):
         return 1;
@@ -28,9 +32,13 @@ def device_has_SMP_info(bdaddr):
 
 # Returns 1 if this device did not request Secure Connections,
 # which would lead to it using legacy pairing even when an eavesdropper isn't trying to force it
-def device_SMP_legacy_pairing(bdaddr):
-    values = (bdaddr,)
-    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s";
+def device_SMP_legacy_pairing(bdaddr, bdaddr_random):
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s AND bdaddr_random = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s";
     SMP_result = execute_query(query, values)
     if(len(SMP_result) != 0):
         return 1;
@@ -119,10 +127,14 @@ def print_pairing_req_res(bdaddr_random, opcode, io_cap, oob_data, auth_req, max
     key_dist_print("Responder", responder_key_dist)
 
 
-def print_SMP_info(bdaddr):
+def print_SMP_info(bdaddr, bdaddr_random):
     # Query the database for all SMP data
-    values = (bdaddr,)
-    query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr_random, opcode, io_cap, oob_data, auth_req, max_key_size, initiator_key_dist, responder_key_dist FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_Pairing_Req_Res_result = execute_query(query, values)
     if (len(SMP_Pairing_Req_Res_result) == 0):
         vprint(f"{i1}No SMP data found.")

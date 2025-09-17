@@ -130,8 +130,12 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
     elif(UUID == "2a24"): # Model Number String
         # Check if we have a 0x2a29 (Model Number String) value
         # which is equal to any of the keys in the model_metadata_by_manufacturer dictionary
-        base_values = (bdaddr, bdaddr_random)
-        query = "SELECT bdaddr FROM GATT_characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s AND byte_values = %s"
+        if(bdaddr_random is not None):
+            base_values = (bdaddr, bdaddr_random)
+            query = "SELECT bdaddr FROM GATT_characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s AND byte_values = %s"
+        else:
+            base_values = (bdaddr,)
+            query = "SELECT bdaddr FROM GATT_characteristics_values WHERE bdaddr = %s AND byte_values = %s"
         for k in TME.TME_glob.model_metadata_by_manufacturer.keys():
             # key_hexstr = "0x" + str_to_hex_str(key)
             # values = base_values + (key_hexstr,)
@@ -161,25 +165,38 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
             qprint(f"{indent}PnP ID present, but length is not 7 bytes, so cannot decode. Length = {len(bytes)} bytes.")
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
-def device_has_GATT_any(bdaddr):
+def device_has_GATT_any(bdaddr, bdaddr_random):
     # Query the database for all GATT services
-    values = (bdaddr,)
-    query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
     if(len(GATT_services_result) != 0):
         return True
 
-    query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     if(len(GATT_attribute_handles_result) != 0):
         return True
 
-    query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
     if(len(GATT_characteristics_result) != 0):
         return True
 
-    query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     if(len(GATT_characteristics_values_result) != 0):
         return True
@@ -187,10 +204,14 @@ def device_has_GATT_any(bdaddr):
     return False
 
 # Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
-def device_has_GATT_values(bdaddr):
+def device_has_GATT_values(bdaddr, bdaddr_random):
     # Query the database for all GATT services
-    values = (bdaddr,)
-    query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     if(len(GATT_characteristics_values_result) != 0):
         return True
@@ -265,37 +286,50 @@ def descriptor_print(indent, UUID, operation, byte_values):
 
 def print_GATT_info(bdaddr, bdaddr_random):
     # Query the database for all GATT services
-    values = (bdaddr_random, bdaddr)
-    query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr_random, service_type, begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
     GATT_services_result = execute_query(query, values)
-    for bdaddr_random, service_type, begin_handle, end_handle, UUID in GATT_services_result:
+    for bdaddr_random2, service_type, begin_handle, end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
         BTIDES_export_GATT_Service(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
     GATT_attribute_handles_result = execute_query(query, values)
     attribute_handles_dict = {}
-    for bdaddr_random, attribute_handle, UUID in GATT_attribute_handles_result:
+    for bdaddr_random2, attribute_handle, UUID in GATT_attribute_handles_result:
         UUID = add_dashes_to_UUID128(UUID)
         attribute_handles_dict[attribute_handle] = UUID
         data = ff_ATT_handle_entry(attribute_handle, UUID)
         BTIDES_export_ATT_handle(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
-    characteristic_declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
-    for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+    characteristic_declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
+    for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
         BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-    query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
-    for bdaddr_random, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
+    for bdaddr_random2, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
         data = {"handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
@@ -306,10 +340,13 @@ def print_GATT_info(bdaddr, bdaddr_random):
             # There wasn't already an entry, so insert a list of a single value")
             char_value_handles_dict[(char_value_handle, operation)] = [ byte_values ]
 
-    query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr = %s";
     GATT_characteristic_descriptor_values_result = execute_query(query, values)
     descriptor_handles_dict = {}
-    for bdaddr_random, UUID, descriptor_handle, operation, byte_values in GATT_characteristic_descriptor_values_result:
+    for bdaddr_random2, UUID, descriptor_handle, operation, byte_values in GATT_characteristic_descriptor_values_result:
         if(descriptor_handle in descriptor_handles_dict.keys()):
             # There is already an entry for this handle, so append the new value to the list of possible values
             descriptor_handles_dict[descriptor_handle].append((UUID, operation, byte_values))
@@ -319,32 +356,60 @@ def print_GATT_info(bdaddr, bdaddr_random):
 
     # Changing up the logic to start from the maximum list of all handles in the attributes, characteristics, and read characteristic values tables
     # I will iterate through all of these handles, so nothing gets missed
-    values = (bdaddr_random, bdaddr) * 5
-    query = """
-    SELECT DISTINCT handle_value
-    FROM (
-        SELECT attribute_handle AS handle_value
-        FROM GATT_attribute_handles
-        WHERE bdaddr_random = %s AND bdaddr = %s
-        UNION
-        SELECT declaration_handle AS handle_value
-        FROM GATT_characteristics
-        WHERE bdaddr_random = %s AND bdaddr = %s
-        UNION
-        SELECT char_value_handle AS handle_value
-        FROM GATT_characteristics
-        WHERE bdaddr_random = %s AND bdaddr = %s
-        UNION
-        SELECT char_value_handle AS handle_value
-        FROM GATT_characteristics_values
-        WHERE bdaddr_random = %s AND bdaddr = %s
-        UNION
-        SELECT descriptor_handle AS handle_value
-        FROM GATT_characteristic_descriptor_values
-        WHERE bdaddr_random = %s AND bdaddr = %s
-    ) AS combined_handles
-    ORDER BY handle_value ASC;
-    """
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr) * 5
+        query = """
+        SELECT DISTINCT handle_value
+        FROM (
+            SELECT attribute_handle AS handle_value
+            FROM GATT_attribute_handles
+            WHERE bdaddr_random = %s AND bdaddr = %s
+            UNION
+            SELECT declaration_handle AS handle_value
+            FROM GATT_characteristics
+            WHERE bdaddr_random = %s AND bdaddr = %s
+            UNION
+            SELECT char_value_handle AS handle_value
+            FROM GATT_characteristics
+            WHERE bdaddr_random = %s AND bdaddr = %s
+            UNION
+            SELECT char_value_handle AS handle_value
+            FROM GATT_characteristics_values
+            WHERE bdaddr_random = %s AND bdaddr = %s
+            UNION
+            SELECT descriptor_handle AS handle_value
+            FROM GATT_characteristic_descriptor_values
+            WHERE bdaddr_random = %s AND bdaddr = %s
+        ) AS combined_handles
+        ORDER BY handle_value ASC;
+        """
+    else:
+        values = (bdaddr,) * 5
+        query = """
+        SELECT DISTINCT handle_value
+        FROM (
+            SELECT attribute_handle AS handle_value
+            FROM GATT_attribute_handles
+            WHERE bdaddr = %s
+            UNION
+            SELECT declaration_handle AS handle_value
+            FROM GATT_characteristics
+            WHERE bdaddr = %s
+            UNION
+            SELECT char_value_handle AS handle_value
+            FROM GATT_characteristics
+            WHERE bdaddr = %s
+            UNION
+            SELECT char_value_handle AS handle_value
+            FROM GATT_characteristics_values
+            WHERE bdaddr = %s
+            UNION
+            SELECT descriptor_handle AS handle_value
+            FROM GATT_characteristic_descriptor_values
+            WHERE bdaddr = %s
+        ) AS combined_handles
+        ORDER BY handle_value ASC;
+        """
     GATT_all_known_handles_result = execute_query(query, values)
 
     # Create a copy of the handle list to keep track of handles we see which never match any Service, to print them out after the fact
@@ -360,7 +425,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
 
     unknown_UUID128_hash = {}
     # Print semantically-meaningful information
-    for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+    for bdaddr_random2, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
         service_match_dict[svc_begin_handle] = 1
         UUID128_description = match_known_GATT_UUID_or_custom_UUID(UUID)
@@ -500,15 +565,15 @@ def print_GATT_info(bdaddr, bdaddr_random):
     if(len(GATT_services_result) != 0):
         if(TME.TME_glob.verbose_print):
             qprint(f"\n{i2}GATTPrint:")
-            for bdaddr_random, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
+            for bdaddr_random2, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
                 UUID = add_dashes_to_UUID128(UUID)
                 # qprint(f"{i3}{UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)}:")
                 # qprint(f"{i3}Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}")
                 qprint(f"{i3}Service: Begin Handle: {svc_begin_handle:03}, End Handle: {svc_end_handle:03}, UUID128: {UUID} ({match_known_GATT_UUID_or_custom_UUID(UUID)})")
-            for bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
+            for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
                 UUID = add_dashes_to_UUID128(UUID)
                 qprint(f"{i3}Characteristic Declaration: {UUID}, Properties: 0x{char_properties:02x}, Characteristic Handle: {declaration_handle:03}, Characteristic Value Handle: {char_value_handle:03}")
-            for bdaddr_random, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
+            for bdaddr_random2, attribute_handle, UUID128_2 in GATT_attribute_handles_result:
                 UUID128_2 = add_dashes_to_UUID128(UUID128_2)
                 qprint(f"{i3}Attribute List: Attribute Handle: {attribute_handle:03}, {UUID128_2} ({match_known_GATT_UUID_or_custom_UUID(UUID128_2)})")
             qprint("")

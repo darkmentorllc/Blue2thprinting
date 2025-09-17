@@ -13,14 +13,19 @@ from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within p
 ########################################
 
 # Function to print UUID32s for a given bdaddr
-def print_uuid32s(bdaddr):
+def print_uuid32s(bdaddr, bdaddr_random):
     values = (bdaddr,)
     # Query for EIR_bdaddr_to_UUID32s table
     eir_uuid32s_query = "SELECT list_type, str_UUID32s FROM EIR_bdaddr_to_UUID32s WHERE bdaddr = %s"
     eir_uuid32s_result = execute_query(eir_uuid32s_query, values)
 
     # Query for LE_bdaddr_to_UUID32s_list table
-    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID32s FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr = %s"
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(eir_uuid32s_result) == 0 and len(le_uuid32s_result) == 0):
@@ -114,9 +119,13 @@ def print_uuid32s(bdaddr):
     qprint("")
 
 # Function to print UUID32s for a given bdaddr
-def print_service_solicit_uuid32s(bdaddr):
-    values = (bdaddr,)
-    le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr = %s"
+def print_service_solicit_uuid32s(bdaddr, bdaddr_random):
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid32s_query = "SELECT bdaddr_random, le_evt_type, str_UUID32s FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr = %s"
     le_uuid32s_result = execute_query(le_uuid32s_query, values)
 
     if(len(le_uuid32s_result) == 0):
@@ -158,9 +167,13 @@ def print_service_solicit_uuid32s(bdaddr):
     qprint("")
 
 # Function to print UUID32s service data for a given bdaddr
-def print_uuid32_service_data(bdaddr):
-    values = (bdaddr,)
-    le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr = %s"
+def print_uuid32_service_data(bdaddr, bdaddr_random):
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid32_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID32_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr = %s"
     le_uuid32_service_data_result = execute_query(le_uuid32_service_data_query, values)
 
     if(len(le_uuid32_service_data_result) == 0):

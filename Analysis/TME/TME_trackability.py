@@ -170,8 +170,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
         TME.TME_glob.privacy_report_no_results_found = False
 
     # Or if it has Classic BDADDR embedded in Microsoft Swift Pair MSD
-    values = (bdaddr,)
-    le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 6 AND manufacturer_specific_data REGEXP '^030180'"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) != 0):
@@ -190,7 +194,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
     # To be clear, we don't necessarily need to have successfully read the value for this. The mere presence of a definition for it is suggestive enough of the presence of a DUID to report on it
 
     we_have_GATT = False
-    chars_query = "SELECT UUID FROM GATT_characteristics WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        chars_query = "SELECT UUID FROM GATT_characteristics WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        chars_query = "SELECT UUID FROM GATT_characteristics WHERE bdaddr = %s"
     chars_result = execute_query(chars_query, values)
     if(len(chars_result) > 0): we_have_GATT = True
 
@@ -217,7 +226,7 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
 
     NamePrint_match = False
     # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
-    str = lookup_metadata_by_nameprint(bdaddr, 'NamePrint_UniqueID')
+    str = lookup_metadata_by_nameprint(bdaddr, bdaddr_random, 'NamePrint_UniqueID')
     if(str[2:6] == "True"):
         print_unique_ID_header_if_needed()
         qprint(f"{i3}* The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
@@ -234,6 +243,7 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
 
     # Don't bother giving a less-preceise match if a more-precise match was already found.
     if(NamePrint_match == False):
+        values = (bdaddr,)
         eir_query = "SELECT name_hex_str FROM EIR_bdaddr_to_name WHERE bdaddr = %s"
         eir_result = execute_query(eir_query, values)
         name_source = "Bluetooth Classic Extended Inquiry Responses"
@@ -254,7 +264,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
             print_possible_unique_ID_warning(f"{i3}", name, name_source)
             TME.TME_glob.privacy_report_no_results_found = False
 
-        le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
+        if(bdaddr_random is not None):
+            values = (bdaddr_random, bdaddr)
+            le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND bdaddr = %s"
+        else:
+            values = (bdaddr,)
+            le_query = "SELECT name_hex_str, le_evt_type FROM LE_bdaddr_to_name WHERE bdaddr = %s"
         le_result = execute_query(le_query, values)
         name_source = "Bluetooth Low Energy Advertisements"
         for name_hex_str, le_evt_type in le_result:
@@ -264,7 +279,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
             print_possible_unique_ID_warning(f"{i3}", name, name_source)
             TME.TME_glob.privacy_report_no_results_found = False
 
-        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' and cv.bdaddr = %s;"
+        if(bdaddr_random is not None):
+            values = (bdaddr_random, bdaddr_random, bdaddr)
+            chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' AND c.bdaddr_random = %s AND cv.bdaddr_random = %s AND cv.bdaddr = %s;"
+        else:
+            values = (bdaddr,)
+            chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00' AND cv.bdaddr = %s;"
         chars_result = execute_query(chars_query, values)
         name_source = "GATT"
         if(len(chars_result) > 0):
@@ -275,7 +295,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
                 print_possible_unique_ID_warning(f"{i3}", name, name_source)
                 TME.TME_glob.privacy_report_no_results_found = False
 
-        ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
+        if(bdaddr_random is not None):
+            values = (bdaddr_random, bdaddr)
+            ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
+        else:
+            values = (bdaddr,)
+            ms_msd_query = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP '^030';"
         ms_msd_result = execute_query(ms_msd_query, values)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
             name_source = f"Microsoft Swift Pair Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"
@@ -287,8 +312,12 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
                 TME.TME_glob.privacy_report_no_results_found = False
 
         regex = '^01[0-9a-f]{4}0a' # Pulling out so the {4} isn't interpreted as part of the format string
-        values2 = (bdaddr, regex)
-        ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
+        if(bdaddr_random is not None):
+            values2 = (bdaddr_random, bdaddr, regex)
+            ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
+        else:
+            values2 = (bdaddr, regex)
+            ms_msd_query2 = "SELECT le_evt_type, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 0006 AND manufacturer_specific_data REGEXP %s;"
         ms_msd_result2 = execute_query(ms_msd_query2, values2)
         for (le_evt_type, manufacturer_specific_data) in ms_msd_result2:
             name_source = f"Microsoft Beacon Manufacturer-specific data in {get_le_event_type_string(le_evt_type)} packets"

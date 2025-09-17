@@ -42,14 +42,19 @@ def colored_print_name_for_UUID16(uuid16):
         qprint(f"{i2}UUID16 {uuid16} (No matches)")
 
 # Function to print UUID16s for a given bdaddr
-def print_uuid16s(bdaddr):
+def print_uuid16s(bdaddr, bdaddr_random):
     # Query for EIR_bdaddr_to_UUID16s table
     values = (bdaddr,)
     eir_uuid16s_query = "SELECT list_type, str_UUID16s FROM EIR_bdaddr_to_UUID16s WHERE bdaddr = %s"
     eir_uuid16s_result = execute_query(eir_uuid16s_query, values)
 
     # Query for LE_bdaddr_to_UUID16s_list table
-    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, list_type, str_UUID16s FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(eir_uuid16s_result) == 0 and len(le_uuid16s_result) == 0):
@@ -115,9 +120,13 @@ def print_uuid16s(bdaddr):
     qprint("")
 
 # Function to print UUID16s service solicitation data for a given bdaddr
-def print_uuid16s_service_solicit(bdaddr):
-    values = (bdaddr,)
-    le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr = %s"
+def print_uuid16s_service_solicit(bdaddr, bdaddr_random):
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid16s_query = "SELECT bdaddr_random, le_evt_type, str_UUID16s FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr = %s"
     le_uuid16s_result = execute_query(le_uuid16s_query, values)
 
     if(len(le_uuid16s_result) == 0):
@@ -146,9 +155,13 @@ def print_uuid16s_service_solicit(bdaddr):
     qprint("")
 
 # Function to print UUID16s service data for a given bdaddr
-def print_uuid16_service_data(bdaddr):
-    values = (bdaddr,)
-    le_uuid16_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
+def print_uuid16_service_data(bdaddr, bdaddr_random):
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_uuid16_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_uuid16_service_data_query = "SELECT bdaddr_random, le_evt_type, UUID16_hex_str, service_data_hex_str FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr = %s"
     le_uuid16_service_data_result = execute_query(le_uuid16_service_data_query, values)
 
     if(len(le_uuid16_service_data_result) == 0):

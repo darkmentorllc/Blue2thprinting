@@ -644,11 +644,15 @@ def appearance_uint16_to_string(number):
     return f"(0x{number:04x}) Category ({category_num}): {cat_name}, Sub-Category ({subcategory_num}): {subcat_name}"
 
 # Function to print appearance info
-def print_appearance(bdaddr, nametype):
+def print_appearance(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        le_query = "SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE bdaddr = %s AND bdaddr_random = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT appearance, bdaddr_random, le_evt_type FROM LE_bdaddr_to_appearance WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -751,14 +755,19 @@ def print_CoD_to_names(number):
                             qprint(f"{i3}CoD Minor Device Class (bit {bitsentry['value']} set): {bitsentry['name']}")
 
 
-def print_class_of_device(bdaddr):
+def print_class_of_device(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
     eir_query = "SELECT class_of_device FROM EIR_bdaddr_to_CoD WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
 
-    le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE bdaddr = %s AND bdaddr_random = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, class_of_device FROM LE_bdaddr_to_CoD WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
@@ -811,8 +820,12 @@ def print_device_names(bdaddr, bdaddr_random):
     hci_query = "SELECT name_hex_str FROM HCI_bdaddr_to_name WHERE bdaddr = %s"
     hci_result = execute_query(hci_query, values)
     # Query for LE_bdaddr_to_name table
-    values = (bdaddr_random, bdaddr)
-    le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, device_name_type, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if(len(eir_result) == 0 and len(hci_result) == 0 and len(le_result)== 0):

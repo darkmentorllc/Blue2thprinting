@@ -74,7 +74,7 @@ def main():
 
     # Search arguments
     device_group = parser.add_argument_group('Database search arguments')
-    device_group.add_argument('--bdaddr-type', type=int, default=1, required=False, help='BDADDR type (0 = LE Public, 1 = LE Random (default, but BT Classic will also be matched by default.)).')
+    device_group.add_argument('--bdaddr-type', type=int, default=None, required=False, help='BDADDR type (0 = LE Public, 1 = LE Random (but BT Classic will also be matched by default.) This forces DB lookups to require the given value, so it will decrease results.')
     device_group.add_argument('--bdaddr', type=validate_bdaddr, required=False, help='Device bdaddr value. Note: passing --bdaddr will downselect from any BDADDRs found via optional BTIDALPOOL queries or optional input files to the single specified bdaddr.')
     device_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove the given BDADDR from the final results. (This is more efficient than --NOT-bdaddr-regex). May be passed multiple times.')
     device_group.add_argument('--bdaddr-regex', action='append', required=False, help='Regex to match a bdaddr value. May be passed multiple times.')
@@ -372,7 +372,7 @@ def main():
         if(version < 0 or subversion > 65535):
             print("Sub-version must be a two byte hex value (0000-FFFF)")
             exit(1)
-        bdaddrs_tmp = get_bdaddrs_by_LL_VERSION_IND(version, company_id, subversion)
+        bdaddrs_tmp = get_bdaddrs_by_LL_VERSION_IND(version, company_id, subversion, args.bdaddr_type)
         qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
         if(bdaddrs_tmp is not None):
             bdaddrs += bdaddrs_tmp
@@ -441,28 +441,28 @@ def main():
     filtered_bdaddrs = []
     for bdaddr in bdaddrs:
         if(args.require_GPS):
-            if(not device_has_GPS(bdaddr)):
+            if(not device_has_GPS(bdaddr, args.bdaddr_type)):
                 continue
         if(args.GPS_exclude_upper_left and device_has_GPS(bdaddr)):
             if(is_GPS_coordinate_within_exclusion_box(bdaddr, upper_left_tuple, lower_right_tuple)):
                 continue
         if(args.require_GATT_any):
-            if(not device_has_GATT_any(bdaddr)):
+            if(not device_has_GATT_any(bdaddr, args.bdaddr_type)):
                 continue
         if(args.require_GATT_values):
-            if(not device_has_GATT_values(bdaddr)):
+            if(not device_has_GATT_values(bdaddr, args.bdaddr_type)):
                 continue
         if(args.require_SMP):
-            if(not device_has_SMP_info(bdaddr)):
+            if(not device_has_SMP_info(bdaddr, args.bdaddr_type)):
                 continue
         if(args.require_SMP_legacy_pairing):
-            if(not device_SMP_legacy_pairing(bdaddr)):
+            if(not device_SMP_legacy_pairing(bdaddr, args.bdaddr_type)):
                 continue
         if(args.require_SDP):
             if(not device_has_SDP_info(bdaddr)):
                 continue
         if(args.require_LL_VERSION_IND):
-            if(not device_has_LL_VERSION_IND_info(bdaddr)):
+            if(not device_has_LL_VERSION_IND_info(bdaddr, args.bdaddr_type)):
                 continue
         if(args.require_LMP_VERSION_RES):
             if(not device_has_LMP_VERSION_RES_info(bdaddr)):
@@ -491,15 +491,15 @@ def main():
         print_ChipPrint(bdaddr, args.bdaddr_type)
         print_ChipMakerPrint(bdaddr, args.bdaddr_type)      # Includes BTIDES export
         print_classic_EIR_CID_info(bdaddr)                  # Includes BTIDES export
-        print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export # FIXME: Ticket #19
+        print_all_advdata(bdaddr, args.bdaddr_type)         # Includes BTIDES export
         print_GATT_info(bdaddr, args.bdaddr_type)           # Includes BTIDES export
-        print_SMP_info(bdaddr)                              # Includes BTIDES export
+        print_SMP_info(bdaddr, args.bdaddr_type)            # Includes BTIDES export
         print_LLCP_info(bdaddr, args.bdaddr_type)           # Includes BTIDES export
         print_LMP_info(bdaddr)                              # Includes BTIDES export
         print_SDP_info(bdaddr)                              # Includes BTIDES export
         print_L2CAP_info(bdaddr, args.bdaddr_type)          # Includes BTIDES export
         print_GPS(bdaddr, args.bdaddr_type)
-        print_UniqueIDReport(bdaddr, args.bdaddr_type)     # Includes BTIDES export# FIXME: Ticket #19
+        print_UniqueIDReport(bdaddr, args.bdaddr_type)      # Includes BTIDES export
 
     if(out_filename != None and out_filename != ""):
         write_BTIDES(out_filename)

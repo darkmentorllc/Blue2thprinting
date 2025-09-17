@@ -60,13 +60,18 @@ def ff_CONNECT_IND_placeholder():
 # Transmit Power (0x0A)
 ########################################
 
-def print_transmit_power(bdaddr, nametype):
+def print_transmit_power(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
     eir_query = "SELECT device_tx_power FROM EIR_bdaddr_to_tx_power WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s" # I think I prefer without the nametype, to always return more info
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT device_tx_power, bdaddr_random, le_evt_type FROM LE_bdaddr_to_tx_power WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
@@ -94,13 +99,19 @@ def print_transmit_power(bdaddr, nametype):
 # Flags (0x01)
 ########################################
 
-def print_flags(bdaddr):
+def print_flags(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
     eir_query = "SELECT le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM EIR_bdaddr_to_flags WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE bdaddr = %s"
+
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, le_limited_discoverable_mode, le_general_discoverable_mode, bredr_not_supported, le_bredr_support_controller, le_bredr_support_host FROM LE_bdaddr_to_flags WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result) == 0 and len(le_result) == 0):
@@ -329,11 +340,15 @@ uri_scheme_prefixes = {
     0xBA: 'mss-ettings-cloudstorage:'
 }
 
-def print_URI(bdaddr):
+def print_URI(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT bdaddr_random, le_evt_type, uri_hex_str FROM LE_bdaddr_to_URI WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, uri_hex_str FROM LE_bdaddr_to_URI WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, uri_hex_str FROM LE_bdaddr_to_URI WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -375,11 +390,15 @@ role_dict = {
     3: "Peripheral and Central Role supported, Central Role preferred for connection establishment"
 }
 
-def print_role(bdaddr):
+def print_role(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT bdaddr_random, le_evt_type, role FROM LE_bdaddr_to_role WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, role FROM LE_bdaddr_to_role WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, role FROM LE_bdaddr_to_role WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -420,13 +439,19 @@ def print_3d_info_bit_fields(indent, byte1):
         qprint(f"{indent}Send Battery Level Report on Start-up Synchronization: 3D Display requests 3D Glasses to not send a 3D Glasses Connection Announcement Message with Battery Level Report on Start-up Synchronization.")
 
 
-def print_3DInfoData(bdaddr):
+def print_3DInfoData(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
     eir_query = "SELECT byte1, path_loss FROM EIR_bdaddr_to_3d_info WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT bdaddr_random, le_evt_type, byte1, path_loss FROM LE_bdaddr_to_3d_info WHERE bdaddr = %s"
+
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, byte1, path_loss FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, byte1, path_loss FROM LE_bdaddr_to_3d_info WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0 and len(eir_result) == 0):
@@ -460,11 +485,15 @@ def print_3DInfoData(bdaddr):
 # Public Target Address (0x17)
 ########################################
 
-def print_public_target_address(bdaddr):
+def print_public_target_address(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT bdaddr_random, le_evt_type, public_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, public_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, public_bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -488,11 +517,15 @@ def print_public_target_address(bdaddr):
 # Random Target Address (0x18)
 ########################################
 
-def print_random_target_address(bdaddr):
+def print_random_target_address(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT bdaddr_random, le_evt_type, random_bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, random_bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, random_bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -518,11 +551,15 @@ def print_random_target_address(bdaddr):
 # but yet some things include it in OTA advertisements
 ################################################################################
 
-def print_le_bluetooth_device_address(bdaddr):
+def print_le_bluetooth_device_address(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
-    values = (bdaddr,)
-    le_query = "SELECT bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr = %s"
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        le_query = "SELECT bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = %s AND bdaddr = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT bdaddr_random, le_evt_type, other_bdaddr, other_bdaddr_random FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(le_result) == 0):
@@ -702,13 +739,19 @@ def print_Samsung_MSD(indent, manufacturer_specific_data):
         except:
             pass
 
-def print_manufacturer_data(bdaddr):
+def print_manufacturer_data(bdaddr, bdaddr_random):
     bdaddr = bdaddr.strip().lower()
 
     values = (bdaddr,)
     eir_query = "SELECT device_BT_CID, manufacturer_specific_data FROM EIR_bdaddr_to_MSD WHERE bdaddr = %s"
     eir_result = execute_query(eir_query, values)
-    le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s"
+
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND bdaddr_random = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT le_evt_type, bdaddr_random, device_BT_CID, manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s"
     le_result = execute_query(le_query, values)
 
     if (len(eir_result)== 0 and len(le_result) == 0):
@@ -793,25 +836,25 @@ def print_all_advdata(bdaddr, bdaddr_random):
     # TODO: Ideally I want to have information grouped by the source packet type it came in on
     # TODO: But looping through and printing only the information for a single type at a time seem like it would be inefficient in terms of db queries
     # TODO: Maybe build up the BTIDES data structure and then pretty-print that?
-    # FIXME: Ticket #19
+
     print_device_names(bdaddr, bdaddr_random)
-    print_uuid16s(bdaddr)                               # Includes BTIDES export
-    print_uuid16_service_data(bdaddr)                   # Includes BTIDES export
-    print_uuid16s_service_solicit(bdaddr)               # Includes BTIDES export
-    print_uuid32s(bdaddr)                               # Includes BTIDES export
-    print_uuid32_service_data(bdaddr)                   # Includes BTIDES export
-    print_uuid128s(bdaddr)                              # Includes BTIDES export
-    print_uuid128_service_data(bdaddr)                  # Includes BTIDES export
-    print_uuid128s_service_solicit(bdaddr)              # Includes BTIDES export
-    print_transmit_power(bdaddr, bdaddr_random)              # Includes BTIDES export
-    print_flags(bdaddr)                                 # Includes BTIDES export
-    print_appearance(bdaddr, bdaddr_random)                  # Includes BTIDES export
-    print_manufacturer_data(bdaddr)
-    print_class_of_device(bdaddr)                       # Includes BTIDES export
-    print_PSRM(bdaddr)                                  # Includes BTIDES export
-    print_public_target_address(bdaddr)                 # Includes BTIDES export
-    print_random_target_address(bdaddr)                 # Includes BTIDES export
-    print_le_bluetooth_device_address(bdaddr)           # Includes BTIDES export
-    print_URI(bdaddr)                                   # Includes BTIDES export
-    print_role(bdaddr)                                  # Includes BTIDES export
-    print_3DInfoData(bdaddr)                            # Includes BTIDES export
+    print_uuid16s(bdaddr, bdaddr_random)                               # Includes BTIDES export
+    print_uuid16_service_data(bdaddr, bdaddr_random)                   # Includes BTIDES export
+    print_uuid16s_service_solicit(bdaddr, bdaddr_random)               # Includes BTIDES export
+    print_uuid32s(bdaddr, bdaddr_random)                               # Includes BTIDES export
+    print_uuid32_service_data(bdaddr, bdaddr_random)                   # Includes BTIDES export
+    print_uuid128s(bdaddr, bdaddr_random)                              # Includes BTIDES export
+    print_uuid128_service_data(bdaddr, bdaddr_random)                  # Includes BTIDES export
+    print_uuid128s_service_solicit(bdaddr, bdaddr_random)              # Includes BTIDES export
+    print_transmit_power(bdaddr, bdaddr_random)                        # Includes BTIDES export
+    print_flags(bdaddr, bdaddr_random)                                 # Includes BTIDES export
+    print_appearance(bdaddr, bdaddr_random)                            # Includes BTIDES export
+    print_manufacturer_data(bdaddr, bdaddr_random)                     # Includes BTIDES export
+    print_class_of_device(bdaddr, bdaddr_random)                       # Includes BTIDES export
+    print_PSRM(bdaddr)                                                 # Includes BTIDES export
+    print_public_target_address(bdaddr, bdaddr_random)                 # Includes BTIDES export
+    print_random_target_address(bdaddr, bdaddr_random)                 # Includes BTIDES export
+    print_le_bluetooth_device_address(bdaddr, bdaddr_random)           # Includes BTIDES export
+    print_URI(bdaddr, bdaddr_random)                                   # Includes BTIDES export
+    print_role(bdaddr, bdaddr_random)                                  # Includes BTIDES export
+    print_3DInfoData(bdaddr, bdaddr_random)                            # Includes BTIDES export

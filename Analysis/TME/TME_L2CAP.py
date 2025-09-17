@@ -17,10 +17,14 @@ from colorama import Fore, Back, Style, init
 init(autoreset=True)
 
 # Returns 0 if there is no SMP info for this BDADDR in any of the SMP tables, else returns 1
-def device_has_L2CAP_info(bdaddr):
+def device_has_L2CAP_info(bdaddr, bdaddr_random):
     # Query the database for all GATT services
-    values = (bdaddr,)
-    query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s AND bdaddr_random = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
     SMP_result = execute_query(query, values)
     if(len(SMP_result) != 0):
         return 1;
@@ -54,10 +58,18 @@ def print_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP(indent, direction, pkt_id, data_
 
 def print_L2CAP_info(bdaddr, bdaddr_random):
     # Query the database for all L2CAP data
-    values = (bdaddr_random, bdaddr)
-    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr_random = %s AND bdaddr = %s";
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        values = (bdaddr,)
+        query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, interval_min, interval_max, latency, timeout FROM L2CAP_CONNECTION_PARAMETER_UPDATE_REQ WHERE bdaddr = %s";
     l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result = execute_query(query, values)
-    query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr_random = %s AND bdaddr = %s";
+
+    if(bdaddr_random is not None):
+        query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr_random = %s AND bdaddr = %s";
+    else:
+        query = "SELECT bdaddr_random, direction, code, pkt_id, data_len, result FROM L2CAP_CONNECTION_PARAMETER_UPDATE_RSP WHERE bdaddr = %s";
     l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result = execute_query(query, values)
 
     if (l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_REQ_result or l2cap_L2CAP_CONNECTION_PARAMETER_UPDATE_RSP_result):
