@@ -158,7 +158,7 @@ compile_toolz() {
         exit
     fi
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
-    $BASE_PATHb/luez-5.66/tools/sdptool --help
+    $BASE_PATH/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
