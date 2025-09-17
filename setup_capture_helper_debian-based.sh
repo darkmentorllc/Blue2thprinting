@@ -87,6 +87,8 @@ configure_scripts() {
         cd /home/$USERNAME/Blue2thprinting
         echo "Correcting bluez-5.66/tools/sdptool.c"
         sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/tools/sdptool.c
+        echo "Correcting bluez-5.66/attrib/gatttool.c"
+        sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/attrib/gatttool.c
         echo "Correcting all the scripts in ./Scripts"
         cd $BASE_PATH/Scripts
         for i in *.sh; do
