@@ -131,7 +131,7 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
         # Check if we have a 0x2a29 (Model Number String) value
         # which is equal to any of the keys in the model_metadata_by_manufacturer dictionary
         base_values = (bdaddr, bdaddr_random)
-        query = "SELECT bdaddr FROM GATT_Characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s AND byte_values = %s"
+        query = "SELECT bdaddr FROM GATT_characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s AND byte_values = %s"
         for k in TME.TME_glob.model_metadata_by_manufacturer.keys():
             # key_hexstr = "0x" + str_to_hex_str(key)
             # values = base_values + (key_hexstr,)
