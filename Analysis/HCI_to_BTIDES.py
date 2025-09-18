@@ -522,7 +522,7 @@ def main():
 
     btides_to_sql_succeeded = False
     if args.to_SQL:
-        b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:

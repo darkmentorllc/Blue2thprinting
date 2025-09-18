@@ -58,8 +58,8 @@ def main():
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
-    btides_group.add_argument('--input-pcap', type=str, required=False, help='Input pcap file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout.')
-    btides_group.add_argument('--input-hci-log', type=str, required=False, help='Input HCI log file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout.')
+    btides_group.add_argument('--input-pcap', action='append',  required=False, help='Input pcap file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout. May be passed multiple times.')
+    btides_group.add_argument('--input-hci-log', action='append', required=False, help='Input HCI log file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout. May be passed multiple times.')
     btides_group.add_argument('--include-centrals', action='store_true', help='Include the Central BDADDR from connections in the output.')
     btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
@@ -140,16 +140,18 @@ def main():
     # and import it into the local database,
     # and collect all the BDADDRs from it for printing.
     #######################################################
-    if(args.input_pcap):
-        read_pcap(args.input_pcap)
+    if args.input_pcap is not None:
+        for pcap in args.input_pcap:
+            read_pcap(pcap)
 
-    if(args.input_hci_log):
-        read_HCI(args.input_hci_log)
+    if args.input_hci_log is not None:
+        for hci_log in args.input_hci_log:
+            read_HCI(hci_log)
 
     # Fill in bdaddrs[] with the bdaddrs in the BTIDES data, if any
     if(TME.TME_glob.BTIDES_JSON):
         # Magic input filename "SKIPME" tells btides_to_sql to not read from file, but just use the global TME.TME_glob.BTIDES_JSON
-        b2s_args = btides_to_sql_args(input="SKIPME", use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        b2s_args = btides_to_sql_args(input=["SKIPME"], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
         for entry in TME.TME_glob.BTIDES_JSON:
@@ -250,7 +252,7 @@ def main():
             # output_filename can be None because an error occurred, or because no records were found
             # In either case we don't need to run BTIDES_to_SQL
             if output_filename:
-                b2s_args = btides_to_sql_args(input=output_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+                b2s_args = btides_to_sql_args(input=[output_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
                 btides_to_sql(b2s_args)
             # For debugging
             write_BTIDES("/tmp/a.btides")

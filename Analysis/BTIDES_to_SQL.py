@@ -1283,80 +1283,84 @@ def btides_to_sql(args):
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.use_test_db = args.use_test_db
-    in_filename = args.input
     skip_invalid = args.skip_invalid
     global last_printed_percentage
     global BTIDES_JSON
     global g_last_read_req_handle
 
     last_printed_percentage = 0
-    if(in_filename != "SKIPME"):
-        with open(in_filename, 'r') as f:
-            TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
-            #qprint(json.dumps(BTIDES_JSON, indent=2))
+    for input_file in args.input:
+        last_printed_percentage = 0
+        if not os.path.isfile(input_file):
+            qprint(f"Error: Input file '{input_file}' does not exist or is not a file.")
+            return False
+        if(input_file != "SKIPME"):
+            with open(input_file, 'r') as f:
+                TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
+                #qprint(json.dumps(BTIDES_JSON, indent=2))
 
-    # Import all the local BTIDES json schema files, so that we don't hit the website all the time
-    all_schemas = []
-    for file in BTIDES_files:
-        with open(f"./BTIDES_Schema/{file}", 'r') as f:
-            #BTIDES_Schema
-            s = json.load(f)
-            #qprint(s["$id"])
-            schema = Resource.from_contents(s)
-            all_schemas.append((s["$id"], schema))
+        # Import all the local BTIDES json schema files, so that we don't hit the website all the time
+        all_schemas = []
+        for file in BTIDES_files:
+            with open(f"./BTIDES_Schema/{file}", 'r') as f:
+                #BTIDES_Schema
+                s = json.load(f)
+                #qprint(s["$id"])
+                schema = Resource.from_contents(s)
+                all_schemas.append((s["$id"], schema))
 
-    registry = Registry().with_resources( all_schemas )
+        registry = Registry().with_resources( all_schemas )
 
-    total = len(TME.TME_glob.BTIDES_JSON)
-    count = 0;
-    for entry in TME.TME_glob.BTIDES_JSON:
-        # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
-        try:
-            Draft202012Validator(
-                {"anyOf": [
-                    {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
-                    {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
-                ]},
-                registry=registry,
-            ).validate(instance=entry)
-            #qprint("JSON is valid according to BTIDES Schema")
-        except ValidationError as e:
-            qprint("JSON data is invalid per BTIDES Schema:", e.message)
-            if(skip_invalid):
-                continue
-            else:
-                qprint(json.dumps(entry, indent=2))
-                #return False
-                exit(-1)
+        total = len(TME.TME_glob.BTIDES_JSON)
+        count = 0;
+        for entry in TME.TME_glob.BTIDES_JSON:
+            # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
+            try:
+                Draft202012Validator(
+                    {"anyOf": [
+                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
+                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
+                    ]},
+                    registry=registry,
+                ).validate(instance=entry)
+                #qprint("JSON is valid according to BTIDES Schema")
+            except ValidationError as e:
+                qprint("JSON data is invalid per BTIDES Schema:", e.message)
+                if(skip_invalid):
+                    continue
+                else:
+                    qprint(json.dumps(entry, indent=2))
+                    #return False
+                    exit(-1)
 
-        parse_AdvChanArray(entry)
+            parse_AdvChanArray(entry)
 
-        parse_LLArray(entry)
+            parse_LLArray(entry)
 
-        parse_LMPArray(entry)
+            parse_LMPArray(entry)
 
-        parse_HCIArray(entry)
+            parse_HCIArray(entry)
 
-        parse_L2CAPArray(entry)
+            parse_L2CAPArray(entry)
 
-        g_last_read_req_handle = 0
-        parse_ATTArray(entry)
+            g_last_read_req_handle = 0
+            parse_ATTArray(entry)
 
-        parse_GATTArray(entry)
+            parse_GATTArray(entry)
 
-        parse_SMPArray(entry)
+            parse_SMPArray(entry)
 
-        parse_EIRArray(entry)
+            parse_EIRArray(entry)
 
-        parse_SDPArray(entry)
+            parse_SDPArray(entry)
 
-        parse_GPSArray(entry)
+            parse_GPSArray(entry)
 
-        count += 1
-        progress_update(total, count)
+            count += 1
+            progress_update(total, count)
 
-    qprint(f"New db records inserted: {TME.TME_glob.insert_count}")
-    qprint(f"Duplicate db records ignored: {TME.TME_glob.duplicate_count}")
+        qprint(f"New db records inserted: {TME.TME_glob.insert_count}")
+        qprint(f"Duplicate db records ignored: {TME.TME_glob.duplicate_count}")
     return True
 
 ###################################
@@ -1385,7 +1389,7 @@ def main():
     global verbose_print, use_test_db, duplicate_count, insert_count
 
     parser = argparse.ArgumentParser(description='Input BTIDES files to MySQL tables.')
-    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--input', action='append', required=True, help='Input file name for BTIDES JSON file. May be passed multiple times.')
     parser.add_argument('--skip-invalid', action='store_true', required=False, help='Skip any data that fails to validate via the schema, rather than just terminating.')
     parser.add_argument('--rename', action='store_true', required=False, help='Rename the input file to add \'.processed.\' suffix')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')

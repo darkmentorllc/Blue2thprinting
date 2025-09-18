@@ -198,7 +198,7 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
 
 def main():
     parser = argparse.ArgumentParser(description='Send BTIDES data to BTIDALPOOL server.')
-    parser.add_argument('--input', type=str, required=True, help='Input file name for BTIDES JSON file.')
+    parser.add_argument('--input', action='append', required=True, help='Input file name for BTIDES JSON file. May be passed multiple times.')
     parser.add_argument('--verbose-print', action='store_true', required=False, help='Print verbose output.')
 
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
@@ -228,11 +228,15 @@ def main():
             exit(1)
 
     # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
-    ret = send_btides_to_btidalpool(
-        input_file=args.input,
-        token=client.credentials.token,
-        refresh_token=client.credentials.refresh_token
-    )
+    for input_file in args.input:
+        if(not Path(input_file).is_file()):
+            print(f"Input file {input_file} does not exist or is not a file.")
+            continue
+        ret = send_btides_to_btidalpool(
+            input_file=input_file,
+            token=client.credentials.token,
+            refresh_token=client.credentials.refresh_token
+        )
     if(ret):
         print(f"Upload succeeded for {args.input}")
     else:

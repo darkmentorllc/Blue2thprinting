@@ -38,7 +38,7 @@ from PCAP_to_BTIDES import *
 def optionally_store_to_SQL(btides_file, to_SQL, to_BTIDALPOOL, token_file, use_test_db, quiet_print, verbose_print, rename):
     btides_to_sql_succeeded = False
     if to_SQL:
-        b2s_args = btides_to_sql_args(input=btides_file, use_test_db=use_test_db, quiet_print=quiet_print, verbose_print=verbose_print)
+        b2s_args = btides_to_sql_args(input=[btides_file], use_test_db=use_test_db, quiet_print=quiet_print, verbose_print=verbose_print)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if to_BTIDALPOOL:
@@ -62,9 +62,9 @@ def main():
     global verbose_print, verbose_BTIDES
     global BTIDES_JSON
     parser = argparse.ArgumentParser(description='File input arguments. Can specify either HCI or PCAP or both.')
-    parser.add_argument('--HCI-logs-folder', type=str, required=False, help='Input folder name for HCI log files which will be processed.')
+    parser.add_argument('--HCI-logs-folder', action='append', required=False, help='Input folder name for HCI log files which will be processed. May be passed multiple times.')
     parser.add_argument('--HCI-logs-suffix', type=str, default='.bin', required=False, help='(Required if --HCI-logs-folder is passed) Suffix for identifying HCI log files within this folder and all sub-folders. (Default is .bin, but you might want to set to .log or something else.)')
-    parser.add_argument('--pcaps-folder', type=str, required=False, help='Input folder name for pcap log files which will be processed.')
+    parser.add_argument('--pcaps-folder', action='append', required=False, help='Input folder name for pcap log files which will be processed. May be passed multiple times.')
     parser.add_argument('--pcaps-suffix', type=str, default='.pcap', required=False, help='Suffix for identifying pcap files within this folder and all sub-folders. (default is .pcap, but you might want to set to .pcapng or something else.)')
 
     # BTIDES arguments
@@ -95,19 +95,23 @@ def main():
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
     # Sanity check args
-    if args.HCI_logs_folder and not os.path.isdir(args.HCI_logs_folder):
-        print("The --HCI-logs-folder argument must be a folder")
-        exit(1)
+    if args.HCI_logs_folder:
+        for folder in args.HCI_logs_folder:
+            if not os.path.isdir(folder):
+                print("The --HCI-logs-folder argument must be a folder. (Invalid entry: {folder})")
+                exit(1)
 
-    if(args.HCI_logs_suffix != ".bin" and not args.HCI_logs_folder):
+    if(args.HCI_logs_suffix != ".bin" and args.HCI_logs_folder is None):
         print("--HCI-logs-suffix can only be passed if --HCI-logs-folder is also given.")
         exit(1)
 
-    if args.pcaps_folder and not os.path.isdir(args.pcaps_folder):
-        print("The --pcaps-folder argument must be a folder")
-        exit(1)
+    if args.pcaps_folder:
+        for folder in args.pcaps_folder:
+            if not os.path.isdir(folder):
+                print("The --pcaps-folder argument must be a folder. (Invalid entry: {folder})")
+                exit(1)
 
-    if(args.pcaps_suffix != ".pcap" and not args.pcaps_folder):
+    if(args.pcaps_suffix != ".pcap" and args.pcaps_folder is None):
         print("--pcaps-suffix can only be passed if --pcaps-folder is also given.")
         exit(1)
 
@@ -116,8 +120,8 @@ def main():
         exit(1)
 
     hci_file_export_count = 0
-    if(args.HCI_logs_folder):
-        for root, dirs, files in os.walk(args.HCI_logs_folder):
+    for folder in args.HCI_logs_folder:
+        for root, dirs, files in os.walk(folder):
             for file in files:
                 if file.endswith(args.HCI_logs_suffix):
                     base_file_name = file[:-len(args.HCI_logs_suffix)]
@@ -153,8 +157,8 @@ def main():
                     g_last_handle_to_bdaddr = {}
 
     pcap_file_export_count = 0
-    if(args.pcaps_folder):
-        for root, dirs, files in os.walk(args.pcaps_folder):
+    for folder in args.pcaps_folder:
+        for root, dirs, files in os.walk(folder):
             for file in files:
                 if file.endswith(args.pcaps_suffix):
                     base_file_name = file[:-len(args.pcaps_suffix)]

@@ -697,11 +697,11 @@ def read_pcap(file_path):
 def main():
     global verbose_print, verbose_BTIDES
     parser = argparse.ArgumentParser(description='pcap file input arguments')
-    parser.add_argument('--input', type=str, required=True, help='Input file name for pcap file.')
+    parser.add_argument('--input', action='append', required=True, help='Input file name for pcap file. May be passed multiple times.')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
-    btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
+    btides_group.add_argument('--output', action='append', required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
 
     # SQL arguments
@@ -721,57 +721,68 @@ def main():
 
     args = parser.parse_args()
 
-    in_pcap_filename = args.input
-    out_BTIDES_filename = args.output
-    if args.to_BTIDALPOOL and not out_BTIDES_filename:
-        # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
-        out_BTIDES_filename = "/tmp/pcap2btides.btides"
-    TME.TME_glob.verbose_print = args.verbose_print
-    TME.TME_glob.quiet_print = args.quiet_print
-    TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
+    if (len(args.output) == 0):
+        print("Error: You must provide an --output filename unless using --to-BTIDALPOOL, in which case a temporary file will be created if you didn't provide one.")
+        exit(1)
 
-    qprint("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 1000 packets.)")
-    read_pcap(in_pcap_filename)
+    if (len(args.output) > 1 and len(args.input) != len(args.output)):
+        print("Error: If you provide multiple --input files, you must provide the same number of --output files.")
+        exit(1)
 
-    qprint("Writing BTIDES data to file.")
-    write_BTIDES(out_BTIDES_filename)
-    qprint("Export completed with no errors.")
+    index = 0
+    for in_pcap_filename in args.input:
+        out_BTIDES_filename = args.output[index]
+        if args.to_BTIDALPOOL and not out_BTIDES_filename:
+            # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
+            out_BTIDES_filename = "/tmp/pcap2btides.btides"
+        TME.TME_glob.verbose_print = args.verbose_print
+        TME.TME_glob.quiet_print = args.quiet_print
+        TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
-    btides_to_sql_succeeded = False
-    if args.to_SQL:
-        b2s_args = btides_to_sql_args(input=out_BTIDES_filename, use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
-        btides_to_sql_succeeded = btides_to_sql(b2s_args)
+        qprint("Reading all packets from pcap into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 1000 packets.)")
+        read_pcap(in_pcap_filename)
 
-    if args.to_BTIDALPOOL:
-        # If the token isn't given on the CLI, then redirect them to go login and get one
-        client = AuthClient()
-        if args.token_file:
-            with open(args.token_file, 'r') as f:
-                token_data = json.load(f)
-            token = token_data['token']
-            refresh_token = token_data['refresh_token']
-            client.set_credentials(token, refresh_token, token_file=args.token_file)
-            if(not client.validate_credentials()):
-                print("Authentication failed.")
-                exit(1)
-        else:
-            try:
-                if(not client.google_SSO_authenticate() or not client.validate_credentials()):
+        qprint("Writing BTIDES data to file.")
+        write_BTIDES(out_BTIDES_filename)
+        qprint("Export completed with no errors.")
+
+        btides_to_sql_succeeded = False
+        if args.to_SQL:
+            b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+            btides_to_sql_succeeded = btides_to_sql(b2s_args)
+
+        if args.to_BTIDALPOOL:
+            # If the token isn't given on the CLI, then redirect them to go login and get one
+            client = AuthClient()
+            if args.token_file:
+                with open(args.token_file, 'r') as f:
+                    token_data = json.load(f)
+                token = token_data['token']
+                refresh_token = token_data['refresh_token']
+                client.set_credentials(token, refresh_token, token_file=args.token_file)
+                if(not client.validate_credentials()):
                     print("Authentication failed.")
                     exit(1)
-            except ValueError as e:
-                print(f"Error: {e}")
-                exit(1)
+            else:
+                try:
+                    if(not client.google_SSO_authenticate() or not client.validate_credentials()):
+                        print("Authentication failed.")
+                        exit(1)
+                except ValueError as e:
+                    print(f"Error: {e}")
+                    exit(1)
 
-        # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
-        send_btides_to_btidalpool(
-            input_file=out_BTIDES_filename,
-            token=client.credentials.token,
-            refresh_token=client.credentials.refresh_token
-        )
+            # Use the copy of token/refresh_token in client.credentials, because it could have been refreshed inside validate_credentials()
+            send_btides_to_btidalpool(
+                input_file=out_BTIDES_filename,
+                token=client.credentials.token,
+                refresh_token=client.credentials.refresh_token
+            )
 
-    if(btides_to_sql_succeeded and args.rename):
-        os.rename(out_BTIDES_filename, out_BTIDES_filename + ".processed")
+        if(btides_to_sql_succeeded and args.rename):
+            os.rename(out_BTIDES_filename, out_BTIDES_filename + ".processed")
+
+        index += 1
 
 
 if __name__ == "__main__":
