@@ -344,6 +344,8 @@ def main():
 
     if(args.UUID_regex != None):
         for entry in args.UUID_regex:
+            if(sanity_check_UUID_regex(entry)):
+                entry = entry.replace("-", "")
             bdaddrs_tmp = get_bdaddrs_by_uuid_regex(entry, args.bdaddr_type)
             qprint(f"bdaddrs_tmp = {bdaddrs_tmp}")
             if(bdaddrs_tmp is not None):

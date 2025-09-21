@@ -772,6 +772,30 @@ def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
 
     return bdaddr_hash.keys()
 
+def sanity_check_UUID_regex(entry):
+    if "-" not in entry:
+        return True
+    while True:
+        print(" __                 ")
+        print("/  \\        ____________________________________________")
+        print("|  |       /                                             \\")
+        print("@  @       | It looks like you are trying to pass a UUID |")
+        print("|| ||      | regex with dashes in it. The dashes will be |")
+        print("|| ||   <--| interpreted as part of the regex pattern.   |")
+        print("|\\_/|      | Do you want me to remove the dashes?        |")
+        print("\\___/      \\_____________________________________________/")
+        try:
+            choice = input("y/n: ")
+        except EOFError:
+            print("Input must be y or n. Try again!")
+            return False
+        choice = choice.strip().lower()
+        if choice == "y":
+            return True
+        if choice == "n":
+            return False
+        print("Input must be y or n. Try again!")
+
 
 def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
 
