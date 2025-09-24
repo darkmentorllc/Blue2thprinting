@@ -118,7 +118,11 @@ mysql -u user -pa --database='bt2' --execute="CREATE TABLE LL_LENGTHs (id INT NO
 echo "Creating BTC LMP tables"
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_VERSION_RES (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, lmp_version TINYINT UNSIGNED NOT NULL, device_BT_CID SMALLINT UNSIGNED NOT NULL, lmp_sub_version SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_VERSION_REQ (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, lmp_version TINYINT UNSIGNED NOT NULL, device_BT_CID SMALLINT UNSIGNED NOT NULL, lmp_sub_version SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_FEATURES_RES (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, page TINYINT UNSIGNED NOT NULL, features BIGINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page, features)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_FEATURES_REQ (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, page TINYINT UNSIGNED NOT NULL, features BIGINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page, features)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_FEATURES_RES_EXT (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, page TINYINT UNSIGNED NOT NULL, max_page TINYINT UNSIGNED NOT NULL, features BIGINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page, features)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 

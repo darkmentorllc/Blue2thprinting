@@ -121,11 +121,21 @@ ll_ctrl_pdu_opcodes_to_strings = {
 ##################################################################
 
 ## LMP PDU types defined in BT spec
+type_LMP_VERSION_REQ             = 37
 type_LMP_VERSION_RES             = 38
+type_LMP_FEATURES_REQ            = 39
 type_LMP_FEATURES_RES            = 40
 type_LMP_FEATURES_RES_EXT        = 127
 
 type_extended_opcode_LMP_FEATURES_RES_EXT = 4
+
+lmp_pdu_opcodes_to_strings = {
+    type_LMP_VERSION_REQ:           "LMP_VERSION_REQ",
+    type_LMP_VERSION_RES:           "LMP_VERSION_RES",
+    type_LMP_FEATURES_REQ:          "LMP_FEATURES_REQ",
+    type_LMP_FEATURES_RES:          "LMP_FEATURES_RES",
+    type_LMP_FEATURES_RES_EXT:      "LMP_FEATURES_RES_EXT"
+}
 
 ######################################################
 # Host/Controller Interface (HCI) types

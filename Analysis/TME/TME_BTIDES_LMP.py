@@ -15,7 +15,14 @@ import TME.TME_glob
 # Helper "factory functions"
 ############################
 
-# TODO: we need to update database to keep track of opcode so we know whether something is a REQ or RSP
+# TODO: ideally we should have unified REQ/REQ tables in the db, but for now I just make separate ones for rapidity
+def ff_LMP_VERSION_REQ(version, company_id, subversion):
+    obj = {"opcode": type_LMP_VERSION_REQ, "version": version, "company_id": company_id, "subversion": subversion}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_VERSION_REQ"
+    return obj
+
+
 def ff_LMP_VERSION_RES(version, company_id, subversion):
     obj = {"opcode": type_LMP_VERSION_RES, "version": version, "company_id": company_id, "subversion": subversion}
     if(TME.TME_glob.verbose_BTIDES):
@@ -23,13 +30,22 @@ def ff_LMP_VERSION_RES(version, company_id, subversion):
     return obj
 
 
-# TODO: we need to update database to keep track of opcode so we know whether something is a REQ or RSP
+# TODO: ideally we should have unified REQ/REQ tables in the db, but for now I just make separate ones for rapidity
+def ff_LMP_FEATURES_REQ(features):
+    lmp_features_hex_str = f"{features:016x}"
+    obj = {"opcode": type_LMP_FEATURES_REQ, "lmp_features_hex_str": lmp_features_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_FEATURES_REQ"
+    return obj
+
+
 def ff_LMP_FEATURES_RES(features):
     lmp_features_hex_str = f"{features:016x}"
     obj = {"opcode": type_LMP_FEATURES_RES, "lmp_features_hex_str": lmp_features_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_FEATURES_RES"
     return obj
+
 
 def ff_LMP_FEATURES_RES_EXT(page, max_page, features):
     lmp_features_hex_str = f"{features:016x}"
@@ -38,13 +54,33 @@ def ff_LMP_FEATURES_RES_EXT(page, max_page, features):
         obj["opcode_str"] = "LMP_FEATURES_RES_EXT"
     return obj
 
+
+def ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str):
+    obj = {"opcode": opcode, "full_pkt_hex_str": full_pkt_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = lmp_pdu_opcodes_to_strings[opcode]
+    return obj
+
+
 ############################
 # JSON insertion functions
 ############################
 
+def BTIDES_export_LMP_VERSION_REQ(bdaddr, version, company_id, subversion):
+    global BTIDES_JSON
+    data = ff_LMP_VERSION_REQ(version, company_id, subversion)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
 def BTIDES_export_LMP_VERSION_RES(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
     data = ff_LMP_VERSION_RES(version, company_id, subversion)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_FEATURES_REQ(bdaddr, features):
+    global BTIDES_JSON
+    data = ff_LMP_FEATURES_REQ(features)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
@@ -59,3 +95,8 @@ def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
     data = ff_LMP_FEATURES_RES_EXT(page, max_page, features)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
+
+def BTIDES_export_LMP_generic_full_pkt_hex_str(bdaddr, opcode, full_pkt_hex_str):
+    global BTIDES_JSON
+    data = ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
