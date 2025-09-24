@@ -32,7 +32,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 import TME.TME_glob
-from TME.TME_helpers import execute_query, execute_update, execute_insert, qprint
+from TME.TME_helpers import execute_query, execute_update, execute_insert, qprint, hex_str_to_bytes
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
@@ -732,19 +732,47 @@ def parse_LLArray(entry):
 # BTIDES_LMP.json information
 ###################################
 
-def import_LMP_VERSION_RES(bdaddr, lmp_entry):
+def import_LMP_VERSION_REQ_or_RES(bdaddr, opcode, lmp_entry):
     lmp_version = lmp_entry["version"]
     device_BT_CID = lmp_entry["company_id"]
     lmp_sub_version = lmp_entry["subversion"]
     values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
-    insert = f"INSERT IGNORE INTO LMP_VERSION_RES (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    if(opcode == type_LMP_VERSION_REQ):
+        insert = f"INSERT IGNORE INTO LMP_VERSION_REQ (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    else:
+        insert = f"INSERT IGNORE INTO LMP_VERSION_RES (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
-def import_LMP_FEATURES_RES(bdaddr, lmp_entry):
+def import_LMP_VERSION_REQ_or_RES2(bdaddr, opcode, lmp_entry):
+    lmp_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    device_BT_CID = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:6]), byteorder='little')
+    lmp_sub_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][6:10]), byteorder='little')
+    values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
+    if(opcode == type_LMP_VERSION_REQ):
+        insert = f"INSERT IGNORE INTO LMP_VERSION_REQ (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    else:
+        insert = f"INSERT IGNORE INTO LMP_VERSION_RES (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_FEATURES_REQ_or_RES(bdaddr, opcode, lmp_entry):
     features = int(lmp_entry["lmp_features_hex_str"], 16)
     values = (bdaddr, 0, features)
-    insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (bdaddr, page, features) VALUES (%s, %s, %s);"
+    if(opcode == type_LMP_FEATURES_REQ):
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ (bdaddr, page, features) VALUES (%s, %s, %s);"
+    else:
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (bdaddr, page, features) VALUES (%s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_FEATURES_REQ_or_RES2(bdaddr, opcode, lmp_entry):
+    features = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:16]), byteorder='little')
+    values = (bdaddr, 0, features)
+    if(opcode == type_LMP_FEATURES_REQ):
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ (bdaddr, page, features) VALUES (%s, %s, %s);"
+    else:
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (bdaddr, page, features) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -776,11 +804,29 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
+        if(has_known_LMP_packet(type_LMP_VERSION_REQ, lmp_entry)):
+            if("full_pkt_hex_str" in lmp_entry):
+                import_LMP_VERSION_REQ_or_RES2(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
+            else:
+                import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
+            continue
         if(has_known_LMP_packet(type_LMP_VERSION_RES, lmp_entry)):
-            import_LMP_VERSION_RES(bdaddr, lmp_entry)
+            if("full_pkt_hex_str" in lmp_entry):
+                import_LMP_VERSION_REQ_or_RES2(bdaddr, type_LMP_VERSION_RES, lmp_entry)
+            else:
+                import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_RES, lmp_entry)
+            continue
+        if(has_known_LMP_packet(type_LMP_FEATURES_REQ, lmp_entry)):
+            if("full_pkt_hex_str" in lmp_entry):
+                import_LMP_FEATURES_REQ_or_RES2(bdaddr, type_LMP_FEATURES_REQ, lmp_entry)
+            else:
+                import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_REQ, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_FEATURES_RES, lmp_entry)):
-            import_LMP_FEATURES_RES(bdaddr, lmp_entry)
+            if("full_pkt_hex_str" in lmp_entry):
+                import_LMP_FEATURES_REQ_or_RES2(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
+            else:
+                import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_FEATURES_RES_EXT, lmp_entry, extended_opcode=type_extended_opcode_LMP_FEATURES_RES_EXT)):
             import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
