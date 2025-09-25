@@ -4,9 +4,26 @@ The code in this repository is ***researchware***. That means **its purpose is p
 
 # OST2 Class Now Available!
 
-The class ["Bluetooth 2222: Bluetooth reconnaissance with Blue2thprinting"](https://ost2.fyi/BT2222) is now available on [OpenSecurityTraining2](https://ost2.fyi/)!
+The class ["Bluetooth 2222: Bluetooth reconnaissance with Blue2thprinting"](https://ost2.fyi/BT2222) is now available on [OpenSecurityTraining2](https://ost2.fyi/) as part of the new [Bluetooth Learning Path](https://ost2.fyi/OST2_LP_Bluetooth.pdf)!
 
 This class takes on average about 8.5h to complete, and is by far the best way to learn how to use this software. It provides you with a preconfigured VM and walks you through the 30+ Bluetooth data types which are exposed for your analysis. Afterwards you can come back and load Blue2thprinting on to whichever of the physical setups below works best for you.
+
+
+# 💥Breaking changes💥
+
+If you have data from running Blue2thprinting before tag `2.2.0`, you will need to execute the following commands to migrate the table names after tag `2.2.0` (commit ``):
+
+```
+echo "rename tables"
+mysql -u user -pa --database='bt2' --execute="RENAME TABLE bttest.LMP_NAME_RES TO bttest.LMP_NAME_RES_defragmented;"
+mysql -u user -pa --database='bttest' --execute="RENAME TABLE bttest.LMP_NAME_RES TO bttest.LMP_NAME_RES_defragmented;"
+
+echo "create new tables"
+cd ~/Blue2thprinting/Analysis/one_time_initialization
+./initialize_database.sh
+./initialize_test_database.sh
+```
+
 
 # Hardware Setup Guides
 

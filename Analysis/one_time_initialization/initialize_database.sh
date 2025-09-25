@@ -126,7 +126,9 @@ mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_FEATURES_REQ (id 
 
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_FEATURES_RES_EXT (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, page TINYINT UNSIGNED NOT NULL, max_page TINYINT UNSIGNED NOT NULL, features BIGINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, page, features)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_NAME_RES (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_NAME_RES_defragmented (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, device_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, device_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bt2' --execute="CREATE TABLE LMP_NAME_RES_fragmented (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, name_offset TINYINT UNSIGNED NOT NULL, name_total_length TINYINT UNSIGNED NOT NULL, name_fragment BLOB NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, name_offset, name_total_length, name_fragment(255))) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 echo "Creating other helper tables"
 mysql -u user -pa --database='bt2' --execute="CREATE TABLE IEEE_bdaddr_to_company (id INT NOT NULL AUTO_INCREMENT, bdaddr VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, company_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, company_name)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"

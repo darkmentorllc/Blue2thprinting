@@ -266,7 +266,7 @@ def is_bdaddr_classic(bdaddr):
     WHERE bdaddr = %s
     UNION
     SELECT 1
-    FROM LMP_NAME_RES
+    FROM LMP_NAME_RES_defragmented
     WHERE bdaddr = %s
     UNION
     SELECT 1
@@ -976,7 +976,7 @@ def bdaddr_found_in_any_table(bdaddr):
         "LE_bdaddr_to_UUID32_service_data", "LE_bdaddr_to_UUID32_service_solicit",
         "LE_bdaddr_to_UUID32s_list", "LL_FEATUREs", "LL_LENGTHs", "LL_PHYs", "LL_PINGs",
         "LL_UNKNOWN_RSP", "LL_VERSION_IND", "LMP_FEATURES_RES", "LMP_FEATURES_RES_EXT",
-        "LMP_NAME_RES", "LMP_VERSION_RES", "SDP_Common", "SDP_ERROR_RSP", "SMP_Pairing_Req_Res"
+        "LMP_NAME_RES_defragmented", "LMP_VERSION_RES", "SDP_Common", "SDP_ERROR_RSP", "SMP_Pairing_Req_Res"
     ]
 
     query = " UNION ALL ".join([f"SELECT EXISTS(SELECT 1 FROM {table} WHERE bdaddr = %s)" for table in tables])

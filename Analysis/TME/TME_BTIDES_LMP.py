@@ -49,12 +49,13 @@ def ff_LMP_FEATURES_RES(features):
 
 def ff_LMP_FEATURES_RES_EXT(page, max_page, features):
     lmp_features_hex_str = f"{features:016x}"
-    obj = {"opcode": type_LMP_FEATURES_RES_EXT, "extended_opcode": type_extended_opcode_LMP_FEATURES_RES_EXT, "page": page, "max_page": max_page, "lmp_features_hex_str": lmp_features_hex_str}
+    obj = {"opcode": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_FEATURES_RES_EXT, "page": page, "max_page": max_page, "lmp_features_hex_str": lmp_features_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_FEATURES_RES_EXT"
     return obj
 
 
+# Used for all the LMP_*2 type data definitions which just copy the entire packet (minus opcode) as a hex string
 def ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str):
     obj = {"opcode": opcode, "full_pkt_hex_str": full_pkt_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
@@ -93,6 +94,12 @@ def BTIDES_export_LMP_FEATURES_RES(bdaddr, features):
 def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
     global BTIDES_JSON
     data = ff_LMP_FEATURES_RES_EXT(page, max_page, features)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_FEATURES_RES(bdaddr, features):
+    global BTIDES_JSON
+    data = ff_LMP_FEATURES_RES(features)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 

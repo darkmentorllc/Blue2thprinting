@@ -121,20 +121,26 @@ ll_ctrl_pdu_opcodes_to_strings = {
 ##################################################################
 
 ## LMP PDU types defined in BT spec
-type_LMP_VERSION_REQ             = 37
-type_LMP_VERSION_RES             = 38
-type_LMP_FEATURES_REQ            = 39
-type_LMP_FEATURES_RES            = 40
-type_LMP_FEATURES_RES_EXT        = 127
+type_LMP_NAME_RES               = 2
+type_LMP_VERSION_REQ            = 37
+type_LMP_VERSION_RES            = 38
+type_LMP_FEATURES_REQ           = 39
+type_LMP_FEATURES_RES           = 40
+type_LMP_ESCAPE_127             = 127
 
-type_extended_opcode_LMP_FEATURES_RES_EXT = 4
+type_ext_opcode_LMP_FEATURES_RES_EXT = 4
 
 lmp_pdu_opcodes_to_strings = {
+    type_LMP_NAME_RES:              "LMP_NAME_RES",
     type_LMP_VERSION_REQ:           "LMP_VERSION_REQ",
     type_LMP_VERSION_RES:           "LMP_VERSION_RES",
     type_LMP_FEATURES_REQ:          "LMP_FEATURES_REQ",
     type_LMP_FEATURES_RES:          "LMP_FEATURES_RES",
-    type_LMP_FEATURES_RES_EXT:      "LMP_FEATURES_RES_EXT"
+    type_LMP_ESCAPE_127:            "LMP_ESCAPE_127"
+}
+
+lmp_pdu_ext_opcodes_to_strings = {
+    type_ext_opcode_LMP_FEATURES_RES_EXT:           "LMP_FEATURES_RES_EXT",
 }
 
 ######################################################

@@ -42,7 +42,7 @@ cursor = db_connection.cursor()
 # Prepare the SQL statement with placeholders
 sql_LMP_VERSION_RES = "INSERT IGNORE INTO LMP_VERSION_RES (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s)"
 sql_LMP_FEATURES_RES = "INSERT IGNORE INTO LMP_FEATURES_RES (bdaddr, page, features) VALUES (%s, %s, %s)"
-sql_LMP_NAME_RES = "INSERT IGNORE INTO LMP_NAME_RES (bdaddr, device_name) VALUES (%s, %s)"
+sql_LMP_NAME_RES = "INSERT IGNORE INTO LMP_NAME_RES_defragmented (bdaddr, device_name) VALUES (%s, %s)"
 
 def print_string(args):
     try:

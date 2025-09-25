@@ -199,7 +199,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES"
+            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
             "    UNION ALL"
@@ -309,7 +309,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES"
+            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
             "    UNION ALL"
@@ -596,7 +596,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
                     UNION ALL
                     SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_FEATURES_RES_EXT
                     UNION ALL
-                    SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_NAME_RES
+                    SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_NAME_RES_defragmented
                     UNION ALL
                     SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_VERSION_RES
                     UNION ALL
@@ -706,7 +706,7 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
                     UNION ALL
                     SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_FEATURES_RES_EXT
                     UNION ALL
-                    SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_NAME_RES
+                    SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_NAME_RES_defragmented
                     UNION ALL
                     SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM LMP_VERSION_RES
                     UNION ALL

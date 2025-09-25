@@ -111,7 +111,7 @@ def print_LMP_info(bdaddr):
     features_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
     features_ext_result = execute_query(features_ext_query, values)
 
-    name_query = "SELECT device_name FROM LMP_NAME_RES WHERE bdaddr = %s"
+    name_query = "SELECT device_name FROM LMP_NAME_RES_defragmented WHERE bdaddr = %s"
     name_result = execute_query(name_query, values)
 
     if((len(version_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0)): # and (len(lengths_result) == 0) and (len(ping_result) == 0) and (len(unknown_result) == 0)):
