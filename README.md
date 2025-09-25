@@ -11,7 +11,7 @@ This class takes on average about 8.5h to complete, and is by far the best way t
 
 # 💥Breaking changes💥
 
-If you have data from running Blue2thprinting before tag `2.2.0`, you will need to execute the following commands to migrate the table names after tag `2.2.0` (commit `634ae803c29cf97e04c87a02431ac54340dcecb8`):
+If you have data from running Blue2thprinting before tag `2.2.0`, you will need to execute the following commands to migrate the table names after tag `2.2.0` (commit `ac416c8c2f78a93038be15ecdec6a62913d97ad9`):
 
 ```
 echo "rename tables"
