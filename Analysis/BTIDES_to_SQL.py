@@ -32,7 +32,7 @@ from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
 
 import TME.TME_glob
-from TME.TME_helpers import execute_query, execute_update, execute_insert, qprint, hex_str_to_bytes
+from TME.TME_helpers import execute_query, execute_update, execute_insert, qprint, hex_str_to_bytes, hex_str_to_utf8
 from TME.TME_BTIDES_base import *
 from TME.TME_BTIDES_AdvData import *
 from TME.TME_UUID128 import add_dashes_to_UUID128
@@ -785,6 +785,25 @@ def import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry):
     execute_insert(insert, values)
 
 
+def import_LMP_NAME_RES_defragmented(bdaddr, name):
+    values = (bdaddr, name)
+    insert = f"INSERT IGNORE INTO LMP_NAME_RES_defragmented (bdaddr, device_name) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry):
+    name_offset = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    name_total_length = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+    # Don't sanity check the fragment, or attempt to grab the subset of the fragment specified by the length
+    # just insert it exactly as-is, and let other code deal with sanity checking
+    # TODO: IMPROVEMENT: because the Realtek-based logging doesn't attempt to check size either, this can lead to
+    # entries where the last bytes past where the length would specify are uninitialized data, which leads to unnecessary duplication
+    name_fragment_bytes = hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:])
+    values = (bdaddr, name_offset, name_total_length, name_fragment_bytes)
+    insert = f"INSERT IGNORE INTO LMP_NAME_RES_fragmented (bdaddr, name_offset, name_total_length, name_fragment) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
 def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
         if(extended_opcode):
@@ -801,6 +820,8 @@ def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
 def parse_LMPArray(entry):
     if("LMPArray" not in entry.keys() or entry["LMPArray"] == None or entry["bdaddr_rand"] != 0):
         return # Entry not valid for this type
+
+    name_frag_dict = {}
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
@@ -828,8 +849,48 @@ def parse_LMPArray(entry):
             else:
                 import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
             continue
-        if(has_known_LMP_packet(type_LMP_FEATURES_RES_EXT, lmp_entry, extended_opcode=type_extended_opcode_LMP_FEATURES_RES_EXT)):
+        if(has_known_LMP_packet(type_LMP_ESCAPE_127, lmp_entry, extended_opcode=type_ext_opcode_LMP_FEATURES_RES_EXT)):
             import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_packet(type_LMP_NAME_RES, lmp_entry)):
+            import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry)
+            # Save a copy of the fragment into a bdaddr_indexed list, for defragmentation at the end
+            if(bdaddr not in name_frag_dict.keys()):
+                name_frag_dict[bdaddr] = [lmp_entry["full_pkt_hex_str"]]
+            else:
+                name_frag_dict[bdaddr].append(lmp_entry["full_pkt_hex_str"])
+            continue
+
+    # We have to defragment LMP_NAME_RES data ourselves after we're done processing all LMPArray entries
+    for bdaddr in name_frag_dict.keys():
+        fragment_list = name_frag_dict[bdaddr]
+        # Parse the pieces and place into a dictionary keyed by offset
+        tmp_frag_dict = {}
+        tmp_name_total_length = 0 # For sanity checking that all fragments agree on the total length
+        for fragment in fragment_list:
+            name_offset = int.from_bytes(hex_str_to_bytes(fragment[0:2]), byteorder='little')
+            name_total_length = int.from_bytes(hex_str_to_bytes(fragment[2:4]), byteorder='little')
+            name_fragment = fragment[4:]
+            tmp_frag_dict[name_offset] = (name_total_length, name_fragment)
+            tmp_name_length = name_total_length
+
+        defragmented_name_bytes = bytearray(0)
+        for offset in sorted(tmp_frag_dict.keys()):
+            name_total_length, name_fragment = tmp_frag_dict[offset]
+            if(name_total_length != tmp_name_length):
+                print("[!] Error: Not all fragments have the same name length, cannot defragment LMP_NAME_RES for " + bdaddr)
+                break
+            if(offset + len(name_fragment)//2 - 1 > name_total_length):
+                print("[!] Error: Fragment inclusion would exceed total length, cannot defragment LMP_NAME_RES for " + bdaddr)
+                break
+
+            # Do naive appending for now, since the offsets are ordered
+            # TODO: this will almost certainly break once we start requesting invalid offsets
+            #       Is there a way to preserve legit fragments but discard the bad ones?
+            defragmented_name_bytes += bytes.fromhex(name_fragment)
+        print(defragmented_name_bytes)
+        import_LMP_NAME_RES_defragmented(bdaddr, defragmented_name_bytes.decode('utf-8', errors='ignore'))
+
 
 ###################################
 # BTIDES_HCI.json information
