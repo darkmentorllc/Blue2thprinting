@@ -445,7 +445,7 @@ def main():
     filtered_bdaddrs = []
     for bdaddr in bdaddrs:
         if(args.require_GPS):
-            if(not device_has_GPS(bdaddr, args.bdaddr_type)):
+            if(not device_has_GPS(bdaddr)):
                 continue
         if(args.GPS_exclude_upper_left and device_has_GPS(bdaddr)):
             if(is_GPS_coordinate_within_exclusion_box(bdaddr, upper_left_tuple, lower_right_tuple)):

@@ -10,7 +10,7 @@
 import re
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
-from TME.TME_helpers import qprint
+from TME.TME_helpers import qprint, is_bdaddr_le_and_random
 from TME.TME_BTIDES_base import *
 import TME.TME_glob
 
@@ -101,6 +101,9 @@ def BTIDES_export_GATT_Service(connect_ind_obj=None, bdaddr=None, random=None, d
     if connect_ind_obj != None:
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "GATTArray")
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "GATTArray")
 
 def find_service_with_target_handle_in_range(connect_ind_obj=None, bdaddr=None, random=None, target_handle=None):
@@ -126,6 +129,9 @@ def BTIDES_export_GATT_Characteristic(connect_ind_obj=None, bdaddr=None, random=
             service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
         generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, service_entry, "GATTArray", data, "characteristics")
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         service_entry = find_service_with_target_handle_in_range(bdaddr=bdaddr, random=random, target_handle=data["handle"])
         if(service_entry == None):
             service_entry = ff_GATT_Service({"placeholder_entry": True, "utype": "2800", "begin_handle": 1, "end_handle": 0xFFFF, "UUID": "FFFF", "characteristics": [ data ]})
@@ -161,6 +167,9 @@ def BTIDES_export_GATT_Characteristic_Value(connect_ind_obj=None, bdaddr=None, r
     if(connect_ind_obj):
         base = lookup_DualBDADDR_base_entry(connect_ind_obj)
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         base = lookup_SingleBDADDR_base_entry(bdaddr, random)
     # For the placeholder, first run it through the factory function to add any nice-to-haves for verbosity
     data = ff_GATT_Characteristic_Value(data)

@@ -122,6 +122,12 @@ def insert_std_optional_fields(obj, **optional_fields):
 
 def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, tier1_data, target_tier1_array_name):
     global BTIDES_JSON
+
+    # DELETEME: DEBUGGING:
+    if(random == None):
+        print("ERROR: random is None in generic_SingleBDADDR_insertion_into_BTIDES_first_level_array()")
+        return False
+
     if(tier1_data == None):
         return False
     bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)
@@ -228,6 +234,12 @@ def non_recursive_primitive_equality_check(dict1, dict2):
 # The tier1_data should already have the tier2_data inserted into it, to simplify insertion in the case that the tier1 data doesn't already exist (TODO: Is this right?)
 def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, target_tier1_array_name, tier2_data, target_tier2_array_name):
     global BTIDES_JSON
+
+    # DELETEME: DEBUGGING:
+    if(random == None):
+        print("ERROR: random is None in generic_SingleBDADDR_insertion_into_BTIDES_first_level_array()")
+        return False
+
     if(tier1_data == None):
         return False
     bdaddr_specific_entry = lookup_SingleBDADDR_base_entry(bdaddr, random)

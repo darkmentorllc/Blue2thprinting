@@ -11,8 +11,7 @@ import re
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array, convert_UUID128_to_UUID16_if_possible
 import TME.TME_glob
-from TME.TME_helpers import get_utf8_string_from_hex_string
-
+from TME.TME_helpers import get_utf8_string_from_hex_string, is_bdaddr_le_and_random
 ############################
 # Helper "factory functions"
 ############################
@@ -62,6 +61,7 @@ def ff_ATT_FIND_INFORMATION_RSP_information_data(handle=None, UUID=None):
     list_obj = {"handle": handle, "UUID": UUID}
     return list_obj
 
+
 def ff_ATT_FIND_INFORMATION_RSP(direction, format, information_data):
     obj = {"direction": direction, "opcode": type_ATT_FIND_INFORMATION_RSP, "format": format, "information_data": information_data}
     if(TME.TME_glob.verbose_BTIDES):
@@ -89,17 +89,20 @@ def ff_ATT_READ_BY_TYPE_REQ(direction, start_handle, end_handle, attribute_uuid)
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_TYPE_REQ]
     return obj
 
+
 def ff_ATT_READ_BY_TYPE_RSP_attribute_data_list_entry(attribute_handle=None, value_hex_str=None):
     list_obj = {"attribute_handle": attribute_handle, "value_hex_str": value_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         list_obj["utf8_str"] = get_utf8_string_from_hex_string(value_hex_str)
     return list_obj
 
+
 def ff_ATT_READ_BY_TYPE_RSP(direction, length, attribute_data_list):
     obj = {"direction": direction, "opcode": type_ATT_READ_BY_TYPE_RSP, "length": length, "attribute_data_list": attribute_data_list}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = att_opcode_strings[type_ATT_READ_BY_TYPE_RSP]
     return obj
+
 
 def ff_ATT_READ_REQ(direction, handle):
     obj = {"direction": direction, "opcode": type_ATT_READ_REQ, "handle": handle}
@@ -126,6 +129,7 @@ def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry(attribute_handle=Non
     list_obj = {"attribute_handle": attribute_handle, "end_group_handle": end_group_handle, "UUID": UUID}
     return list_obj
 
+
 # 3rd parameter should be created with def ff_ATT_READ_BY_GROUP_TYPE_RSP_attribute_data_list_entry() above
 def ff_ATT_READ_BY_GROUP_TYPE_RSP(direction, length, attribute_data_list):
     obj = {"direction": direction, "opcode": type_ATT_READ_BY_GROUP_TYPE_RSP, "length": length, "attribute_data_list": attribute_data_list}
@@ -142,10 +146,16 @@ def BTIDES_export_ATT_handle(connect_ind_obj=None, bdaddr=None, random=None, dat
     if connect_ind_obj is not None:
         generic_DualBDADDR_insertion_into_BTIDES_second_level_array(connect_ind_obj, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, tier1_data, "ATTArray", data, "ATT_handle_enumeration")
 
 def BTIDES_export_ATT_packet(connect_ind_obj=None, bdaddr=None, random=None, data=None):
     if connect_ind_obj is not None:
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "ATTArray")
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "ATTArray")

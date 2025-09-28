@@ -15,8 +15,8 @@ If you have data from running Blue2thprinting before tag `2.2.0`, you will need 
 
 ```
 echo "rename tables"
-mysql -u user -pa --database='bt2' --execute="RENAME TABLE bttest.LMP_NAME_RES TO bttest.LMP_NAME_RES_defragmented;"
-mysql -u user -pa --database='bttest' --execute="RENAME TABLE bttest.LMP_NAME_RES TO bttest.LMP_NAME_RES_defragmented;"
+mysql -u user -pa --database='bt2' --execute="RENAME TABLE LMP_NAME_RES TO LMP_NAME_RES_defragmented;"
+mysql -u user -pa --database='bttest' --execute="RENAME TABLE LMP_NAME_RES TO LMP_NAME_RES_defragmented;"
 
 echo "create new tables"
 cd ~/Blue2thprinting/Analysis/one_time_initialization

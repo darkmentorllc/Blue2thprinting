@@ -3,8 +3,6 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
-# import re
-# import TME.TME_glob
 import struct
 from TME.TME_helpers import *
 from TME.TME_BTIDES_ATT import *

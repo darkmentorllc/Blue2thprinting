@@ -10,6 +10,7 @@
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import *
 import TME.TME_glob
+from TME.TME_helpers import is_bdaddr_le_and_random
 
 ############################
 # Helper "factory functions"
@@ -230,4 +231,7 @@ def BTIDES_export_LLArray_entry(bdaddr=None, random=None, connect_ind_obj=None, 
     if connect_ind_obj is not None:
         generic_DualBDADDR_insertion_into_BTIDES_first_level_array(connect_ind_obj, data, "LLArray")
     else:
+        # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+        if(random == None):
+            random = is_bdaddr_le_and_random(bdaddr)
         generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random, data, "LLArray")

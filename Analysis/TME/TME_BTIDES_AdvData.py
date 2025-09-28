@@ -12,6 +12,7 @@ from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import generic_SingleBDADDR_insertion_into_BTIDES_second_level_array
 import TME.TME_glob
+# from TME.TME_helpers import is_bdaddr_le_and_random
 
 def ff_AdvChanData(type=None, type_str=None, CSA=None, full_pkt_hex_str=None, AdvDataArray=None):
     AdvChanData = {}
@@ -540,6 +541,10 @@ def pdu_type_to_BTIDES_type_str(type):
 
 # Generalized export capability for all AdvData types
 def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
+    # Can't have random be None for exported entries (as it now is by default after Ticket #19), so look it up if needed
+    if(random == None):
+        random = is_bdaddr_le_and_random(bdaddr)
+
     btype = pdu_type_to_BTIDES_type(adv_type)
     btype_str = None
     if(TME.TME_glob.verbose_BTIDES):
@@ -547,5 +552,4 @@ def BTIDES_export_AdvData(bdaddr, random, adv_type, adv_data_type, data):
     adv_chan_array_entry = ff_AdvChanData(type=btype, type_str=btype_str)
     adv_data = ff_adv_data_type_specific_obj(adv_data_type, data)
     adv_chan_array_entry["AdvDataArray"] = [ adv_data ]
-
     generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random, adv_chan_array_entry, "AdvChanArray", adv_data, "AdvDataArray")
