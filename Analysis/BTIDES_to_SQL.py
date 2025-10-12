@@ -732,6 +732,62 @@ def parse_LLArray(entry):
 # BTIDES_LMP.json information
 ###################################
 
+def import_LMP_NAME_RES_defragmented(bdaddr, name):
+    values = (bdaddr, name)
+    insert = f"INSERT IGNORE INTO LMP_NAME_RES_defragmented (bdaddr, device_name) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry):
+    name_offset = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    name_total_length = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+    # Don't sanity check the fragment, or attempt to grab the subset of the fragment specified by the length
+    # just insert it exactly as-is, and let other code deal with sanity checking
+    # TODO: IMPROVEMENT: because the Realtek-based logging doesn't attempt to check size either, this can lead to
+    # entries where the last bytes past where the length would specify are uninitialized data, which leads to unnecessary duplication
+    name_fragment_bytes = hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:])
+    values = (bdaddr, name_offset, name_total_length, name_fragment_bytes)
+    insert = f"INSERT IGNORE INTO LMP_NAME_RES_fragmented (bdaddr, name_offset, name_total_length, name_fragment) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_ACCEPTED(bdaddr, opcode, lmp_entry):
+    # Get the opcode when it's a "LMP_ACCEPTED2" form entry
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
+        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    else:
+        if("rcvd_opcode" in lmp_entry.keys() and lmp_entry["rcvd_opcode"] != None):
+            rcvd_opcode = lmp_entry["rcvd_opcode"]
+        else:
+            print(f"invalid LMP_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
+            return # Can't process this entry
+    values = (bdaddr, rcvd_opcode)
+    insert = f"INSERT IGNORE INTO LMP_ACCEPTED (bdaddr, rcvd_opcode) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_NOT_ACCEPTED(bdaddr, opcode, lmp_entry):
+    # Get the opcode when it's a "LMP_NOT_ACCEPTED2" form entry
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 4):
+        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        error_code = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+    else:
+        if("rcvd_opcode" in lmp_entry.keys() and lmp_entry["rcvd_opcode"] != None):
+            rcvd_opcode = lmp_entry["rcvd_opcode"]
+        else:
+            print(f"invalid LMP_NOT_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
+            return # Can't process this entry
+        if("error_code" in lmp_entry.keys() and lmp_entry["error_code"] != None):
+            error_code = lmp_entry["error_code"]
+        else:
+            print(f"invalid LMP_NOT_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
+            return # Can't process this entry
+
+    values = (bdaddr, rcvd_opcode, error_code)
+    insert = f"INSERT IGNORE INTO LMP_NOT_ACCEPTED (bdaddr, rcvd_opcode, error_code) VALUES (%s, %s, %s);"
+    execute_insert(insert, values)
+
+
 def import_LMP_VERSION_REQ_or_RES(bdaddr, opcode, lmp_entry):
     lmp_version = lmp_entry["version"]
     device_BT_CID = lmp_entry["company_id"]
@@ -785,25 +841,6 @@ def import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry):
     execute_insert(insert, values)
 
 
-def import_LMP_NAME_RES_defragmented(bdaddr, name):
-    values = (bdaddr, name)
-    insert = f"INSERT IGNORE INTO LMP_NAME_RES_defragmented (bdaddr, device_name) VALUES (%s, %s);"
-    execute_insert(insert, values)
-
-
-def import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry):
-    name_offset = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
-    name_total_length = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
-    # Don't sanity check the fragment, or attempt to grab the subset of the fragment specified by the length
-    # just insert it exactly as-is, and let other code deal with sanity checking
-    # TODO: IMPROVEMENT: because the Realtek-based logging doesn't attempt to check size either, this can lead to
-    # entries where the last bytes past where the length would specify are uninitialized data, which leads to unnecessary duplication
-    name_fragment_bytes = hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:])
-    values = (bdaddr, name_offset, name_total_length, name_fragment_bytes)
-    insert = f"INSERT IGNORE INTO LMP_NAME_RES_fragmented (bdaddr, name_offset, name_total_length, name_fragment) VALUES (%s, %s, %s, %s);"
-    execute_insert(insert, values)
-
-
 def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
         if(extended_opcode):
@@ -825,6 +862,20 @@ def parse_LMPArray(entry):
 
     bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
     for lmp_entry in entry["LMPArray"]:
+        if(has_known_LMP_packet(type_LMP_NAME_RES, lmp_entry)):
+            import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry)
+            # Save a copy of the fragment into a bdaddr_indexed list, for defragmentation at the end
+            if(bdaddr not in name_frag_dict.keys()):
+                name_frag_dict[bdaddr] = [lmp_entry["full_pkt_hex_str"]]
+            else:
+                name_frag_dict[bdaddr].append(lmp_entry["full_pkt_hex_str"])
+            continue
+        if(has_known_LMP_packet(type_LMP_ACCEPTED, lmp_entry)):
+            import_LMP_ACCEPTED(bdaddr, type_LMP_ACCEPTED, lmp_entry)
+            continue
+        if(has_known_LMP_packet(type_LMP_NOT_ACCEPTED, lmp_entry)):
+            import_LMP_NOT_ACCEPTED(bdaddr, type_LMP_NOT_ACCEPTED, lmp_entry)
+            continue
         if(has_known_LMP_packet(type_LMP_VERSION_REQ, lmp_entry)):
             if("full_pkt_hex_str" in lmp_entry):
                 import_LMP_VERSION_REQ_or_RES2(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
@@ -852,14 +903,6 @@ def parse_LMPArray(entry):
         if(has_known_LMP_packet(type_LMP_ESCAPE_127, lmp_entry, extended_opcode=type_ext_opcode_LMP_FEATURES_RES_EXT)):
             import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
             continue
-        if(has_known_LMP_packet(type_LMP_NAME_RES, lmp_entry)):
-            import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry)
-            # Save a copy of the fragment into a bdaddr_indexed list, for defragmentation at the end
-            if(bdaddr not in name_frag_dict.keys()):
-                name_frag_dict[bdaddr] = [lmp_entry["full_pkt_hex_str"]]
-            else:
-                name_frag_dict[bdaddr].append(lmp_entry["full_pkt_hex_str"])
-            continue
 
     # We have to defragment LMP_NAME_RES data ourselves after we're done processing all LMPArray entries
     for bdaddr in name_frag_dict.keys():
@@ -881,14 +924,18 @@ def parse_LMPArray(entry):
                 print("[!] Error: Not all fragments have the same name length, cannot defragment LMP_NAME_RES for " + bdaddr)
                 break
             if(offset + len(name_fragment)//2 - 1 > name_total_length):
-                print("[!] Error: Fragment inclusion would exceed total length, cannot defragment LMP_NAME_RES for " + bdaddr)
-                break
+                # Until we can improve the LMP capture-side, for now let's try dropping trailing nulls...
+                # (even though that's not always strictly accurate to what a device sends, as some include nulls...)
+                name_fragment = name_fragment.rstrip("00")
+                if(offset + len(name_fragment)//2 - 1 > name_total_length):
+                    print("[!] Error: Fragment inclusion would exceed total length, cannot defragment LMP_NAME_RES for " + bdaddr)
+                    break
 
             # Do naive appending for now, since the offsets are ordered
             # TODO: this will almost certainly break once we start requesting invalid offsets
             #       Is there a way to preserve legit fragments but discard the bad ones?
             defragmented_name_bytes += bytes.fromhex(name_fragment)
-        print(defragmented_name_bytes)
+        print(f"Defragmented name = {defragmented_name_bytes.decode('utf-8', errors='ignore')}")
         import_LMP_NAME_RES_defragmented(bdaddr, defragmented_name_bytes.decode('utf-8', errors='ignore'))
 
 

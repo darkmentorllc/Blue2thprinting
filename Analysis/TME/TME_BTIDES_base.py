@@ -81,7 +81,7 @@ def lookup_SingleBDADDR_base_entry(bdaddr, random):
         ###print(item)
         ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
         ###print(f"lookup_base_entry: random = {random}")
-        if("bdaddr" in item.keys() and item["bdaddr"] == bdaddr and
+        if("bdaddr" in item.keys() and item["bdaddr"].lower() == bdaddr.lower() and
            "bdaddr_rand" in item.keys() and item["bdaddr_rand"] == random):
             return item
 

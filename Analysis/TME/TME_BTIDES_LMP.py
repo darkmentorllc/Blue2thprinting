@@ -15,6 +15,23 @@ import TME.TME_glob
 # Helper "factory functions"
 ############################
 
+def ff_LMP_ACCEPTED(rcvd_opcode):
+    obj = {"opcode": type_LMP_ACCEPTED, "rcvd_opcode": rcvd_opcode}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_ACCEPTED"
+        obj["rcvd_opcode_str"] = lmp_pdu_opcodes_to_strings.get(rcvd_opcode, "UNKNOWN_OPCODE")
+    return obj
+
+
+def ff_LMP_NOT_ACCEPTED(rcvd_opcode, error_code):
+    obj = {"opcode": type_LMP_NOT_ACCEPTED, "rcvd_opcode": rcvd_opcode, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_NOT_ACCEPTED"
+        obj["rcvd_opcode_str"] = lmp_pdu_opcodes_to_strings.get(rcvd_opcode, "UNKNOWN_OPCODE")
+        obj["error_code_str"] = controller_error_strings.get(error_code, "UNKNOWN_ERROR_CODE")
+    return obj
+
+
 # TODO: ideally we should have unified REQ/REQ tables in the db, but for now I just make separate ones for rapidity
 def ff_LMP_VERSION_REQ(version, company_id, subversion):
     obj = {"opcode": type_LMP_VERSION_REQ, "version": version, "company_id": company_id, "subversion": subversion}
@@ -66,6 +83,18 @@ def ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str):
 ############################
 # JSON insertion functions
 ############################
+
+def BTIDES_export_LMP_ACCEPTED(bdaddr, rcvd_opcode):
+    global BTIDES_JSON
+    data = ff_LMP_ACCEPTED(rcvd_opcode)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code):
+    global BTIDES_JSON
+    data = ff_LMP_NOT_ACCEPTED(rcvd_opcode, error_code)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
 
 def BTIDES_export_LMP_VERSION_REQ(bdaddr, version, company_id, subversion):
     global BTIDES_JSON
