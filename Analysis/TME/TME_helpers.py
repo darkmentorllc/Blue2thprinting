@@ -479,7 +479,7 @@ def get_custom_by_uuid16(uuid16):
             name = "Unknown"
         else:
             name = entry["UUID_name"]
-        return f"{entry["company"]}:{name}"
+        return f"{entry['company']}:{name}"
     else:
         return "Unknown"
 
