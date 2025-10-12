@@ -8,6 +8,19 @@ from TME.TME_BTIDES_LMP import *
 from TME.TME_BTIDES_HCI import *
 from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
+#####################################################################################
+# Globals to temporarily hold db lookup info (to avoid unnecessary duplicate queries)
+#####################################################################################
+# Filled in in LMP_info_exists_for_bdaddr()
+g_tmp_version_res_result = []
+g_tmp_version_req_result = []
+g_tmp_features_res_result = []
+g_tmp_features_req_result = []
+g_tmp_features_res_ext_result = []
+g_tmp_features_req_ext_result = []
+g_tmp_name_result = []
+
+
 ########################################
 # LMP Info
 ########################################
@@ -81,7 +94,7 @@ def decode_BTC_features(page, features, indent):
     elif(page == 1):
         if(features & (0b1 << 0x00)): qprint(f"{indent}* Secure Simple Pairing (Host Support)")
         if(features & (0b1 << 0x01)): qprint(f"{indent}* LE Supported (Host)")
-        if(features & (0b1 << 0x02)): qprint(f"{indent}* Previously used(Simultaneous LE and BR/EDR to Same Device Capable (Host))")
+        if(features & (0b1 << 0x02)): qprint(f"{indent}* Previously used (Simultaneous LE and BR/EDR to Same Device Capable (Host))")
         if(features & (0b1 << 0x03)): qprint(f"{indent}* LE Secure Connections (Host)")
     elif(page == 2):
         if(features & (0b1 << 0x00)): qprint(f"{indent}* Connectionless Peripheral Broadcast – Transmitter Operation")
@@ -98,97 +111,180 @@ def decode_BTC_features(page, features, indent):
         if(features & (0b1 << 0x0b)): qprint(f"{indent}* Train nudging")
 
 
-# TODO: this will get too big, break up into per-opcode sub-functions
-def print_LMP_info(bdaddr):
-    bdaddr = bdaddr.strip().lower()
+def print_LMP_VERSION_REQ_RES_info(bdaddr):
+    global g_tmp_version_res_result
+    global g_tmp_version_req_result
 
-    values = (bdaddr,)
-    version_res_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
-    version_res_result = execute_query(version_res_query, values)
-
-    version_req_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_REQ WHERE bdaddr = %s"
-    version_req_result = execute_query(version_req_query, values)
-
-    features_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE bdaddr = %s"
-    features_result = execute_query(features_query, values)
-
-    features_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
-    features_ext_result = execute_query(features_ext_query, values)
-
-    name_query = "SELECT device_name FROM LMP_NAME_RES_defragmented WHERE bdaddr = %s"
-    name_result = execute_query(name_query, values)
-
-    accepted_query = "SELECT rcvd_opcode FROM LMP_ACCEPTED WHERE bdaddr = %s"
-    accepted_result = execute_query(accepted_query, values)
-
-    not_accepted_query = "SELECT rcvd_opcode, error_code FROM LMP_NOT_ACCEPTED WHERE bdaddr = %s"
-    not_accepted_result = execute_query(not_accepted_query, values)
-
-    if((len(version_res_result) == 0) and (len(version_req_result) == 0) and (len(features_result) == 0) and (len(name_result) == 0) and (len(accepted_result) == 0) and (len(not_accepted_result) == 0)):
-        vprint(f"{i1}No BTC LMP Info found.")
-        return
-    else:
-        qprint(f"{i1}BTC LMP Info:")
-
-    for lmp_version, lmp_sub_version, device_BT_CID in version_res_result:
+    for lmp_version, lmp_sub_version, device_BT_CID in g_tmp_version_res_result:
         qprint(f"{i2}BTC LMP version response:")
         qprint(f"{i3}Version ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
         qprint(f"{i3}Sub-version: 0x{lmp_sub_version:04x}")
         qprint(f"{i3}Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
         BTIDES_export_LMP_VERSION_RES(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
-    for lmp_version, lmp_sub_version, device_BT_CID in version_req_result:
+    for lmp_version, lmp_sub_version, device_BT_CID in g_tmp_version_req_result:
         qprint(f"{i2}BTC LMP version request:")
         qprint(f"{i3}Version ({lmp_version}): {get_bt_spec_version_numbers_to_names(lmp_version)}")
         qprint(f"{i3}Sub-version: 0x{lmp_sub_version:04x}")
         qprint(f"{i3}Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
         BTIDES_export_LMP_VERSION_REQ(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
 
+    g_tmp_version_res_result = []
+    g_tmp_version_req_result = []
 
-    for page, features in features_result:
-        qprint(f"{i2}BTC LMP Features: 0x{features:016x}")
+def print_LMP_FEATURES_info(bdaddr):
+    global g_tmp_features_res_result
+    global g_tmp_features_req_result
+    global g_tmp_features_res_ext_result
+    global g_tmp_features_req_ext_result
+
+    for page, features in g_tmp_features_res_result:
+        qprint(f"{i2}BTC LMP Features (from LMP_FEATURES_RES): 0x{features:016x}")
         decode_BTC_features(page, features, f"{i3}")
         BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
 
-    for page, max_page, features in features_ext_result:
-        qprint(f"{i2}BTC LMP Extended Features: 0x{features:016x}, Page: {page:02x} (MaxPage: {max_page:02x})")
+    for page, features in g_tmp_features_req_result:
+        qprint(f"{i2}BTC LMP Features (from LMP_FEATURES_REQ): 0x{features:016x}")
+        decode_BTC_features(page, features, f"{i3}")
+        BTIDES_export_LMP_FEATURES_REQ(bdaddr, features)
+
+    for page, max_page, features in g_tmp_features_res_ext_result:
+        qprint(f"{i2}BTC LMP Extended Features (from LMP_FEATURES_RES_EXT): 0x{features:016x}, Page: {page:02x} (MaxPage: {max_page:02x})")
         decode_BTC_features(page, features, f"{i3}")
         BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features)
 
-    for (device_name,) in name_result:
+    for page, max_page, features in g_tmp_features_req_ext_result:
+        qprint(f"{i2}BTC LMP Extended Features (from LMP_FEATURES_REQ_EXT): 0x{features:016x}, Page: {page:02x} (MaxPage: {max_page:02x})")
+        decode_BTC_features(page, features, f"{i3}")
+        BTIDES_export_LMP_FEATURES_REQ_EXT(bdaddr, page, max_page, features)
+
+    g_tmp_features_res_result = []
+    g_tmp_features_req_result = []
+    g_tmp_features_res_ext_result = []
+    g_tmp_features_req_ext_result = []
+
+def print_LMP_NAME_info(bdaddr):
+    global g_tmp_name_result
+    for (device_name,) in g_tmp_name_result:
         qprint(f"{i2}BTC LMP Name Response: {device_name}")
         find_nameprint_match(device_name)
         # I'm using this for now because it's a better fit for the db data, since it's not actually individual LMP_NAME_RES fragments (it's defragmented)
+        # Also once I started doing manual defragmentation of LMP_NAME_RES packets, I started putting the results in there too
         remote_name_hex_str = str_to_hex_str(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
 
-    if accepted_result:
+    g_tmp_name_result = []
+
+# Check each table, and save the results into globals for later use
+def LMP_info_exists_for_bdaddr(bdaddr):
+    global g_tmp_version_res_result
+    global g_tmp_version_req_result
+    global g_tmp_features_res_result
+    global g_tmp_features_req_result
+    global g_tmp_features_res_ext_result
+    global g_tmp_features_req_ext_result
+    global g_tmp_name_result
+    global g_tmp_accepted_result
+    global g_tmp_not_accepted_result
+
+    results_exist = False
+
+    values = (bdaddr,)
+    version_res_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
+    g_tmp_version_res_result = execute_query(version_res_query, values)
+    if(g_tmp_version_res_result):
+        results_exist = True
+
+    version_req_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_REQ WHERE bdaddr = %s"
+    g_tmp_version_req_result = execute_query(version_req_query, values)
+    if(g_tmp_version_req_result):
+        results_exist = True
+
+    features_res_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE bdaddr = %s"
+    g_tmp_features_res_result = execute_query(features_res_query, values)
+    if(g_tmp_features_res_result):
+        results_exist = True
+
+    features_req_query = "SELECT page, features FROM LMP_FEATURES_REQ WHERE bdaddr = %s"
+    g_tmp_features_req_result = execute_query(features_req_query, values)
+    if(g_tmp_features_req_result):
+        results_exist = True
+
+    features_res_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
+    g_tmp_features_res_ext_result = execute_query(features_res_ext_query, values)
+    if(g_tmp_features_res_ext_result):
+        results_exist = True
+
+    features_req_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_REQ_EXT WHERE bdaddr = %s"
+    g_tmp_features_req_ext_result = execute_query(features_req_ext_query, values)
+    if(g_tmp_features_req_ext_result):
+        results_exist = True
+
+    name_query = "SELECT device_name FROM LMP_NAME_RES_defragmented WHERE bdaddr = %s"
+    g_tmp_name_result = execute_query(name_query, values)
+    if(g_tmp_name_result):
+        results_exist = True
+
+    accepted_query = "SELECT rcvd_opcode FROM LMP_ACCEPTED WHERE bdaddr = %s"
+    g_tmp_accepted_result = execute_query(accepted_query, values)
+    if(g_tmp_accepted_result):
+        results_exist = True
+
+    not_accepted_query = "SELECT rcvd_opcode, error_code FROM LMP_NOT_ACCEPTED WHERE bdaddr = %s"
+    g_tmp_not_accepted_result = execute_query(not_accepted_query, values)
+    if(g_tmp_not_accepted_result):
+        results_exist = True
+
+    return results_exist
+
+def print_LMP_ACCEPTED_info(bdaddr):
+    global g_tmp_accepted_result
+    if g_tmp_accepted_result:
         qprint(f"{i2}BTC LMP Accepted Opcodes:")
-        for (rcvd_opcode,) in accepted_result:
+        for (rcvd_opcode,) in g_tmp_accepted_result:
             qprint(f"{i3}Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')})")
             BTIDES_export_LMP_ACCEPTED(bdaddr, rcvd_opcode)
+    g_tmp_accepted_result = []
 
-    if not_accepted_result:
+def print_LMP_NOT_ACCEPTED_info(bdaddr):
+    global g_tmp_not_accepted_result
+    if g_tmp_not_accepted_result:
         qprint(f"{i2}BTC LMP Not Accepted Opcodes:")
-        for rcvd_opcode, error_code in not_accepted_result:
-            qprint(f"{i3}Not Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')}), Error Code: 0x{error_code:02x}")
+        for rcvd_opcode, error_code in g_tmp_not_accepted_result:
+            qprint(f"{i3}Not Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')}), Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
             BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code)
+    g_tmp_not_accepted_result = []
 
-    if(len(version_res_result) != 0 or len(features_result) != 0 or len(features_ext_result) != 0 or len(name_result) != 0 or len(accepted_result) != 0 or len(not_accepted_result) != 0):
-        vprint("\n\tRaw BTC LMP info:")
-        for lmp_version, lmp_sub_version, device_BT_CID in version_res_result:
-            vprint(f"{i2}\"lmp_version\",\"0x{lmp_version:02x}\"")
-            vprint(f"{i2}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
-            vprint(f"{i2}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
+def print_LMP_info(bdaddr):
+    bdaddr = bdaddr.strip().lower()
+    results_exist = LMP_info_exists_for_bdaddr(bdaddr) # Populate the global tmp variables
+    if(results_exist):
+        qprint(f"{i1}BTC LMP Info:")
+    else:
+        vprint(f"{i1}No BTC LMP Info found.")
+        return
 
-        for page, features in features_result:
-            vprint(f"{i2}\"features\",\"0x{features:016x}\"")
-        for page, max_page, features in features_ext_result:
-            vprint(f"{i2}\"page\",\"0x{page:02x}\",\"max_page\",\"0x{max_page:02x}\",\"features\",\"0x{features:016x}\"")
+    print_LMP_VERSION_REQ_RES_info(bdaddr)
+    print_LMP_FEATURES_info(bdaddr)
+    print_LMP_NAME_info(bdaddr)
+    print_LMP_ACCEPTED_info(bdaddr)
+    print_LMP_NOT_ACCEPTED_info(bdaddr)
 
-        for (rcvd_opcode,) in accepted_result:
-            vprint(f"{i2}\"accepted_opcode\",\"0x{rcvd_opcode:02x}\"")
-        for rcvd_opcode, error_code in not_accepted_result:
-            vprint(f"{i2}\"not_accepted_opcode\",\"0x{rcvd_opcode:02x}\",\"error_code\",\"0x{error_code:02x}\"")
+    # if(results_exist):
+    #     vprint("\n\tRaw BTC LMP info:")
+    #     for lmp_version, lmp_sub_version, device_BT_CID in version_res_result:
+    #         vprint(f"{i2}\"lmp_version\",\"0x{lmp_version:02x}\"")
+    #         vprint(f"{i2}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
+    #         vprint(f"{i2}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
+
+    #     for page, features in features_result:
+    #         vprint(f"{i2}\"features\",\"0x{features:016x}\"")
+    #     for page, max_page, features in features_ext_result:
+    #         vprint(f"{i2}\"page\",\"0x{page:02x}\",\"max_page\",\"0x{max_page:02x}\",\"features\",\"0x{features:016x}\"")
+
+    #     for (rcvd_opcode,) in accepted_result:
+    #         vprint(f"{i2}\"accepted_opcode\",\"0x{rcvd_opcode:02x}\"")
+    #     for rcvd_opcode, error_code in not_accepted_result:
+    #         vprint(f"{i2}\"not_accepted_opcode\",\"0x{rcvd_opcode:02x}\",\"error_code\",\"0x{error_code:02x}\"")
 
     qprint("")

@@ -32,7 +32,6 @@ def ff_LMP_NOT_ACCEPTED(rcvd_opcode, error_code):
     return obj
 
 
-# TODO: ideally we should have unified REQ/REQ tables in the db, but for now I just make separate ones for rapidity
 def ff_LMP_VERSION_REQ(version, company_id, subversion):
     obj = {"opcode": type_LMP_VERSION_REQ, "version": version, "company_id": company_id, "subversion": subversion}
     if(TME.TME_glob.verbose_BTIDES):
@@ -47,7 +46,6 @@ def ff_LMP_VERSION_RES(version, company_id, subversion):
     return obj
 
 
-# TODO: ideally we should have unified REQ/REQ tables in the db, but for now I just make separate ones for rapidity
 def ff_LMP_FEATURES_REQ(features):
     lmp_features_hex_str = f"{features:016x}"
     obj = {"opcode": type_LMP_FEATURES_REQ, "lmp_features_hex_str": lmp_features_hex_str}
@@ -66,9 +64,17 @@ def ff_LMP_FEATURES_RES(features):
 
 def ff_LMP_FEATURES_RES_EXT(page, max_page, features):
     lmp_features_hex_str = f"{features:016x}"
-    obj = {"opcode": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_FEATURES_RES_EXT, "page": page, "max_page": max_page, "lmp_features_hex_str": lmp_features_hex_str}
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_FEATURES_RES_EXT, "page": page, "max_page": max_page, "lmp_features_hex_str": lmp_features_hex_str}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_FEATURES_RES_EXT"
+    return obj
+
+
+def ff_LMP_FEATURES_REQ_EXT(page, max_page, features):
+    lmp_features_hex_str = f"{features:016x}"
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_FEATURES_REQ_EXT, "page": page, "max_page": max_page, "lmp_features_hex_str": lmp_features_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_FEATURES_REQ_EXT"
     return obj
 
 
@@ -79,6 +85,12 @@ def ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str):
         obj["opcode_str"] = lmp_pdu_opcodes_to_strings[opcode]
     return obj
 
+
+def ff_LMP_EXT_generic_full_pkt_hex_str(extended_opcode, full_pkt_hex_str):
+    obj = {"escape_127": 127, "extended_opcode": extended_opcode, "full_pkt_hex_str": full_pkt_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["extended_opcode_str"] = lmp_pdu_ext_opcodes_to_strings[extended_opcode]
+    return obj
 
 ############################
 # JSON insertion functions
@@ -126,13 +138,20 @@ def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
-def BTIDES_export_LMP_FEATURES_RES(bdaddr, features):
+def BTIDES_export_LMP_FEATURES_REQ_EXT(bdaddr, page, max_page, features):
     global BTIDES_JSON
-    data = ff_LMP_FEATURES_RES(features)
+    data = ff_LMP_FEATURES_REQ_EXT(page, max_page, features)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
 def BTIDES_export_LMP_generic_full_pkt_hex_str(bdaddr, opcode, full_pkt_hex_str):
     global BTIDES_JSON
     data = ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_EXT_generic_full_pkt_hex_str(bdaddr, escape, extended_opcode, full_pkt_hex_str):
+    global BTIDES_JSON
+    # TODO: we don't support escape values other than 127 yet...but I don't think the spec does either?
+    data = ff_LMP_EXT_generic_full_pkt_hex_str(extended_opcode, full_pkt_hex_str)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")

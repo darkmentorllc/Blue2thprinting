@@ -187,7 +187,14 @@ type_LMP_DHKEY_CHECK                     = 65
 type_LMP_PAUSE_ENCRYPTION_AES_REQ        = 66
 type_LMP_ESCAPE_127                      = 127
 
-type_ext_opcode_LMP_FEATURES_RES_EXT = 4
+type_ext_opcode_LMP_ACCEPTED_EXT                = 1
+type_ext_opcode_LMP_NOT_ACCEPTED_EXT            = 2
+type_ext_opcode_LMP_FEATURES_REQ_EXT            = 3
+type_ext_opcode_LMP_FEATURES_RES_EXT            = 4
+type_ext_opcode_LMP_CHANNEL_CLASSIFICATION_REQ  = 16
+type_ext_opcode_LMP_CHANNEL_CLASSIFICATION      = 17
+type_ext_opcode_LMP_POWER_CONTROL_REQ           = 31
+type_ext_opcode_LMP_POWER_CONTROL_RES           = 32
 
 lmp_pdu_opcodes_to_strings = {
     type_LMP_NAME_REQ:                        "LMP_NAME_REQ",
@@ -258,7 +265,14 @@ lmp_pdu_opcodes_to_strings = {
 }
 
 lmp_pdu_ext_opcodes_to_strings = {
+    type_ext_opcode_LMP_ACCEPTED_EXT:               "LMP_ACCEPTED_EXT",
+    type_ext_opcode_LMP_NOT_ACCEPTED_EXT:           "LMP_NOT_ACCEPTED_EXT",
+    type_ext_opcode_LMP_FEATURES_REQ_EXT:           "LMP_FEATURES_REQ_EXT",
     type_ext_opcode_LMP_FEATURES_RES_EXT:           "LMP_FEATURES_RES_EXT",
+    type_ext_opcode_LMP_CHANNEL_CLASSIFICATION_REQ: "LMP_CHANNEL_CLASSIFICATION_REQ",
+    type_ext_opcode_LMP_CHANNEL_CLASSIFICATION:     "LMP_CHANNEL_CLASSIFICATION",
+    type_ext_opcode_LMP_POWER_CONTROL_REQ:          "LMP_POWER_CONTROL_REQ",
+    type_ext_opcode_LMP_POWER_CONTROL_RES:          "LMP_POWER_CONTROL_RES"
 }
 
 ######################################################

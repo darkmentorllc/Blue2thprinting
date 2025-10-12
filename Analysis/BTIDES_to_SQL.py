@@ -751,59 +751,68 @@ def import_LMP_NAME_RES_fragmented(bdaddr, lmp_entry):
     execute_insert(insert, values)
 
 
-def import_LMP_ACCEPTED(bdaddr, opcode, lmp_entry):
-    # Get the opcode when it's a "LMP_ACCEPTED2" form entry
+def import_LMP_ACCEPTED(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
         rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
     else:
-        if("rcvd_opcode" in lmp_entry.keys() and lmp_entry["rcvd_opcode"] != None):
-            rcvd_opcode = lmp_entry["rcvd_opcode"]
-        else:
-            print(f"invalid LMP_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
-            return # Can't process this entry
+        rcvd_opcode = lmp_entry["rcvd_opcode"]
     values = (bdaddr, rcvd_opcode)
     insert = f"INSERT IGNORE INTO LMP_ACCEPTED (bdaddr, rcvd_opcode) VALUES (%s, %s);"
     execute_insert(insert, values)
 
 
-def import_LMP_NOT_ACCEPTED(bdaddr, opcode, lmp_entry):
-    # Get the opcode when it's a "LMP_NOT_ACCEPTED2" form entry
+def import_LMP_NOT_ACCEPTED(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 4):
         rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
         error_code = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
     else:
-        if("rcvd_opcode" in lmp_entry.keys() and lmp_entry["rcvd_opcode"] != None):
-            rcvd_opcode = lmp_entry["rcvd_opcode"]
-        else:
-            print(f"invalid LMP_NOT_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
-            return # Can't process this entry
-        if("error_code" in lmp_entry.keys() and lmp_entry["error_code"] != None):
-            error_code = lmp_entry["error_code"]
-        else:
-            print(f"invalid LMP_NOT_ACCEPTED entry for bdaddr {bdaddr}, {lmp_entry}. Skipping")
-            return # Can't process this entry
-
+        rcvd_opcode = lmp_entry["rcvd_opcode"]
+        error_code = lmp_entry["error_code"]
     values = (bdaddr, rcvd_opcode, error_code)
     insert = f"INSERT IGNORE INTO LMP_NOT_ACCEPTED (bdaddr, rcvd_opcode, error_code) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
-def import_LMP_VERSION_REQ_or_RES(bdaddr, opcode, lmp_entry):
-    lmp_version = lmp_entry["version"]
-    device_BT_CID = lmp_entry["company_id"]
-    lmp_sub_version = lmp_entry["subversion"]
-    values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
-    if(opcode == type_LMP_VERSION_REQ):
-        insert = f"INSERT IGNORE INTO LMP_VERSION_REQ (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+def import_LMP_ACCEPTED_EXT(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 4):
+        rcvd_escape_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
     else:
-        insert = f"INSERT IGNORE INTO LMP_VERSION_RES (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
+        rcvd_escape_opcode = lmp_entry["rcvd_escape_opcode"]
+        rcvd_opcode = lmp_entry["rcvd_opcode"]
+    values = (bdaddr, rcvd_escape_opcode, rcvd_opcode)
+    insert = f"INSERT IGNORE INTO LMP_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_opcode) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
-def import_LMP_VERSION_REQ_or_RES2(bdaddr, opcode, lmp_entry):
-    lmp_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
-    device_BT_CID = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:6]), byteorder='little')
-    lmp_sub_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][6:10]), byteorder='little')
+def import_LMP_NOT_ACCEPTED_EXT(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 6):
+        rcvd_escape_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+        error_code = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:5]), byteorder='little')
+    else:
+        rcvd_escape_opcode = lmp_entry["rcvd_escape_opcode"]
+        rcvd_opcode = lmp_entry["rcvd_opcode"]
+        error_code = lmp_entry["error_code"]
+    values = (bdaddr, rcvd_escape_opcode, rcvd_opcode, error_code)
+    insert = f"INSERT IGNORE INTO LMP_NOT_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_opcode, error_code) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_VERSION_REQ_or_RES(bdaddr, opcode, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 10):
+        lmp_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        device_BT_CID = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:6]), byteorder='little')
+        lmp_sub_version = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][6:10]), byteorder='little')
+    else:
+        lmp_version = lmp_entry["version"]
+        device_BT_CID = lmp_entry["company_id"]
+        lmp_sub_version = lmp_entry["subversion"]
     values = (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
     if(opcode == type_LMP_VERSION_REQ):
         insert = f"INSERT IGNORE INTO LMP_VERSION_REQ (bdaddr, lmp_version, device_BT_CID, lmp_sub_version) VALUES (%s, %s, %s, %s);"
@@ -813,7 +822,11 @@ def import_LMP_VERSION_REQ_or_RES2(bdaddr, opcode, lmp_entry):
 
 
 def import_LMP_FEATURES_REQ_or_RES(bdaddr, opcode, lmp_entry):
-    features = int(lmp_entry["lmp_features_hex_str"], 16)
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 16):
+        features = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:16]), byteorder='little')
+    else:
+        features = int(lmp_entry["lmp_features_hex_str"], 16)
     values = (bdaddr, 0, features)
     if(opcode == type_LMP_FEATURES_REQ):
         insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ (bdaddr, page, features) VALUES (%s, %s, %s);"
@@ -822,34 +835,34 @@ def import_LMP_FEATURES_REQ_or_RES(bdaddr, opcode, lmp_entry):
     execute_insert(insert, values)
 
 
-def import_LMP_FEATURES_REQ_or_RES2(bdaddr, opcode, lmp_entry):
-    features = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:16]), byteorder='little')
-    values = (bdaddr, 0, features)
-    if(opcode == type_LMP_FEATURES_REQ):
-        insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ (bdaddr, page, features) VALUES (%s, %s, %s);"
+def import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, opcode, lmp_entry):
+    # Check if it's a "LMP_FEATURES_RES_EXT2" form
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 20):
+        page = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        max_page = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+        features = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:20]), byteorder='little')
     else:
-        insert = f"INSERT IGNORE INTO LMP_FEATURES_RES (bdaddr, page, features) VALUES (%s, %s, %s);"
-    execute_insert(insert, values)
-
-
-def import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry):
-    features = int(lmp_entry["lmp_features_hex_str"], 16)
-    page = lmp_entry["page"]
-    max_page = lmp_entry["max_page"]
+        features = int(lmp_entry["lmp_features_hex_str"], 16)
+        page = lmp_entry["page"]
+        max_page = lmp_entry["max_page"]
     values = (bdaddr, page, max_page, features)
-    insert = f"INSERT IGNORE INTO LMP_FEATURES_RES_EXT (bdaddr, page, max_page, features) VALUES (%s, %s, %s, %s);"
+    if(opcode == type_ext_opcode_LMP_FEATURES_RES_EXT):
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_RES_EXT (bdaddr, page, max_page, features) VALUES (%s, %s, %s, %s);"
+    else:
+        insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ_EXT (bdaddr, page, max_page, features) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
 
 
 def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
-        if(extended_opcode):
-            if("extended_opcode" in lmp_entry.keys() and lmp_entry["extended_opcode"] == extended_opcode):
-                return True
-            else:
-                return False
-        else:
             return True
+    else:
+        return False
+
+def has_known_LMP_EXT_packet(extended_opcode, lmp_entry):
+    if("escape_127" in lmp_entry.keys() and lmp_entry["escape_127"] == 127 \
+       and "extended_opcode" in lmp_entry.keys() and lmp_entry["extended_opcode"] == extended_opcode):
+        return True
     else:
         return False
 
@@ -871,37 +884,34 @@ def parse_LMPArray(entry):
                 name_frag_dict[bdaddr].append(lmp_entry["full_pkt_hex_str"])
             continue
         if(has_known_LMP_packet(type_LMP_ACCEPTED, lmp_entry)):
-            import_LMP_ACCEPTED(bdaddr, type_LMP_ACCEPTED, lmp_entry)
+            import_LMP_ACCEPTED(bdaddr, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_NOT_ACCEPTED, lmp_entry)):
-            import_LMP_NOT_ACCEPTED(bdaddr, type_LMP_NOT_ACCEPTED, lmp_entry)
+            import_LMP_NOT_ACCEPTED(bdaddr, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_VERSION_REQ, lmp_entry)):
-            if("full_pkt_hex_str" in lmp_entry):
-                import_LMP_VERSION_REQ_or_RES2(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
-            else:
-                import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
+            import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_VERSION_RES, lmp_entry)):
-            if("full_pkt_hex_str" in lmp_entry):
-                import_LMP_VERSION_REQ_or_RES2(bdaddr, type_LMP_VERSION_RES, lmp_entry)
-            else:
-                import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_RES, lmp_entry)
+            import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_RES, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_FEATURES_REQ, lmp_entry)):
-            if("full_pkt_hex_str" in lmp_entry):
-                import_LMP_FEATURES_REQ_or_RES2(bdaddr, type_LMP_FEATURES_REQ, lmp_entry)
-            else:
-                import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_REQ, lmp_entry)
+            import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_REQ, lmp_entry)
             continue
         if(has_known_LMP_packet(type_LMP_FEATURES_RES, lmp_entry)):
-            if("full_pkt_hex_str" in lmp_entry):
-                import_LMP_FEATURES_REQ_or_RES2(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
-            else:
-                import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
+            import_LMP_FEATURES_REQ_or_RES(bdaddr, type_LMP_FEATURES_RES, lmp_entry)
             continue
-        if(has_known_LMP_packet(type_LMP_ESCAPE_127, lmp_entry, extended_opcode=type_ext_opcode_LMP_FEATURES_RES_EXT)):
-            import_LMP_FEATURES_RES_EXT(bdaddr, lmp_entry)
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_ACCEPTED_EXT, lmp_entry)):
+            import_LMP_ACCEPTED_EXT(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_NOT_ACCEPTED_EXT, lmp_entry)):
+            import_LMP_NOT_ACCEPTED_EXT(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_FEATURES_RES_EXT, lmp_entry)):
+            import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, type_ext_opcode_LMP_FEATURES_RES_EXT, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)):
+            import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)
             continue
 
     # We have to defragment LMP_NAME_RES data ourselves after we're done processing all LMPArray entries
