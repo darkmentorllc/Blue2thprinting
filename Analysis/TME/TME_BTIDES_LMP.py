@@ -15,6 +15,8 @@ import TME.TME_glob
 # Helper "factory functions"
 ############################
 
+### Basic Opcodes ###
+
 def ff_LMP_ACCEPTED(rcvd_opcode):
     obj = {"opcode": type_LMP_ACCEPTED, "rcvd_opcode": rcvd_opcode}
     if(TME.TME_glob.verbose_BTIDES):
@@ -22,13 +24,27 @@ def ff_LMP_ACCEPTED(rcvd_opcode):
         obj["rcvd_opcode_str"] = lmp_pdu_opcodes_to_strings.get(rcvd_opcode, "UNKNOWN_OPCODE")
     return obj
 
-
 def ff_LMP_NOT_ACCEPTED(rcvd_opcode, error_code):
     obj = {"opcode": type_LMP_NOT_ACCEPTED, "rcvd_opcode": rcvd_opcode, "error_code": error_code}
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = "LMP_NOT_ACCEPTED"
         obj["rcvd_opcode_str"] = lmp_pdu_opcodes_to_strings.get(rcvd_opcode, "UNKNOWN_OPCODE")
         obj["error_code_str"] = controller_error_strings.get(error_code, "UNKNOWN_ERROR_CODE")
+    return obj
+
+
+def ff_LMP_DETACH(error_code):
+    obj = {"opcode": type_LMP_DETACH, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_DETACH"
+        obj["error_code_str"] = controller_error_strings.get(error_code, "UNKNOWN_ERROR_CODE")
+    return obj
+
+
+def ff_LMP_PREFERRED_RATE(data_rate):
+    obj = {"opcode": type_LMP_PREFERRED_RATE, "data_rate": data_rate}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_PREFERRED_RATE"
     return obj
 
 
@@ -61,6 +77,25 @@ def ff_LMP_FEATURES_RES(features):
         obj["opcode_str"] = "LMP_FEATURES_RES"
     return obj
 
+### Extended Opcodes ###
+
+def ff_LMP_ACCEPTED_EXT(rcvd_escape_opcode, rcvd_extended_opcode):
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_ACCEPTED_EXT, "rcvd_escape_opcode": rcvd_escape_opcode, "rcvd_extended_opcode": rcvd_extended_opcode}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["extended_opcode_str"] = "LMP_ACCEPTED_EXT"
+        obj["rcvd_extended_opcode_str"] = lmp_pdu_ext_opcodes_to_strings.get(rcvd_extended_opcode, "UNKNOWN_OPCODE")
+    return obj
+
+
+def ff_LMP_NOT_ACCEPTED_EXT(rcvd_escape_opcode, rcvd_extended_opcode, error_code):
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_NOT_ACCEPTED_EXT, "rcvd_escape_opcode": rcvd_escape_opcode, "rcvd_extended_opcode": rcvd_extended_opcode, "error_code": error_code}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["extended_opcode_str"] = "LMP_NOT_ACCEPTED_EXT"
+        obj["rcvd_extended_opcode_str"] = lmp_pdu_ext_opcodes_to_strings.get(rcvd_extended_opcode, "UNKNOWN_OPCODE")
+        obj["error_code_str"] = controller_error_strings.get(error_code, "UNKNOWN_ERROR_CODE")
+
+    return obj
+
 
 def ff_LMP_FEATURES_RES_EXT(page, max_page, features):
     lmp_features_hex_str = f"{features:016x}"
@@ -77,17 +112,27 @@ def ff_LMP_FEATURES_REQ_EXT(page, max_page, features):
         obj["opcode_str"] = "LMP_FEATURES_REQ_EXT"
     return obj
 
+def ff_LMP_empty_opcode(opcode):
+    obj = {"opcode": opcode}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = lmp_pdu_opcodes_to_strings.get(opcode, "UNKNOWN_OPCODE")
+    return obj
+
 
 # Used for all the LMP_*2 type data definitions which just copy the entire packet (minus opcode) as a hex string
 def ff_LMP_generic_full_pkt_hex_str(opcode, full_pkt_hex_str):
-    obj = {"opcode": opcode, "full_pkt_hex_str": full_pkt_hex_str}
+    obj = {"opcode": opcode}
+    if(full_pkt_hex_str != None):
+        obj["full_pkt_hex_str"] = full_pkt_hex_str
     if(TME.TME_glob.verbose_BTIDES):
         obj["opcode_str"] = lmp_pdu_opcodes_to_strings[opcode]
     return obj
 
 
 def ff_LMP_EXT_generic_full_pkt_hex_str(extended_opcode, full_pkt_hex_str):
-    obj = {"escape_127": 127, "extended_opcode": extended_opcode, "full_pkt_hex_str": full_pkt_hex_str}
+    obj = {"escape_127": 127, "extended_opcode": extended_opcode}
+    if(full_pkt_hex_str != None):
+        obj["full_pkt_hex_str"] = full_pkt_hex_str
     if(TME.TME_glob.verbose_BTIDES):
         obj["extended_opcode_str"] = lmp_pdu_ext_opcodes_to_strings[extended_opcode]
     return obj
@@ -105,6 +150,18 @@ def BTIDES_export_LMP_ACCEPTED(bdaddr, rcvd_opcode):
 def BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code):
     global BTIDES_JSON
     data = ff_LMP_NOT_ACCEPTED(rcvd_opcode, error_code)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_DETACH(bdaddr, error_code):
+    global BTIDES_JSON
+    data = ff_LMP_DETACH(error_code)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_PREFERRED_RATE(bdaddr, error_code):
+    global BTIDES_JSON
+    data = ff_LMP_PREFERRED_RATE(error_code)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
@@ -132,6 +189,18 @@ def BTIDES_export_LMP_FEATURES_RES(bdaddr, features):
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
+def BTIDES_export_LMP_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode):
+    global BTIDES_JSON
+    data = ff_LMP_ACCEPTED_EXT(rcvd_escape_opcode, rcvd_extended_opcode)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_NOT_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode, error_code):
+    global BTIDES_JSON
+    data = ff_LMP_NOT_ACCEPTED_EXT(rcvd_escape_opcode, rcvd_extended_opcode, error_code)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
 def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
     global BTIDES_JSON
     data = ff_LMP_FEATURES_RES_EXT(page, max_page, features)
@@ -141,6 +210,12 @@ def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
 def BTIDES_export_LMP_FEATURES_REQ_EXT(bdaddr, page, max_page, features):
     global BTIDES_JSON
     data = ff_LMP_FEATURES_REQ_EXT(page, max_page, features)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_empty_opcode(bdaddr, opcode):
+    global BTIDES_JSON
+    data = ff_LMP_empty_opcode(opcode)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 

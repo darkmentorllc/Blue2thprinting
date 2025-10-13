@@ -19,6 +19,13 @@ g_tmp_features_req_result = []
 g_tmp_features_res_ext_result = []
 g_tmp_features_req_ext_result = []
 g_tmp_name_result = []
+g_tmp_accepted_result = []
+g_tmp_accepted_ext_result = []
+g_tmp_not_accepted_result = []
+g_tmp_not_accepted_ext_result = []
+g_tmp_detach_result = []
+g_tmp_empty_opcodes_result = []
+g_tmp_preferred_rate_result = []
 
 
 ########################################
@@ -128,7 +135,6 @@ def print_LMP_VERSION_REQ_RES_info(bdaddr):
         qprint(f"{i3}Sub-version: 0x{lmp_sub_version:04x}")
         qprint(f"{i3}Company ID: {device_BT_CID} ({BT_CID_to_company_name(device_BT_CID)})")
         BTIDES_export_LMP_VERSION_REQ(bdaddr, lmp_version, device_BT_CID, lmp_sub_version)
-
     g_tmp_version_res_result = []
     g_tmp_version_req_result = []
 
@@ -157,7 +163,6 @@ def print_LMP_FEATURES_info(bdaddr):
         qprint(f"{i2}BTC LMP Extended Features (from LMP_FEATURES_REQ_EXT): 0x{features:016x}, Page: {page:02x} (MaxPage: {max_page:02x})")
         decode_BTC_features(page, features, f"{i3}")
         BTIDES_export_LMP_FEATURES_REQ_EXT(bdaddr, page, max_page, features)
-
     g_tmp_features_res_result = []
     g_tmp_features_req_result = []
     g_tmp_features_res_ext_result = []
@@ -172,8 +177,77 @@ def print_LMP_NAME_info(bdaddr):
         # Also once I started doing manual defragmentation of LMP_NAME_RES packets, I started putting the results in there too
         remote_name_hex_str = str_to_hex_str(device_name)
         BTIDES_export_HCI_Name_Response(bdaddr, remote_name_hex_str)
-
     g_tmp_name_result = []
+
+
+def print_LMP_ACCEPTED_info(bdaddr):
+    global g_tmp_accepted_result
+    global g_tmp_accepted_ext_result
+
+    if g_tmp_accepted_result:
+        qprint(f"{i2}BTC LMP Accepted Opcodes:")
+        for (rcvd_opcode,) in g_tmp_accepted_result:
+            qprint(f"{i3}Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')})")
+            BTIDES_export_LMP_ACCEPTED(bdaddr, rcvd_opcode)
+    if g_tmp_accepted_ext_result:
+        qprint(f"{i2}BTC LMP Accepted Extended Opcodes:")
+        for rcvd_escape_opcode, rcvd_extended_opcode in g_tmp_accepted_ext_result:
+            qprint(f"{i3}Accepted Extended Opcode: 0x{rcvd_extended_opcode:02x} ({lmp_pdu_ext_opcodes_to_strings.get(rcvd_extended_opcode, 'Unknown')})")
+            BTIDES_export_LMP_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode)
+
+    g_tmp_accepted_result = []
+    g_tmp_accepted_ext_result = []
+
+
+def print_LMP_NOT_ACCEPTED_info(bdaddr):
+    global g_tmp_not_accepted_result
+    global g_tmp_not_accepted_ext_result
+
+    if g_tmp_not_accepted_result:
+        qprint(f"{i2}BTC LMP Not-Accepted Opcodes:")
+        for rcvd_opcode, error_code in g_tmp_not_accepted_result:
+            qprint(f"{i3}Not Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')}), Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
+            BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code)
+
+    if g_tmp_not_accepted_ext_result:
+        qprint(f"{i2}BTC LMP Not-Accepted Extended Opcodes:")
+        for rcvd_escape_opcode, rcvd_extended_opcode, error_code in g_tmp_not_accepted_ext_result:
+            qprint(f"{i3}Not Accepted Extended Opcode: 0x{rcvd_extended_opcode:02x} ({lmp_pdu_ext_opcodes_to_strings.get(rcvd_extended_opcode, 'Unknown')}), Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
+            BTIDES_export_LMP_NOT_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode, error_code)
+
+    g_tmp_not_accepted_result = []
+    g_tmp_not_accepted_ext_result = []
+
+
+def print_LMP_DETACH_info(bdaddr):
+    global g_tmp_detach_result
+    if g_tmp_detach_result:
+        qprint(f"{i2}BTC LMP Not-Accepted Opcodes:")
+        for (error_code,) in g_tmp_detach_result:
+            qprint(f"{i3}Detach Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
+            BTIDES_export_LMP_DETACH(bdaddr, error_code)
+    g_tmp_detach_result = []
+
+
+def print_LMP_PREFERRED_RATE_info(bdaddr):
+    global g_tmp_preferred_rate_result
+    if g_tmp_preferred_rate_result:
+        qprint(f"{i2}BTC LMP Preferred Data Rates:")
+        for (data_rate,) in g_tmp_preferred_rate_result:
+            qprint(f"{i3}Preferred Data Rate: 0x{data_rate:2x}")
+            BTIDES_export_LMP_PREFERRED_RATE(bdaddr, data_rate)
+    g_tmp_preferred_rate_result = []
+
+
+def print_LMP_empty_opcodes(bdaddr):
+    global g_tmp_empty_opcodes_result
+    if g_tmp_empty_opcodes_result:
+        qprint(f"{i2}BTC LMP Opcodes without payloads seen:")
+        for (opcode,) in g_tmp_empty_opcodes_result:
+            qprint(f"{i3}{opcode} ({lmp_pdu_opcodes_to_strings.get(opcode, 'Unknown')})")
+            BTIDES_export_LMP_empty_opcode(bdaddr, opcode)
+    g_tmp_empty_opcodes_result = []
+
 
 # Check each table, and save the results into globals for later use
 def LMP_info_exists_for_bdaddr(bdaddr):
@@ -186,6 +260,11 @@ def LMP_info_exists_for_bdaddr(bdaddr):
     global g_tmp_name_result
     global g_tmp_accepted_result
     global g_tmp_not_accepted_result
+    global g_tmp_accepted_ext_result
+    global g_tmp_not_accepted_ext_result
+    global g_tmp_detach_result
+    global g_tmp_empty_opcodes_result
+    global g_tmp_preferred_rate_result
 
     results_exist = False
 
@@ -235,25 +314,33 @@ def LMP_info_exists_for_bdaddr(bdaddr):
     if(g_tmp_not_accepted_result):
         results_exist = True
 
+    accepted_ext_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode FROM LMP_ACCEPTED_EXT WHERE bdaddr = %s"
+    g_tmp_accepted_ext_result = execute_query(accepted_ext_query, values)
+    if(g_tmp_accepted_ext_result):
+        results_exist = True
+
+    not_accepted_ext_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode, error_code FROM LMP_NOT_ACCEPTED_EXT WHERE bdaddr = %s"
+    g_tmp_not_accepted_ext_result = execute_query(not_accepted_ext_query, values)
+    if(g_tmp_not_accepted_ext_result):
+        results_exist = True
+
+    detach_query = "SELECT error_code FROM LMP_DETACH WHERE bdaddr = %s"
+    g_tmp_detach_result = execute_query(detach_query, values)
+    if(g_tmp_detach_result):
+        results_exist = True
+
+    preferred_rate_query = "SELECT data_rate FROM LMP_PREFERRED_RATE WHERE bdaddr = %s"
+    g_tmp_preferred_rate_result = execute_query(preferred_rate_query, values)
+    if(g_tmp_preferred_rate_result):
+        results_exist = True
+
+    empty_opcodes_query = "SELECT opcode FROM LMP_empty_opcodes WHERE bdaddr = %s"
+    g_tmp_empty_opcodes_result = execute_query(empty_opcodes_query, values)
+    if(g_tmp_empty_opcodes_result):
+        results_exist = True
+
     return results_exist
 
-def print_LMP_ACCEPTED_info(bdaddr):
-    global g_tmp_accepted_result
-    if g_tmp_accepted_result:
-        qprint(f"{i2}BTC LMP Accepted Opcodes:")
-        for (rcvd_opcode,) in g_tmp_accepted_result:
-            qprint(f"{i3}Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')})")
-            BTIDES_export_LMP_ACCEPTED(bdaddr, rcvd_opcode)
-    g_tmp_accepted_result = []
-
-def print_LMP_NOT_ACCEPTED_info(bdaddr):
-    global g_tmp_not_accepted_result
-    if g_tmp_not_accepted_result:
-        qprint(f"{i2}BTC LMP Not Accepted Opcodes:")
-        for rcvd_opcode, error_code in g_tmp_not_accepted_result:
-            qprint(f"{i3}Not Accepted Opcode: 0x{rcvd_opcode:02x} ({lmp_pdu_opcodes_to_strings.get(rcvd_opcode, 'Unknown')}), Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
-            BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code)
-    g_tmp_not_accepted_result = []
 
 def print_LMP_info(bdaddr):
     bdaddr = bdaddr.strip().lower()
@@ -269,6 +356,9 @@ def print_LMP_info(bdaddr):
     print_LMP_NAME_info(bdaddr)
     print_LMP_ACCEPTED_info(bdaddr)
     print_LMP_NOT_ACCEPTED_info(bdaddr)
+    print_LMP_DETACH_info(bdaddr)
+    print_LMP_empty_opcodes(bdaddr)
+    print_LMP_PREFERRED_RATE_info(bdaddr)
 
     # if(results_exist):
     #     vprint("\n\tRaw BTC LMP info:")

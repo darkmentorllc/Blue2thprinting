@@ -779,12 +779,12 @@ def import_LMP_ACCEPTED_EXT(bdaddr, lmp_entry):
     # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 4):
         rcvd_escape_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
-        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+        rcvd_extended_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
     else:
         rcvd_escape_opcode = lmp_entry["rcvd_escape_opcode"]
-        rcvd_opcode = lmp_entry["rcvd_opcode"]
-    values = (bdaddr, rcvd_escape_opcode, rcvd_opcode)
-    insert = f"INSERT IGNORE INTO LMP_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_opcode) VALUES (%s, %s, %s);"
+        rcvd_extended_opcode = lmp_entry["rcvd_extended_opcode"]
+    values = (bdaddr, rcvd_escape_opcode, rcvd_extended_opcode)
+    insert = f"INSERT IGNORE INTO LMP_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_extended_opcode) VALUES (%s, %s, %s);"
     execute_insert(insert, values)
 
 
@@ -792,14 +792,36 @@ def import_LMP_NOT_ACCEPTED_EXT(bdaddr, lmp_entry):
     # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 6):
         rcvd_escape_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
-        rcvd_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
+        rcvd_extended_opcode = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
         error_code = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][4:5]), byteorder='little')
     else:
         rcvd_escape_opcode = lmp_entry["rcvd_escape_opcode"]
-        rcvd_opcode = lmp_entry["rcvd_opcode"]
+        rcvd_extended_opcode = lmp_entry["rcvd_extended_opcode"]
         error_code = lmp_entry["error_code"]
-    values = (bdaddr, rcvd_escape_opcode, rcvd_opcode, error_code)
-    insert = f"INSERT IGNORE INTO LMP_NOT_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_opcode, error_code) VALUES (%s, %s, %s, %s);"
+    values = (bdaddr, rcvd_escape_opcode, rcvd_extended_opcode, error_code)
+    insert = f"INSERT IGNORE INTO LMP_NOT_ACCEPTED_EXT (bdaddr, rcvd_escape_opcode, rcvd_extended_opcode, error_code) VALUES (%s, %s, %s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_DETACH(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
+        error_code = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    else:
+        error_code = lmp_entry["error_code"]
+    values = (bdaddr, error_code)
+    insert = f"INSERT IGNORE INTO LMP_DETACH (bdaddr, error_code) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_PREFERRED_RATE(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
+        data_rate = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    else:
+        data_rate = lmp_entry["data_rate"]
+    values = (bdaddr, data_rate)
+    insert = f"INSERT IGNORE INTO LMP_PREFERRED_RATE(bdaddr, data_rate) VALUES (%s, %s);"
     execute_insert(insert, values)
 
 
@@ -853,6 +875,12 @@ def import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, opcode, lmp_entry):
     execute_insert(insert, values)
 
 
+def import_LMP_empty_opcode(bdaddr, opcode):
+    values = (bdaddr, opcode)
+    insert = f"INSERT IGNORE INTO LMP_empty_opcodes (bdaddr, opcode) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
 def has_known_LMP_packet(opcode, lmp_entry, extended_opcode=None):
     if("opcode" in lmp_entry.keys() and lmp_entry["opcode"] == opcode):
             return True
@@ -889,6 +917,12 @@ def parse_LMPArray(entry):
         if(has_known_LMP_packet(type_LMP_NOT_ACCEPTED, lmp_entry)):
             import_LMP_NOT_ACCEPTED(bdaddr, lmp_entry)
             continue
+        if(has_known_LMP_packet(type_LMP_DETACH, lmp_entry)):
+            import_LMP_DETACH(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_packet(type_LMP_PREFERRED_RATE, lmp_entry)):
+            import_LMP_PREFERRED_RATE(bdaddr, lmp_entry)
+            continue
         if(has_known_LMP_packet(type_LMP_VERSION_REQ, lmp_entry)):
             import_LMP_VERSION_REQ_or_RES(bdaddr, type_LMP_VERSION_REQ, lmp_entry)
             continue
@@ -913,6 +947,17 @@ def parse_LMPArray(entry):
         if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)):
             import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)
             continue
+        # Handle all the "empty" opcodes (no data in the packet other than the opcode itself) here
+        if(has_known_LMP_packet(type_LMP_AUTO_RATE, lmp_entry)):
+            import_LMP_empty_opcode(bdaddr, type_LMP_AUTO_RATE)
+            continue
+        if(has_known_LMP_packet(type_LMP_TIMING_ACCURACY_REQ, lmp_entry)):
+            import_LMP_empty_opcode(bdaddr, type_LMP_TIMING_ACCURACY_REQ)
+            continue
+        if(has_known_LMP_packet(type_LMP_SETUP_COMPLETE, lmp_entry)):
+            import_LMP_empty_opcode(bdaddr, type_LMP_SETUP_COMPLETE)
+            continue
+
 
     # We have to defragment LMP_NAME_RES data ourselves after we're done processing all LMPArray entries
     for bdaddr in name_frag_dict.keys():

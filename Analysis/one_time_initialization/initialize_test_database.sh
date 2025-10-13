@@ -127,6 +127,13 @@ mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_ACCEPTED (id I
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_NOT_ACCEPTED (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, rcvd_opcode TINYINT UNSIGNED NOT NULL, error_code TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, rcvd_opcode, error_code)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_DETACH (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, error_code TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, error_code)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_PREFERRED_RATE (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, data_rate TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, data_rate)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Used for things like LMP_AUTO_RATE, LMP_TIMING_ACCURACY_REQ, etc which have no payload, only an opcode, instead of having a table per opcode
+mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_empty_opcodes (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, opcode TINYINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, opcode)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_VERSION_RES (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, lmp_version TINYINT UNSIGNED NOT NULL, device_BT_CID SMALLINT UNSIGNED NOT NULL, lmp_sub_version SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 mysql -u user -pa --database='bttest' --execute="CREATE TABLE LMP_VERSION_REQ (id INT NOT NULL AUTO_INCREMENT, bdaddr CHAR(18) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, lmp_version TINYINT UNSIGNED NOT NULL, device_BT_CID SMALLINT UNSIGNED NOT NULL, lmp_sub_version SMALLINT UNSIGNED NOT NULL, PRIMARY KEY (id), UNIQUE KEY uni_name (bdaddr, lmp_version, device_BT_CID, lmp_sub_version)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
