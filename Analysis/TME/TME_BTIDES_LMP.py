@@ -9,6 +9,7 @@
 
 from TME.BT_Data_Types import *
 from TME.TME_BTIDES_base import *
+from TME.TME_helpers import bytes_to_hex_str
 import TME.TME_glob
 
 ############################
@@ -112,6 +113,29 @@ def ff_LMP_FEATURES_REQ_EXT(page, max_page, features):
         obj["opcode_str"] = "LMP_FEATURES_REQ_EXT"
     return obj
 
+
+def ff_LMP_CHANNEL_CLASSIFICATION(afh_channel_classification_bytes):
+    afh_channel_classification_hex_str = bytes_to_hex_str(afh_channel_classification_bytes)
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_CHANNEL_CLASSIFICATION, "afh_channel_classification_hex_str": afh_channel_classification_hex_str}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_CHANNEL_CLASSIFICATION"
+    return obj
+
+
+def ff_LMP_POWER_CONTROL_REQ(power_adj_req):
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_POWER_CONTROL_REQ, "power_adj_req": power_adj_req}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_POWER_CONTROL_REQ"
+    return obj
+
+
+def ff_LMP_POWER_CONTROL_RES(power_adj_res):
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_POWER_CONTROL_RES, "power_adj_res": power_adj_res}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_POWER_CONTROL_RES"
+    return obj
+
+
 def ff_LMP_empty_opcode(opcode):
     obj = {"opcode": opcode}
     if(TME.TME_glob.verbose_BTIDES):
@@ -210,6 +234,24 @@ def BTIDES_export_LMP_FEATURES_RES_EXT(bdaddr, page, max_page, features):
 def BTIDES_export_LMP_FEATURES_REQ_EXT(bdaddr, page, max_page, features):
     global BTIDES_JSON
     data = ff_LMP_FEATURES_REQ_EXT(page, max_page, features)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_CHANNEL_CLASSIFICATION(bdaddr, afh_channel_classification_bytes):
+    global BTIDES_JSON
+    data = ff_LMP_CHANNEL_CLASSIFICATION(afh_channel_classification_bytes)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_req):
+    global BTIDES_JSON
+    data = ff_LMP_POWER_CONTROL_REQ(power_adj_req)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_POWER_CONTROL_RES(bdaddr, power_adj_res):
+    global BTIDES_JSON
+    data = ff_LMP_POWER_CONTROL_RES(power_adj_res)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 

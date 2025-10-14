@@ -858,7 +858,7 @@ def import_LMP_FEATURES_REQ_or_RES(bdaddr, opcode, lmp_entry):
 
 
 def import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, opcode, lmp_entry):
-    # Check if it's a "LMP_FEATURES_RES_EXT2" form
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 20):
         page = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
         max_page = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][2:4]), byteorder='little')
@@ -873,6 +873,40 @@ def import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, opcode, lmp_entry):
     else:
         insert = f"INSERT IGNORE INTO LMP_FEATURES_REQ_EXT (bdaddr, page, max_page, features) VALUES (%s, %s, %s, %s);"
     execute_insert(insert, values)
+
+
+def import_LMP_CHANNEL_CLASSIFICATION(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 20):
+        afh_channel_classification = hex_str_to_bytes(lmp_entry["full_pkt_hex_str"])
+    else:
+        afh_channel_classification = bytes.fromhex(lmp_entry["afh_channel_classification"])
+    values = (bdaddr, afh_channel_classification)
+    insert = f"INSERT IGNORE INTO LMP_CHANNEL_CLASSIFICATION (bdaddr, afh_channel_classification) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+
+def import_LMP_POWER_CONTROL_REQ(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
+        power_adj_req = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    else:
+        power_adj_req = bytes.fromhex(lmp_entry["power_adj_req"])
+    values = (bdaddr, power_adj_req)
+    insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_REQ (bdaddr, power_adj_req) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
+# Untested, don't have data for this yet...
+def import_LMP_POWER_CONTROL_RES(bdaddr, lmp_entry):
+    # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
+    if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
+        power_adj_res = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+    else:
+        power_adj_res = bytes.fromhex(lmp_entry["power_adj_req"])
+    values = (bdaddr, power_adj_res)
+    insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES (%s, %s);"
+    execute_insert(insert, values)
+
 
 
 def import_LMP_empty_opcode(bdaddr, opcode):
@@ -946,6 +980,15 @@ def parse_LMPArray(entry):
             continue
         if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)):
             import_LMP_FEATURES_RES_or_REQ_EXT(bdaddr, type_ext_opcode_LMP_FEATURES_REQ_EXT, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_CHANNEL_CLASSIFICATION, lmp_entry)):
+            import_LMP_CHANNEL_CLASSIFICATION(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_POWER_CONTROL_REQ, lmp_entry)):
+            import_LMP_POWER_CONTROL_REQ(bdaddr, lmp_entry)
+            continue
+        if(has_known_LMP_EXT_packet(type_ext_opcode_LMP_POWER_CONTROL_RES, lmp_entry)):
+            import_LMP_POWER_CONTROL_RES(bdaddr, lmp_entry)
             continue
         # Handle all the "empty" opcodes (no data in the packet other than the opcode itself) here
         if(has_known_LMP_packet(type_LMP_AUTO_RATE, lmp_entry)):

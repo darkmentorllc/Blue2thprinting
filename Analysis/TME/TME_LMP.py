@@ -26,7 +26,9 @@ g_tmp_not_accepted_ext_result = []
 g_tmp_detach_result = []
 g_tmp_empty_opcodes_result = []
 g_tmp_preferred_rate_result = []
-
+g_tmp_lmp_channel_classification_result = []
+g_tmp_lmp_power_req_result = []
+g_tmp_lmp_power_res_result = []
 
 ########################################
 # LMP Info
@@ -222,7 +224,7 @@ def print_LMP_NOT_ACCEPTED_info(bdaddr):
 def print_LMP_DETACH_info(bdaddr):
     global g_tmp_detach_result
     if g_tmp_detach_result:
-        qprint(f"{i2}BTC LMP Not-Accepted Opcodes:")
+        qprint(f"{i2}BTC LMP Detach error codes observed:")
         for (error_code,) in g_tmp_detach_result:
             qprint(f"{i3}Detach Error Code: 0x{error_code:02x} ({controller_error_strings.get(error_code, 'Unknown')})")
             BTIDES_export_LMP_DETACH(bdaddr, error_code)
@@ -234,9 +236,54 @@ def print_LMP_PREFERRED_RATE_info(bdaddr):
     if g_tmp_preferred_rate_result:
         qprint(f"{i2}BTC LMP Preferred Data Rates:")
         for (data_rate,) in g_tmp_preferred_rate_result:
-            qprint(f"{i3}Preferred Data Rate: 0x{data_rate:2x}")
+            qprint(f"{i3}Preferred Data Rate: 0x{data_rate:02x}")
             BTIDES_export_LMP_PREFERRED_RATE(bdaddr, data_rate)
     g_tmp_preferred_rate_result = []
+
+
+channel_classifier = {
+    0b00: "Unknown",
+    0b01: "Good",
+    0b10: "Reserved",
+    0b11: "Bad"
+}
+def print_LMP_CHANNEL_CLASSIFICATION_info(bdaddr):
+    global g_tmp_lmp_channel_classification_result
+    if g_tmp_lmp_channel_classification_result:
+        qprint(f"{i2}BTC LMP Channel Classification received values:")
+        for (afh_channel_classification_bytes,) in g_tmp_lmp_channel_classification_result:
+            afh_channel_classification_integer = int.from_bytes(afh_channel_classification_bytes, byteorder='big') # FIXME: Not 100% sure on the endianness...
+            qprint(f"{i3}Channel classification: 0x{afh_channel_classification_integer:020x}")
+            for i in range(40):
+                two_bits = (afh_channel_classification_integer >> (i * 2)) & 0b11
+                if(two_bits != 0b00): # Only print non-unknown channels
+                    qprint(f"{i4}Channel {i}: {channel_classifier.get(two_bits, 'Unknown')} (0b{two_bits:02b})")
+            qprint(f"{i4}All other channels are unknown (0b00)")
+            BTIDES_export_LMP_CHANNEL_CLASSIFICATION(bdaddr, afh_channel_classification_bytes)
+    g_tmp_lmp_channel_classification_result = []
+
+
+power_req_classifier = {
+    0: "Decrement power one step",
+    1: "Increment power one step",
+    2: "Increase to maximum power",
+}
+def print_LMP_POWER_CONTROL_info(bdaddr):
+    global g_tmp_lmp_power_req_result
+    global g_tmp_lmp_power_res_result
+    if g_tmp_lmp_power_req_result:
+        qprint(f"{i2}BTC LMP Power Adjustment Requests:")
+        for (power_adj_req,) in g_tmp_lmp_power_req_result:
+            qprint(f"{i3}Request: {power_req_classifier.get(power_adj_req, f'reserved for future use')} (0x{power_adj_req:02x})")
+            BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_req)
+    # Untested, don't have data for this yet...
+    if g_tmp_lmp_power_res_result:
+        qprint(f"{i2}BTC LMP Power Adjustment Response:")
+        for (power_adj_res,) in g_tmp_lmp_power_res_result:
+            qprint(f"{i3}Response: 0x{power_adj_req:02x}")
+            BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_res)
+    g_tmp_lmp_power_req_result = []
+    g_tmp_lmp_power_res_result = []
 
 
 def print_LMP_empty_opcodes(bdaddr):
@@ -265,77 +312,95 @@ def LMP_info_exists_for_bdaddr(bdaddr):
     global g_tmp_detach_result
     global g_tmp_empty_opcodes_result
     global g_tmp_preferred_rate_result
+    global g_tmp_lmp_channel_classification_result
+    global g_tmp_lmp_power_req_result
+    global g_tmp_lmp_power_res_result
 
     results_exist = False
 
     values = (bdaddr,)
-    version_res_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
-    g_tmp_version_res_result = execute_query(version_res_query, values)
+    tmp_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
+    g_tmp_version_res_result = execute_query(tmp_query, values)
     if(g_tmp_version_res_result):
         results_exist = True
 
-    version_req_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_REQ WHERE bdaddr = %s"
-    g_tmp_version_req_result = execute_query(version_req_query, values)
+    tmp_query = "SELECT lmp_version, lmp_sub_version, device_BT_CID FROM LMP_VERSION_REQ WHERE bdaddr = %s"
+    g_tmp_version_req_result = execute_query(tmp_query, values)
     if(g_tmp_version_req_result):
         results_exist = True
 
-    features_res_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE bdaddr = %s"
-    g_tmp_features_res_result = execute_query(features_res_query, values)
+    tmp_query = "SELECT page, features FROM LMP_FEATURES_RES WHERE bdaddr = %s"
+    g_tmp_features_res_result = execute_query(tmp_query, values)
     if(g_tmp_features_res_result):
         results_exist = True
 
-    features_req_query = "SELECT page, features FROM LMP_FEATURES_REQ WHERE bdaddr = %s"
-    g_tmp_features_req_result = execute_query(features_req_query, values)
+    tmp_query = "SELECT page, features FROM LMP_FEATURES_REQ WHERE bdaddr = %s"
+    g_tmp_features_req_result = execute_query(tmp_query, values)
     if(g_tmp_features_req_result):
         results_exist = True
 
-    features_res_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
-    g_tmp_features_res_ext_result = execute_query(features_res_ext_query, values)
+    tmp_query = "SELECT page, max_page, features FROM LMP_FEATURES_RES_EXT WHERE bdaddr = %s"
+    g_tmp_features_res_ext_result = execute_query(tmp_query, values)
     if(g_tmp_features_res_ext_result):
         results_exist = True
 
-    features_req_ext_query = "SELECT page, max_page, features FROM LMP_FEATURES_REQ_EXT WHERE bdaddr = %s"
-    g_tmp_features_req_ext_result = execute_query(features_req_ext_query, values)
+    tmp_query = "SELECT page, max_page, features FROM LMP_FEATURES_REQ_EXT WHERE bdaddr = %s"
+    g_tmp_features_req_ext_result = execute_query(tmp_query, values)
     if(g_tmp_features_req_ext_result):
         results_exist = True
 
-    name_query = "SELECT device_name FROM LMP_NAME_RES_defragmented WHERE bdaddr = %s"
-    g_tmp_name_result = execute_query(name_query, values)
+    tmp_query = "SELECT device_name FROM LMP_NAME_RES_defragmented WHERE bdaddr = %s"
+    g_tmp_name_result = execute_query(tmp_query, values)
     if(g_tmp_name_result):
         results_exist = True
 
-    accepted_query = "SELECT rcvd_opcode FROM LMP_ACCEPTED WHERE bdaddr = %s"
-    g_tmp_accepted_result = execute_query(accepted_query, values)
+    tmp_query = "SELECT rcvd_opcode FROM LMP_ACCEPTED WHERE bdaddr = %s"
+    g_tmp_accepted_result = execute_query(tmp_query, values)
     if(g_tmp_accepted_result):
         results_exist = True
 
-    not_accepted_query = "SELECT rcvd_opcode, error_code FROM LMP_NOT_ACCEPTED WHERE bdaddr = %s"
-    g_tmp_not_accepted_result = execute_query(not_accepted_query, values)
+    tmp_query = "SELECT rcvd_opcode, error_code FROM LMP_NOT_ACCEPTED WHERE bdaddr = %s"
+    g_tmp_not_accepted_result = execute_query(tmp_query, values)
     if(g_tmp_not_accepted_result):
         results_exist = True
 
-    accepted_ext_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode FROM LMP_ACCEPTED_EXT WHERE bdaddr = %s"
-    g_tmp_accepted_ext_result = execute_query(accepted_ext_query, values)
+    tmp_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode FROM LMP_ACCEPTED_EXT WHERE bdaddr = %s"
+    g_tmp_accepted_ext_result = execute_query(tmp_query, values)
     if(g_tmp_accepted_ext_result):
         results_exist = True
 
-    not_accepted_ext_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode, error_code FROM LMP_NOT_ACCEPTED_EXT WHERE bdaddr = %s"
-    g_tmp_not_accepted_ext_result = execute_query(not_accepted_ext_query, values)
+    tmp_query = "SELECT rcvd_escape_opcode, rcvd_extended_opcode, error_code FROM LMP_NOT_ACCEPTED_EXT WHERE bdaddr = %s"
+    g_tmp_not_accepted_ext_result = execute_query(tmp_query, values)
     if(g_tmp_not_accepted_ext_result):
         results_exist = True
 
-    detach_query = "SELECT error_code FROM LMP_DETACH WHERE bdaddr = %s"
-    g_tmp_detach_result = execute_query(detach_query, values)
+    tmp_query = "SELECT error_code FROM LMP_DETACH WHERE bdaddr = %s"
+    g_tmp_detach_result = execute_query(tmp_query, values)
     if(g_tmp_detach_result):
         results_exist = True
 
-    preferred_rate_query = "SELECT data_rate FROM LMP_PREFERRED_RATE WHERE bdaddr = %s"
-    g_tmp_preferred_rate_result = execute_query(preferred_rate_query, values)
+    tmp_query = "SELECT data_rate FROM LMP_PREFERRED_RATE WHERE bdaddr = %s"
+    g_tmp_preferred_rate_result = execute_query(tmp_query, values)
     if(g_tmp_preferred_rate_result):
         results_exist = True
 
-    empty_opcodes_query = "SELECT opcode FROM LMP_empty_opcodes WHERE bdaddr = %s"
-    g_tmp_empty_opcodes_result = execute_query(empty_opcodes_query, values)
+    tmp_query = "SELECT afh_channel_classification FROM LMP_CHANNEL_CLASSIFICATION WHERE bdaddr = %s"
+    g_tmp_lmp_channel_classification_result = execute_query(tmp_query, values)
+    if(g_tmp_lmp_channel_classification_result):
+        results_exist = True
+
+    tmp_query = "SELECT power_adj_req FROM LMP_POWER_CONTROL_REQ WHERE bdaddr = %s"
+    g_tmp_lmp_power_req_result = execute_query(tmp_query, values)
+    if(g_tmp_lmp_power_req_result):
+        results_exist = True
+
+    tmp_query = "SELECT power_adj_res FROM LMP_POWER_CONTROL_RES WHERE bdaddr = %s"
+    g_tmp_lmp_power_res_result = execute_query(tmp_query, values)
+    if(g_tmp_lmp_power_res_result):
+        results_exist = True
+
+    tmp_query = "SELECT opcode FROM LMP_empty_opcodes WHERE bdaddr = %s"
+    g_tmp_empty_opcodes_result = execute_query(tmp_query, values)
     if(g_tmp_empty_opcodes_result):
         results_exist = True
 
@@ -359,22 +424,7 @@ def print_LMP_info(bdaddr):
     print_LMP_DETACH_info(bdaddr)
     print_LMP_empty_opcodes(bdaddr)
     print_LMP_PREFERRED_RATE_info(bdaddr)
-
-    # if(results_exist):
-    #     vprint("\n\tRaw BTC LMP info:")
-    #     for lmp_version, lmp_sub_version, device_BT_CID in version_res_result:
-    #         vprint(f"{i2}\"lmp_version\",\"0x{lmp_version:02x}\"")
-    #         vprint(f"{i2}\"lmp_sub_version\",\"0x{lmp_sub_version:04x}\"")
-    #         vprint(f"{i2}\"version_BT_CID\",\"0x{device_BT_CID:04x}\"")
-
-    #     for page, features in features_result:
-    #         vprint(f"{i2}\"features\",\"0x{features:016x}\"")
-    #     for page, max_page, features in features_ext_result:
-    #         vprint(f"{i2}\"page\",\"0x{page:02x}\",\"max_page\",\"0x{max_page:02x}\",\"features\",\"0x{features:016x}\"")
-
-    #     for (rcvd_opcode,) in accepted_result:
-    #         vprint(f"{i2}\"accepted_opcode\",\"0x{rcvd_opcode:02x}\"")
-    #     for rcvd_opcode, error_code in not_accepted_result:
-    #         vprint(f"{i2}\"not_accepted_opcode\",\"0x{rcvd_opcode:02x}\",\"error_code\",\"0x{error_code:02x}\"")
+    print_LMP_CHANNEL_CLASSIFICATION_info(bdaddr)
+    print_LMP_POWER_CONTROL_info(bdaddr)
 
     qprint("")
