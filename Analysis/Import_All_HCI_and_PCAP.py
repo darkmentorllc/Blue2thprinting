@@ -157,39 +157,40 @@ def main():
                     g_last_handle_to_bdaddr = {}
 
     pcap_file_export_count = 0
-    for folder in args.pcaps_folder:
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if file.endswith(args.pcaps_suffix):
-                    base_file_name = file[:-len(args.pcaps_suffix)]
-                    btides_file = os.path.join(root, f"{base_file_name}.btides")
-                    btides_processed_file = os.path.join(root, f"{base_file_name}.btides.processed")
-                    if (not os.path.exists(btides_file) and not os.path.exists(btides_processed_file)):
-                        qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 1000 packets.)")
-                        read_pcap(os.path.join(root, file))
-                        write_BTIDES(btides_file)
-                        qprint(f"Export {btides_file} completed with no errors.")
-                        pcap_file_export_count += 1
-                        optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
-                    else:
-                        if(args.overwrite_existing_BTIDES):
+    if args.pcaps_folder:
+        for folder in args.pcaps_folder:
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    if file.endswith(args.pcaps_suffix):
+                        base_file_name = file[:-len(args.pcaps_suffix)]
+                        btides_file = os.path.join(root, f"{base_file_name}.btides")
+                        btides_processed_file = os.path.join(root, f"{base_file_name}.btides.processed")
+                        if (not os.path.exists(btides_file) and not os.path.exists(btides_processed_file)):
                             qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 1000 packets.)")
                             read_pcap(os.path.join(root, file))
                             write_BTIDES(btides_file)
                             qprint(f"Export {btides_file} completed with no errors.")
                             pcap_file_export_count += 1
                             optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
-                        elif(args.read_existing_BTIDES):
-                            if(os.path.exists(btides_file)):
-                                # Don't re-process .processed files. If we need to do that, use the --overwrite-existing-BTIDES path
-                                # This path will just be for processing unprocessed .btides files
+                        else:
+                            if(args.overwrite_existing_BTIDES):
+                                qprint(f"Reading all packets from pcap {os.path.join(root, file)} into memory. (This can take a while for large pcaps. Assume a total time of 1 second per 1000 packets.)")
+                                read_pcap(os.path.join(root, file))
+                                write_BTIDES(btides_file)
+                                qprint(f"Export {btides_file} completed with no errors.")
+                                pcap_file_export_count += 1
                                 optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
+                            elif(args.read_existing_BTIDES):
+                                if(os.path.exists(btides_file)):
+                                    # Don't re-process .processed files. If we need to do that, use the --overwrite-existing-BTIDES path
+                                    # This path will just be for processing unprocessed .btides files
+                                    optionally_store_to_SQL(btides_file, args.to_SQL, args.to_BTIDALPOOL, args.token_file, args.use_test_db, args.quiet_print, args.verbose_print, args.rename)
 
-                    # Reset globals to not accumulate wasted memory
-                    TME.TME_glob.BTIDES_JSON = []
-                    TME.TME_glob.duplicate_count = 0
-                    TME.TME_glob.insert_count = 0
-                    g_access_address_to_connect_ind_obj = {}
+                        # Reset globals to not accumulate wasted memory
+                        TME.TME_glob.BTIDES_JSON = []
+                        TME.TME_glob.duplicate_count = 0
+                        TME.TME_glob.insert_count = 0
+                        g_access_address_to_connect_ind_obj = {}
 
     print("File conversion to BTIDES completed.")
     if(args.HCI_logs_folder):

@@ -1543,10 +1543,10 @@ def btides_to_sql(args):
     last_printed_percentage = 0
     for input_file in args.input:
         last_printed_percentage = 0
-        if not os.path.isfile(input_file):
-            qprint(f"Error: Input file '{input_file}' does not exist or is not a file.")
-            return False
         if(input_file != "SKIPME"):
+            if not os.path.isfile(input_file):
+                qprint(f"Error: Input file '{input_file}' does not exist or is not a file.")
+                return False
             with open(input_file, 'r') as f:
                 TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
                 #qprint(json.dumps(BTIDES_JSON, indent=2))
