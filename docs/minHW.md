@@ -47,7 +47,7 @@ For devices where only 1 is recommended, it is assumed that you will only have o
 ---
 **Required: custom packet sending hardware (for Sniffle)**
 
-* For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://us.itead.cc/us/products/sonoff-zigbee-3-0-usb-dongle-plus?ref=366) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P”.) For capturing pcap of BLE traffic and/or sending custom BLE packets.
+* For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x+ - [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://itead.cc/product/sonoff-zigbee-3-0-usb-dongle-plus/?ref=366) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P” and have a TI CC2652P chip to work with Sniffle!)
  * The code will currently automatically scale to however many Sniffle dongles you plug in, capturing backup pcaps across channels to catch packets which might be missed otherwise (e.g. due to wireless interference/decoding issues.)
 
 ---
