@@ -61,6 +61,10 @@ struct gatt_desc {
 guint gatt_discover_primary(GAttrib *attrib, bt_uuid_t *uuid, gatt_cb_t func,
 							gpointer user_data);
 
+guint gatt_discover_secondary(GAttrib *attrib, bt_uuid_t *uuid, gatt_cb_t func,
+							gpointer user_data);
+
+
 unsigned int gatt_find_included(GAttrib *attrib, uint16_t start, uint16_t end,
 					gatt_cb_t func, gpointer user_data);
 

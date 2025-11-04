@@ -219,6 +219,32 @@ static guint16 encode_discover_primary(uint16_t start, uint16_t end,
 	return plen;
 }
 
+static guint16 encode_discover_secondary(uint16_t start, uint16_t end,
+				bt_uuid_t *uuid, uint8_t *pdu, size_t len)
+{
+	bt_uuid_t prim;
+	guint16 plen;
+
+	bt_uuid16_create(&prim, GATT_SND_SVC_UUID);
+
+	if (uuid == NULL) {
+		/* Discover all secondary services */
+		plen = enc_read_by_grp_req(start, end, &prim, pdu, len);
+	} else {
+		uint8_t value[16];
+		size_t vlen;
+
+		/* Discover secondary service by service UUID */
+		put_uuid_le(uuid, value);
+		vlen = bt_uuid_len(uuid);
+
+		plen = enc_find_by_type_req(start, end, &prim, value, vlen,
+								pdu, len);
+	}
+
+	return plen;
+}
+
 static void primary_by_uuid_cb(guint8 status, const guint8 *ipdu,
 					guint16 iplen, gpointer user_data)
 
@@ -267,6 +293,62 @@ static void primary_by_uuid_cb(guint8 status, const guint8 *ipdu,
 		goto done;
 
 	g_attrib_send(dp->attrib, dp->id, buf, oplen, primary_by_uuid_cb,
+			discover_primary_ref(dp), discover_primary_unref);
+	return;
+
+done:
+	dp->cb(err, dp->primaries, dp->user_data);
+}
+
+
+static void secondary_by_uuid_cb(guint8 status, const guint8 *ipdu,
+					guint16 iplen, gpointer user_data)
+
+{
+	struct discover_primary *dp = user_data;
+	GSList *ranges, *last;
+	struct att_range *range;
+	uint8_t *buf;
+	guint16 oplen;
+	int err = 0;
+	size_t buflen;
+
+	if (status) {
+		err = status == ATT_ECODE_ATTR_NOT_FOUND ? 0 : status;
+		goto done;
+	}
+
+	ranges = dec_find_by_type_resp(ipdu, iplen);
+	if (ranges == NULL)
+		goto done;
+
+	dp->primaries = g_slist_concat(dp->primaries, ranges);
+
+	last = g_slist_last(ranges);
+	range = last->data;
+
+	if (range->end == 0xffff)
+		goto done;
+
+	/*
+	 * If last handle is lower from previous start handle then it is smth
+	 * wrong. Let's stop search, otherwise we might enter infinite loop.
+	 */
+	if (range->end < dp->start) {
+		err = ATT_ECODE_UNLIKELY;
+		goto done;
+	}
+
+	dp->start = range->end + 1;
+
+	buf = g_attrib_get_buffer(dp->attrib, &buflen);
+	oplen = encode_discover_secondary(dp->start, 0xffff, &dp->uuid,
+								buf, buflen);
+
+	if (oplen == 0)
+		goto done;
+
+	g_attrib_send(dp->attrib, dp->id, buf, oplen, secondary_by_uuid_cb,
 			discover_primary_ref(dp), discover_primary_unref);
 	return;
 
@@ -358,6 +440,90 @@ done:
 	dp->cb(err, dp->primaries, dp->user_data);
 }
 
+static void secondary_all_cb(guint8 status, const guint8 *ipdu, guint16 iplen,
+							gpointer user_data)
+{
+	struct discover_primary *dp = user_data;
+	struct att_data_list *list;
+	unsigned int i, err;
+	uint16_t start, end;
+	uint8_t type;
+
+	if (status) {
+		err = status == ATT_ECODE_ATTR_NOT_FOUND ? 0 : status;
+		goto done;
+	}
+
+	list = dec_read_by_grp_resp(ipdu, iplen);
+	if (list == NULL) {
+		err = ATT_ECODE_IO;
+		goto done;
+	}
+
+	if (list->len == 6)
+		type = BT_UUID16;
+	else if (list->len == 20)
+		type = BT_UUID128;
+	else {
+		att_data_list_free(list);
+		err = ATT_ECODE_INVALID_PDU;
+		goto done;
+	}
+
+	for (i = 0, end = 0; i < list->num; i++) {
+		const uint8_t *data = list->data[i];
+		struct gatt_primary *primary;
+		bt_uuid_t uuid128;
+
+		start = get_le16(&data[0]);
+		end = get_le16(&data[2]);
+
+		get_uuid128(type, &data[4], &uuid128);
+
+		primary = g_try_new0(struct gatt_primary, 1);
+		if (!primary) {
+			att_data_list_free(list);
+			err = ATT_ECODE_INSUFF_RESOURCES;
+			goto done;
+		}
+		primary->range.start = start;
+		primary->range.end = end;
+		bt_uuid_to_string(&uuid128, primary->uuid, sizeof(primary->uuid));
+		dp->primaries = g_slist_append(dp->primaries, primary);
+	}
+
+	att_data_list_free(list);
+	err = 0;
+
+	/*
+	 * If last handle is lower from previous start handle then it is smth
+	 * wrong. Let's stop search, otherwise we might enter infinite loop.
+	 */
+	if (end < dp->start) {
+		err = ATT_ECODE_UNLIKELY;
+		goto done;
+	}
+
+	dp->start = end + 1;
+
+	if (end != 0xffff) {
+		size_t buflen;
+		uint8_t *buf = g_attrib_get_buffer(dp->attrib, &buflen);
+		guint16 oplen = encode_discover_secondary(dp->start, 0xffff, NULL,
+								buf, buflen);
+
+
+		g_attrib_send(dp->attrib, dp->id, buf, oplen, secondary_all_cb,
+						discover_primary_ref(dp),
+						discover_primary_unref);
+
+		return;
+	}
+
+done:
+	dp->cb(err, dp->primaries, dp->user_data);
+}
+
 guint gatt_discover_primary(GAttrib *attrib, bt_uuid_t *uuid, gatt_cb_t func,
 							gpointer user_data)
 {
@@ -385,6 +551,42 @@ guint gatt_discover_primary(GAttrib *attrib, bt_uuid_t *uuid, gatt_cb_t func,
 		cb = primary_by_uuid_cb;
 	} else
 		cb = primary_all_cb;
+
+	dp->id = g_attrib_send(attrib, 0, buf, plen, cb,
+					discover_primary_ref(dp),
+					discover_primary_unref);
+
+	return dp->id;
+}
+
+
+guint gatt_discover_secondary(GAttrib *attrib, bt_uuid_t *uuid, gatt_cb_t func,
+							gpointer user_data)
+{
+	struct discover_primary *dp;
+	size_t buflen;
+	uint8_t *buf = g_attrib_get_buffer(attrib, &buflen);
+	GAttribResultFunc cb;
+	guint16 plen;
+
+	plen = encode_discover_secondary(0x0001, 0xffff, uuid, buf, buflen);
+	if (plen == 0)
+		return 0;
+
+	dp = g_try_new0(struct discover_primary, 1);
+	if (dp == NULL)
+		return 0;
+
+	dp->attrib = g_attrib_ref(attrib);
+	dp->cb = func;
+	dp->user_data = user_data;
+	dp->start = 0x0001;
+
+	if (uuid) {
+		dp->uuid = *uuid;
+		cb = secondary_by_uuid_cb;
+	} else
+		cb = secondary_all_cb;
 
 	dp->id = g_attrib_send(attrib, 0, buf, plen, cb,
 					discover_primary_ref(dp),

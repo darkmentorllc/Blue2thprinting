@@ -34,6 +34,7 @@
 
 //XENO: declarations, since I changed the order in which things are called
 static gboolean primary(gpointer user_data);
+static gboolean secondary(gpointer user_data);
 static gboolean characteristics(gpointer user_data);
 static gboolean characteristics_desc(gpointer user_data);
 static void char_read_cb(guint8 status, const guint8 *pdu, guint16 plen, gpointer user_data);
@@ -109,6 +110,7 @@ static void connect_cb(GIOChannel *io, GError *err, gpointer user_data)
 
 	//XENO: Just do all the operations sequentially, that would normally be done by different CLI options
 	primary(attrib);
+	secondary(attrib);
 	characteristics(attrib);
 	characteristics_desc(attrib);
 }
@@ -127,8 +129,30 @@ static void primary_all_cb(uint8_t status, GSList *services, void *user_data)
 		struct gatt_primary *prim = l->data;
 //		g_print("attr handle = 0x%04x, end grp handle = 0x%04x "
 //			"uuid: %s\n", prim->range.start, prim->range.end, prim->uuid);
-		g_print("\"GATTPRINT:SERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
-		fprintf(g_log_FILE, "\"GATTPRINT:SERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
+		g_print("\"GATTPRINT:PSERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
+		fprintf(g_log_FILE, "\"GATTPRINT:PSERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
+		fflush(g_log_FILE);
+                g_max_handle = prim->range.end;
+	}
+
+}
+
+static void secondary_all_cb(uint8_t status, GSList *services, void *user_data)
+{
+	GSList *l;
+
+	if (status) {
+		g_printerr("Discover all secondary services failed: %s\n",
+							att_ecode2str(status));
+		return;
+	}
+
+	for (l = services; l; l = l->next) {
+		struct gatt_primary *prim = l->data;
+//		g_print("attr handle = 0x%04x, end grp handle = 0x%04x "
+//			"uuid: %s\n", prim->range.start, prim->range.end, prim->uuid);
+		g_print("\"GATTPRINT:SSERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
+		fprintf(g_log_FILE, "\"GATTPRINT:SSERVICE\",\"%s\",\"%s\",\"0x%04x\",\"0x%04x\",\"%s\"\n", opt_dst_type, opt_dst, prim->range.start, prim->range.end, prim->uuid);
 		fflush(g_log_FILE);
                 g_max_handle = prim->range.end;
 	}
@@ -141,6 +165,15 @@ static gboolean primary(gpointer user_data)
 	GAttrib *attrib = user_data;
 
 	gatt_discover_primary(attrib, NULL, primary_all_cb, NULL);
+
+	return FALSE;
+}
+
+static gboolean secondary(gpointer user_data)
+{
+	GAttrib *attrib = user_data;
+
+	gatt_discover_secondary(attrib, NULL, secondary_all_cb, NULL);
 
 	return FALSE;
 }
