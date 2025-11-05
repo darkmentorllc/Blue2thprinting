@@ -214,6 +214,9 @@ const char *lmp_ext_opcode_names[ext_opcode_MAX_VALUE] = {
     "LMP_POWER_CONTROL_RESP"
 };
 
+#define OPCODE_SEEN(x) g_lmp_opcodes_seen & (1ULL << x)
+#define EXT_OPCODE_SEEN(x) g_lmp_ext_opcodes_seen & (1ULL << x)
+
 // Mutexes for protecting access to global variables
 pthread_mutex_t g_lmp_opcodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t g_lmp_ext_opcodes_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -259,7 +262,7 @@ void *threaded_hci_read(void *arg) {
                 pthread_mutex_unlock(&g_lmp_opcodes_mutex);
                 // printf("\t\t[AF] g_lmp_opcodes_seen: 0x%016llX\n", g_lmp_opcodes_seen);
             } else if (lmp_opcode == 0x7f) { // 127 is the only "escape" opcode currently used in the spec
-                lmp_ext_opcode = buf[vse_lmp_opcode_offset + 4] >> 1;
+                lmp_ext_opcode = buf[vse_lmp_opcode_offset + 4];
                 if (lmp_ext_opcode < ext_opcode_MAX_VALUE) {
                     printf("\t[!] threaded_hci_read: Raw value at offset 0x%02X: 0x%02X\n", vse_lmp_opcode_offset+1, buf[vse_lmp_opcode_offset + 3 + 1]);
                     printf("\t\t[+] Saw extended opcode 0x%02X (%s)\n", lmp_ext_opcode, lmp_ext_opcode_names[lmp_ext_opcode]);
@@ -301,13 +304,13 @@ int wait_to_see_opcode(unsigned int wait_seconds, unsigned char lmp_opcode, unsi
         // Check if this opcode has been seen yet
         if(lmp_opcode == 0x7f){
             // Don't need mutex if only reading
-            if((lmp_ext_opcode < ext_opcode_MAX_VALUE) && (g_lmp_ext_opcodes_seen & (1ULL << lmp_ext_opcode))){
+            if((lmp_ext_opcode < ext_opcode_MAX_VALUE) && EXT_OPCODE_SEEN(lmp_ext_opcode)){
                 return 1;
             }
         }
         else if (lmp_opcode < opcode_MAX_VALUE){
             // Don't need mutex if only reading
-            if(g_lmp_opcodes_seen & (1ULL << lmp_opcode)){
+            if(OPCODE_SEEN(lmp_opcode)){
                 return 1;
             }
         }
@@ -384,7 +387,7 @@ int main(int argc, char *argv[]) {
     uint8_t ogf = 0x3f;
     uint16_t ocf = 0x0222; // Magic "Xeno VSC" hacked in to DarkFirmware_real_i to allow LMP passthrough
     
-    if(g_lmp_opcodes_seen & (1ULL << opcode_LMP_VERSION_RES) || g_lmp_opcodes_seen & (1ULL << opcode_LMP_VERSION_REQ)){
+    if(OPCODE_SEEN(opcode_LMP_VERSION_RES) || OPCODE_SEEN(opcode_LMP_VERSION_REQ)){
         printf("[+] Already saw LMP Version, skipping sending of LMP_VERSION_REQ\n");
     }
     else{
@@ -410,7 +413,7 @@ int main(int argc, char *argv[]) {
     // sleep(sleep_seconds);
 
     // TODO: add conditional to only send LMP packet if we haven't seen features already
-    if(g_lmp_opcodes_seen & (1ULL << opcode_LMP_FEATURES_RES) || g_lmp_opcodes_seen & (1ULL << opcode_LMP_FEATURES_REQ)){
+    if(OPCODE_SEEN(opcode_LMP_FEATURES_RES) || OPCODE_SEEN(opcode_LMP_FEATURES_REQ)){
         printf("[+] Already saw LMP Features, skipping sending of LMP_FEATURES_REQ\n");
     }
     else{
