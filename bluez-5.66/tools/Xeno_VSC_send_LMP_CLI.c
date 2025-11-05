@@ -30,7 +30,7 @@ int check_expected_values(int dev, unsigned char offset, unsigned char value){
         // Check if the event length is sufficient to access offset 0x1C
         if (readlen > offset + header_len) {
             if (buf[header_len + offset] == value) {
-                printf("Found matching value %d at offset %d!\n", value, offset);
+                printf("Found matching value 0x%02x at offset 0x%02x!\n", value, offset);
                 return 1;
                 break;
             } else {
