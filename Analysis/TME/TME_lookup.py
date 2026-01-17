@@ -100,10 +100,10 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
     if(bdaddr_random is not None):
         values = (bdaddrregex,) + (bdaddr_random,) * 33
         bdaddr_query = (
-            "SELECT DISTINCT t.bdaddr"
+            "SELECT DISTINCT t.bdaddr "
             "FROM ("
-            "    SELECT %s AS bdaddr_regex"
-            ") AS regex"
+            "    SELECT %s AS bdaddr_regex "
+            ") AS regex "
             "CROSS JOIN ("
             "    SELECT bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = %s"
             "    UNION ALL"
@@ -204,16 +204,16 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
-            ") AS t"
+            ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
     else:
         values = (bdaddrregex,)
         bdaddr_query = (
-            "SELECT DISTINCT t.bdaddr"
+            "SELECT DISTINCT t.bdaddr "
             "FROM ("
-            "    SELECT %s AS bdaddr_regex"
-            ") AS regex"
+            "    SELECT %s AS bdaddr_regex "
+            ") AS regex "
             "CROSS JOIN ("
             "    SELECT bdaddr FROM LE_bdaddr_to_3d_info"
             "    UNION ALL"
@@ -314,7 +314,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
             "    UNION ALL"
             "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
-            ") AS t"
+            ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
     bdaddr_result = execute_query(bdaddr_query, values)
