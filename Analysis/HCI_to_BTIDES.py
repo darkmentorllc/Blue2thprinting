@@ -217,6 +217,11 @@ def export_to_LMPArray(packet):
         # No bytes in this packet type
         BTIDES_export_LMP_AUTO_RATE(bdaddr)
         return True
+    if(LMP_opcode == type_LMP_PREFERRED_RATE):
+        # 1 byte: data_rate
+        data_rate = packet[1] if len(packet) > 1 else 0
+        BTIDES_export_LMP_PREFERRED_RATE(bdaddr, data_rate)
+        return True
     if(LMP_opcode == type_LMP_MAX_SLOT):
         # 1 byte: max_slots
         max_slots = packet[1] if len(packet) > 1 else 0
@@ -250,9 +255,15 @@ def export_to_LMPArray(packet):
         extended_opcode = packet[1]
         escape = type_LMP_ESCAPE_127
         if(extended_opcode == type_ext_opcode_LMP_ACCEPTED_EXT):
-            # Convert packet[2:4] (2 bytes, little-endian) into a hex string
-            full_pkt_hex_str = bytes_to_hex_str(packet[2:4])
-            BTIDES_export_LMP_EXT_generic_full_pkt_hex_str(bdaddr, escape, extended_opcode, full_pkt_hex_str)
+            rcvd_escape_opcode = packet[2] if len(packet) > 2 else 0
+            rcvd_extended_opcode = packet[3] if len(packet) > 3 else 0
+            BTIDES_export_LMP_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode)
+            return True
+        if(extended_opcode == type_ext_opcode_LMP_NOT_ACCEPTED_EXT):
+            rcvd_escape_opcode = packet[2] if len(packet) > 2 else 0
+            rcvd_extended_opcode = packet[3] if len(packet) > 3 else 0
+            error_code = packet[4] if len(packet) > 4 else 0
+            BTIDES_export_LMP_NOT_ACCEPTED_EXT(bdaddr, rcvd_escape_opcode, rcvd_extended_opcode, error_code)
             return True
         if(extended_opcode == type_ext_opcode_LMP_POWER_CONTROL_REQ):
             power_adj_req = packet[2] if len(packet) > 2 else 0

@@ -237,9 +237,9 @@ def BTIDES_export_LMP_AUTO_RATE(bdaddr):
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
-def BTIDES_export_LMP_PREFERRED_RATE(bdaddr, error_code):
+def BTIDES_export_LMP_PREFERRED_RATE(bdaddr, data_rate):
     global BTIDES_JSON
-    data = ff_LMP_PREFERRED_RATE(error_code)
+    data = ff_LMP_PREFERRED_RATE(data_rate)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
