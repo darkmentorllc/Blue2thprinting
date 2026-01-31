@@ -217,6 +217,35 @@ def export_to_LMPArray(packet):
         # No bytes in this packet type
         BTIDES_export_LMP_AUTO_RATE(bdaddr)
         return True
+    if(LMP_opcode == type_LMP_MAX_SLOT):
+        # 1 byte: max_slots
+        max_slots = packet[1] if len(packet) > 1 else 0
+        BTIDES_export_LMP_MAX_SLOT(bdaddr, max_slots)
+        return True
+    if(LMP_opcode == type_LMP_MAX_SLOT_REQ):
+        # 1 byte: max_slots
+        max_slots = packet[1] if len(packet) > 1 else 0
+        BTIDES_export_LMP_MAX_SLOT_REQ(bdaddr, max_slots)
+        return True
+    if(LMP_opcode == type_LMP_TIMING_ACCURACY_REQ):
+        # No payload
+        BTIDES_export_LMP_TIMING_ACCURACY_REQ(bdaddr)
+        return True
+    if(LMP_opcode == type_LMP_TIMING_ACCURACY_RES):
+        # 1 byte drift, 1 byte jitter (best-effort parsing)
+        drift = packet[1] if len(packet) > 1 else 0
+        jitter = packet[2] if len(packet) > 2 else 0
+        BTIDES_export_LMP_TIMING_ACCURACY_RES(bdaddr, drift, jitter)
+        return True
+    if(LMP_opcode == type_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ):
+        # No bytes in this packet type
+        BTIDES_export_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ(bdaddr)
+        return True
+    if(LMP_opcode == type_LMP_ENCRYPTION_KEY_SIZE_MASK_RES):
+        # 2 byte "Key Size Mask" (bit 0 = 1 byte key supported, bit 1 = 2 byte key supported, ..., bit 15 = 16 byte key supported)
+        key_size_mask = int.from_bytes(packet[1:2], byteorder='little', signed=False)
+        BTIDES_export_LMP_ENCRYPTION_KEY_SIZE_MASK_RES(bdaddr, key_size_mask)
+        return True
     if(LMP_opcode == type_LMP_ESCAPE_127):
         extended_opcode = packet[1]
         escape = type_LMP_ESCAPE_127

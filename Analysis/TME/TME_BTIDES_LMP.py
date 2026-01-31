@@ -85,6 +85,47 @@ def ff_LMP_FEATURES_RES(features):
         obj["opcode_str"] = "LMP_FEATURES_RES"
     return obj
 
+def ff_LMP_MAX_SLOT(max_slots):
+    obj = {"opcode": type_LMP_MAX_SLOT, "max_slots": max_slots}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_MAX_SLOT"
+    return obj
+
+
+def ff_LMP_MAX_SLOT_REQ(max_slots):
+    obj = {"opcode": type_LMP_MAX_SLOT_REQ, "max_slots": max_slots}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_MAX_SLOT_REQ"
+    return obj
+
+
+def ff_LMP_TIMING_ACCURACY_REQ():
+    obj = {"opcode": type_LMP_TIMING_ACCURACY_REQ}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_TIMING_ACCURACY_REQ"
+    return obj
+
+
+def ff_LMP_TIMING_ACCURACY_RES(drift, jitter):
+    obj = {"opcode": type_LMP_TIMING_ACCURACY_RES, "drift": drift, "jitter": jitter}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_TIMING_ACCURACY_RES"
+    return obj
+
+
+def ff_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ():
+    obj = {"opcode": type_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_ENCRYPTION_KEY_SIZE_MASK_REQ"
+    return obj
+
+
+def ff_LMP_ENCRYPTION_KEY_SIZE_MASK_RES(key_size_mask):
+    obj = {"opcode": type_LMP_ENCRYPTION_KEY_SIZE_MASK_RES, "key_size_mask": key_size_mask}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_ENCRYPTION_KEY_SIZE_MASK_RES"
+    return obj
+
 ### Extended Opcodes ###
 
 def ff_LMP_ACCEPTED_EXT(rcvd_escape_opcode, rcvd_extended_opcode):
@@ -223,6 +264,42 @@ def BTIDES_export_LMP_FEATURES_REQ(bdaddr, features):
 def BTIDES_export_LMP_FEATURES_RES(bdaddr, features):
     global BTIDES_JSON
     data = ff_LMP_FEATURES_RES(features)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_MAX_SLOT(bdaddr, max_slots):
+    global BTIDES_JSON
+    data = ff_LMP_MAX_SLOT(max_slots)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_MAX_SLOT_REQ(bdaddr, max_slots):
+    global BTIDES_JSON
+    data = ff_LMP_MAX_SLOT_REQ(max_slots)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_TIMING_ACCURACY_REQ(bdaddr):
+    global BTIDES_JSON
+    data = ff_LMP_TIMING_ACCURACY_REQ()
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_TIMING_ACCURACY_RES(bdaddr, drift, jitter):
+    global BTIDES_JSON
+    data = ff_LMP_TIMING_ACCURACY_RES(drift, jitter)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ(bdaddr):
+    global BTIDES_JSON
+    data = ff_LMP_ENCRYPTION_KEY_SIZE_MASK_REQ()
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_ENCRYPTION_KEY_SIZE_MASK_RES(bdaddr, key_size_mask):
+    global BTIDES_JSON
+    data = ff_LMP_ENCRYPTION_KEY_SIZE_MASK_RES(key_size_mask)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
