@@ -35,12 +35,26 @@ if [ ! $? ]; then
     exit -1
 fi
 
-tshark --version
-if [ ! $? ]; then
+# Get the Python version and remove the "Python " part
+python_version=$(python3 --version 2>&1 | awk '{print $2}')
+
+# Extract major and minor version numbers
+major_version=$(echo $python_version | cut -d '.' -f 1)
+minor_version=$(echo $python_version | cut -d '.' -f 2)
+
+# Compare version numbers
+if [ "$major_version" -gt 3 ] || { [ "$major_version" -eq 3 ] && [ "$minor_version" -ge 11 ]; }; then
+    success=1
+else
+    success=0
+fi
+if [ "$success" -ne 1 ]; then
     echo "================================================================================================================================================="
-    echo "This script assumes you've already run \"brew install wireshark\" on macOS per the instructions in the git repository. Please run that first."
+    echo "Python3 > 3.11 is required. You may need to install with \"brew install python3\" on macOS to get a high enough version.
     echo "================================================================================================================================================="
     exit -1
+else
+    echo "Python > 3.11 found"
 fi
 
 python3 -m venv ./venv
@@ -48,6 +62,7 @@ source ./venv/bin/activate
 pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
 
 # Using my branch until all of my and Antonio's changes are merged in
+cd Analysis
 git clone https://github.com/XenoKovah/scapy.git
 cd scapy
 pip install .

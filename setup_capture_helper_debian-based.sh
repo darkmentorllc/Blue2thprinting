@@ -16,11 +16,11 @@ check_env() {
         echo "This script needs to be run with sudo"
         if is_sourced; then
             echo "Press any key to exit terminal or Ctlr + C to continue"
-            read -n 1 -s            
+            read -n 1 -s
             exit -1
         fi
         exit -1
-    fi  
+    fi
     USERNAME="$SUDO_USER"
     BASE_PATH="/home/$USERNAME/Blue2thprinting"
     echo "Username detected as '$USERNAME'."
@@ -138,8 +138,8 @@ compile_toolz() {
     cd $BASE_PATH/bluez-5.66
     ### BlueZ Configuration ###
     if [ ! -f "$BASE_PATH/bluez-5.66/Makefile" ]; then
-        print_compilation_step "  Beginning configuration."
-        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
+        print_tool_working "  Beginning configuration."
+        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --disable-systemd --with-udevdir=/lib/udev --enable-experimental --enable-deprecated
     else
         echo "  Makefile present. Configuration already succeeded."
     fi
@@ -150,7 +150,7 @@ compile_toolz() {
     ### Compilation ###
     if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATHbluez-5.66/client/bluetoothctl" ]; then
     print_tool_working "  Beginning compilation (this will take a while!)"
-    make -j4
+    make -j
     print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then

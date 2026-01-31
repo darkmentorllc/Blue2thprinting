@@ -34,6 +34,7 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
 # Used to keep track of state between packets
 g_last_handle_to_bdaddr = {}
+g_last_bdaddr_connected_to = None
 
 def export_AdvChannelData(packet, scapy_type, adv_type):
     fields = packet.getlayer(scapy_type).fields
@@ -190,7 +191,46 @@ def export_to_SMPArray(packet, direction):
     if(export_SMP_Pairing_Keypress_Notification(connect_ind_obj, packet, direction=direction)):
         return True
 
+
+# For now this is biased towards the LMP packet types we have DB tables for
+# and/or which we don't have db tables for but which I have data from actual traffic during testing (e.g. on iPhone)
+def export_to_LMPArray(packet):
+
+    bdaddr=g_last_bdaddr_connected_to
+
+    print(bytes_to_hex_str(packet))
+    # The opcodes are mutually exclusive, so if one returns true, we're done
+    # Note: there's no point in sanity checking the length, because the debug format means it'll always be > 17 bytes,
+    # and if the data is wrong there's no way to determine that based on length, only by parsing it further
+    LMP_opcode = packet[0] >> 1
+    if(LMP_opcode == type_LMP_FEATURES_RES):
+        # Convert packet[1:9] (8 bytes, little-endian) into an int
+        features = int.from_bytes(packet[1:9], byteorder='little', signed=False)
+        BTIDES_export_LMP_FEATURES_RES(bdaddr, features)
+        return True
+    if(LMP_opcode == type_LMP_FEATURES_REQ):
+        # Convert packet[1:9] (8 bytes, little-endian) into an int
+        features = int.from_bytes(packet[1:9], byteorder='little', signed=False)
+        BTIDES_export_LMP_FEATURES_REQ(bdaddr, features)
+        return True
+    if(LMP_opcode == type_LMP_AUTO_RATE):
+        # No bytes in this packet type
+        BTIDES_export_LMP_AUTO_RATE(bdaddr)
+        return True
+    if(LMP_opcode == type_LMP_ESCAPE_127):
+        extended_opcode = packet[1]
+        escape = type_LMP_ESCAPE_127
+        if(extended_opcode == type_ext_opcode_LMP_ACCEPTED_EXT):
+            # Convert packet[2:4] (2 bytes, little-endian) into a hex string
+            full_pkt_hex_str = bytes_to_hex_str(packet[2:4])
+            BTIDES_export_LMP_EXT_generic_full_pkt_hex_str(bdaddr, escape, extended_opcode, full_pkt_hex_str)
+            return True
+
+    return False
+
+
 def process_connections(p):
+    global g_last_bdaddr_connected_to
     # We have to statefully keep track of what the last bdaddr/type combo was for a given connection handle,
     # because we'll only have the handle as a reference in the LE Read Remote Features Complete event
     if p.haslayer(HCI_LE_Meta_Connection_Complete):
@@ -209,7 +249,14 @@ def process_connections(p):
         if(event.fields['status'] == 0):
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
         return True
-    #HCI_Cmd_Create_Connection
+    # Note: when processing DarkFirmware_real_i logs, we see LMP traffic after the HCI_Cmd_Create_Connection but before the HCI_Event_Connection_Complete
+    # so we need to capture the bdaddr at this point to be able to make sense of that LMP traffic
+    elif p.haslayer(HCI_Cmd_Create_Connection):
+        #p.show()
+        command = p.getlayer(HCI_Cmd_Create_Connection)
+        g_last_bdaddr_connected_to = command.fields['bd_addr']
+        return True
+
     return False
 
 
@@ -428,6 +475,21 @@ def process_SMP(p, record):
     return False
 
 
+# Just hacking this in for now, since I don't want to fight with scapy definitions
+def process_DarkFirmware_LMP_Log(p, record):
+    if p.haslayer(HCI_Event_Hdr) and p.code == 0xff and p.len == 56:
+        print(record)
+        # The vendor-specific event sent back by DarkFirmware_real_i will always start with "AAAA"
+        # and have 0xCC-initialized data at offset 0x1C for unused data which hasn't been filled in with an incoming LMP packet
+        if(bytes_to_hex_str(p.load[0:4]) != "41414141" or (len(p.load) > 0x1C and p.load[0x1C] == 0xCC)):
+            return False
+        else:
+            print("LMP data found")
+            export_to_LMPArray(p.load[28:])
+            return True
+    return False
+
+
 def read_HCI(file_path):
     try:
         try:
@@ -451,7 +513,7 @@ def read_HCI(file_path):
                 print(f"Error forcing HCI_Hdr type on packet: {e}")
                 exit(1)
 
-            #p.show()
+            p.show()
             if(process_connections(p)):
                 continue
             elif(process_advertisements(p)):
@@ -467,6 +529,8 @@ def read_HCI(file_path):
             elif(process_ATT(p, record)):
                 continue
             elif(process_SMP(p, record)):
+                continue
+            elif(process_DarkFirmware_LMP_Log(p, record)):
                 continue
 
         return True

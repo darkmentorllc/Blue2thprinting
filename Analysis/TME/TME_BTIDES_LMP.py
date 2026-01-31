@@ -42,6 +42,13 @@ def ff_LMP_DETACH(error_code):
     return obj
 
 
+def ff_LMP_AUTO_RATE():
+    obj = {"opcode": type_LMP_AUTO_RATE}
+    if(TME.TME_glob.verbose_BTIDES):
+        obj["opcode_str"] = "LMP_AUTO_RATE"
+    return obj
+
+
 def ff_LMP_PREFERRED_RATE(data_rate):
     obj = {"opcode": type_LMP_PREFERRED_RATE, "data_rate": data_rate}
     if(TME.TME_glob.verbose_BTIDES):
@@ -180,6 +187,12 @@ def BTIDES_export_LMP_NOT_ACCEPTED(bdaddr, rcvd_opcode, error_code):
 def BTIDES_export_LMP_DETACH(bdaddr, error_code):
     global BTIDES_JSON
     data = ff_LMP_DETACH(error_code)
+    generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
+
+
+def BTIDES_export_LMP_AUTO_RATE(bdaddr):
+    global BTIDES_JSON
+    data = ff_LMP_AUTO_RATE()
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
