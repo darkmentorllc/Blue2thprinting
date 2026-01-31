@@ -198,7 +198,7 @@ def export_to_LMPArray(packet):
 
     bdaddr=g_last_bdaddr_connected_to
 
-    print(bytes_to_hex_str(packet))
+    #print(bytes_to_hex_str(packet))
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # Note: there's no point in sanity checking the length, because the debug format means it'll always be > 17 bytes,
     # and if the data is wrong there's no way to determine that based on length, only by parsing it further
@@ -526,13 +526,13 @@ def process_SMP(p, record):
 # Just hacking this in for now, since I don't want to fight with scapy definitions
 def process_DarkFirmware_LMP_Log(p, record):
     if p.haslayer(HCI_Event_Hdr) and p.code == 0xff and p.len == 56:
-        print(record)
+        #print(record)
         # The vendor-specific event sent back by DarkFirmware_real_i will always start with "AAAA"
         # and have 0xCC-initialized data at offset 0x1C for unused data which hasn't been filled in with an incoming LMP packet
         if(bytes_to_hex_str(p.load[0:4]) != "41414141" or (len(p.load) > 0x1C and p.load[0x1C] == 0xCC)):
             return False
         else:
-            print("LMP data found")
+            #print("DarkFirmware_real_i LMP log data found")
             export_to_LMPArray(p.load[28:])
             return True
     return False
@@ -561,7 +561,7 @@ def read_HCI(file_path):
                 print(f"Error forcing HCI_Hdr type on packet: {e}")
                 exit(1)
 
-            p.show()
+            #p.show()
             if(process_connections(p)):
                 continue
             elif(process_advertisements(p)):
