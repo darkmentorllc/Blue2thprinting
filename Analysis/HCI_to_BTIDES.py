@@ -243,7 +243,7 @@ def export_to_LMPArray(packet):
         return True
     if(LMP_opcode == type_LMP_ENCRYPTION_KEY_SIZE_MASK_RES):
         # 2 byte "Key Size Mask" (bit 0 = 1 byte key supported, bit 1 = 2 byte key supported, ..., bit 15 = 16 byte key supported)
-        key_size_mask = int.from_bytes(packet[1:2], byteorder='little', signed=False)
+        key_size_mask = int.from_bytes(packet[1:3], byteorder='little', signed=False)
         BTIDES_export_LMP_ENCRYPTION_KEY_SIZE_MASK_RES(bdaddr, key_size_mask)
         return True
     if(LMP_opcode == type_LMP_ESCAPE_127):
@@ -253,6 +253,14 @@ def export_to_LMPArray(packet):
             # Convert packet[2:4] (2 bytes, little-endian) into a hex string
             full_pkt_hex_str = bytes_to_hex_str(packet[2:4])
             BTIDES_export_LMP_EXT_generic_full_pkt_hex_str(bdaddr, escape, extended_opcode, full_pkt_hex_str)
+            return True
+        if(extended_opcode == type_ext_opcode_LMP_POWER_CONTROL_REQ):
+            power_adj_req = packet[2] if len(packet) > 2 else 0
+            BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_req)
+            return True
+        if(extended_opcode == type_ext_opcode_LMP_POWER_CONTROL_RES):
+            power_adj_res = packet[2] if len(packet) > 2 else 0
+            BTIDES_export_LMP_POWER_CONTROL_RES(bdaddr, power_adj_res)
             return True
 
     return False
