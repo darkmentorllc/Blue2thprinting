@@ -83,7 +83,8 @@ class AuthClient:
                 }
             },
             scopes=self.scopes,
-            redirect_uri=self.redirect_uri
+            redirect_uri=self.redirect_uri,
+            autogenerate_code_verifier=False,
         )
 
         auth_url, _ = flow.authorization_url(prompt='consent')
