@@ -1549,6 +1549,7 @@ def btides_to_sql(args):
                 return False
             with open(input_file, 'r') as f:
                 TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
+                rebuild_SingleBDADDR_index() # Keep the O(1) lookup index in sync with the just-loaded list.
                 #qprint(json.dumps(BTIDES_JSON, indent=2))
 
         # Import all the local BTIDES json schema files, so that we don't hit the website all the time

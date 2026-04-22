@@ -160,6 +160,10 @@ def filter_BTIDES_by_NOT_args(NOT_bdaddr=None, NOT_bdaddr_regex=None,
     ]
     removed = before - len(TME.TME_glob.BTIDES_JSON)
     if removed:
+        # Rebuild the SingleBDADDR lookup index from the surviving entries so
+        # subsequent lookups remain O(1) and don't return pointers to removed items.
+        from TME.TME_BTIDES_base import rebuild_SingleBDADDR_index
+        rebuild_SingleBDADDR_index()
         plural = "y" if removed == 1 else "ies"
         qprint(f"--NOT-* post-processing removed {removed} BTIDES entr{plural}.")
     return removed
