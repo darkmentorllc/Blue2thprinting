@@ -42,7 +42,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     bdaddrs = []
 
     values = (nameregex,)
-    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8mb4) REGEXP %s"
     eir_result = execute_query(eir_query, values)
     bdaddrs += eir_result
     for (bdaddr,) in eir_result:
@@ -51,7 +51,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for HCI_bdaddr_to_name table
-    hci_query = "SELECT bdaddr FROM HCI_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+    hci_query = "SELECT bdaddr FROM HCI_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8mb4) REGEXP %s"
     hci_result = execute_query(hci_query, values)
     for (bdaddr,) in hci_result:
         bdaddr_hash[bdaddr] = 1
@@ -61,10 +61,10 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     # Query for LE_bdaddr_to_name table
     if(bdaddr_random is not None):
         values = (bdaddr_random, nameregex)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND CONVERT(UNHEX(name_hex_str) USING utf8mb4) REGEXP %s"
     else:
         values = (nameregex,)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8mb4) REGEXP %s"
     le_result = execute_query(le_query, values)
     for (bdaddr,) in le_result:
         bdaddr_hash[bdaddr] = 1
