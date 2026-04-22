@@ -28,6 +28,7 @@ from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import write_BTIDES
 from TME.TME_BTIDES_GPS import BTIDES_export_GPS_coordinate
+from TME.TME_BTIDES_filter import filter_BTIDES_by_NOT_args
 
 # BTIDALPOOL access related
 from oauth_helper import AuthClient
@@ -219,6 +220,15 @@ def main():
     btides_group.add_argument('--GPS-exclude-lower-right', type=str, required=False, help='The coordinate for the lower right corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(38.568929,-76.385467)\"')
     btides_group.add_argument('--get-all-GPS', action='store_true', required=False, help='This will extract every GPS coordinate found for the given BDADDR in the WiGLE database, not just the trilaterated \"best\" one. This will potentially take a *lot* longer, based on how many records exist in your database.')
 
+    # Post-processing exclusion arguments (applied to the in-memory BTIDES JSON
+    # AFTER reading WiGLE — no local Bluetooth DB lookups are performed).
+    not_group = parser.add_argument_group('BTIDES post-processing exclusion arguments')
+    not_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove the given BDADDR from the BTIDES output (case-insensitive exact match). May be passed multiple times.')
+    not_group.add_argument('--NOT-bdaddr-regex', action='append', required=False, help='Remove any BTIDES entry whose BDADDR matches the given regex (case-insensitive). May be passed multiple times.')
+    not_group.add_argument('--NOT-name-regex', action='append', required=False, help='Remove any BTIDES entry whose device name (HCI Remote Name, AdvData Complete/Incomplete Name, or GATT Device Name characteristic) matches the given regex (case-insensitive). May be passed multiple times.')
+    not_group.add_argument('--NOT-company-regex', action='append', required=False, help='Remove any BTIDES entry whose Manufacturer-Specific Data company-ID-derived name matches the given regex (case-insensitive). Looked up against the BT SIG company_identifiers list — no local DB query. May be passed multiple times.')
+    not_group.add_argument('--NOT-UUID-regex', action='append', required=False, help='Remove any BTIDES entry containing a UUID (in AdvData UUID16/32/128 lists or in GATT services/characteristics) matching the given regex (case-insensitive). NOTE: make sure to remove dashes from UUID128s because dashes will be interpreted per their regex meaning! May be passed multiple times.')
+
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
     sql.add_argument('--to-SQL', action='store_true', required=False, help='Store output BTIDES file to your local SQL database.')
@@ -264,6 +274,16 @@ def main():
         read_WiGLE_DB(input=args.input, gps_exclude_upper_left=upper_left_tuple, gps_exclude_lower_right=lower_right_tuple, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
     else:
         read_WiGLE_DB(input=args.input, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
+
+    # Post-process the aggregated BTIDES data to honor any --NOT-* exclusions.
+    # Operates purely on the in-memory BTIDES JSON; does not query the local Bluetooth DB.
+    filter_BTIDES_by_NOT_args(
+        NOT_bdaddr=args.NOT_bdaddr,
+        NOT_bdaddr_regex=args.NOT_bdaddr_regex,
+        NOT_name_regex=args.NOT_name_regex,
+        NOT_company_regex=args.NOT_company_regex,
+        NOT_UUID_regex=args.NOT_UUID_regex,
+    )
 
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
