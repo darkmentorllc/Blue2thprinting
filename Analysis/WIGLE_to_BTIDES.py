@@ -133,6 +133,20 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         print(f"Error: {e}")
         return
 
+    # Batch-load the location table into an in-memory dict keyed by bssid.
+    # The WiGLE DB has no index on location.bssid, so doing per-row SELECTs
+    # against ~500k rows produces N full table scans. Loading once and
+    # looking up in Python is ~100x faster and dominates the conversion cost.
+    location_by_bssid = {}
+    try:
+        qprint("Loading WiGLE location table into memory for fast lookups.")
+        sqlite_cursor.execute("SELECT * FROM location")
+        for loc_row in sqlite_cursor:
+            location_by_bssid.setdefault(loc_row[1], []).append(loc_row)
+    except sqlite3.DatabaseError as e:
+        print(f"Error loading location table: {e}")
+        return
+
     # TODO: add progress tracker
 
     i = 0
@@ -187,16 +201,14 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             continue
 
         # See if there's any RSSI in the location table for this exact GPS coordinate (irrespective of time)
-        query = "SELECT * FROM location WHERE bssid = ? AND lat = ? AND lon = ?"
-        values = (bssid_ACID, data["lat"], data["lon"])
-        sqlite_cursor.execute(query, values)
-        locations = sqlite_cursor.fetchall()
+        bssid_locations = location_by_bssid.get(bssid_ACID, [])
         best_rssi = -127
-        for location in locations:
-            # Only update if we find a better RSSI
-            if(location[2] > best_rssi):
-                best_rssi = location[2]
-                data["rssi"] = location[2]
+        for location in bssid_locations:
+            if location[3] == data["lat"] and location[4] == data["lon"]:
+                # Only update if we find a better RSSI
+                if(location[2] > best_rssi):
+                    best_rssi = location[2]
+                    data["rssi"] = location[2]
 
         # Export the coordinate now that we have the best-case data
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
@@ -208,11 +220,7 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             export_Remote_Name_Request_Complete(bdaddr, str_to_hex_str(name))
 
         if(get_all_GPS):
-            query = "SELECT * FROM location WHERE bssid = ?"
-            values = (bssid_ACID,)
-            sqlite_cursor.execute(query, values)
-            locations = sqlite_cursor.fetchall()
-            for location in locations:
+            for location in bssid_locations:
                 rssi = location[2]
                 lat = location[3]
                 lon = location[4]
