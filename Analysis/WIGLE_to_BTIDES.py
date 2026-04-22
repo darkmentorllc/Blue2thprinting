@@ -35,59 +35,77 @@ from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
+import functools
 import sqlite3
 import mysql.connector
 
-def find_bdaddr_rand(bdaddr):
-    if(TME.TME_glob.use_test_db):
-        database = 'bttest'
-    else:
-        database = 'bt2'
+# Module-level cache for the MySQL connection and the list of tables that have
+# a bdaddr_random column. Both are initialized lazily on first call to
+# find_bdaddr_rand and reused for the lifetime of the process.
+_mysql_conn = None
+_bdaddr_rand_tables = None
+_bdaddr_rand_union_sql = None
 
-    conn = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database=database,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
+
+def _get_mysql_conn():
+    global _mysql_conn
+    if _mysql_conn is None:
+        database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
+        _mysql_conn = mysql.connector.connect(
+            host='localhost',
+            user='user',
+            password='a',
+            database=database,
+            charset='utf8mb4',
+            collation='utf8mb4_unicode_ci',
+            auth_plugin='mysql_native_password'
+        )
+    return _mysql_conn
+
+
+def _get_bdaddr_rand_union_sql():
+    global _bdaddr_rand_tables, _bdaddr_rand_union_sql
+    if _bdaddr_rand_union_sql is not None:
+        return _bdaddr_rand_union_sql, _bdaddr_rand_tables
+    conn = _get_mysql_conn()
     cursor = conn.cursor()
+    cursor.execute(
+        "SELECT table_name FROM information_schema.columns "
+        "WHERE table_schema = DATABASE() AND column_name = 'bdaddr_random'"
+    )
+    _bdaddr_rand_tables = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    if _bdaddr_rand_tables:
+        # Parens are required around each sub-select when LIMIT is used inside UNION ALL in MySQL.
+        _bdaddr_rand_union_sql = " UNION ALL ".join(
+            f"(SELECT bdaddr_random FROM {t} WHERE bdaddr = %s LIMIT 1)"
+            for t in _bdaddr_rand_tables
+        )
+    else:
+        _bdaddr_rand_union_sql = ""
+    return _bdaddr_rand_union_sql, _bdaddr_rand_tables
 
-    cursor.execute("SHOW TABLES")
-    tables = cursor.fetchall()
+
+@functools.lru_cache(maxsize=None)
+def find_bdaddr_rand(bdaddr):
+    union_sql, tables = _get_bdaddr_rand_union_sql()
+    if not tables:
+        return 1  # No data available → default to random (matches prior behavior).
+
+    conn = _get_mysql_conn()
+    cursor = conn.cursor()
+    cursor.execute(union_sql, tuple([bdaddr] * len(tables)))
+    rows = cursor.fetchall()
+    cursor.close()
 
     bdaddr_rand_count = {0: 0, 1: 0}
+    for (bdaddr_rand,) in rows:
+        if bdaddr_rand in bdaddr_rand_count:
+            bdaddr_rand_count[bdaddr_rand] += 1
 
-    # TODO: change to a union statement across all tables, to cut down on DB connection traffic
-    for table in tables:
-        table_name = table[0]
-        cursor.execute(f"SHOW COLUMNS FROM {table_name}")
-        columns = cursor.fetchall()
-
-        if any(column[0] == "bdaddr_random" for column in columns):
-            values = (bdaddr,)
-            # table_name is not ACID, so it's OK to interpolate it directly in
-            # (because otherwise there's a syntax error due to the prepared statement
-            # wrapping the table name in single quotes...
-            query = f"SELECT bdaddr_random FROM {table_name} where bdaddr = %s LIMIT 1"
-            cursor.execute(query, values)
-            rows = cursor.fetchall()
-            for row in rows:
-                bdaddr_rand = row[0]
-                if bdaddr_rand in bdaddr_rand_count:
-                    bdaddr_rand_count[bdaddr_rand] += 1
-
-    conn.close()
-
-    if(bdaddr_rand_count[0] == bdaddr_rand_count[1]):
-        most_common_bdaddr_rand = 1 # If there's no results in our DB, just say it's a random address, since that's statistically most likely
-    else:
-        most_common_bdaddr_rand = max(bdaddr_rand_count, key=bdaddr_rand_count.get)
-    return most_common_bdaddr_rand
-
-    # return 1
+    if bdaddr_rand_count[0] == bdaddr_rand_count[1]:
+        return 1  # No matches or exact tie → default to random.
+    return max(bdaddr_rand_count, key=bdaddr_rand_count.get)
 
 def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False, offset=0, limit=None):
     try:
