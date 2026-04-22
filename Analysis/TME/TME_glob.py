@@ -138,6 +138,10 @@ SDP_protocol_identifiers = {}
 # BTIDES JSON data to export
 #########################################
 BTIDES_JSON = []
+# Optional O(1) lookup index for SingleBDADDR entries, keyed by
+# (bdaddr.lower(), bdaddr_rand). Maintained by TME_BTIDES_base helpers and
+# invalidated by any bulk mutation of BTIDES_JSON (e.g. filters, resets).
+BTIDES_JSON_by_bdaddr_key = {}
 verbose_BTIDES = False
 
 #########################################

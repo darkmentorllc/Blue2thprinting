@@ -17,76 +17,51 @@ init(autoreset=True)
 # MYSQL specific
 ########################################
 
+# Lazily-opened, process-wide MySQL connection shared by execute_query /
+# execute_update / execute_insert. Opening a fresh connection per call was
+# ~3ms of overhead multiplied across thousands of calls in BTIDES_to_SQL,
+# dominating the --to-SQL wall time.
+_mysql_conn = None
+
+
+def _get_mysql_conn():
+    global _mysql_conn
+    if _mysql_conn is None:
+        database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
+        _mysql_conn = mysql.connector.connect(
+            host='localhost',
+            user='user',
+            password='a',
+            database=database,
+            charset='utf8mb4',
+            collation='utf8mb4_unicode_ci',
+            auth_plugin='mysql_native_password',
+            get_warnings=True,
+            raise_on_warnings=True,
+        )
+    return _mysql_conn
+
+
 # Function to execute a MySQL query and fetch results
 def execute_query(query, values):
-    global use_test_db
-    if(TME.TME_glob.use_test_db):
-        database = 'bttest'
-    else:
-        database = 'bt2'
-
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database=database,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
-
+    connection = _get_mysql_conn()
     cursor = connection.cursor()
     cursor.execute(query, values)
     result = cursor.fetchall()
-
     cursor.close()
-    connection.close()
     return result
 
 def execute_update(query, values):
-    global use_test_db
-    if(TME.TME_glob.use_test_db):
-        database = 'bttest'
-    else:
-        database = 'bt2'
-
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database=database,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
-
+    connection = _get_mysql_conn()
     cursor = connection.cursor()
     cursor.execute(query, values)
     connection.commit()
-
     cursor.close()
-    connection.close()
 
 # Function to execute a MySQL query and fetch results
 def execute_insert(query, values):
-    global insert_count, duplicate_count, use_test_db
-    if(TME.TME_glob.use_test_db):
-        database = 'bttest'
-    else:
-        database = 'bt2'
-
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database=database,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password',
-        get_warnings=True,
-        raise_on_warnings=True
-    )
-
+    global insert_count, duplicate_count
+    connection = _get_mysql_conn()
     cursor = connection.cursor()
     # TODO: FIXME: I can't find a way around the
     # "1300: Invalid utf8mb4 character string:..."
@@ -145,7 +120,7 @@ def execute_insert(query, values):
         connection.rollback()
     finally:
         cursor.close()
-        connection.close()
+        # Connection is module-level persistent; do not close it here.
 
 ########################################
 # Helpers
