@@ -370,7 +370,9 @@ def main():
 
     btides_to_sql_succeeded = False
     if args.to_SQL:
-        b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        # skip_schema_validation=True: write_BTIDES already validated the JSON
+        # we just wrote; no need to pay ~0.5ms/entry to re-validate on import.
+        b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print, skip_schema_validation=True)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:
