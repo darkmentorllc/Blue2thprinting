@@ -855,38 +855,42 @@ def get_candidate_bdaddrs_matching_company_regex(companyregex, bdaddr_random, ca
     ############################################
     # CLUES path — batched, candidate-scoped.
     #
-    # CLUES UUIDs are full 128-bit values. After dash-stripping they are
-    # 32 hex chars, so they cannot substring-match inside UUID16 (4-char)
-    # or UUID32 (8-char) columns — those tables are skipped.
+    # CLUES UUIDs are full 128-bit values, so they cannot substring-match
+    # inside UUID16 (4-char) or UUID32 (8-char) columns — those tables are
+    # skipped. All matching CLUES UUIDs for this company regex are collapsed
+    # into a single alternation regex per column format and each table is hit
+    # exactly once, scoped to the remaining candidate bdaddrs via `bdaddr IN`.
     #
-    # All matching CLUES UUIDs for this company regex are collapsed into a
-    # single alternation regex and each table is hit exactly once with the
-    # query scoped to the remaining candidate bdaddrs via `bdaddr IN (...)`.
-    #
-    # Note: GATT_{services,characteristics,attribute_handles}.UUID is CHAR(36)
-    # and stores the dashed form, whereas CLUES input is dash-stripped. The
-    # pre-existing behavior therefore did not produce GATT hits for CLUES
-    # lookups, and we preserve that here. Extending coverage to GATT tables
-    # (by also emitting a dashed-form alternation) is a separate improvement.
+    # Two alternations are emitted because the columns are stored in different
+    # formats:
+    #   * UUID128s tables (EIR_bdaddr_to_UUID128s, LE_bdaddr_to_UUID128s_list,
+    #     LE_bdaddr_to_UUID128_service_solicit, LE_bdaddr_to_UUID128_service_data)
+    #     store dash-stripped UUID128 hex.
+    #   * GATT_{services,characteristics,attribute_handles}.UUID is CHAR(36)
+    #     and stores the dashed form "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".
     ############################################
     if remaining:
-        clues_uuids_dashless = []
+        clues_uuids_raw = []  # keep original dashed form from CLUES
         for key in TME.TME_glob.clues.keys():
             if re.search(pattern, TME.TME_glob.clues[key]["company"]):
-                clues_uuids_dashless.append(TME.TME_glob.clues[key]["UUID"].replace("-", ""))
+                clues_uuids_raw.append(TME.TME_glob.clues[key]["UUID"])
 
-        if clues_uuids_dashless:
-            clues_pattern = "|".join(clues_uuids_dashless)
+        if clues_uuids_raw:
+            clues_pattern_dashless = "|".join(u.replace("-", "") for u in clues_uuids_raw)
+            clues_pattern_dashed = "|".join(clues_uuids_raw)
 
-            # (table, uuid_column, uses_bdaddr_random)
+            # (table, uuid_column, uses_bdaddr_random, pattern)
             clues_tables = (
-                ("EIR_bdaddr_to_UUID128s", "str_UUID128s", False),
-                ("LE_bdaddr_to_UUID128s_list", "str_UUID128s", True),
-                ("LE_bdaddr_to_UUID128_service_solicit", "str_UUID128s", True),
-                ("LE_bdaddr_to_UUID128_service_data", "UUID128_hex_str", True),
+                ("EIR_bdaddr_to_UUID128s", "str_UUID128s", False, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128s_list", "str_UUID128s", True, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128_service_solicit", "str_UUID128s", True, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128_service_data", "UUID128_hex_str", True, clues_pattern_dashless),
+                ("GATT_services", "UUID", True, clues_pattern_dashed),
+                ("GATT_characteristics", "UUID", True, clues_pattern_dashed),
+                ("GATT_attribute_handles", "UUID", True, clues_pattern_dashed),
             )
 
-            for table, col, uses_random in clues_tables:
+            for table, col, uses_random, clues_pattern in clues_tables:
                 if not remaining:
                     break
                 bdaddr_list = list(remaining)
