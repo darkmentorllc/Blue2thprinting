@@ -853,26 +853,58 @@ def get_candidate_bdaddrs_matching_company_regex(companyregex, bdaddr_random, ca
                     remaining.discard(bdaddr)
 
     ############################################
-    # CLUES path — reuse the existing UUID-regex lookup, then intersect.
-    # Per-issue scope, we accept the cost of get_bdaddrs_by_uuid_regex here;
-    # optimizing it is out of scope for #11.
+    # CLUES path — batched, candidate-scoped.
+    #
+    # CLUES UUIDs are full 128-bit values. After dash-stripping they are
+    # 32 hex chars, so they cannot substring-match inside UUID16 (4-char)
+    # or UUID32 (8-char) columns — those tables are skipped.
+    #
+    # All matching CLUES UUIDs for this company regex are collapsed into a
+    # single alternation regex and each table is hit exactly once with the
+    # query scoped to the remaining candidate bdaddrs via `bdaddr IN (...)`.
+    #
+    # Note: GATT_{services,characteristics,attribute_handles}.UUID is CHAR(36)
+    # and stores the dashed form, whereas CLUES input is dash-stripped. The
+    # pre-existing behavior therefore did not produce GATT hits for CLUES
+    # lookups, and we preserve that here. Extending coverage to GATT tables
+    # (by also emitting a dashed-form alternation) is a separate improvement.
     ############################################
     if remaining:
-        clues_uuids = set()
+        clues_uuids_dashless = []
         for key in TME.TME_glob.clues.keys():
             if re.search(pattern, TME.TME_glob.clues[key]["company"]):
-                clues_uuids.add(TME.TME_glob.clues[key]["UUID"])
-        for UUID in clues_uuids:
-            if not remaining:
-                break
-            tmp = get_bdaddrs_by_uuid_regex(UUID.replace("-", ""), bdaddr_random)
-            if tmp is None:
-                continue
-            tmp_set = set(tmp)
-            hits = remaining & tmp_set
-            if hits:
-                matched.update(hits)
-                remaining.difference_update(hits)
+                clues_uuids_dashless.append(TME.TME_glob.clues[key]["UUID"].replace("-", ""))
+
+        if clues_uuids_dashless:
+            clues_pattern = "|".join(clues_uuids_dashless)
+
+            # (table, uuid_column, uses_bdaddr_random)
+            clues_tables = (
+                ("EIR_bdaddr_to_UUID128s", "str_UUID128s", False),
+                ("LE_bdaddr_to_UUID128s_list", "str_UUID128s", True),
+                ("LE_bdaddr_to_UUID128_service_solicit", "str_UUID128s", True),
+                ("LE_bdaddr_to_UUID128_service_data", "UUID128_hex_str", True),
+            )
+
+            for table, col, uses_random in clues_tables:
+                if not remaining:
+                    break
+                bdaddr_list = list(remaining)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                if uses_random and bdaddr_random is not None:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND bdaddr_random = %s "
+                             f"AND {col} REGEXP %s")
+                    vals = tuple(bdaddr_list) + (bdaddr_random, clues_pattern)
+                else:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND {col} REGEXP %s")
+                    vals = tuple(bdaddr_list) + (clues_pattern,)
+                for (bdaddr,) in execute_query(query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
 
     qprint(f"get_candidate_bdaddrs_matching_company_regex: {len(matched)}/{len(candidate_set)} candidates matched")
     return matched
