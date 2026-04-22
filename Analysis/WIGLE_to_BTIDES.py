@@ -107,6 +107,50 @@ def find_bdaddr_rand(bdaddr):
         return 1  # No matches or exact tie → default to random.
     return max(bdaddr_rand_count, key=bdaddr_rand_count.get)
 
+
+def batch_find_bdaddr_rand(bdaddrs, chunk_size=1000):
+    """Bulk variant of find_bdaddr_rand: returns dict[bdaddr] -> bdaddr_rand.
+
+    Issues one UNION-ALL query per chunk (across every bdaddr_random-bearing
+    table), with a shared IN-clause per table. Applies the same "majority
+    across tables, default to 1 on tie/miss" rule as find_bdaddr_rand.
+    """
+    unique_bdaddrs = list({b for b in bdaddrs if b})
+    if not unique_bdaddrs:
+        return {}
+
+    _, tables = _get_bdaddr_rand_union_sql()
+    if not tables:
+        return {b: 1 for b in unique_bdaddrs}
+
+    conn = _get_mysql_conn()
+    counts = {}  # bdaddr -> {0: n, 1: n}
+    for i in range(0, len(unique_bdaddrs), chunk_size):
+        chunk = unique_bdaddrs[i:i + chunk_size]
+        placeholders = ",".join(["%s"] * len(chunk))
+        subqueries = [
+            f"(SELECT bdaddr, bdaddr_random FROM {t} WHERE bdaddr IN ({placeholders}))"
+            for t in tables
+        ]
+        query = " UNION ALL ".join(subqueries)
+        params = tuple(chunk) * len(tables)
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        for bdaddr, bdaddr_rand in cursor.fetchall():
+            c = counts.setdefault(bdaddr, {0: 0, 1: 0})
+            if bdaddr_rand in c:
+                c[bdaddr_rand] += 1
+        cursor.close()
+
+    result = {}
+    for b in unique_bdaddrs:
+        c = counts.get(b, {0: 0, 1: 0})
+        if c[0] == c[1]:
+            result[b] = 1
+        else:
+            result[b] = max(c, key=c.get)
+    return result
+
 def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False, offset=0, limit=None):
     try:
         sqlite_conn = sqlite3.connect(input)
@@ -147,6 +191,15 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
         print(f"Error loading location table: {e}")
         return
 
+    # Pre-compute bdaddr_rand for every BLE entry in one batched MySQL
+    # roundtrip (chunked UNION ALL) rather than N individual lookups.
+    ble_bdaddrs = [row[0] for row in rows if row[7] == "E" and row[0]]
+    if ble_bdaddrs:
+        qprint(f"Looking up bdaddr_rand for {len(set(ble_bdaddrs))} unique BLE BDADDRs in bulk.")
+        bdaddr_rand_map = batch_find_bdaddr_rand(ble_bdaddrs)
+    else:
+        bdaddr_rand_map = {}
+
     # TODO: add progress tracker
 
     i = 0
@@ -174,7 +227,7 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             bdaddr_rand = 0
         elif type == "E":
             bdaddr = bssid_ACID
-            bdaddr_rand = find_bdaddr_rand(bdaddr)
+            bdaddr_rand = bdaddr_rand_map.get(bdaddr, 1)
         else:
             continue
 
