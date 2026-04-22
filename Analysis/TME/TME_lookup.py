@@ -744,6 +744,140 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
 
     return bdaddr_hash.keys()
 
+
+# Target-scoped variant of get_bdaddrs_by_company_regex used by --NOT-company-regex.
+# Returns the subset of `candidates` whose company matches `companyregex`.
+# Avoids the 33-table UNION ALL per OUI prefix that makes the unscoped function
+# painfully slow for regexes like "Apple" (see issue #11).
+def get_candidate_bdaddrs_matching_company_regex(companyregex, bdaddr_random, candidates):
+    if not candidates:
+        return set()
+
+    qprint(f"get_candidate_bdaddrs_matching_company_regex: regex={companyregex}, {len(candidates)} candidates")
+    pattern = re.compile(companyregex)
+    candidate_set = set(candidates)
+    remaining = set(candidate_set)
+    matched = set()
+    try_byte_swapped_bt_cid = True
+
+    ############################################
+    # IEEE OUI path (the hot path for "Apple").
+    # Pull matching OUIs into memory once, then prefix-match candidates locally.
+    ############################################
+    values = (companyregex,)
+    oui_query = "SELECT bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP %s"
+    oui_result = execute_query(oui_query, values)
+    matching_ouis = {oui.lower() for (oui, _company_name) in oui_result}
+    qprint(f"{i1}{len(matching_ouis)} OUIs matched in IEEE_bdaddr_to_company")
+    if matching_ouis:
+        for bdaddr in list(remaining):
+            if bdaddr[:8].lower() in matching_ouis:
+                matched.add(bdaddr)
+                remaining.discard(bdaddr)
+
+    ############################################
+    # BT Company ID path — restrict queries to the remaining candidate set.
+    ############################################
+    if remaining:
+        matching_cids = {
+            key for key, value in TME.TME_glob.bt_CID_to_names.items()
+            if re.search(pattern, value)
+        }
+        if matching_cids:
+            if try_byte_swapped_bt_cid:
+                swapped = {((k & 0xFF) << 8) | ((k & 0xFF00) >> 8) for k in matching_cids}
+                msd_cids = matching_cids | swapped
+            else:
+                msd_cids = matching_cids
+
+            def _run_cid_query(table, cids, random_filtered):
+                if not remaining or not cids:
+                    return
+                bdaddr_list = list(remaining)
+                cid_list = list(cids)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                cid_ph = ",".join(["%s"] * len(cid_list))
+                if random_filtered and bdaddr_random is not None:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND bdaddr_random = %s "
+                             f"AND device_BT_CID IN ({cid_ph})")
+                    vals = tuple(bdaddr_list) + (bdaddr_random,) + tuple(cid_list)
+                else:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND device_BT_CID IN ({cid_ph})")
+                    vals = tuple(bdaddr_list) + tuple(cid_list)
+                for (bdaddr,) in execute_query(query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
+
+            _run_cid_query("LMP_VERSION_RES", matching_cids, random_filtered=False)
+            _run_cid_query("LL_VERSION_IND", matching_cids, random_filtered=True)
+            _run_cid_query("LE_bdaddr_to_MSD", msd_cids, random_filtered=True)
+            _run_cid_query("EIR_bdaddr_to_MSD", msd_cids, random_filtered=False)
+
+    ############################################
+    # UUID16 path — restrict queries to the remaining candidate set.
+    ############################################
+    if remaining:
+        matching_uuid16s = {
+            key for key, value in TME.TME_glob.bt_member_UUID16s_to_names.items()
+            if re.search(pattern, value)
+        }
+        if matching_uuid16s:
+            uuid_pattern = "|".join(f"0x{k:04x}" for k in matching_uuid16s)
+            bdaddr_list = list(remaining)
+            bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+
+            eir_query = (f"SELECT DISTINCT bdaddr FROM EIR_bdaddr_to_UUID16s "
+                         f"WHERE bdaddr IN ({bdaddr_ph}) AND str_UUID16s REGEXP %s")
+            for (bdaddr,) in execute_query(eir_query, tuple(bdaddr_list) + (uuid_pattern,)):
+                matched.add(bdaddr)
+                remaining.discard(bdaddr)
+
+            if remaining:
+                bdaddr_list = list(remaining)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                if bdaddr_random is not None:
+                    le_query = (f"SELECT DISTINCT bdaddr FROM LE_bdaddr_to_UUID16s_list "
+                                f"WHERE bdaddr IN ({bdaddr_ph}) AND bdaddr_random = %s "
+                                f"AND str_UUID16s REGEXP %s")
+                    vals = tuple(bdaddr_list) + (bdaddr_random, uuid_pattern)
+                else:
+                    le_query = (f"SELECT DISTINCT bdaddr FROM LE_bdaddr_to_UUID16s_list "
+                                f"WHERE bdaddr IN ({bdaddr_ph}) AND str_UUID16s REGEXP %s")
+                    vals = tuple(bdaddr_list) + (uuid_pattern,)
+                for (bdaddr,) in execute_query(le_query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
+
+    ############################################
+    # CLUES path — reuse the existing UUID-regex lookup, then intersect.
+    # Per-issue scope, we accept the cost of get_bdaddrs_by_uuid_regex here;
+    # optimizing it is out of scope for #11.
+    ############################################
+    if remaining:
+        clues_uuids = set()
+        for key in TME.TME_glob.clues.keys():
+            if re.search(pattern, TME.TME_glob.clues[key]["company"]):
+                clues_uuids.add(TME.TME_glob.clues[key]["UUID"])
+        for UUID in clues_uuids:
+            if not remaining:
+                break
+            tmp = get_bdaddrs_by_uuid_regex(UUID.replace("-", ""), bdaddr_random)
+            if tmp is None:
+                continue
+            tmp_set = set(tmp)
+            hits = remaining & tmp_set
+            if hits:
+                matched.update(hits)
+                remaining.difference_update(hits)
+
+    qprint(f"get_candidate_bdaddrs_matching_company_regex: {len(matched)}/{len(candidate_set)} candidates matched")
+    return matched
+
+
 def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     qprint(f"{msdregex} in get_bdaddrs_by_msd_regex")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
