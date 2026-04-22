@@ -1564,18 +1564,23 @@ def btides_to_sql(args):
 
         registry = Registry().with_resources( all_schemas )
 
+        # Build the per-entry validator once and reuse. Re-constructing inside
+        # the loop re-parsed the schema and rebuilt the keyword dispatch table
+        # for every BTIDES entry.
+        entry_validator = Draft202012Validator(
+            {"anyOf": [
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
+            ]},
+            registry=registry,
+        )
+
         total = len(TME.TME_glob.BTIDES_JSON)
         count = 0;
         for entry in TME.TME_glob.BTIDES_JSON:
             # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
             try:
-                Draft202012Validator(
-                    {"anyOf": [
-                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
-                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
-                    ]},
-                    registry=registry,
-                ).validate(instance=entry)
+                entry_validator.validate(instance=entry)
                 #qprint("JSON is valid according to BTIDES Schema")
             except ValidationError as e:
                 qprint("JSON data is invalid per BTIDES Schema:", e.message)
