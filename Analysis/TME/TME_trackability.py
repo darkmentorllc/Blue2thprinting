@@ -210,9 +210,24 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
             # Remove dashes and make lowercase
 #            UUID_db_ = UUID_db.replace('-','').lower()
             if(check_if_UUIDs_match(UUID_db, "2a25")):
-                print_unique_ID_header_if_needed()
-                qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
-                TME.TME_glob.privacy_report_no_results_found = False
+                # Suppress the warning if every read value for 0x2a25 is the literal
+                # placeholder "Serial Number" (observed on e.g. Lime scooters). See issue #18.
+                if(bdaddr_random is not None):
+                    sn_vals = (bdaddr_random, bdaddr_random, bdaddr)
+                    sn_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a25' AND c.bdaddr_random = %s AND cv.bdaddr_random = %s AND cv.bdaddr = %s;"
+                else:
+                    sn_vals = (bdaddr,)
+                    sn_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a25' AND cv.bdaddr = %s;"
+                sn_rows = execute_query(sn_query, sn_vals)
+                all_placeholder = (
+                    len(sn_rows) > 0
+                    and all(bv.decode('utf-8', 'ignore').strip().lower() == "serial number"
+                            for (bv,) in sn_rows)
+                )
+                if(not all_placeholder):
+                    print_unique_ID_header_if_needed()
+                    qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                    TME.TME_glob.privacy_report_no_results_found = False
             if(check_if_UUIDs_match(UUID_db, "2bff")):
                 print_unique_ID_header_if_needed()
                 qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
