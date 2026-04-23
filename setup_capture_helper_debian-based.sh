@@ -16,17 +16,17 @@ check_env() {
         echo "This script needs to be run with sudo"
         if is_sourced; then
             echo "Press any key to exit terminal or Ctlr + C to continue"
-            read -n 1 -s            
+            read -n 1 -s
             exit -1
         fi
         exit -1
-    fi  
+    fi
     USERNAME="$SUDO_USER"
-    BASE_PATH="/home/$USERNAME/Blue2thprinting"
+    BASE_PATH="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
     echo "Username detected as '$USERNAME'."
-    if [[ ! -d "$BASE_PATH" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
-        echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
-        echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
+    echo "Repo detected at '$BASE_PATH'."
+    if [[ ! -f "$BASE_PATH/Scripts/runall.sh" ]]; then
+        echo "Could not find Scripts/runall.sh relative to this script. Run setup from inside a Blue2thprinting checkout."
         exit -1
     fi
     apt -v
@@ -68,7 +68,7 @@ install_prerequs(){
     #### This git repository includes the Bluetooth SIG's assigned numbers git repo under the ./public subfolder
     #### Most people would check it out before seeing that they need to pass the parameter to recurse submodules
     #### So I'm just not bothering with telling folks to do that, and just doing it here
-    cd /home/$USERNAME/Blue2thprinting
+    cd "$BASE_PATH"
     git submodule update --init --recursive
     echo "  Done"
 }
@@ -80,35 +80,15 @@ enter_venv(){
 }
 
 configure_scripts() {
-    print_banner "Correcting locations which include hardcoded username in a /home/username/... path."
-    #### There's a few places where paths are assumed to be in the user's home dir. This fixes those up.
-    if [ $USERNAME != "user" ]; then
-        echo "Replacing username 'user' with '$USERNAME'."
-        cd /home/$USERNAME/Blue2thprinting
-        echo "Correcting bluez-5.66/tools/sdptool.c"
-        sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/tools/sdptool.c
-        echo "Correcting bluez-5.66/attrib/gatttool.c"
-        sed -i "s|/home/user/|/home/$USERNAME/|" ./bluez-5.66/attrib/gatttool.c
-        echo "Correcting all the scripts in ./Scripts"
-        cd $BASE_PATH/Scripts
-        for i in *.sh; do
-            echo "  Correcting $i"
-            sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
-        done
-        for i in *.py; do
-            echo "  Correcting $i"
-            sed -i "s|/home/user/|/home/$USERNAME/|g" "$i";
-        done
-        sed -i "s|username = \"user\"|username = \"$USERNAME\"|" central_app_launcher.py
-        echo "Correcting central_app_launcher.py"
-    fi
-    echo "  Done"
+    #### Scripts and binaries now resolve their own repo root via BASH_SOURCE / __file__
+    #### / /proc/self/exe, so there's no longer anything to sed-rewrite post-clone.
 
     print_banner "Adding execute permissions to the shell scripts."
+    cd "$BASE_PATH/Scripts"
     chmod +x *.sh
     echo "  Done"
 
-    print_banner "Appending entry to root crontab to run ~/Scripts/runall.sh at reboot."
+    print_banner "Appending entry to root crontab to run Scripts/runall.sh at reboot."
     #### This tries to make sure it preserves whatever is already in the crontab
     #### and it just appends an entry to run the runall.sh script at reboot
     #### which invokes the sub-scripts to run btmon (primary HCI logging),
@@ -203,9 +183,9 @@ flash_sniffle(){
 }
 
 create_aliases() {
-    print_banner "Adding helpful command aliases (c, k, TME) to ~/.bashrc"
-    echo "alias c=\"~/Blue2thprinting/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
-    echo "alias k=\"sudo ~/Blue2thprinting/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
+    print_banner "Adding helpful command aliases (c, k, TME) to /home/$USERNAME/.bashrc"
+    echo "alias c=\"$BASE_PATH/Scripts/check.sh\"" >> /home/$USERNAME/.bashrc
+    echo "alias k=\"sudo $BASE_PATH/Scripts/killall.sh\"" >> /home/$USERNAME/.bashrc
     echo "alias d=\"ls -la /dev/serial/by-id/\"" >> /home/$USERNAME/.bashrc
     echo "alias pj=\"python -m json.tool\"" >> /home/$USERNAME/.bashrc
     echo "alias TME=\"python3 ./Tell_Me_Everything.py\"" >> /home/$USERNAME/.bashrc
@@ -214,7 +194,7 @@ create_aliases() {
     echo "alias BG=\"python3 ./Better_Getter.py\"" >> /home/$USERNAME/.bashrc
     source /home/$USERNAME/.bashrc
     print_banner "Correcting permissions on the Blue2thprinting folder."
-    sudo chown -R "$USERNAME" /home/"$USERNAME"/Blue2thprinting
+    sudo chown -R "$USERNAME" "$BASE_PATH"
 }
 
 

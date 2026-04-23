@@ -9,8 +9,9 @@ FILES="$@"
 
 echo "passed in " ${args[0]}
 
-BTMONLOGS="/home/user/Scripts/Blue2thprinting/logs/btmon/"
-GPSPIPELOGS="/home/user/Scripts/Blue2thprinting/logs/gpspipe/"
+REPO_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+BTMONLOGS="$REPO_ROOT/Logs/btmon/"
+GPSPIPELOGS="$REPO_ROOT/Logs/gpspipe/"
 
 # Reset the files and db tables
 rm /tmp/advspecific.csv
@@ -37,7 +38,7 @@ do
 	mysql --database='bt2' --execute="LOAD DATA INFILE '/tmp/advspecific.csv' INTO TABLE adv_specific FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (capture_date_unix,rssi,bdaddr_random,bdaddr,device_name);"
 
 	# Process the specific gps coordinates, Output goes into /tmp/gpsspecific.csv
-	echo ${file} | xargs -n 1 -I {} python /home/user/Blue2thprinting/Scripts/gpspipe2mysql.py $GPSPIPELOGS{}.txt >> /tmp/gpsspecific.csv
+	echo ${file} | xargs -n 1 -I {} python "$REPO_ROOT/Scripts/gpspipe2mysql.py" $GPSPIPELOGS{}.txt >> /tmp/gpsspecific.csv
 
 	# Insert data into database
 	mysql --database='bt2' --execute="LOAD DATA INFILE '/tmp/gpsspecific.csv' REPLACE INTO TABLE gps_specific FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\n' (@host_time,@gps_time,lat,lon) SET unix_host_time = UNIX_TIMESTAMP(@host_time), unix_gps_time = UNIX_TIMESTAMP(@gps_time);"

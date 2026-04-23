@@ -5,9 +5,10 @@
 # Copyright(c) © Dark Mentor LLC 2023-2026
 ##########################################
 
+REPO_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
 ERRORLOG="/tmp/runall.log"
 echo "start_gpspipe.sh start" >> $ERRORLOG
-LOGPATH="/home/user/Blue2thprinting/Logs/gpspipe"
+LOGPATH="$REPO_ROOT/Logs/gpspipe"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 

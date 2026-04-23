@@ -7,7 +7,8 @@
 
 #bluetoothctl is a better than hcitool lescan because it shows more info about beacons it sees
 
-LOGPATH="/home/user/Blue2thprinting/Logs/bluetoothctl"
+REPO_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+LOGPATH="$REPO_ROOT/Logs/bluetoothctl"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 LINKAGE_FILE="/tmp/BT_link.txt"
@@ -24,6 +25,6 @@ if [ -e "$LINKAGE_FILE" ]; then
     rm "$LINKAGE_FILE"
 fi
 # Had to move over to my custom bluetoothctl to find out which are BTC vs. BLE devices!
-RESULT=$(unbuffer /home/user/Blue2thprinting/bluez-5.66/client/bluetoothctl scan on > ${LOGPATH}/${DATE}_${HN}.txt &)
+RESULT=$(unbuffer "$REPO_ROOT/bluez-5.66/client/bluetoothctl" scan on > ${LOGPATH}/${DATE}_${HN}.txt &)
 #Re-link to the file so it can be found by other scripts
 ln -s ${LOGPATH}/${DATE}_${HN}.txt $LINKAGE_FILE

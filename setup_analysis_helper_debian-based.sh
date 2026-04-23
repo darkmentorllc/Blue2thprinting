@@ -11,11 +11,12 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 USERNAME="$SUDO_USER"
+BASE_PATH="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 echo "Username detected as '$USERNAME'."
+echo "Repo detected at '$BASE_PATH'."
 
-if [[ ! -d "/home/$USERNAME/Blue2thprinting" && ! -d "/home/$USERNAME/blue2thprinting" ]]; then
-    echo "All Blue2thprinting code assumes that Blue2thprinting has been checked out to your home directory (/home/$USERNAME/Blue2thprinting)"
-    echo "Please move the folder to /home/$USERNAME/Blue2thprinting and re-run this script from there."
+if [[ ! -f "$BASE_PATH/Analysis/handle_venv.py" ]]; then
+    echo "Could not find Analysis/handle_venv.py relative to this script. Run setup from inside a Blue2thprinting checkout."
     exit -1
 fi
 
@@ -117,7 +118,7 @@ mysql -u user -pa --database='bt2' --execute="SELECT * from USB_CID_to_company o
 echo "======================================================="
 echo "Correcting permissions on the Blue2thprinting folder."
 echo "======================================================="
-sudo chown -R "$USERNAME" /home/"$USERNAME"/Blue2thprinting
+sudo chown -R "$USERNAME" "$BASE_PATH"
 
 echo ""
 echo "[--------------------------------------------------]"
