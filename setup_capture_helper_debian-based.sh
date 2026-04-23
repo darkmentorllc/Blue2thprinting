@@ -117,18 +117,25 @@ compile_toolz() {
     #### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
     cd $BASE_PATH/bluez-5.66
     ### BlueZ Configuration ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/Makefile" ]; then
-        print_compilation_step "  Beginning configuration."
+    # config.status is the autotools completion sentinel, not Makefile. A Makefile
+    # without config.status leaves autotools in a half-configured state where
+    # 'make' tries to re-invoke ./config.status --recheck and fails with Error 127.
+    if [ ! -f "$BASE_PATH/bluez-5.66/config.status" ]; then
+        if [ -f "$BASE_PATH/bluez-5.66/Makefile" ]; then
+            print_tool_working "  Stale Makefile without config.status detected; cleaning before reconfigure."
+            make distclean >/dev/null 2>&1 || true
+        fi
+        print_tool_working "  Beginning configuration."
         ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated
     else
-        echo "  Makefile present. Configuration already succeeded."
+        echo "  config.status present. Configuration already succeeded."
     fi
     if [ $? != 0 ]; then
         echo "  Something went wrong with the ./configure. Look for an error message, correct it, and try again."
         exit
     fi
     ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATHbluez-5.66/client/bluetoothctl" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ]; then
     print_tool_working "  Beginning compilation (this will take a while!)"
     make -j4
     print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
