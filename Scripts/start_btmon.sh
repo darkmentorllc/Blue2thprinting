@@ -6,6 +6,8 @@
 ##########################################
 
 REPO_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+source "$REPO_ROOT/Scripts/lib_bluetooth.sh"
+
 ERRORLOG="/tmp/runall.log"
 echo "start_btmon.sh start" >> $ERRORLOG
 LOGPATH="$REPO_ROOT/Logs/btmon"
@@ -14,10 +16,6 @@ HN=$(hostname)
 echo $HN
 echo "Logging to ${LOGPATH}/${DATE}_${HN}.bin"
 
-sleep 31
-hciconfig hci0 down
-sleep 1
-hciconfig hci0 up
-sleep 1
+wait_for_bluetooth || { echo "start_btmon.sh aborted: bluetooth not ready" >> $ERRORLOG; exit 1; }
 RESULT=$( "$REPO_ROOT/bluez-5.66/monitor/btmon" -i 0 -T -w ${LOGPATH}/${DATE}_${HN}.bin &>/dev/null&)
 echo "start_btmon.sh end" >> $ERRORLOG
