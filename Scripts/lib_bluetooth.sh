@@ -28,12 +28,15 @@ wait_for_bluetooth() {
 
 # Block until a btmon process is running so HCI logging is in place before
 # scanning starts. Returns 0 on success, 1 on timeout. First arg is the
-# timeout in seconds (default 60).
+# timeout in seconds (default 60). Matches the full command line via -f
+# rather than COMM via -x, since COMM is truncated to 15 chars and can be
+# overridden by PR_SET_NAME — bluez-5.66/monitor/btmon uniquely identifies
+# our btmon regardless.
 wait_for_btmon() {
     local timeout="${1:-60}"
     local deadline=$(( $(date +%s) + timeout ))
     while [ "$(date +%s)" -lt "$deadline" ]; do
-        if pgrep -x btmon >/dev/null 2>&1; then
+        if pgrep -f 'bluez-5.66/monitor/btmon' >/dev/null 2>&1; then
             return 0
         fi
         sleep 1
