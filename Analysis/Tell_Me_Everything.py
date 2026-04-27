@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # Activate venv before any other imports

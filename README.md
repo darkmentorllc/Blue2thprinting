@@ -47,4 +47,4 @@ You should pick one of the below targets which best matches your goals.
 
 ## 3️⃣ [Import your own captured data](./docs/Import.md) third
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

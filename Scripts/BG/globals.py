@@ -1,7 +1,7 @@
 import time
 
 # Written by Xeno Kovah
-# Copyright (c) 2024-2025 Dark Mentor LLC
+# Copyright(c) © Dark Mentor LLC 2023-2026
 
 ######################################################################################
 # Misc globals

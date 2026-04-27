@@ -1,5 +1,5 @@
 # Written by Xeno Kovah
-# Copyright (c) 2024-2025 Dark Mentor LLC
+# Copyright(c) © Dark Mentor LLC 2023-2026
 # For use in OST2 BT2701 classs https://ost2.fyi/BT2701
 
 import globals

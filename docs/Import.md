@@ -68,4 +68,4 @@ Unfortunately no deduplication of data is possible currently due to the fact tha
 mysql -u user -pa -D bt -e "SELECT * FROM LMP_VERSION_RES LIMIT 10;"
 ```
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

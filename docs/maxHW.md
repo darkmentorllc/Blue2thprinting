@@ -134,4 +134,4 @@ The following are only required if you'll be placing the devices into an outdoor
 
 Further configuration instructions will be given later.
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

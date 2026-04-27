@@ -123,4 +123,4 @@ from within the Scripts folder.
 
 *Note:* The accepted name format is just the filename, not the full path.
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026
