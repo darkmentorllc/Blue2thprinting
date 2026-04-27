@@ -1,6 +1,8 @@
 #include "ModulesInclude.hpp"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <limits.h>
 #include <inttypes.h>
 #include <unistd.h> // For sleep
 
@@ -21,9 +23,42 @@ static const char *filter_lmp_encryption_key_size_req;
 
 // Vars
 
-char * BTC2TH_LOG_PATH = "/home/pi/Blue2thprinting/Logs/BTC_2THPRINT.log";
+static char g_btc2th_log_path_buf[PATH_MAX];
+char * BTC2TH_LOG_PATH = NULL;
 
 FILE * glogfile;
+
+// Resolve BTC_2THPRINT.log path relative to this binary's location so the repo
+// can live at any path. Honors B2TP_LOG_DIR as an override.
+// bt_exploiter lives at <repo>/braktooth_minimized/bin/bt_exploiter, so strip
+// 3 path components (binary name, "bin", "braktooth_minimized") to reach the
+// repo root.
+static void init_log_path(void)
+{
+    const char *override = getenv("B2TP_LOG_DIR");
+    if (override) {
+        snprintf(g_btc2th_log_path_buf, sizeof(g_btc2th_log_path_buf), "%s/BTC_2THPRINT.log", override);
+        BTC2TH_LOG_PATH = g_btc2th_log_path_buf;
+        return;
+    }
+    char exe[PATH_MAX];
+    ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+    if (n <= 0) {
+        BTC2TH_LOG_PATH = (char *)"BTC_2THPRINT.log";
+        return;
+    }
+    exe[n] = '\0';
+    for (int i = 0; i < 3; i++) {
+        char *slash = strrchr(exe, '/');
+        if (!slash) {
+            BTC2TH_LOG_PATH = (char *)"BTC_2THPRINT.log";
+            return;
+        }
+        *slash = '\0';
+    }
+    snprintf(g_btc2th_log_path_buf, sizeof(g_btc2th_log_path_buf), "%s/Logs/BTC_2THPRINT.log", exe);
+    BTC2TH_LOG_PATH = g_btc2th_log_path_buf;
+}
 
 unsigned long long gAllRequiredResponses = 0;
 #define RR_LMP_FEATURES_RES			(1 << 0)
@@ -189,6 +224,7 @@ static int setup(void *p)
     filter_lmp_name_res = packet_register_filter("btbrlmp.op == 2");
     filter_lmp_encryption_key_size_req = packet_register_filter("btbrlmp.op == 16");
 
+    init_log_path();
     glogfile = fopen(BTC2TH_LOG_PATH, "a"); // Open file in append mode
     if (glogfile == NULL) {
         printf("Failed to open the file.\n");

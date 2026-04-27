@@ -14,7 +14,9 @@
 #endif
 
 #include <errno.h>
+#include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <glib.h>
@@ -39,8 +41,40 @@ static gboolean characteristics(gpointer user_data);
 static gboolean characteristics_desc(gpointer user_data);
 static void char_read_cb(guint8 status, const guint8 *pdu, guint16 plen, gpointer user_data);
 
-static char * g_log_name = "/home/user/Blue2thprinting/Logs/GATTprint.log";
+static char g_log_name_buf[PATH_MAX];
+static char * g_log_name = NULL;
 FILE * g_log_FILE;
+
+// Resolve GATTprint.log path relative to this binary's location so the repo
+// can live at any path. Honors B2TP_LOG_DIR as an override.
+// gatttool lives at <repo>/bluez-5.66/attrib/gatttool, so strip 3 path components
+// (binary name, "attrib", "bluez-5.66") to reach the repo root.
+static void init_log_path(void)
+{
+	const char *override = getenv("B2TP_LOG_DIR");
+	if (override) {
+		snprintf(g_log_name_buf, sizeof(g_log_name_buf), "%s/GATTprint.log", override);
+		g_log_name = g_log_name_buf;
+		return;
+	}
+	char exe[PATH_MAX];
+	ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+	if (n <= 0) {
+		g_log_name = "GATTprint.log";
+		return;
+	}
+	exe[n] = '\0';
+	for (int i = 0; i < 3; i++) {
+		char *slash = strrchr(exe, '/');
+		if (!slash) {
+			g_log_name = "GATTprint.log";
+			return;
+		}
+		*slash = '\0';
+	}
+	snprintf(g_log_name_buf, sizeof(g_log_name_buf), "%s/Logs/GATTprint.log", exe);
+	g_log_name = g_log_name_buf;
+}
 
 static char *opt_src = NULL;
 static char *opt_dst = NULL;
@@ -385,6 +419,7 @@ int main(int argc, char *argv[])
 	GError *gerr = NULL;
 	GIOChannel *chan;
 
+	init_log_path();
 	g_log_FILE = fopen(g_log_name, "a"); // Open file in append mode
 	if (g_log_FILE == NULL) {
 		printf("Failed to open the file.\n");

@@ -39,6 +39,8 @@ You should pick one of the below targets which best matches your goals.
 
 # Software Setup & Configuration
 
+> The repo can be cloned to any location. Scripts and binaries resolve their paths from their own filesystem location, so `~/Blue2thprinting`, `/opt/Blue2thprinting`, or any other path will work. If you're upgrading from a version that required `~/Blue2thprinting` and had already run the capture setup, delete `Scripts/.cron_added` and re-run `setup_capture_helper_debian-based.sh` so the root crontab gets rewritten with the new absolute path.
+
 ## 1️⃣ Try out [analysis](./docs/Analysis.md) on [BTIDALPOOL](./docs/BTIDALPOOL.md) data first
 
 ## 2️⃣ Setup [capture](./docs/Capture.md) second

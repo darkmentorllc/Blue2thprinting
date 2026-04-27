@@ -53,31 +53,29 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
                          # in the bluetoothctl log (which would happen if the signal went low and then high again)
 
 ##################################################
-# PATHS YOU MAY NEED TO FIX
+# Paths resolved from this file's location so the repo works from any clone path.
 ##################################################
 
-username = "user"
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
-default_cwd = f"/home/{username}/"
+default_cwd = f"{REPO_ROOT}/"
 
-BG_exec_path = f"/home/{username}/Blue2thprinting/Scripts/BG/Better_Getter.py"
-BG_output_pcap_path = f"/home/{username}/Blue2thprinting/Logs/BetterGetter"
+BG_exec_path = str(REPO_ROOT / "Scripts/BG/Better_Getter.py")
+BG_output_pcap_path = str(REPO_ROOT / "Logs/BetterGetter")
 
-sdptool_exec_path = f"/home/{username}/Blue2thprinting/bluez-5.66/tools/sdptool"
-sdptool_log_path = f"/home/{username}/Blue2thprinting/Logs/sdptool"
+sdptool_exec_path = str(REPO_ROOT / "bluez-5.66/tools/sdptool")
+sdptool_log_path = str(REPO_ROOT / "Logs/sdptool")
 
-braktooth = f"/home/{username}/Blue2thprinting/braktooth_minimized/bin/bt_exploiter"
-brak_cwd = f"/home/{username}/Blue2thprinting/braktooth_minimized/"
+braktooth = str(REPO_ROOT / "braktooth_minimized/bin/bt_exploiter")
+brak_cwd = str(REPO_ROOT / "braktooth_minimized") + "/"
 
-btc2thprint_log_path = f"/home/{username}/Blue2thprinting/Logs/BTC_2THPRINT.log"
-bgprint_log_path = f"/home/{username}/Blue2thprinting/Logs/GATTprint.log"
-sdpprint_log_path = f"/home/{username}/Blue2thprinting/Logs/SDPprint.log"
+btc2thprint_log_path = str(REPO_ROOT / "Logs/BTC_2THPRINT.log")
+bgprint_log_path = str(REPO_ROOT / "Logs/GATTprint.log")
+sdpprint_log_path = str(REPO_ROOT / "Logs/SDPprint.log")
 
-sniffle_stdout_log_path = f"/home/{username}/Blue2thprinting/Logs/Sniffle_stdout.log"
-sniffle_path = f"/home/{username}/Blue2thprinting/Sniffle/python_cli/sniff_receiver.py"
-sniffle_pcap_log_folder = f"/home/{username}/Blue2thprinting/Logs/sniffle"
-
-# END STUFF YOU MAY NEED TO FIX UP
+sniffle_stdout_log_path = str(REPO_ROOT / "Logs/Sniffle_stdout.log")
+sniffle_path = str(REPO_ROOT / "Sniffle/python_cli/sniff_receiver.py")
+sniffle_pcap_log_folder = str(REPO_ROOT / "Logs/sniffle")
 
 # Define a dictionary to store BDADDRs and their RSSI values
 ble_bdaddrs = {}

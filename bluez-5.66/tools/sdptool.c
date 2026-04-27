@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <limits.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -41,8 +43,40 @@
 #define for_each_opt(opt, long, short) while ((opt=getopt_long(argc, argv, short ? short:"+", long, 0)) != -1)
 #define N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
-static char * g_log_name = "/home/user/Blue2thprinting/Logs/SDPprint.log";
+static char g_log_name_buf[PATH_MAX];
+static char * g_log_name = NULL;
 FILE * g_log_FILE;
+
+// Resolve SDPprint.log path relative to this binary's location so the repo
+// can live at any path. Honors B2TP_LOG_DIR as an override.
+// sdptool lives at <repo>/bluez-5.66/tools/sdptool, so strip 3 path components
+// (binary name, "tools", "bluez-5.66") to reach the repo root.
+static void init_log_path(void)
+{
+	const char *override = getenv("B2TP_LOG_DIR");
+	if (override) {
+		snprintf(g_log_name_buf, sizeof(g_log_name_buf), "%s/SDPprint.log", override);
+		g_log_name = g_log_name_buf;
+		return;
+	}
+	char exe[PATH_MAX];
+	ssize_t n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
+	if (n <= 0) {
+		g_log_name = "SDPprint.log";
+		return;
+	}
+	exe[n] = '\0';
+	for (int i = 0; i < 3; i++) {
+		char *slash = strrchr(exe, '/');
+		if (!slash) {
+			g_log_name = "SDPprint.log";
+			return;
+		}
+		*slash = '\0';
+	}
+	snprintf(g_log_name_buf, sizeof(g_log_name_buf), "%s/Logs/SDPprint.log", exe);
+	g_log_name = g_log_name_buf;
+}
 
 /*
  * Convert a string to a BDADDR, with a few "enhancements" - Jean II
@@ -4382,6 +4416,7 @@ int main(int argc, char *argv[])
 
 	bacpy(&interface, BDADDR_ANY);
 
+        init_log_path();
         g_log_FILE = fopen(g_log_name, "a"); // Open file in append mode
         if (g_log_FILE == NULL) {
                 printf("Failed to open the file.\n");
