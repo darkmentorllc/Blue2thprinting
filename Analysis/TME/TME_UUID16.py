@@ -3,6 +3,8 @@
 # Copyright(c) Dark Mentor LLC 2023-2025
 ########################################
 
+import struct
+
 from TME.TME_helpers import *
 from TME.TME_GATT import *
 from TME.TME_BTIDES_AdvData import *
@@ -155,6 +157,55 @@ def print_uuid16s_service_solicit(bdaddr, bdaddr_random):
     qprint("")
 
 # Function to print UUID16s service data for a given bdaddr
+_EDDYSTONE_URL_SCHEMES = {
+    0: "http://www.", 1: "https://www.", 2: "http://", 3: "https://",
+}
+_EDDYSTONE_URL_EXPANSIONS = {
+    0: ".com/", 1: ".org/", 2: ".edu/", 3: ".net/",
+    4: ".info/", 5: ".biz/", 6: ".gov/",
+    7: ".com", 8: ".org", 9: ".edu", 10: ".net",
+    11: ".info", 12: ".biz", 13: ".gov",
+}
+
+def print_eddystone_service_data(indent, service_data_hex_str):
+    if not service_data_hex_str or len(service_data_hex_str) < 2:
+        return
+    data = bytes.fromhex(service_data_hex_str)
+    frame_type = (data[0] >> 4) & 0xF  # upper nibble of first byte per Eddystone spec
+
+    if frame_type == 0x0 and len(data) >= 19:  # UID
+        tx_power = struct.unpack('b', bytes([data[1]]))[0]
+        namespace = data[2:12].hex()
+        instance = data[12:18].hex()
+        qprint(f"{indent}Eddystone-UID: tx_power={tx_power} dBm, namespace={namespace}, instance={instance}")
+
+    elif frame_type == 0x1 and len(data) >= 3:  # URL
+        tx_power = struct.unpack('b', bytes([data[1]]))[0]
+        scheme = _EDDYSTONE_URL_SCHEMES.get(data[2], f"?0x{data[2]:02x}://")
+        body = "".join(_EDDYSTONE_URL_EXPANSIONS.get(b, chr(b)) for b in data[3:])
+        qprint(f"{indent}Eddystone-URL: tx_power={tx_power} dBm, url={scheme}{body}")
+
+    elif frame_type == 0x2 and len(data) >= 2:  # TLM
+        version = data[1]
+        if version == 0 and len(data) >= 14:
+            batt_mv = struct.unpack('>H', data[2:4])[0]
+            temp = struct.unpack('>h', data[4:6])[0] / 256.0
+            adv_cnt = struct.unpack('>I', data[6:10])[0]
+            sec_cnt = struct.unpack('>I', data[10:14])[0]
+            qprint(f"{indent}Eddystone-TLM (plain): batt={batt_mv} mV, temp={temp:.2f} °C, adv_cnt={adv_cnt}, uptime={sec_cnt/10.0:.1f} s")
+        elif version == 1 and len(data) >= 18:
+            qprint(f"{indent}Eddystone-TLM (encrypted): cannot decode without Identity Key")
+        else:
+            qprint(f"{indent}Eddystone-TLM: unknown version 0x{version:02x}")
+
+    elif frame_type == 0x3 and len(data) >= 10:  # EID
+        tx_power = struct.unpack('b', bytes([data[1]]))[0]
+        eid = data[2:10].hex()
+        qprint(f"{indent}Eddystone-EID: tx_power={tx_power} dBm, eid={eid}")
+
+    else:
+        qprint(f"{indent}Eddystone: unknown/malformed frame type=0x{frame_type:x}")
+
 def print_uuid16_service_data(bdaddr, bdaddr_random):
     if(bdaddr_random is not None):
         values = (bdaddr_random, bdaddr)
@@ -180,6 +231,8 @@ def print_uuid16_service_data(bdaddr, bdaddr_random):
         # Lookup the UUID16 and see if it matches any well-known UUID16s
         colored_print_name_for_UUID16(UUID16_hex_str)
         qprint(f"{i2}Raw service data: {service_data_hex_str}")
+        if UUID16_hex_str == "feaa":
+            print_eddystone_service_data(i2, service_data_hex_str)
 
         vprint(f"{i3}Found in BLE data (DB:LE_bdaddr_to_UUID16_service_data), bdaddr_random = {bdaddr_random} ({get_bdaddr_type(bdaddr, bdaddr_random)})")
         vprint(f"{i3}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
