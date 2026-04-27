@@ -44,3 +44,44 @@ wait_for_btmon() {
     echo "wait_for_btmon: timed out after ${timeout}s waiting for btmon process" >&2
     return 1
 }
+
+# Clear any soft-block on bluetooth rfkill devices via sysfs. At @reboot,
+# systemd-rfkill restores the saved state asynchronously and bluetoothd can
+# race ahead of it: its initial Set Powered command then fails with
+# 'Failed to set mode: Failed (0x03)' (Hardware Failure from rfkill), and
+# bluetoothd does not retry. We unblock proactively so the subsequent
+# 'power on' call has a chance to succeed. Idempotent. No-op if no
+# bluetooth rfkill device or already unblocked.
+unblock_bt_rfkill() {
+    local rk
+    for rk in /sys/class/rfkill/rfkill*; do
+        [ -e "$rk/type" ] || continue
+        [ "$(cat "$rk/type" 2>/dev/null)" = "bluetooth" ] || continue
+        if [ "$(cat "$rk/soft" 2>/dev/null)" = "1" ]; then
+            if ! echo 0 > "$rk/soft" 2>/dev/null; then
+                sudo -n sh -c "echo 0 > $rk/soft" 2>/dev/null || return 1
+            fi
+        fi
+    done
+    return 0
+}
+
+# Block until the controller reports 'Powered: yes'. bluetoothd's own initial
+# Set Powered loses a race with rfkill at boot and it doesn't retry, so we
+# unblock rfkill and re-issue 'power on' each iteration until it sticks.
+# Returns 0 on success, 1 on timeout. First arg is the timeout in seconds
+# (default 60).
+wait_for_powered_adapter() {
+    local timeout="${1:-60}"
+    local deadline=$(( $(date +%s) + timeout ))
+    while [ "$(date +%s)" -lt "$deadline" ]; do
+        unblock_bt_rfkill 2>/dev/null
+        bluetoothctl power on >/dev/null 2>&1
+        if bluetoothctl show 2>/dev/null | grep -qE '^[[:space:]]*Powered: yes'; then
+            return 0
+        fi
+        sleep 1
+    done
+    echo "wait_for_powered_adapter: timed out after ${timeout}s waiting for Powered: yes" >&2
+    return 1
+}

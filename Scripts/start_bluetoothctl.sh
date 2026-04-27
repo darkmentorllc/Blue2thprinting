@@ -24,8 +24,9 @@ wait_for_bluetooth || { echo "start_bluetoothctl.sh aborted: bluetooth not ready
 # Then wait for btmon so its HCI capture covers our scan traffic.
 wait_for_btmon || { echo "start_bluetoothctl.sh aborted: btmon never started" >> $ERRORLOG; exit 1; }
 # Defensive: even when registered the adapter can be soft-blocked / unpowered,
-# which also produces NotReady. Idempotent — no-op if already on.
-bluetoothctl power on >/dev/null 2>&1
+# which also produces NotReady. Unblock rfkill, then poll until Powered: yes —
+# bluetoothd does not retry its own initial Set Powered after the boot-time race.
+wait_for_powered_adapter || { echo "start_bluetoothctl.sh aborted: adapter never powered on" >> $ERRORLOG; exit 1; }
 
 #Do the actual scanning, so hcidump and btmon can see traffic
 #/usr/bin/bluetoothctl scan on > $LOGPATH/$DATE.txt
