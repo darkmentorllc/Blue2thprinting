@@ -175,10 +175,10 @@ def lookup_ChipPrint_by_GATT(bdaddr, bdaddr_random):
             if( (check_if_UUIDs_match(UUID128_db_, "2a24") or check_if_UUIDs_match(UUID128_db_, "2a27")) and model_name_match == 0):
                 # If so, go lookup the actual data behind it, so we can see if the "Model Number String" is a Chip
                 if(bdaddr_random is not None):
-                    values = (bdaddr_random, bdaddr, f"char_value_handle:03")
+                    values = (bdaddr_random, bdaddr, char_value_handle)
                     char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr_random = %s AND bdaddr = %s and char_value_handle = %s"
                 else:
-                    values = (bdaddr, f"char_value_handle:03")
+                    values = (bdaddr, char_value_handle)
                     char_value_query = "SELECT byte_values FROM GATT_characteristics_values WHERE bdaddr = %s and char_value_handle = %s"
                 char_value_result = execute_query(char_value_query, values)
                 if(len(char_value_result) > 0):
