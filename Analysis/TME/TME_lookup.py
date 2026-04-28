@@ -3,7 +3,7 @@
 # Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
-# import re
+import re
 # import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
@@ -105,6 +105,8 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     return bdaddr_hash.keys()
 
 def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
+    # Translate bare glob '*' to regex '.*' so users can pass '*' to mean "match all"
+    bdaddrregex = re.sub(r'(?<!\.)[\*]', '.*', bdaddrregex)
     vprint(bdaddrregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
@@ -161,27 +163,27 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_attribute_handles WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics_values WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services WHERE bdaddr_random = %s"
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
             "    UNION ALL"
@@ -207,15 +209,19 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
             ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
@@ -271,27 +277,27 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_attribute_handles"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristic_descriptor_values"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics_values"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services"
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
             "    UNION ALL"
@@ -317,15 +323,19 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
             ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
@@ -341,6 +351,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
 def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
     global bt_CID_to_names
     global bt_member_UUID16s_to_names
+    companyregex = re.sub(r'(?<!\.)[\*]', '.*', companyregex)
     qprint(f"Your given regex was {companyregex}")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddr_prefixes = {}

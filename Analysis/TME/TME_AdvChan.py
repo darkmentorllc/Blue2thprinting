@@ -856,7 +856,7 @@ def print_manufacturer_data(bdaddr, bdaddr_random):
         elif(device_BT_CID == 117):
             print_Samsung_MSD(f"{i3}", manufacturer_specific_data)
         elif(device_BT_CID == 0x02FA):  # ASTM International — Open Drone ID
-            print_odid_payload(f"{i2}", manufacturer_specific_data)
+            print_odid_payload(f"{i3}", manufacturer_specific_data)
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 

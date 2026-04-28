@@ -240,6 +240,198 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, p
 
     return
 
+############################
+# Structured value parser and terse display
+############################
+
+def _parse_sdp_elem_val(bv, i):
+    """Parse one SDP data element at bv[i]; return (python_value, new_i).
+
+    Values: int for integers, (kind, val) tuples for UUIDs where kind is
+    'uuid16'/'uuid32'/'uuid128', str for text/URL, bool for boolean,
+    list for sequence/alternate, None for nil.
+    Returns (None, i) on any error.
+    """
+    if i >= len(bv):
+        return None, i
+    descriptor = bv[i]; i += 1
+    type_id   = (descriptor >> 3) & 0x1F
+    size_code =  descriptor       & 0x07
+    try:
+        if size_code < 5:
+            size = data_element_size_to_actual_size[size_code]
+        elif size_code == 5:
+            size = bv[i]; i += 1
+        elif size_code == 6:
+            size, = struct.unpack('>H', bv[i:i+2]); i += 2
+        else:
+            size, = struct.unpack('>I', bv[i:i+4]); i += 4
+        end = i + size
+        if type_id == 0:
+            return None, end
+        elif type_id in (1, 2):
+            signed = (type_id == 2)
+            val = int.from_bytes(bv[i:end], 'big', signed=signed)
+            return val, end
+        elif type_id == 3:
+            if size == 2:
+                return ('uuid16',  struct.unpack('>H',  bv[i:i+2])[0]), end
+            elif size == 4:
+                return ('uuid32',  struct.unpack('>I',  bv[i:i+4])[0]), end
+            elif size == 16:
+                return ('uuid128', bv[i:i+16].hex()), end
+        elif type_id in (4, 8):
+            return bv[i:end].decode('utf-8', errors='replace'), end
+        elif type_id == 5:
+            return bool(bv[i]), end
+        elif type_id in (6, 7):
+            items, j = [], i
+            while j < end:
+                v, j = _parse_sdp_elem_val(bv, j)
+                items.append(v)
+            return items, end
+    except Exception:
+        pass
+    return None, i + size if 'size' in dir() else (None, i)
+
+
+def _sdp_uuid_label(uuid_tup):
+    """Return a human-readable label for a UUID tuple from _parse_sdp_elem_val."""
+    if not isinstance(uuid_tup, tuple):
+        return str(uuid_tup)
+    kind, val = uuid_tup
+    if kind == 'uuid16':
+        ustr = f"{val:04x}"
+        if val in TME.TME_glob.SDP_protocol_identifiers:
+            return f"{TME.TME_glob.SDP_protocol_identifiers[val]} (0x{ustr})"
+        if val in TME.TME_glob.uuid16_service_names:
+            return f"{TME.TME_glob.uuid16_service_names[val]} (0x{ustr})"
+        name = match_known_GATT_UUID_or_custom_UUID(ustr)
+        if name and name != ustr:
+            return f"{name} (0x{ustr})"
+        return f"0x{ustr}"
+    elif kind == 'uuid32':
+        return f"0x{val:08x}"
+    elif kind == 'uuid128':
+        dashed = add_dashes_to_UUID128(val)
+        name = match_known_GATT_UUID_or_custom_UUID(dashed)
+        if name and name != dashed:
+            return f"{name} ({dashed})"
+        return dashed
+    return str(uuid_tup)
+
+
+def _parse_sdp_record_dict(flat_list):
+    """Convert a flat [attr_id, value, attr_id, value, ...] list into {attr_id: value}."""
+    attrs = {}
+    i = 0
+    while i + 1 < len(flat_list):
+        key = flat_list[i]
+        if isinstance(key, int):
+            attrs[key] = flat_list[i + 1]
+        i += 2
+    return attrs
+
+
+def _parse_sdp_all_records(buf):
+    """Parse a reassembled AttributeLists buffer into a list of record attribute dicts.
+
+    buf starts at the outer sequence element (type byte included).
+    """
+    records = []
+    i = 0
+    while i < len(buf):
+        outer_val, i = _parse_sdp_elem_val(buf, i)
+        if isinstance(outer_val, list):
+            for inner in outer_val:
+                if isinstance(inner, list):
+                    records.append(_parse_sdp_record_dict(inner))
+    return records
+
+
+def _fmt_sdp_version(v):
+    return f"v{(v >> 8) & 0xFF}.{v & 0xFF}"
+
+
+def _fmt_protocol_stack(pdl_val):
+    """Format a ProtocolDescriptorList value as 'L2CAP → RFCOMM (ch 2)'."""
+    if not isinstance(pdl_val, list):
+        return ""
+    layers = []
+    for proto_seq in pdl_val:
+        if not isinstance(proto_seq, list) or not proto_seq:
+            continue
+        proto_uuid = proto_seq[0]
+        if not isinstance(proto_uuid, tuple):
+            continue
+        kind, val = proto_uuid
+        if kind == 'uuid16':
+            ustr = f"{val:04x}"
+            name = TME.TME_glob.SDP_protocol_identifiers.get(val, f"0x{ustr}")
+            params = proto_seq[1:]
+            if params and isinstance(params[0], int):
+                p = params[0]
+                if val == 0x0003:    # RFCOMM — parameter is channel
+                    name = f"{name} (ch {p})"
+                elif val == 0x0100:  # L2CAP — parameter is PSM
+                    name = f"{name} (PSM 0x{p:04x})"
+                else:
+                    name = f"{name} (0x{p:x})"
+        else:
+            name = _sdp_uuid_label(proto_uuid)
+        layers.append(name)
+    return " → ".join(layers)
+
+
+def _terse_print_sdp_records(records):
+    """Print a compact, human-readable summary of SDP service records."""
+    if not records:
+        return
+    qprint(f"{i1}SDP Services:")
+    for rec in records:
+        handle   = rec.get(0x0000)
+        name     = rec.get(0x0100)   # ServiceName (default language base offset)
+        desc     = rec.get(0x0101)   # ServiceDescription
+        classes  = rec.get(0x0001)   # ServiceClassIDList
+        pdl      = rec.get(0x0004)   # ProtocolDescriptorList
+        apdl     = rec.get(0x000D)   # AdditionalProtocolDescriptorLists
+        profiles = rec.get(0x0009)   # BluetoothProfileDescriptorList
+
+        handle_str = f"0x{handle:08x}" if isinstance(handle, int) else "?"
+        name_str   = f' "{name}"'     if isinstance(name, str)    else ""
+        qprint(f"{i2}Handle {handle_str}:{name_str}")
+
+        if isinstance(classes, list):
+            parts = [_sdp_uuid_label(u) for u in classes if isinstance(u, tuple)]
+            if parts:
+                qprint(f"{i3}Classes:  {', '.join(parts)}")
+
+        if isinstance(pdl, list):
+            ps = _fmt_protocol_stack(pdl)
+            if ps:
+                qprint(f"{i3}Protocol: {ps}")
+
+        if isinstance(apdl, list):
+            for extra in apdl:
+                if isinstance(extra, list):
+                    ps = _fmt_protocol_stack(extra)
+                    if ps:
+                        qprint(f"{i3}Alt Protocol: {ps}")
+
+        if isinstance(profiles, list):
+            parts = []
+            for p in profiles:
+                if isinstance(p, list) and len(p) >= 2:
+                    uuid_val, ver = p[0], p[1]
+                    if isinstance(uuid_val, tuple) and isinstance(ver, int):
+                        parts.append(f"{_sdp_uuid_label(uuid_val)} {_fmt_sdp_version(ver)}")
+            if parts:
+                qprint(f"{i3}Profile:  {', '.join(parts)}")
+
+        if isinstance(desc, str):
+            qprint(f"{i3}Desc:     {desc}")
+
+
 def defrag_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
 
     raw_byte_len = len(byte_values)
@@ -280,6 +472,9 @@ def print_SDP_info(bdaddr):
         vprint(f"{i1}No SDP data found.")
         return
 
+    # Records collected for the terse view (populated from pdu_id=5 and pdu_id=7).
+    terse_records = []
+
     for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:
         raw_data_hex_str = bytes_to_hex_str(byte_values)
         # First export BTIDES
@@ -296,6 +491,15 @@ def print_SDP_info(bdaddr):
         elif(pdu_id == type_SDP_SERVICE_ATTR_RSP):
             data = ff_SDP_Common(type_SDP_SERVICE_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+            # Collect one service record for the terse view
+            try:
+                cnt = struct.unpack('>H', byte_values[:2])[0]
+                attr_list_bytes = byte_values[2:2+cnt]
+                inner_val, _ = _parse_sdp_elem_val(attr_list_bytes, 0)
+                if isinstance(inner_val, list):
+                    terse_records.append(_parse_sdp_record_dict(inner_val))
+            except Exception:
+                pass
         elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
             data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
             BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
@@ -353,15 +557,16 @@ def print_SDP_info(bdaddr):
         if(ContinuationState):
             continue
         else:
-            # DELETEME: Don't export the reassembled buffer, just keep the fragments
-            # # Export first
-            # raw_data_hex_str = bytes_to_hex_str(reassembly_buffer)
-            # data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            # BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            # Then parse
-            # print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, reassembly_buffer)
-            i = 0
-            while (i < len(reassembly_buffer)):
-                (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{i2}", reassembly_buffer, i)
+            if TME.TME_glob.verbose_print:
+                # Verbose form: raw data-element dump (current behaviour)
+                i = 0
+                while (i < len(reassembly_buffer)):
+                    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{i2}", reassembly_buffer, i)
+            else:
+                # Terse form: collect structured records for display below
+                terse_records.extend(_parse_sdp_all_records(reassembly_buffer))
+
+    if not TME.TME_glob.verbose_print:
+        _terse_print_sdp_records(terse_records)
 
     qprint("")
