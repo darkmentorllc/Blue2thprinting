@@ -30,6 +30,14 @@ ChipMaker_names_and_BT_CIDs = {'^Actions': [0x03E0], 'Airoha Technology Corp': [
 
 # Returns a string to be printed by the caller
 def lookup_metadata_by_nameprint(bdaddr, bdaddr_random, metadata_type):
+    def print_section_header_if_needed():
+        if metadata_type == 'NamePrint_UniqueID':
+            if not TME.TME_glob.g_printed_unique_id_header:
+                qprint(f"{i2}Unique ID:")
+                TME.TME_glob.g_printed_unique_id_header = True
+        else:
+            print_ChipPrint_header_if_needed()
+
     # First see if we have a name for this device
     we_have_a_name = False
 
@@ -109,25 +117,25 @@ def lookup_metadata_by_nameprint(bdaddr, bdaddr_random, metadata_type):
                     for (name_hex_str,) in eir_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            print_ChipPrint_header_if_needed()
+                            print_section_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:EIR_bdaddr_to_name)" if TME.TME_glob.verbose_print else ""}"
                 if(len(hci_result) > 0):
                     for (name_hex_str,) in hci_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            print_ChipPrint_header_if_needed()
+                            print_section_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:HCI_bdaddr_to_name)" if TME.TME_glob.verbose_print else ""}"
                 if(len(le_result) > 0):
                     for name_hex_str, le_evt_type in le_result:
                         name = get_utf8_string_from_hex_string(name_hex_str)
                         if re.search(regex_pattern, name):
-                            print_ChipPrint_header_if_needed()
+                            print_section_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern} ({"DB:LE_bdaddr_to_name, " if TME.TME_glob.verbose_print else ""}le_evt_type = {get_le_event_type_string(le_evt_type)})"
                 if(len(chars_result) > 0):
                     for (byte_values,) in chars_result:
                         name = byte_values.decode('utf-8', 'ignore',)
                         if re.search(regex_pattern, name):
-                            print_ChipPrint_header_if_needed()
+                            print_section_header_if_needed()
                             return f"{i2}{metadata[metadata_type]} -> From NamePrint match on {regex_pattern}{" (DB:GATT_characteristics & DB:GATT_characteristics_values)" if TME.TME_glob.verbose_print else ""}"
                 if(ms_msd_name_present):
                     for (le_evt_type, manufacturer_specific_data) in ms_msd_result:
