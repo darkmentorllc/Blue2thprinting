@@ -6,7 +6,9 @@
 
 # OS Setup & Configuration
 
-## ***All code assumes that you've checked out this repository to your home directory as `~/Blue2thprinting`.***
+## Repository location
+
+You may clone this repository to any path you like. The rest of the documentation uses `~/Blue2thprinting` for consistency, but that path is no longer required as it was in previous versions.
 
 ## Run the setup helper script
 
