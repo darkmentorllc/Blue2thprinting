@@ -53,6 +53,8 @@
 "LifeScan Inc. OneTouch glucose test meter (https://www.onetouch.com/products/glucose-meters/onetouch-verio-sync)","^OneTouch [A-Z0-9]{4}$"
 "MagTek eDynamo credit card reader (https://www.magtek.com/product/edynamo)","^eDynamo-B[A-F0-9]{6}$"
 "Meshtastic LoRa node (BLE is a control interface, https://web.archive.org/web/20250812220907/https://meshtastic.org/docs/development/device/client-api/)","Meshtastic_.*"
+"Microsoft Windows-based desktop computer, default hostname name assigned by OS","^DESKTOP-[A-Z0-9]{8}$"
+"Microsoft Windows-based laptop computer, default hostname name assigned by OS","^LAPTOP-[A-Z0-9]{8}$"
 "Nest camera (model unknown) Note: this NamePrint is imperfect, and will have FPs. To remove FPs, it should check if there is a UUID16 == 0xFEAF, which is a Nest ID)","^N[A-Z0-F]{4}$"
 "Nest camera (model unknown)","^NestMini[0-9]{4}$"
 "OOLER bed-cooling system (https://sleep.me/product/ooler-sleep-system)","^OOLER-[0-9]{10,11}$"
