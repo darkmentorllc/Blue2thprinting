@@ -62,8 +62,14 @@ def print_GPS_entries(indent, results, bdaddr):
         qprint(f"{indent}Latitude, Longitude: {lat}, {lon}")
         qprint(f"{indent}https://www.google.com/maps/place/{lat},{lon}")
         # Export as BTIDES
-        if(time_type == 1):
+        if time_type == 0:
+            time_dict = {"unix_time": time}
+        elif time_type == 1:
             time_dict = {"unix_time_milli": time}
+        elif time_type == 2:
+            time_dict = {"time_str1": time}
+        else:
+            continue
         data = {"lat": lat, "lon": lon, "time": time_dict, "rssi": rssi}
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
