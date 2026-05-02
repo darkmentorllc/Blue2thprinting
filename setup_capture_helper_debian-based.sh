@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf
+    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libjson-c-dev zstd usbutils
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -159,6 +159,93 @@ compile_toolz() {
     else
         echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
     fi
+
+    print_banner "Compiling Xeno_VSC_send_LMP_hardcoded (BlueZ Realtek-VSC LMP fingerprinter)."
+    cd "$BASE_PATH/bluez-5.66"
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ] || \
+       [ "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded.c" -nt \
+         "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ]; then
+        gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded tools/Xeno_VSC_send_LMP_hardcoded.c \
+            -Ilib -Isrc -Isrc/shared -I. \
+            -Llib/.libs -lbluetooth-internal \
+            -Lsrc/.libs -lshared-glib \
+            $(pkg-config --cflags --libs glib-2.0 json-c) \
+            -lpthread -DVERSION=\"5.66\"
+        if [ $? != 0 ]; then
+            echo "  Compilation of Xeno_VSC_send_LMP_hardcoded failed. Resolve the error above and try again."
+            exit
+        fi
+        echo "  Built tools/Xeno_VSC_send_LMP_hardcoded."
+    else
+        echo "  Xeno_VSC_send_LMP_hardcoded is up to date."
+    fi
+}
+
+install_realtek_firmware() {
+    print_banner "Installing custom Realtek (DarkFirmware_real_i) firmware if a supported dongle is attached."
+    local SENTINEL="/lib/firmware/rtl_bt/.darkfirmware_real_i_installed"
+    if [ -f "$SENTINEL" ] && [ "$1" != "force" ]; then
+        echo "  Sentinel $SENTINEL present; skipping. Pass --force-reinstall-rtl-firmware to bypass."
+        return 0
+    fi
+
+    # First-pass exact VID:PID match — list ported from
+    # RTL8761B_usbbluetooth_Patch_Writer.py:59-71, plus 0bda:b771 (a common
+    # RTL8761BU variant that the Patch_Writer doesn't enumerate but which
+    # uses the same rtl8761bu_fw.bin file the kernel loads).
+    local RTL_VIDPIDS="0bda:a728 0bda:a729 0bda:8771 0bda:877b 0bda:b771 2550:8761 2357:0604 2c0a:8761"
+    local found=""
+    for vp in $RTL_VIDPIDS; do
+        if lsusb 2>/dev/null | grep -qi "$vp"; then
+            found="$vp"
+            break
+        fi
+    done
+    # Permissive fallback: any Realtek (VID 0bda) Bluetooth device.
+    # install_DarkFirmware_real.sh writes to /lib/firmware/rtl_bt/rtl8761bu_fw.bin
+    # which the kernel will only load for compatible chipsets, so this is safe.
+    if [ -z "$found" ]; then
+        found=$(lsusb 2>/dev/null | grep -i "0bda:" | grep -i -E "(bluetooth|radio)" | \
+                head -n 1 | awk '{print $6}')
+    fi
+    if [ -z "$found" ]; then
+        echo "  No supported Realtek Bluetooth dongle detected via lsusb. Skipping firmware install."
+        echo "  Known supported VID:PIDs: $RTL_VIDPIDS"
+        return 0
+    fi
+    echo "  Realtek dongle detected: $found"
+
+    local FW_INSTALLER="$BASE_PATH/DarkFirmware_real_i/03_custom_patch_standalone_file_for_linux/install_DarkFirmware_real.sh"
+    if [ ! -x "$FW_INSTALLER" ]; then
+        echo "  Installer not found or not executable: $FW_INSTALLER"
+        echo "  Did 'git submodule update --init --recursive' run in install_prerequs?"
+        return 1
+    fi
+
+    pushd "$BASE_PATH/DarkFirmware_real_i/03_custom_patch_standalone_file_for_linux" >/dev/null
+    sudo ./install_DarkFirmware_real.sh
+    local rc=$?
+    popd >/dev/null
+    if [ "$rc" != 0 ]; then
+        echo "  install_DarkFirmware_real.sh exited with $rc; aborting Realtek install."
+        return $rc
+    fi
+
+    if command -v usbreset >/dev/null 2>&1; then
+        sudo usbreset "$found" || true
+    else
+        echo "  'usbreset' not available; please unplug and replug the Realtek dongle to load the new firmware."
+    fi
+
+    sudo touch "$SENTINEL"
+    echo "  Wrote sentinel $SENTINEL."
+
+    # Soft sanity check: the upstream installer always backs up the stock
+    # firmware as <name>.orig. Warn (don't fail) if no .orig is present.
+    if ! ls /lib/firmware/rtl_bt/rtl8761bu_fw.bin*.orig >/dev/null 2>&1; then
+        echo "  Warning: no rtl8761bu_fw.bin*.orig backup found in /lib/firmware/rtl_bt/."
+        echo "  This may indicate the installer ran a second time after manual edits."
+    fi
 }
 
 flash_sniffle(){
@@ -216,8 +303,21 @@ for arg in "$@"; do
             cd $BASE_PATH
             exit 0
             ;;
+        --install-rtl-firmware)
+            check_env
+            install_realtek_firmware
+            cd $BASE_PATH
+            exit 0
+            ;;
+        --force-reinstall-rtl-firmware)
+            check_env
+            install_realtek_firmware force
+            cd $BASE_PATH
+            exit 0
+            ;;
         --help)
-            echo "Usage: $0 [--flash-sniffle] or $0 to execute everything by default"
+            echo "Usage: $0 [--flash-sniffle | --install-rtl-firmware | --force-reinstall-rtl-firmware]"
+            echo "       $0 (no args) runs the full setup."
             exit 0
             ;;
     esac
@@ -230,6 +330,7 @@ do_all(){
     configure_scripts
     compile_toolz
     flash_sniffle
+    install_realtek_firmware
     create_aliases
     cd $BASE_PATH
     print_banner "Everything seems to have completed successfully! \o/"

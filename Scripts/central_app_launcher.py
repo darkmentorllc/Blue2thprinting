@@ -30,7 +30,8 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-braktooth_enabled = False # This is toggled off by default because unless you have Braktooth set up, turning this on will cause an error and reboot loop. Only turn on once Braktooth is configured.
+braktooth_enabled = False # When True, runs LMP2thprint via the BlueZ Realtek-VSC tool (Xeno_VSC_send_LMP_hardcoded). The variable name is preserved for compatibility with existing toggles, but the underlying transport is now BlueZ + Realtek custom firmware (DarkFirmware_real_i), not the ESP32 Braktooth board.
+SUPPORT_BRAKTOOTH = False # Set to True only on hosts that still need the legacy ESP32 Braktooth path (requires the FTDI dual-RS232 board). When False, lmp2thprint runs without the FTDI prereq.
 better_getter_enabled = True
 sdptool_enabled = True
 
@@ -66,8 +67,14 @@ BG_output_pcap_path = str(REPO_ROOT / "Logs/BetterGetter")
 sdptool_exec_path = str(REPO_ROOT / "bluez-5.66/tools/sdptool")
 sdptool_log_path = str(REPO_ROOT / "Logs/sdptool")
 
-braktooth = str(REPO_ROOT / "braktooth_minimized/bin/bt_exploiter")
-brak_cwd = str(REPO_ROOT / "braktooth_minimized") + "/"
+if SUPPORT_BRAKTOOTH:
+    braktooth = str(REPO_ROOT / "braktooth_minimized/bin/bt_exploiter")
+    brak_cwd = str(REPO_ROOT / "braktooth_minimized") + "/"
+else:
+    # New transport: BlueZ + Realtek custom firmware via Xeno_VSC.
+    braktooth = str(REPO_ROOT / "bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded")
+    brak_cwd = str(REPO_ROOT) + "/"
+btides_lmp_dir = str(REPO_ROOT / "Logs/DarkFirmwareLMPLog")
 
 btc2thprint_log_path = str(REPO_ROOT / "Logs/BTC_2THPRINT.log")
 bgprint_log_path = str(REPO_ROOT / "Logs/GATTprint.log")
@@ -104,7 +111,7 @@ base_dir = '/dev/serial/by-id'
 # Note: this would need to be changed to use other TI dev boards instead. For now I won't support that for simplicity
 pattern = 'usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus*'
 
-if(Sniffle_thread_enabled or better_getter_enabled or braktooth_enabled):
+if(Sniffle_thread_enabled or better_getter_enabled or (braktooth_enabled and SUPPORT_BRAKTOOTH)):
     # Check if the base directory exists and is accessible
     # Wait up to 360 seconds after this thread starts before giving up on getting Sniffle running (this is because on Raspbian Bookworm the serial devices come up way late
     retry_count = 0
@@ -138,8 +145,8 @@ if(Sniffle_thread_enabled or better_getter_enabled):
         print(f"No Sniffle adapters found, despite code having Sniffle_thread_enabled = True. Setting to False")
         Sniffle_thread_enabled = False
 
-if(braktooth_enabled):
-    # Now do the same to find the Braktooth serial device
+if(braktooth_enabled and SUPPORT_BRAKTOOTH):
+    # Legacy: find the FTDI-based ESP32 Braktooth board.
     braktooth_pattern = 'usb-FTDI_Dual_RS232-HS-if01-port0'
     braktooth_full_pattern = os.path.join(base_dir, braktooth_pattern)
     braktooth_matching_files = glob.glob(braktooth_full_pattern)
@@ -149,6 +156,10 @@ if(braktooth_enabled):
     else:
         print(f"No Braktooth adapters found, despite code having braktooth_enabled = True. Setting to False")
         braktooth_enabled = False
+else:
+    # New BlueZ-based path: no FTDI board needed. The new tool ignores --host-port,
+    # but we keep an empty value so the existing cmd construction stays unchanged.
+    braktooth_serial_port_absolute_path = ""
 
 ##################################################
 # Log print helpers
@@ -605,7 +616,13 @@ def btc_thread_function():
 
                 if(not skip_sub_process and bdaddr in btc_bdaddrs): # Double check that bdaddr hasn't been deleted out of btc_bdaddrs by a [DEL]
                     external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: LOG ENTRY FOR BDADDR: {bdaddr} {datetime.datetime.now()}")
-                    btc_2thprint_cmd = [braktooth, "--exploit=LMP2thprint", f"--target={bdaddr}", f"--host-port={braktooth_serial_port_absolute_path}"]
+                    if SUPPORT_BRAKTOOTH:
+                        btc_2thprint_cmd = [braktooth, "--exploit=LMP2thprint", f"--target={bdaddr}", f"--host-port={braktooth_serial_port_absolute_path}"]
+                    else:
+                        # New BlueZ Realtek-VSC tool. The launcher already runs as root
+                        # (configured by setup_capture_helper_debian-based.sh's @reboot
+                        # cron entry under root), so we don't prefix with sudo.
+                        btc_2thprint_cmd = [braktooth, f"--target={bdaddr}"]
                     try:
                         btc_2thprint_process = launch_application(btc_2thprint_cmd, brak_cwd) # Braktooth must be launched from its target dir, otherwise it errors out
                     except BlockingIOError as e:
