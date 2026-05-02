@@ -30,7 +30,7 @@ BLE_thread_enabled = True
 BTC_thread_enabled = True
 Sniffle_thread_enabled = True
 
-braktooth_enabled = False # When True, runs LMP2thprint via the BlueZ Realtek-VSC tool (Xeno_VSC_send_LMP_hardcoded). The variable name is preserved for compatibility with existing toggles, but the underlying transport is now BlueZ + Realtek custom firmware (DarkFirmware_real_i), not the ESP32 Braktooth board.
+braktooth_enabled = False # When True, runs LMP2thprint via the BlueZ Realtek-VSC tool (DarkFirmware_VSC_LMP). The variable name is preserved for compatibility with existing toggles, but the underlying transport is now BlueZ + Realtek custom firmware (DarkFirmware_real_i), not the ESP32 Braktooth board.
 SUPPORT_BRAKTOOTH = False # Set to True only on hosts that still need the legacy ESP32 Braktooth path (requires the FTDI dual-RS232 board). When False, lmp2thprint runs without the FTDI prereq.
 better_getter_enabled = True
 sdptool_enabled = True
@@ -72,7 +72,7 @@ if SUPPORT_BRAKTOOTH:
     brak_cwd = str(REPO_ROOT / "braktooth_minimized") + "/"
 else:
     # New transport: BlueZ + Realtek custom firmware via Xeno_VSC.
-    braktooth = str(REPO_ROOT / "bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded")
+    braktooth = str(REPO_ROOT / "bluez-5.66/tools/DarkFirmware_VSC_LMP")
     brak_cwd = str(REPO_ROOT) + "/"
 btides_lmp_dir = str(REPO_ROOT / "Logs/DarkFirmwareLMPLog")
 

@@ -170,27 +170,27 @@ compile_toolz() {
         echo "  sdptool and bluetoothctl already exist, skipping recompilation."
     fi
 
-    print_banner "Compiling Xeno_VSC_send_LMP_hardcoded (BlueZ Realtek-VSC LMP fingerprinter)."
+    print_banner "Compiling DarkFirmware_VSC_LMP (BlueZ Realtek-VSC LMP fingerprinter)."
     # Standalone compile against the system libbluetooth + json-c. The tool
     # uses only public BlueZ HCI APIs (hci_open_dev / hci_send_cmd /
     # hci_create_connection / hci_read_remote_version / etc) which all live
     # in libbluetooth.so from the libbluetooth-dev package, so it does not
     # need the BlueZ source tree. Compile is ~1s on a Pi.
     cd "$BASE_PATH/bluez-5.66"
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ] || \
-       [ "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded.c" -nt \
-         "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ]; then
-        gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded \
-            tools/Xeno_VSC_send_LMP_hardcoded.c \
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP" ] || \
+       [ "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP.c" -nt \
+         "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP" ]; then
+        gcc -O2 -Wall -o tools/DarkFirmware_VSC_LMP \
+            tools/DarkFirmware_VSC_LMP.c \
             $(pkg-config --cflags --libs json-c) \
             -lbluetooth -lpthread
         if [ $? != 0 ]; then
-            echo "  Compilation of Xeno_VSC_send_LMP_hardcoded failed. Resolve the error above and try again."
+            echo "  Compilation of DarkFirmware_VSC_LMP failed. Resolve the error above and try again."
             exit
         fi
-        echo "  Built tools/Xeno_VSC_send_LMP_hardcoded."
+        echo "  Built tools/DarkFirmware_VSC_LMP."
     else
-        echo "  Xeno_VSC_send_LMP_hardcoded is up to date."
+        echo "  DarkFirmware_VSC_LMP is up to date."
     fi
 }
 

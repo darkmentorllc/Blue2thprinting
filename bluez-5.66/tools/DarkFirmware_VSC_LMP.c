@@ -1,8 +1,8 @@
 // Code by Xeno Kovah, Copyright Dark Mentor LLC (c) 2025-2026
 //
 // Compilation command (executed from <repo>/bluez-5.66/):
-//   gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded
-//       tools/Xeno_VSC_send_LMP_hardcoded.c
+//   gcc -O2 -Wall -o tools/DarkFirmware_VSC_LMP
+//       tools/DarkFirmware_VSC_LMP.c
 //       $(pkg-config --cflags --libs json-c) -lbluetooth -lpthread
 //
 // All BlueZ APIs we use (hci_open_dev, hci_send_cmd, hci_create_connection,
@@ -295,8 +295,13 @@ pthread_mutex_t g_lmp_opcodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t g_lmp_ext_opcodes_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t g_btides_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// CLI / runtime config
-static char g_btides_out_dir[1024] = {0};
+// CLI / runtime config.
+// BTIDES_OUT_DIR_SIZE is sized so init_btides_out_dir() can hold a full
+// PATH_MAX-bounded /proc/self/exe path plus the appended "/Logs/DarkFirmwareLMPLog"
+// suffix without gcc's -Wformat-truncation warning. PATH_MAX is 4096 on Linux.
+#define BTIDES_OUT_DIR_SIZE  (PATH_MAX + 64)
+#define BTIDES_PATH_SIZE     (BTIDES_OUT_DIR_SIZE + 64)
+static char g_btides_out_dir[BTIDES_OUT_DIR_SIZE] = {0};
 static int  g_max_feature_pages_cli = 10;
 static int  g_timeout_sec = 10;
 static unsigned int g_experimental = 0;
@@ -313,7 +318,7 @@ static int64_t g_run_unix_time = 0; // captured once at startup, stamped on ever
 static struct json_object *g_btides_root = NULL;     // top-level array
 static struct json_object *g_single_bdaddr = NULL;   // SingleBDADDR object
 static struct json_object *g_lmp_array = NULL;       // LMPArray array
-static char g_btides_path[1280] = {0};
+static char g_btides_path[BTIDES_PATH_SIZE] = {0};
 static int  g_btides_written = 0;
 
 // Resources we need to clean up on exit.
@@ -356,7 +361,7 @@ static void init_btides_out_dir(void) {
 
 // mkdir -p emulator
 static int mkdir_p(const char *path) {
-    char buf[1280];
+    char buf[BTIDES_OUT_DIR_SIZE];
     snprintf(buf, sizeof(buf), "%s", path);
     size_t len = strlen(buf);
     if (len == 0) return -1;
