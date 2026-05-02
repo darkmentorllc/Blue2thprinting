@@ -52,7 +52,7 @@ cd ~/Blue2thprinting/Analysis
 
 ## Importing SDP data from sdptool XML files
 
-The `central_all_launcher2.py` collection script saves sdptool output as per-device XML files named `{BDADDR}_sdp.xml` under `Logs/sdptool/`. Use `SDP_to_BTIDES.py` to import these into the database.
+The `central_all_launcher.py` collection script saves `sdptool` output as per-device XML files named `{BDADDR}_sdp.xml` under `Logs/sdptool/`. Use `SDP_to_BTIDES.py` to import these into the database.
 
 **Import a single device's SDP file:**
 
