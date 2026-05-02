@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 from TME.TME_helpers import *
@@ -55,7 +55,6 @@ def print_possible_unique_ID_warning(indent, name, data_source):
 
 
 def name_contains_bdaddr(indent, name, bdaddr, name_source):
-    print_unique_ID_header_if_needed()
     # Check if the name contains the full 6-byte BDADDR in one of 4 formats:
     # big-endian hex, non-colon-deliminated (e.g. Triones:10020000004F, Keco-74F07DD08DE9:100, Travler 00171AB3CCF5)
     # big-endian hex, colon-deliminated (e.g. RWLS-00:07:80:C2:65:B9)
@@ -79,6 +78,7 @@ def name_contains_bdaddr(indent, name, bdaddr, name_source):
     # Check if any pattern is in the name (case insensitive)
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
+            print_unique_ID_header_if_needed()
             qprint(f"{indent}* Name '{name}' from {name_source} matches 6-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
             return True
 
@@ -106,6 +106,7 @@ def name_contains_bdaddr(indent, name, bdaddr, name_source):
     # Check if any 3-byte pattern matches
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
+            print_unique_ID_header_if_needed()
             qprint(f"{indent}* Name '{name}' from {name_source} matches 3-byte regex pattern {pattern} which is derived from the BDADDR, and is therefore unique.")
             return True
 
@@ -133,6 +134,7 @@ def name_contains_bdaddr(indent, name, bdaddr, name_source):
     # Check if any 2-byte pattern matches
     for pattern in patterns:
         if re.search(pattern, name, re.IGNORECASE):
+            print_unique_ID_header_if_needed()
             qprint(f"{indent}* Name '{name}' from {name_source} matches 2-byte pattern {pattern} which is derived from the BDADDR, and is therefore highly likely to be unique.")
             return True
 
@@ -147,6 +149,7 @@ def check_name_for_most_specific_match(indent, name_string, bdaddr, name_source)
         return True
     pattern = name_matches_presumed_unique_nameprint(name_string)
     if(pattern != None):
+        print_unique_ID_header_if_needed()
         qprint(f"{indent}* Name '{name_string}' from {name_source} matches regex pattern {pattern} which is believed to represent a unique ID.")
         TME.TME_glob.privacy_report_no_results_found = False
         return True
@@ -210,9 +213,24 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
             # Remove dashes and make lowercase
 #            UUID_db_ = UUID_db.replace('-','').lower()
             if(check_if_UUIDs_match(UUID_db, "2a25")):
-                print_unique_ID_header_if_needed()
-                qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
-                TME.TME_glob.privacy_report_no_results_found = False
+                # Suppress the warning if every read value for 0x2a25 is the literal
+                # placeholder "Serial Number" (observed on e.g. Lime scooters). See issue #18.
+                if(bdaddr_random is not None):
+                    sn_vals = (bdaddr_random, bdaddr_random, bdaddr)
+                    sn_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a25' AND c.bdaddr_random = %s AND cv.bdaddr_random = %s AND cv.bdaddr = %s;"
+                else:
+                    sn_vals = (bdaddr,)
+                    sn_query = "SELECT cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a25' AND cv.bdaddr = %s;"
+                sn_rows = execute_query(sn_query, sn_vals)
+                all_placeholder = (
+                    len(sn_rows) > 0
+                    and all(bv.decode('utf-8', 'ignore').strip().lower() == "serial number"
+                            for (bv,) in sn_rows)
+                )
+                if(not all_placeholder):
+                    print_unique_ID_header_if_needed()
+                    qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2a25 (\"Serial Number\"). Because serial numbers are by definition meant to be device-unique, and not change over time, this could be used to track the device.")
+                    TME.TME_glob.privacy_report_no_results_found = False
             if(check_if_UUIDs_match(UUID_db, "2bff")):
                 print_unique_ID_header_if_needed()
                 qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
@@ -227,7 +245,7 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
     NamePrint_match = False
     # This is a search for names that are known to be unique, as captured in the metadata v2 with a NamePrint_UniqueID tag in a record with a 2thprint_NamePrint regex
     str = lookup_metadata_by_nameprint(bdaddr, bdaddr_random, 'NamePrint_UniqueID')
-    if(str[2:6] == "True"):
+    if(str[4:8] == "True"):
         print_unique_ID_header_if_needed()
         qprint(f"{i3}* The name of this device is one which is known to serve as an unchanging, device-unique, ID. Therefore the name can be used to track the device.")
         TME.TME_glob.privacy_report_no_results_found = False

@@ -87,4 +87,4 @@ The file bt_map.html can be opened in a browser to see the GPS locations of name
 
 *Note:* The accepted name format is just the filename, not the full path. You must remove the filetype suffix like ".txt" or ".bin".
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

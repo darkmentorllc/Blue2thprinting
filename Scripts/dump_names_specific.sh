@@ -7,7 +7,8 @@
 
 FILES="$@"
 
-LOGPATH='/home/user/Blue2thprinting/Logs/btmon'
+REPO_ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+LOGPATH="$REPO_ROOT/Logs/btmon"
 
 rm ~/names.txt
 

@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # This file is to export data that conforms to the
@@ -73,19 +73,34 @@ def write_BTIDES(out_filename):
         #json.dump(TME.TME_glob.BTIDES_JSON, fp=f, indent=2) # For pretty-printing to make output more readable
 
 
-# Find SingleBDADDR type entries which match the given bdaddr and random
+# Find SingleBDADDR type entries which match the given bdaddr and random.
+# O(1) dict lookup against BTIDES_JSON_by_bdaddr_key. The index is maintained
+# by register_SingleBDADDR_in_index (called from every SingleBDADDR append
+# site) and by rebuild_SingleBDADDR_index (called after any bulk mutation of
+# BTIDES_JSON such as json.load or filter removals).
 def lookup_SingleBDADDR_base_entry(bdaddr, random):
-    bdaddr = bdaddr.lower()
-    ###print("lookup_base_entry: ")
-    for item in TME.TME_glob.BTIDES_JSON:
-        ###print(item)
-        ###print(f"lookup_base_entry: bdaddr = {bdaddr}")
-        ###print(f"lookup_base_entry: random = {random}")
-        if("bdaddr" in item.keys() and item["bdaddr"].lower() == bdaddr.lower() and
-           "bdaddr_rand" in item.keys() and item["bdaddr_rand"] == random):
-            return item
+    return TME.TME_glob.BTIDES_JSON_by_bdaddr_key.get((bdaddr.lower(), random))
 
-    return None
+
+# Call after appending a SingleBDADDR base entry to BTIDES_JSON, to keep the
+# lookup index in sync. Safe to call with any dict that has bdaddr/bdaddr_rand
+# keys; no-op otherwise.
+def register_SingleBDADDR_in_index(base):
+    bdaddr = base.get("bdaddr")
+    if bdaddr is None:
+        return
+    TME.TME_glob.BTIDES_JSON_by_bdaddr_key[(bdaddr.lower(), base.get("bdaddr_rand"))] = base
+
+
+# Rebuild the SingleBDADDR lookup index from the current BTIDES_JSON list.
+# Call after any bulk mutation that bypasses the insertion helpers (e.g.
+# TME.TME_glob.BTIDES_JSON = json.load(f) in BTIDES_to_SQL.py) or after a
+# bulk removal (filter, slice-replace) if subsequent lookups are expected.
+def rebuild_SingleBDADDR_index():
+    TME.TME_glob.BTIDES_JSON_by_bdaddr_key.clear()
+    for item in TME.TME_glob.BTIDES_JSON:
+        if "bdaddr" in item:
+            register_SingleBDADDR_in_index(item)
 
 
 # Find DualBDADDR type entries which match the given CONNECT_IND
@@ -136,6 +151,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, random,
         base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ]
         TME.TME_glob.BTIDES_JSON.append(base)
+        register_SingleBDADDR_in_index(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_specific_entry.keys()):
@@ -248,6 +264,7 @@ def generic_SingleBDADDR_insertion_into_BTIDES_second_level_array(bdaddr, random
         base = ff_SingleBDADDR_base(bdaddr, random)
         base[target_tier1_array_name] = [ tier1_data ]
         TME.TME_glob.BTIDES_JSON.append(base)
+        register_SingleBDADDR_in_index(base)
         return True
     else:
         if(target_tier1_array_name not in bdaddr_specific_entry.keys()):

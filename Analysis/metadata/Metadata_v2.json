@@ -1,5 +1,5 @@
 {
-	"Created by Xeno Kovah": {"Copyright(c) ©": "Dark Mentor LLC 2023-2024"},
+	"Created by Xeno Kovah": {"Copyright(c) ©": "Dark Mentor LLC 2023-2026"},
 	"Tesla Model 3 or Y": {
 		"comment": "This is close to the maximum data we would like to have about a device. But if new fields are determined later that we'd like to add, they can be added too.",
 		"2thprint_Chip": "TI CC2640",

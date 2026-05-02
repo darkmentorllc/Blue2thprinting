@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Written by Xeno Kovah
-# Copyright (c) 2024-2025 Dark Mentor LLC
+# Copyright(c) © Dark Mentor LLC 2023-2026
 
 # Better_Getter.py
 # Replacement for using gatttool & Sweyntooth in Blue2thprinting

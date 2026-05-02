@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # Activate venv before any other imports
@@ -153,6 +153,7 @@ def main():
 
                         # Reset globals to not accumulate wasted memory
                         TME.TME_glob.BTIDES_JSON = []
+                        TME.TME_glob.BTIDES_JSON_by_bdaddr_key.clear()
                         TME.TME_glob.duplicate_count = 0
                         TME.TME_glob.insert_count = 0
                         g_last_handle_to_bdaddr = {}
@@ -189,6 +190,7 @@ def main():
 
                         # Reset globals to not accumulate wasted memory
                         TME.TME_glob.BTIDES_JSON = []
+                        TME.TME_glob.BTIDES_JSON_by_bdaddr_key.clear()
                         TME.TME_glob.duplicate_count = 0
                         TME.TME_glob.insert_count = 0
                         g_access_address_to_connect_ind_obj = {}

@@ -6,7 +6,9 @@
 
 # OS Setup & Configuration
 
-## ***All code assumes that you've checked out this repository to your home directory as `~/Blue2thprinting`.***
+## Repository location
+
+You may clone this repository to any path you like. The rest of the documentation uses `~/Blue2thprinting` for consistency, but that path is no longer required as it was in previous versions.
 
 ## Run the setup helper script
 
@@ -82,4 +84,4 @@ So currently I primarily get GPS data from WiGLE and import it via `~/Blue2thpri
 
 Therefore I have moved discussion of the linux native GPS setup to a [separate page](./GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page.
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

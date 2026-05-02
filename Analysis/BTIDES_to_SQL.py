@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 # This file is to import data that conforms to the
 # BlueTooth Information Data Exchange Schema (BTIDES!)
@@ -1503,15 +1503,108 @@ def parse_GPSArray(entry):
             execute_insert(insert, values)
 
 
+# Batched counterpart of parse_GPSArray that processes every BTIDES entry's
+# GPSArray in a single pre-fetch + bulk INSERT. Semantics match the per-entry
+# version exactly: preserves the "promote existing rssi=0 to new non-zero
+# rssi" behavior and the "skip rssi=0 when a non-zero row already exists" rule.
+def parse_all_GPSArrays_batched(chunk_size=1000):
+    # Step 1: Collect every valid (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon) op from the JSON.
+    all_ops = []
+    for entry in TME.TME_glob.BTIDES_JSON:
+        if("GPSArray" not in entry or entry.get("GPSArray") is None
+           or entry.get("bdaddr") is None or entry.get("bdaddr_rand") is None):
+            continue
+        bdaddr = entry["bdaddr"]
+        bdaddr_random = entry["bdaddr_rand"]
+        if bdaddr_random not in (0, 1):
+            continue
+        for gps_entry in entry["GPSArray"]:
+            if(gps_entry.get("lat") is None or gps_entry.get("lon") is None
+               or gps_entry.get("time") is None
+               or gps_entry["time"].get("unix_time_milli") is None):
+                continue
+            rssi = gps_entry.get("rssi", 0)
+            all_ops.append((
+                bdaddr, bdaddr_random,
+                gps_entry["time"]["unix_time_milli"],
+                time_types["unix_time_milli"],
+                rssi,
+                gps_entry["lat"], gps_entry["lon"],
+            ))
+    if not all_ops:
+        return
+
+    # Step 2: Bulk-fetch existing rows for the distinct BDADDRs referenced.
+    bdaddrs = list({op[0] for op in all_ops})
+    # key = (bdaddr, bdaddr_random, time, time_type, lat, lon) -> set of rssi values already in DB.
+    existing = {}
+    for i in range(0, len(bdaddrs), chunk_size):
+        chunk = bdaddrs[i:i + chunk_size]
+        ph = ",".join(["%s"] * len(chunk))
+        q = ("SELECT bdaddr, bdaddr_random, time, time_type, rssi, lat, lon "
+             f"FROM bdaddr_to_GPS WHERE bdaddr IN ({ph})")
+        for row in execute_query(q, tuple(chunk)):
+            k = (row[0], row[1], row[2], row[3], row[5], row[6])
+            existing.setdefault(k, set()).add(row[4])
+
+    # Step 3: Decide per op: UPDATE (promote rssi=0 to non-zero) vs INSERT vs skip.
+    updates = []  # (new_rssi, bdaddr, bdaddr_random, time, time_type, lat, lon)
+    inserts = []  # (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon)
+    seen_batch_inserts = set()  # dedup within this run
+    for op in all_ops:
+        bdaddr, bdaddr_random, t, tt, rssi, lat, lon = op
+        key = (bdaddr, bdaddr_random, t, tt, lat, lon)
+        existing_rssis = existing.setdefault(key, set())
+        if 0 in existing_rssis and rssi != 0:
+            # Promote the existing rssi=0 row; update in-memory view so later
+            # ops for the same key see the promoted state.
+            updates.append((rssi, bdaddr, bdaddr_random, t, tt, lat, lon))
+            existing_rssis.discard(0)
+            existing_rssis.add(rssi)
+        elif rssi == 0 and any(r != 0 for r in existing_rssis):
+            # Existing non-zero row already; don't backfill a rssi=0 duplicate.
+            continue
+        else:
+            if rssi in existing_rssis or op in seen_batch_inserts:
+                continue  # exact dup, skip.
+            inserts.append(op)
+            seen_batch_inserts.add(op)
+            existing_rssis.add(rssi)
+
+    # Step 4: Execute the UPDATEs (one per promoted row) and chunked bulk INSERTs.
+    if updates:
+        upd = ("UPDATE bdaddr_to_GPS SET rssi = %s WHERE bdaddr = %s AND "
+               "bdaddr_random = %s AND time = %s AND time_type = %s AND "
+               "lat = %s AND lon = %s")
+        for u in updates:
+            execute_update(upd, u)
+
+    if inserts:
+        placeholder_row = "(%s, %s, %s, %s, %s, %s, %s)"
+        cols = "(bdaddr, bdaddr_random, time, time_type, rssi, lat, lon)"
+        for i in range(0, len(inserts), chunk_size):
+            chunk = inserts[i:i + chunk_size]
+            placeholders = ",".join([placeholder_row] * len(chunk))
+            q = f"INSERT IGNORE INTO bdaddr_to_GPS {cols} VALUES {placeholders}"
+            params = tuple(v for row in chunk for v in row)
+            # Use execute_update: bulk inserts don't need the per-row
+            # duplicate-detection logic that execute_insert does.
+            execute_update(q, params)
+
+
 ###################################
 
 class btides_to_sql_args:
-    def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True):
+    def __init__(self, input=None, skip_invalid=True, verbose_print=False, quiet_print=True, use_test_db=True, skip_schema_validation=False):
         self.input = input
         self.skip_invalid = skip_invalid
         self.verbose_print = verbose_print
         self.quiet_print = quiet_print
         self.use_test_db = use_test_db
+        # Skip per-entry JSON schema validation. Safe when the BTIDES JSON is
+        # known to have just been produced (and thus already validated) by
+        # write_BTIDES — e.g. when called in-process from WIGLE_to_BTIDES.py.
+        self.skip_schema_validation = skip_schema_validation
 
     def set_input(self, input):
         self.input = input
@@ -1536,6 +1629,7 @@ def btides_to_sql(args):
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.use_test_db = args.use_test_db
     skip_invalid = args.skip_invalid
+    skip_schema_validation = getattr(args, 'skip_schema_validation', False)
     global last_printed_percentage
     global BTIDES_JSON
     global g_last_read_req_handle
@@ -1549,6 +1643,7 @@ def btides_to_sql(args):
                 return False
             with open(input_file, 'r') as f:
                 TME.TME_glob.BTIDES_JSON = json.load(f) # We have to just trust that this JSON parser doesn't have any issues...
+                rebuild_SingleBDADDR_index() # Keep the O(1) lookup index in sync with the just-loaded list.
                 #qprint(json.dumps(BTIDES_JSON, indent=2))
 
         # Import all the local BTIDES json schema files, so that we don't hit the website all the time
@@ -1563,27 +1658,33 @@ def btides_to_sql(args):
 
         registry = Registry().with_resources( all_schemas )
 
+        # Build the per-entry validator once and reuse. Re-constructing inside
+        # the loop re-parsed the schema and rebuilt the keyword dispatch table
+        # for every BTIDES entry.
+        entry_validator = Draft202012Validator(
+            {"anyOf": [
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
+                {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
+            ]},
+            registry=registry,
+        )
+
         total = len(TME.TME_glob.BTIDES_JSON)
         count = 0;
         for entry in TME.TME_glob.BTIDES_JSON:
-            # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
-            try:
-                Draft202012Validator(
-                    {"anyOf": [
-                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/SingleBDADDR"},
-                        {"$ref": "https://darkmentor.com/BTIDES_Schema/BTIDES_base.json#/definitions/DualBDADDR"}
-                    ]},
-                    registry=registry,
-                ).validate(instance=entry)
-                #qprint("JSON is valid according to BTIDES Schema")
-            except ValidationError as e:
-                qprint("JSON data is invalid per BTIDES Schema:", e.message)
-                if(skip_invalid):
-                    continue
-                else:
-                    qprint(json.dumps(entry, indent=2))
-                    #return False
-                    exit(-1)
+            if not skip_schema_validation:
+                # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
+                try:
+                    entry_validator.validate(instance=entry)
+                    #qprint("JSON is valid according to BTIDES Schema")
+                except ValidationError as e:
+                    qprint("JSON data is invalid per BTIDES Schema:", e.message)
+                    if(skip_invalid):
+                        continue
+                    else:
+                        qprint(json.dumps(entry, indent=2))
+                        #return False
+                        exit(-1)
 
             parse_AdvChanArray(entry)
 
@@ -1606,10 +1707,16 @@ def btides_to_sql(args):
 
             parse_SDPArray(entry)
 
-            parse_GPSArray(entry)
+            # parse_GPSArray(entry) -- replaced by a single bulk call after the loop.
 
             count += 1
             progress_update(total, count)
+
+        # Batched GPS insertion runs once across the whole BTIDES_JSON,
+        # collapsing ~2-3 MySQL roundtrips per GPS entry down to
+        # O(distinct_bdaddrs / chunk_size) SELECTs + O(total / chunk_size)
+        # INSERTs. Semantics match parse_GPSArray exactly.
+        parse_all_GPSArrays_batched()
 
         qprint(f"New db records inserted: {TME.TME_glob.insert_count}")
         qprint(f"Duplicate db records ignored: {TME.TME_glob.duplicate_count}")

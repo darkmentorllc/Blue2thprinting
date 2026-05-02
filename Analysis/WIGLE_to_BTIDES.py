@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # Activate venv before any other imports
@@ -28,65 +28,128 @@ from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
 from TME.TME_BTIDES_base import write_BTIDES
 from TME.TME_BTIDES_GPS import BTIDES_export_GPS_coordinate
+from TME.TME_BTIDES_filter import filter_BTIDES_by_NOT_args
 
 # BTIDALPOOL access related
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
+import functools
 import sqlite3
 import mysql.connector
 
-def find_bdaddr_rand(bdaddr):
-    if(TME.TME_glob.use_test_db):
-        database = 'bttest'
-    else:
-        database = 'bt2'
+# Module-level cache for the MySQL connection and the list of tables that have
+# a bdaddr_random column. Both are initialized lazily on first call to
+# find_bdaddr_rand and reused for the lifetime of the process.
+_mysql_conn = None
+_bdaddr_rand_tables = None
+_bdaddr_rand_union_sql = None
 
-    conn = mysql.connector.connect(
-        host='localhost',
-        user='user',
-        password='a',
-        database=database,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        auth_plugin='mysql_native_password'
-    )
+
+def _get_mysql_conn():
+    global _mysql_conn
+    if _mysql_conn is None:
+        database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
+        _mysql_conn = mysql.connector.connect(
+            host='localhost',
+            user='user',
+            password='a',
+            database=database,
+            charset='utf8mb4',
+            collation='utf8mb4_unicode_ci',
+            auth_plugin='mysql_native_password'
+        )
+    return _mysql_conn
+
+
+def _get_bdaddr_rand_union_sql():
+    global _bdaddr_rand_tables, _bdaddr_rand_union_sql
+    if _bdaddr_rand_union_sql is not None:
+        return _bdaddr_rand_union_sql, _bdaddr_rand_tables
+    conn = _get_mysql_conn()
     cursor = conn.cursor()
+    cursor.execute(
+        "SELECT table_name FROM information_schema.columns "
+        "WHERE table_schema = DATABASE() AND column_name = 'bdaddr_random'"
+    )
+    _bdaddr_rand_tables = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    if _bdaddr_rand_tables:
+        # Parens are required around each sub-select when LIMIT is used inside UNION ALL in MySQL.
+        _bdaddr_rand_union_sql = " UNION ALL ".join(
+            f"(SELECT bdaddr_random FROM {t} WHERE bdaddr = %s LIMIT 1)"
+            for t in _bdaddr_rand_tables
+        )
+    else:
+        _bdaddr_rand_union_sql = ""
+    return _bdaddr_rand_union_sql, _bdaddr_rand_tables
 
-    cursor.execute("SHOW TABLES")
-    tables = cursor.fetchall()
+
+@functools.lru_cache(maxsize=None)
+def find_bdaddr_rand(bdaddr):
+    union_sql, tables = _get_bdaddr_rand_union_sql()
+    if not tables:
+        return 1  # No data available → default to random (matches prior behavior).
+
+    conn = _get_mysql_conn()
+    cursor = conn.cursor()
+    cursor.execute(union_sql, tuple([bdaddr] * len(tables)))
+    rows = cursor.fetchall()
+    cursor.close()
 
     bdaddr_rand_count = {0: 0, 1: 0}
+    for (bdaddr_rand,) in rows:
+        if bdaddr_rand in bdaddr_rand_count:
+            bdaddr_rand_count[bdaddr_rand] += 1
 
-    # TODO: change to a union statement across all tables, to cut down on DB connection traffic
-    for table in tables:
-        table_name = table[0]
-        cursor.execute(f"SHOW COLUMNS FROM {table_name}")
-        columns = cursor.fetchall()
+    if bdaddr_rand_count[0] == bdaddr_rand_count[1]:
+        return 1  # No matches or exact tie → default to random.
+    return max(bdaddr_rand_count, key=bdaddr_rand_count.get)
 
-        if any(column[0] == "bdaddr_random" for column in columns):
-            values = (bdaddr,)
-            # table_name is not ACID, so it's OK to interpolate it directly in
-            # (because otherwise there's a syntax error due to the prepared statement
-            # wrapping the table name in single quotes...
-            query = f"SELECT bdaddr_random FROM {table_name} where bdaddr = %s LIMIT 1"
-            cursor.execute(query, values)
-            rows = cursor.fetchall()
-            for row in rows:
-                bdaddr_rand = row[0]
-                if bdaddr_rand in bdaddr_rand_count:
-                    bdaddr_rand_count[bdaddr_rand] += 1
 
-    conn.close()
+def batch_find_bdaddr_rand(bdaddrs, chunk_size=1000):
+    """Bulk variant of find_bdaddr_rand: returns dict[bdaddr] -> bdaddr_rand.
 
-    if(bdaddr_rand_count[0] == bdaddr_rand_count[1]):
-        most_common_bdaddr_rand = 1 # If there's no results in our DB, just say it's a random address, since that's statistically most likely
-    else:
-        most_common_bdaddr_rand = max(bdaddr_rand_count, key=bdaddr_rand_count.get)
-    return most_common_bdaddr_rand
+    Issues one UNION-ALL query per chunk (across every bdaddr_random-bearing
+    table), with a shared IN-clause per table. Applies the same "majority
+    across tables, default to 1 on tie/miss" rule as find_bdaddr_rand.
+    """
+    unique_bdaddrs = list({b for b in bdaddrs if b})
+    if not unique_bdaddrs:
+        return {}
 
-    # return 1
+    _, tables = _get_bdaddr_rand_union_sql()
+    if not tables:
+        return {b: 1 for b in unique_bdaddrs}
+
+    conn = _get_mysql_conn()
+    counts = {}  # bdaddr -> {0: n, 1: n}
+    for i in range(0, len(unique_bdaddrs), chunk_size):
+        chunk = unique_bdaddrs[i:i + chunk_size]
+        placeholders = ",".join(["%s"] * len(chunk))
+        subqueries = [
+            f"(SELECT bdaddr, bdaddr_random FROM {t} WHERE bdaddr IN ({placeholders}))"
+            for t in tables
+        ]
+        query = " UNION ALL ".join(subqueries)
+        params = tuple(chunk) * len(tables)
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        for bdaddr, bdaddr_rand in cursor.fetchall():
+            c = counts.setdefault(bdaddr, {0: 0, 1: 0})
+            if bdaddr_rand in c:
+                c[bdaddr_rand] += 1
+        cursor.close()
+
+    result = {}
+    for b in unique_bdaddrs:
+        c = counts.get(b, {0: 0, 1: 0})
+        if c[0] == c[1]:
+            result[b] = 1
+        else:
+            result[b] = max(c, key=c.get)
+    return result
 
 def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=None, get_all_GPS=False, offset=0, limit=None):
     try:
@@ -113,6 +176,29 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
     except sqlite3.DatabaseError as e:
         print(f"Error: {e}")
         return
+
+    # Batch-load the location table into an in-memory dict keyed by bssid.
+    # The WiGLE DB has no index on location.bssid, so doing per-row SELECTs
+    # against ~500k rows produces N full table scans. Loading once and
+    # looking up in Python is ~100x faster and dominates the conversion cost.
+    location_by_bssid = {}
+    try:
+        qprint("Loading WiGLE location table into memory for fast lookups.")
+        sqlite_cursor.execute("SELECT * FROM location")
+        for loc_row in sqlite_cursor:
+            location_by_bssid.setdefault(loc_row[1], []).append(loc_row)
+    except sqlite3.DatabaseError as e:
+        print(f"Error loading location table: {e}")
+        return
+
+    # Pre-compute bdaddr_rand for every BLE entry in one batched MySQL
+    # roundtrip (chunked UNION ALL) rather than N individual lookups.
+    ble_bdaddrs = [row[0] for row in rows if row[7] == "E" and row[0]]
+    if ble_bdaddrs:
+        qprint(f"Looking up bdaddr_rand for {len(set(ble_bdaddrs))} unique BLE BDADDRs in bulk.")
+        bdaddr_rand_map = batch_find_bdaddr_rand(ble_bdaddrs)
+    else:
+        bdaddr_rand_map = {}
 
     # TODO: add progress tracker
 
@@ -141,7 +227,7 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             bdaddr_rand = 0
         elif type == "E":
             bdaddr = bssid_ACID
-            bdaddr_rand = find_bdaddr_rand(bdaddr)
+            bdaddr_rand = bdaddr_rand_map.get(bdaddr, 1)
         else:
             continue
 
@@ -168,16 +254,14 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             continue
 
         # See if there's any RSSI in the location table for this exact GPS coordinate (irrespective of time)
-        query = "SELECT * FROM location WHERE bssid = ? AND lat = ? AND lon = ?"
-        values = (bssid_ACID, data["lat"], data["lon"])
-        sqlite_cursor.execute(query, values)
-        locations = sqlite_cursor.fetchall()
+        bssid_locations = location_by_bssid.get(bssid_ACID, [])
         best_rssi = -127
-        for location in locations:
-            # Only update if we find a better RSSI
-            if(location[2] > best_rssi):
-                best_rssi = location[2]
-                data["rssi"] = location[2]
+        for location in bssid_locations:
+            if location[3] == data["lat"] and location[4] == data["lon"]:
+                # Only update if we find a better RSSI
+                if(location[2] > best_rssi):
+                    best_rssi = location[2]
+                    data["rssi"] = location[2]
 
         # Export the coordinate now that we have the best-case data
         BTIDES_export_GPS_coordinate(bdaddr=bdaddr, random=bdaddr_rand, data=data)
@@ -189,11 +273,7 @@ def read_WiGLE_DB(input, gps_exclude_upper_left=None, gps_exclude_lower_right=No
             export_Remote_Name_Request_Complete(bdaddr, str_to_hex_str(name))
 
         if(get_all_GPS):
-            query = "SELECT * FROM location WHERE bssid = ?"
-            values = (bssid_ACID,)
-            sqlite_cursor.execute(query, values)
-            locations = sqlite_cursor.fetchall()
-            for location in locations:
+            for location in bssid_locations:
                 rssi = location[2]
                 lat = location[3]
                 lon = location[4]
@@ -218,6 +298,15 @@ def main():
     btides_group.add_argument('--GPS-exclude-upper-left', type=str, required=False, help='The coordinate for the upper left corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(39.171951,-77.615936)\"')
     btides_group.add_argument('--GPS-exclude-lower-right', type=str, required=False, help='The coordinate for the lower right corner of the bounding box to exclude from the BTIDES output, in \"(lat,lon)\" format. E.g. \"(38.568929,-76.385467)\"')
     btides_group.add_argument('--get-all-GPS', action='store_true', required=False, help='This will extract every GPS coordinate found for the given BDADDR in the WiGLE database, not just the trilaterated \"best\" one. This will potentially take a *lot* longer, based on how many records exist in your database.')
+
+    # Post-processing exclusion arguments (applied to the in-memory BTIDES JSON
+    # AFTER reading WiGLE — no local Bluetooth DB lookups are performed).
+    not_group = parser.add_argument_group('BTIDES post-processing exclusion arguments')
+    not_group.add_argument('--NOT-bdaddr', action='append', required=False, help='Remove the given BDADDR from the BTIDES output (case-insensitive exact match). May be passed multiple times.')
+    not_group.add_argument('--NOT-bdaddr-regex', action='append', required=False, help='Remove any BTIDES entry whose BDADDR matches the given regex (case-insensitive). May be passed multiple times.')
+    not_group.add_argument('--NOT-name-regex', action='append', required=False, help='Remove any BTIDES entry whose device name (HCI Remote Name, AdvData Complete/Incomplete Name, or GATT Device Name characteristic) matches the given regex (case-insensitive). May be passed multiple times.')
+    not_group.add_argument('--NOT-company-regex', action='append', required=False, help='Remove any BTIDES entry whose Manufacturer-Specific Data company-ID-derived name matches the given regex (case-insensitive). Looked up against the BT SIG company_identifiers list — no local DB query. May be passed multiple times.')
+    not_group.add_argument('--NOT-UUID-regex', action='append', required=False, help='Remove any BTIDES entry containing a UUID (in AdvData UUID16/32/128 lists or in GATT services/characteristics) matching the given regex (case-insensitive). NOTE: make sure to remove dashes from UUID128s because dashes will be interpreted per their regex meaning! May be passed multiple times.')
 
     # SQL arguments
     sql = parser.add_argument_group('Local SQL database storage arguments (only applicable in the context of a local Blue2thprinting setup, not 3rd party tool usage.)')
@@ -265,13 +354,25 @@ def main():
     else:
         read_WiGLE_DB(input=args.input, get_all_GPS=args.get_all_GPS, offset=int(args.offset), limit=int(args.limit))
 
+    # Post-process the aggregated BTIDES data to honor any --NOT-* exclusions.
+    # Operates purely on the in-memory BTIDES JSON; does not query the local Bluetooth DB.
+    filter_BTIDES_by_NOT_args(
+        NOT_bdaddr=args.NOT_bdaddr,
+        NOT_bdaddr_regex=args.NOT_bdaddr_regex,
+        NOT_name_regex=args.NOT_name_regex,
+        NOT_company_regex=args.NOT_company_regex,
+        NOT_UUID_regex=args.NOT_UUID_regex,
+    )
+
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
     qprint("Export completed with no errors.")
 
     btides_to_sql_succeeded = False
     if args.to_SQL:
-        b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
+        # skip_schema_validation=True: write_BTIDES already validated the JSON
+        # we just wrote; no need to pay ~0.5ms/entry to re-validate on import.
+        b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print, skip_schema_validation=True)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
 
     if args.to_BTIDALPOOL:

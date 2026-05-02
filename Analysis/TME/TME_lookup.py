@@ -1,9 +1,9 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
-# import re
+import re
 # import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
@@ -41,34 +41,47 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
 
-    values = (nameregex,)
-    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
-    eir_result = execute_query(eir_query, values)
-    bdaddrs += eir_result
-    for (bdaddr,) in eir_result:
-        bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_name")
+    # Regex matching done in Python (not MySQL) to tolerate non-UTF-8 byte sequences in stored names
+    name_pattern = re.compile(nameregex)
+
+    eir_query = "SELECT bdaddr, name_hex_str FROM EIR_bdaddr_to_name"
+    eir_result = execute_query(eir_query, ())
+    eir_matches = 0
+    for (bdaddr, name_hex_str) in eir_result:
+        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
+        if name_pattern.search(name):
+            bdaddrs.append((bdaddr,))
+            bdaddr_hash[bdaddr] = 1
+            eir_matches += 1
+    qprint(f"get_bdaddrs_by_name_regex: {eir_matches} results found in DB:EIR_bdaddr_to_name")
     vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for HCI_bdaddr_to_name table
-    hci_query = "SELECT bdaddr FROM HCI_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
-    hci_result = execute_query(hci_query, values)
-    for (bdaddr,) in hci_result:
-        bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(hci_result)} results found in DB:HCI_bdaddr_to_name")
+    hci_query = "SELECT bdaddr, name_hex_str FROM HCI_bdaddr_to_name"
+    hci_result = execute_query(hci_query, ())
+    hci_matches = 0
+    for (bdaddr, name_hex_str) in hci_result:
+        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
+        if name_pattern.search(name):
+            bdaddr_hash[bdaddr] = 1
+            hci_matches += 1
+    qprint(f"get_bdaddrs_by_name_regex: {hci_matches} results found in DB:HCI_bdaddr_to_name")
     vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query for LE_bdaddr_to_name table
     if(bdaddr_random is not None):
-        values = (bdaddr_random, nameregex)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s AND CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
+        le_query = "SELECT bdaddr, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr_random = %s"
+        le_result = execute_query(le_query, (bdaddr_random,))
     else:
-        values = (nameregex,)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_name WHERE CONVERT(UNHEX(name_hex_str) USING utf8) REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(le_result)} results found in DB:LE_bdaddr_to_name")
+        le_query = "SELECT bdaddr, name_hex_str FROM LE_bdaddr_to_name"
+        le_result = execute_query(le_query, ())
+    le_matches = 0
+    for (bdaddr, name_hex_str) in le_result:
+        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
+        if name_pattern.search(name):
+            bdaddr_hash[bdaddr] = 1
+            le_matches += 1
+    qprint(f"get_bdaddrs_by_name_regex: {le_matches} results found in DB:LE_bdaddr_to_name")
     vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
 
     # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
@@ -83,8 +96,7 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
         for (bdaddr, byte_values) in chars_result:
             tmpstr = byte_values.decode('utf-8', 'ignore')
             #qprint(f"byte_values: {tmpstr}")
-            pattern = re.compile(nameregex)
-            if re.search(pattern, tmpstr):
+            if name_pattern.search(tmpstr):
                 vprint(f"{nameregex} matched bdaddr = {bdaddr}")
                 bdaddr_hash[bdaddr] = 1
     qprint(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in DB:GATT_characteristics_values and DB:GATT_characteristics")
@@ -93,6 +105,8 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     return bdaddr_hash.keys()
 
 def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
+    # Translate bare glob '*' to regex '.*' so users can pass '*' to mean "match all"
+    bdaddrregex = re.sub(r'(?<!\.)[\*]', '.*', bdaddrregex)
     vprint(bdaddrregex)
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddrs = []
@@ -149,27 +163,27 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_attribute_handles WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics_values WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values WHERE bdaddr_random = %s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services WHERE bdaddr_random = %s"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services WHERE bdaddr_random = %s"
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
             "    UNION ALL"
@@ -195,15 +209,19 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
             ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
@@ -259,27 +277,27 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_FEATUREs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_LENGTHs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PHYs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_PINGs"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_UNKNOWN_RSP"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LL_VERSION_IND"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_attribute_handles"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristic_descriptor_values"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_characteristics_values"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM GATT_services"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services"
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
             "    UNION ALL"
@@ -305,15 +323,19 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             "    UNION ALL"
             "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_FEATURES_RES_EXT"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_NAME_RES_defragmented"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM LMP_VERSION_RES"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
             "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8) FROM HCI_bdaddr_to_name"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
+            "    UNION ALL"
+            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
             ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
@@ -329,6 +351,7 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
 def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
     global bt_CID_to_names
     global bt_member_UUID16s_to_names
+    companyregex = re.sub(r'(?<!\.)[\*]', '.*', companyregex)
     qprint(f"Your given regex was {companyregex}")
     bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
     bdaddr_prefixes = {}
@@ -743,6 +766,176 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
 #    if(enable_GATT_manufacturer_lookup):
 
     return bdaddr_hash.keys()
+
+
+# Target-scoped variant of get_bdaddrs_by_company_regex used by --NOT-company-regex.
+# Returns the subset of `candidates` whose company matches `companyregex`.
+# Avoids the 33-table UNION ALL per OUI prefix that makes the unscoped function
+# painfully slow for regexes like "Apple" (see issue #11).
+def get_candidate_bdaddrs_matching_company_regex(companyregex, bdaddr_random, candidates):
+    if not candidates:
+        return set()
+
+    qprint(f"get_candidate_bdaddrs_matching_company_regex: regex={companyregex}, {len(candidates)} candidates")
+    pattern = re.compile(companyregex)
+    candidate_set = set(candidates)
+    remaining = set(candidate_set)
+    matched = set()
+    try_byte_swapped_bt_cid = True
+
+    ############################################
+    # IEEE OUI path (the hot path for "Apple").
+    # Pull matching OUIs into memory once, then prefix-match candidates locally.
+    ############################################
+    values = (companyregex,)
+    oui_query = "SELECT bdaddr, company_name FROM IEEE_bdaddr_to_company WHERE company_name REGEXP %s"
+    oui_result = execute_query(oui_query, values)
+    matching_ouis = {oui.lower() for (oui, _company_name) in oui_result}
+    qprint(f"{i1}{len(matching_ouis)} OUIs matched in IEEE_bdaddr_to_company")
+    if matching_ouis:
+        for bdaddr in list(remaining):
+            if bdaddr[:8].lower() in matching_ouis:
+                matched.add(bdaddr)
+                remaining.discard(bdaddr)
+
+    ############################################
+    # BT Company ID path — restrict queries to the remaining candidate set.
+    ############################################
+    if remaining:
+        matching_cids = {
+            key for key, value in TME.TME_glob.bt_CID_to_names.items()
+            if re.search(pattern, value)
+        }
+        if matching_cids:
+            if try_byte_swapped_bt_cid:
+                swapped = {((k & 0xFF) << 8) | ((k & 0xFF00) >> 8) for k in matching_cids}
+                msd_cids = matching_cids | swapped
+            else:
+                msd_cids = matching_cids
+
+            def _run_cid_query(table, cids, random_filtered):
+                if not remaining or not cids:
+                    return
+                bdaddr_list = list(remaining)
+                cid_list = list(cids)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                cid_ph = ",".join(["%s"] * len(cid_list))
+                if random_filtered and bdaddr_random is not None:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND bdaddr_random = %s "
+                             f"AND device_BT_CID IN ({cid_ph})")
+                    vals = tuple(bdaddr_list) + (bdaddr_random,) + tuple(cid_list)
+                else:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND device_BT_CID IN ({cid_ph})")
+                    vals = tuple(bdaddr_list) + tuple(cid_list)
+                for (bdaddr,) in execute_query(query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
+
+            _run_cid_query("LMP_VERSION_RES", matching_cids, random_filtered=False)
+            _run_cid_query("LL_VERSION_IND", matching_cids, random_filtered=True)
+            _run_cid_query("LE_bdaddr_to_MSD", msd_cids, random_filtered=True)
+            _run_cid_query("EIR_bdaddr_to_MSD", msd_cids, random_filtered=False)
+
+    ############################################
+    # UUID16 path — restrict queries to the remaining candidate set.
+    ############################################
+    if remaining:
+        matching_uuid16s = {
+            key for key, value in TME.TME_glob.bt_member_UUID16s_to_names.items()
+            if re.search(pattern, value)
+        }
+        if matching_uuid16s:
+            uuid_pattern = "|".join(f"0x{k:04x}" for k in matching_uuid16s)
+            bdaddr_list = list(remaining)
+            bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+
+            eir_query = (f"SELECT DISTINCT bdaddr FROM EIR_bdaddr_to_UUID16s "
+                         f"WHERE bdaddr IN ({bdaddr_ph}) AND str_UUID16s REGEXP %s")
+            for (bdaddr,) in execute_query(eir_query, tuple(bdaddr_list) + (uuid_pattern,)):
+                matched.add(bdaddr)
+                remaining.discard(bdaddr)
+
+            if remaining:
+                bdaddr_list = list(remaining)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                if bdaddr_random is not None:
+                    le_query = (f"SELECT DISTINCT bdaddr FROM LE_bdaddr_to_UUID16s_list "
+                                f"WHERE bdaddr IN ({bdaddr_ph}) AND bdaddr_random = %s "
+                                f"AND str_UUID16s REGEXP %s")
+                    vals = tuple(bdaddr_list) + (bdaddr_random, uuid_pattern)
+                else:
+                    le_query = (f"SELECT DISTINCT bdaddr FROM LE_bdaddr_to_UUID16s_list "
+                                f"WHERE bdaddr IN ({bdaddr_ph}) AND str_UUID16s REGEXP %s")
+                    vals = tuple(bdaddr_list) + (uuid_pattern,)
+                for (bdaddr,) in execute_query(le_query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
+
+    ############################################
+    # CLUES path — batched, candidate-scoped.
+    #
+    # CLUES UUIDs are full 128-bit values, so they cannot substring-match
+    # inside UUID16 (4-char) or UUID32 (8-char) columns — those tables are
+    # skipped. All matching CLUES UUIDs for this company regex are collapsed
+    # into a single alternation regex per column format and each table is hit
+    # exactly once, scoped to the remaining candidate bdaddrs via `bdaddr IN`.
+    #
+    # Two alternations are emitted because the columns are stored in different
+    # formats:
+    #   * UUID128s tables (EIR_bdaddr_to_UUID128s, LE_bdaddr_to_UUID128s_list,
+    #     LE_bdaddr_to_UUID128_service_solicit, LE_bdaddr_to_UUID128_service_data)
+    #     store dash-stripped UUID128 hex.
+    #   * GATT_{services,characteristics,attribute_handles}.UUID is CHAR(36)
+    #     and stores the dashed form "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx".
+    ############################################
+    if remaining:
+        clues_uuids_raw = []  # keep original dashed form from CLUES
+        for key in TME.TME_glob.clues.keys():
+            if re.search(pattern, TME.TME_glob.clues[key]["company"]):
+                clues_uuids_raw.append(TME.TME_glob.clues[key]["UUID"])
+
+        if clues_uuids_raw:
+            clues_pattern_dashless = "|".join(u.replace("-", "") for u in clues_uuids_raw)
+            clues_pattern_dashed = "|".join(clues_uuids_raw)
+
+            # (table, uuid_column, uses_bdaddr_random, pattern)
+            clues_tables = (
+                ("EIR_bdaddr_to_UUID128s", "str_UUID128s", False, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128s_list", "str_UUID128s", True, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128_service_solicit", "str_UUID128s", True, clues_pattern_dashless),
+                ("LE_bdaddr_to_UUID128_service_data", "UUID128_hex_str", True, clues_pattern_dashless),
+                ("GATT_services", "UUID", True, clues_pattern_dashed),
+                ("GATT_characteristics", "UUID", True, clues_pattern_dashed),
+                ("GATT_attribute_handles", "UUID", True, clues_pattern_dashed),
+            )
+
+            for table, col, uses_random, clues_pattern in clues_tables:
+                if not remaining:
+                    break
+                bdaddr_list = list(remaining)
+                bdaddr_ph = ",".join(["%s"] * len(bdaddr_list))
+                if uses_random and bdaddr_random is not None:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND bdaddr_random = %s "
+                             f"AND {col} REGEXP %s")
+                    vals = tuple(bdaddr_list) + (bdaddr_random, clues_pattern)
+                else:
+                    query = (f"SELECT DISTINCT bdaddr FROM {table} "
+                             f"WHERE bdaddr IN ({bdaddr_ph}) "
+                             f"AND {col} REGEXP %s")
+                    vals = tuple(bdaddr_list) + (clues_pattern,)
+                for (bdaddr,) in execute_query(query, vals):
+                    matched.add(bdaddr)
+                    remaining.discard(bdaddr)
+
+    qprint(f"get_candidate_bdaddrs_matching_company_regex: {len(matched)}/{len(candidate_set)} candidates matched")
+    return matched
+
 
 def get_bdaddrs_by_msd_regex(msdregex, bdaddr_random):
     qprint(f"{msdregex} in get_bdaddrs_by_msd_regex")

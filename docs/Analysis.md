@@ -9,7 +9,7 @@ Thanks to [BTIDALPOOL](./BTIDALPOOL.md), the crowdsourcing server, you no longer
 ```
 cd ~
 sudo apt install -y git
-git clone --branch BTIDES https://github.com/darkmentorllc/Blue2thprinting
+git clone https://github.com/darkmentorllc/Blue2thprinting
 cd Blue2thprinting
 sudo ./setup_analysis_helper_debian-based.sh
 ```
@@ -123,4 +123,4 @@ from within the Scripts folder.
 
 *Note:* The accepted name format is just the filename, not the full path.
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

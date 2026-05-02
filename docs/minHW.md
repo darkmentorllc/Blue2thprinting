@@ -97,4 +97,4 @@ Or, if you decide to optimize for size rather than capabilities...
 Further configuration instructions will be given later.
 
 
-Copyright(c) © Dark Mentor LLC 2023-2025
+Copyright(c) © Dark Mentor LLC 2023-2026

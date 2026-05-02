@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 import struct
@@ -417,6 +417,38 @@ def print_role(bdaddr, bdaddr_random):
 
     qprint("")
 
+################################################################################
+# Peripheral Connection Interval Range (0x12)
+################################################################################
+
+def print_connect_interval(bdaddr, bdaddr_random):
+    bdaddr = bdaddr.strip().lower()
+
+    if(bdaddr_random is not None):
+        values = (bdaddr, bdaddr_random)
+        le_query = "SELECT interval_min, interval_max, bdaddr_random, le_evt_type FROM LE_bdaddr_to_connect_interval WHERE bdaddr = %s AND bdaddr_random = %s"
+    else:
+        values = (bdaddr,)
+        le_query = "SELECT interval_min, interval_max, bdaddr_random, le_evt_type FROM LE_bdaddr_to_connect_interval WHERE bdaddr = %s"
+    le_result = execute_query(le_query, values)
+
+    if (len(le_result) == 0):
+        vprint(f"{i1}No Peripheral Connection Interval Range found.")
+        return
+
+    for interval_min, interval_max, random, le_evt_type in le_result:
+        qprint(f"{i1}Peripheral Connection Interval Range:")
+        qprint(f"{i2}Minimum connection interval (in units of 1.25ms): {interval_min}")
+        qprint(f"{i2}Maximum connection interval (in units of 1.25ms): {interval_max}")
+        vprint(f"{i2}In BLE Data (DB:LE_bdaddr_to_connect_interval), bdaddr_random = {random} ({get_bdaddr_type(bdaddr, random)})")
+        vprint(f"{i2}This was found in an event of type {le_evt_type} which corresponds to {get_le_event_type_string(le_evt_type)}")
+
+        # length = 5 (1 byte opcode + 2 bytes min + 2 bytes max)
+        data = {"length": 5, "conn_interval_min": interval_min, "conn_interval_max": interval_max}
+        BTIDES_export_AdvData(bdaddr, random, le_evt_type, type_AdvData_PeripheralConnectionIntervalRange, data)
+
+    qprint("")
+
 ###########################################################
 # 3D Information Data (used for 3D displays/glasses) (0x3D)
 ###########################################################
@@ -823,6 +855,8 @@ def print_manufacturer_data(bdaddr, bdaddr_random):
             print_meta_MSD(f"{i2}", manufacturer_specific_data)
         elif(device_BT_CID == 117):
             print_Samsung_MSD(f"{i3}", manufacturer_specific_data)
+        elif(device_BT_CID == 0x02FA):  # ASTM International — Open Drone ID
+            print_odid_payload(f"{i3}", manufacturer_specific_data)
         # TODO: Does this have the necessary information to parse Amazon MSD? https://developer.amazon.com/en-US/docs/alexa/alexa-gadgets-toolkit/bluetooth-le-settings.html
         # TODO: Parse Eddystone even though it's deprecated?
 
@@ -857,4 +891,5 @@ def print_all_advdata(bdaddr, bdaddr_random):
     print_le_bluetooth_device_address(bdaddr, bdaddr_random)           # Includes BTIDES export
     print_URI(bdaddr, bdaddr_random)                                   # Includes BTIDES export
     print_role(bdaddr, bdaddr_random)                                  # Includes BTIDES export
+    print_connect_interval(bdaddr, bdaddr_random)                      # Includes BTIDES export
     print_3DInfoData(bdaddr, bdaddr_random)                            # Includes BTIDES export

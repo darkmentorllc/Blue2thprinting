@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # Activate venv before any other imports
@@ -404,30 +404,35 @@ def main():
         qprint(f"{len(bdaddrs)} bdaddrs after --LMP_VERSION_RES processing")
         vprint(f"{bdaddrs}")
 
-    # Process CLI arguments that remove BDADDRs from the list
-    bdaddrs_to_remove = []
+    # Process CLI arguments that remove BDADDRs from the list.
+    # bdaddrs_to_remove is a set so membership checks are O(1). We also skip all
+    # --NOT-*-regex database work when there are no candidates to filter.
+    bdaddrs_to_remove = set()
 
     if(args.NOT_bdaddr != None):
         # Not taking the shortcut of just doing "bdaddrs_to_remove = args.NOT_bdaddr",
         # just in case the code gets rearranged later
         for entry in args.NOT_bdaddr:
-            bdaddrs_to_remove.append(f"{entry}")
+            bdaddrs_to_remove.add(f"{entry}")
 
-    if(args.NOT_bdaddr_regex != None):
-        for entry in args.NOT_bdaddr_regex:
-            bdaddrs_to_remove.extend(get_bdaddrs_by_bdaddr_regex(entry, args.bdaddr_type))
+    if(bdaddrs):
+        if(args.NOT_bdaddr_regex != None):
+            for entry in args.NOT_bdaddr_regex:
+                bdaddrs_to_remove.update(get_bdaddrs_by_bdaddr_regex(entry, args.bdaddr_type))
 
-    if(args.NOT_name_regex != None):
-        for entry in args.NOT_name_regex:
-            bdaddrs_to_remove.extend(get_bdaddrs_by_name_regex(entry, args.bdaddr_type))
+        if(args.NOT_name_regex != None):
+            for entry in args.NOT_name_regex:
+                bdaddrs_to_remove.update(get_bdaddrs_by_name_regex(entry, args.bdaddr_type))
 
-    if(args.NOT_company_regex != None):
-        for entry in args.NOT_company_regex:
-            bdaddrs_to_remove.extend(get_bdaddrs_by_company_regex(entry, args.bdaddr_type))
+        if(args.NOT_company_regex != None):
+            for entry in args.NOT_company_regex:
+                bdaddrs_to_remove.update(
+                    get_candidate_bdaddrs_matching_company_regex(entry, args.bdaddr_type, bdaddrs)
+                )
 
-    if(args.NOT_UUID_regex != None):
-        for entry in args.NOT_UUID_regex:
-            bdaddrs_to_remove.extend(get_bdaddrs_by_uuid_regex(entry, args.bdaddr_type))
+        if(args.NOT_UUID_regex != None):
+            for entry in args.NOT_UUID_regex:
+                bdaddrs_to_remove.update(get_bdaddrs_by_uuid_regex(entry, args.bdaddr_type))
 
     # Now that we have all the bdaddrs_to_remove, loop through the bdaddrs list and remove them
     qprint(f"{len(bdaddrs_to_remove)} bdaddrs_to_remove")

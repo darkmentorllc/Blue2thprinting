@@ -1,6 +1,6 @@
 ########################################
 # Created by Xeno Kovah
-# Copyright(c) Dark Mentor LLC 2023-2025
+# Copyright(c) © Dark Mentor LLC 2023-2026
 ########################################
 
 # This file is to export data that conforms to the
@@ -184,6 +184,7 @@ def BTIDES_export_GATT_Characteristic_Value(connect_ind_obj=None, bdaddr=None, r
         base["GATTArray"] = [ placeholder_svc_obj ]
         #qprint(json.dumps(base, indent=2))
         TME.TME_glob.BTIDES_JSON.append(base)
+        register_SingleBDADDR_in_index(base)
         #qprint(json.dumps(BTIDES_JSON, indent=2))
         return
     else:
