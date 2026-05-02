@@ -137,7 +137,19 @@ compile_toolz() {
     ### Compilation ###
     if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ]; then
     print_tool_working "  Beginning compilation (this will take a while!)"
-    make -j
+    # Memory-aware -j. BlueZ's larger source files (client/player.c,
+    # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
+    # 1 GB Pi, an unbounded "make -j" runs as many cc1s as there are cores
+    # and the kernel OOM-killer terminates them mid-build. Budget ~600 MB per
+    # job, capped at nproc, with a floor of 1.
+    mem_kb=$(awk '/MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 1048576)
+    mem_mb=$(( mem_kb / 1024 ))
+    cores=$(nproc 2>/dev/null || echo 2)
+    jobs=$(( mem_mb / 600 ))
+    if [ "$jobs" -lt 1 ]; then jobs=1; fi
+    if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
+    print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
+    make -j"${jobs}"
     print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/attrib/gatttool --help
     if [ $? != 0 ]; then
