@@ -3,10 +3,10 @@
 	url = https://bitbucket.org/bluetooth-SIG/public.git
 [submodule "Analysis/CLUES_Schema"]
 	path = Analysis/CLUES_Schema
-	url = http://github.com/darkmentorllc/CLUES_Schema.git
+	url = https://github.com/darkmentorllc/CLUES_Schema.git
 [submodule "Analysis/BTIDES_Schema"]
 	path = Analysis/BTIDES_Schema
-	url = http://github.com/darkmentorllc/BTIDES_Schema.git
+	url = https://github.com/darkmentorllc/BTIDES_Schema.git
 [submodule "Analysis/scapy"]
 	path = Analysis/scapy
 	url = https://github.com/XenoKovah/scapy.git
@@ -15,4 +15,4 @@
 	url = https://github.com/XenoKovah/btsnoop.git
 [submodule "DarkFirmware_real_i"]
 	path = DarkFirmware_real_i
-	url = git@github.com:darkmentorllc/DarkFirmware_real_i.git
+	url = https://github.com/darkmentorllc/DarkFirmware_real_i.git
