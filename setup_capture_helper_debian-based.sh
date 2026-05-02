@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libjson-c-dev zstd usbutils
+    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
