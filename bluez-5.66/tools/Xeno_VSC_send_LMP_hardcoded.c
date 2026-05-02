@@ -3,9 +3,13 @@
 // Compilation command (executed from <repo>/bluez-5.66/):
 //   gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded
 //       tools/Xeno_VSC_send_LMP_hardcoded.c
-//       -Ilib -Isrc -Isrc/shared -I. -Llib/.libs -lbluetooth-internal
-//       -Lsrc/.libs -lshared-glib $(pkg-config --cflags --libs glib-2.0 json-c)
-//       -lpthread -DVERSION="5.66"
+//       $(pkg-config --cflags --libs json-c) -lbluetooth -lpthread
+//
+// All BlueZ APIs we use (hci_open_dev, hci_send_cmd, hci_create_connection,
+// hci_read_remote_version, hci_filter_*, str2ba, ...) live in the system
+// libbluetooth.so from libbluetooth-dev — so this tool does NOT depend on
+// the BlueZ source tree at all. It just happens to live under tools/ for
+// historical / colocation reasons.
 //
 // VSE byte layout vs. the Bumble Python prototype:
 //   The Bumble prototype (DarkFirmware_real_i/05_XENO_VSC_RX_TX/bumble/examples/

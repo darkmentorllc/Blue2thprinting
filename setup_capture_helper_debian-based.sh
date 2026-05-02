@@ -111,10 +111,10 @@ configure_scripts() {
 }
 
 compile_toolz() {
-    print_banner "Compiling the customized BlueZ gatttool & sdptool & bluetoothctl."
-    #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl & gatttool)
-    #### Or to log invocations so I can compare how many succeeded vs. failed (gatttool & sdptool)
-    #### Or to do the equivalent of multiple CLI invocations all in one shot (gatttool)
+    print_banner "Compiling the customized BlueZ sdptool & bluetoothctl."
+    #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl)
+    #### Or to log invocations so I can compare how many succeeded vs. failed (sdptool)
+    #### gatttool is intentionally not built — it's been deprecated in favor of BetterGetter.py.
     cd $BASE_PATH/bluez-5.66
     ### BlueZ Configuration ###
     # config.status is the autotools completion sentinel, not Makefile. A Makefile
@@ -135,8 +135,8 @@ compile_toolz() {
         exit
     fi
     ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/attrib/gatttool" ] || [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ]; then
-    print_tool_working "  Beginning compilation (this will take a while!)"
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ]; then
+    print_tool_working "  Beginning compilation (only the targets we need)."
     # Memory-aware -j. BlueZ's larger source files (client/player.c,
     # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
     # 1 GB Pi, an unbounded "make -j" runs as many cc1s as there are cores
@@ -149,13 +149,11 @@ compile_toolz() {
     if [ "$jobs" -lt 1 ]; then jobs=1; fi
     if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
     print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
-    make -j"${jobs}"
-    print_tool_working "  Testing gatttool runs successfully. If you see the help output, it's working."
-    $BASE_PATH/bluez-5.66/attrib/gatttool --help
-    if [ $? != 0 ]; then
-        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
-        exit
-    fi
+    # Targeted build: only compile the dependency closure of sdptool +
+    # bluetoothctl. Skips ~80% of BlueZ targets (profiles, mesh, the dozens
+    # of tools we don't use, the test suite). On a Pi this is roughly 40s
+    # vs ~2 min for a full build.
+    make -j"${jobs}" tools/sdptool client/bluetoothctl
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
@@ -169,20 +167,23 @@ compile_toolz() {
         exit
     fi
     else
-        echo "  gatttool and sdptool and bluetoothctl already exist, skipping recompilation."
+        echo "  sdptool and bluetoothctl already exist, skipping recompilation."
     fi
 
     print_banner "Compiling Xeno_VSC_send_LMP_hardcoded (BlueZ Realtek-VSC LMP fingerprinter)."
+    # Standalone compile against the system libbluetooth + json-c. The tool
+    # uses only public BlueZ HCI APIs (hci_open_dev / hci_send_cmd /
+    # hci_create_connection / hci_read_remote_version / etc) which all live
+    # in libbluetooth.so from the libbluetooth-dev package, so it does not
+    # need the BlueZ source tree. Compile is ~1s on a Pi.
     cd "$BASE_PATH/bluez-5.66"
     if [ ! -f "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ] || \
        [ "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded.c" -nt \
          "$BASE_PATH/bluez-5.66/tools/Xeno_VSC_send_LMP_hardcoded" ]; then
-        gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded tools/Xeno_VSC_send_LMP_hardcoded.c \
-            -Ilib -Isrc -Isrc/shared -I. \
-            -Llib/.libs -lbluetooth-internal \
-            -Lsrc/.libs -lshared-glib \
-            $(pkg-config --cflags --libs glib-2.0 json-c) \
-            -lpthread -DVERSION=\"5.66\"
+        gcc -O2 -Wall -o tools/Xeno_VSC_send_LMP_hardcoded \
+            tools/Xeno_VSC_send_LMP_hardcoded.c \
+            $(pkg-config --cflags --libs json-c) \
+            -lbluetooth -lpthread
         if [ $? != 0 ]; then
             echo "  Compilation of Xeno_VSC_send_LMP_hardcoded failed. Resolve the error above and try again."
             exit
