@@ -134,7 +134,7 @@ def send_data(data):
 
 # Import this function to call from external code without invoking via the CLI
 # Returns True on success and False on failure (or exits on fatal error)
-def send_btides_to_btidalpool(input_file, token, refresh_token):
+def send_btides_to_btidalpool(input_file, token, refresh_token, use_test_db=False):
     vprint(f"Sending BTIDES file {input_file}")
     # Load the JSON content from the file
     try:
@@ -159,7 +159,8 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
         "command": 'check_hash',
         "hash": sha1_hash,
         "token": token,
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "use_test_db": use_test_db,
     }
     if(not send_data(data)):
         return False
@@ -188,7 +189,8 @@ def send_btides_to_btidalpool(input_file, token, refresh_token):
         "command": 'upload',
         "btides_content": json_content,
         "token": token,
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "use_test_db": use_test_db,
     }
 
     if(not send_data(data)):
@@ -203,6 +205,10 @@ def main():
 
     auth_group = parser.add_argument_group('Arguments for authentication to BTIDALPOOL server.')
     auth_group.add_argument('--token-file', type=str, required=False, help='Path to file containing JSON with the \"token\" and \"refresh_token\" fields, as obtained from Google SSO. If not provided, you will be prompted to perform Google SSO, after which you can save the token to a file and pass this argument.')
+
+    testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
+    testing_group.add_argument('--use-test-db', action='store_true', required=False, help='Tell the BTIDALPOOL server to ingest the uploaded data into its alternate test database (bttest), used for testing.')
+
     args = parser.parse_args()
 
     TME.TME_glob.verbose_print = args.verbose_print
@@ -235,7 +241,8 @@ def main():
         ret = send_btides_to_btidalpool(
             input_file=input_file,
             token=client.credentials.token,
-            refresh_token=client.credentials.refresh_token
+            refresh_token=client.credentials.refresh_token,
+            use_test_db=args.use_test_db
         )
     if(ret):
         print(f"Upload succeeded for {args.input}")

@@ -245,7 +245,8 @@ def main():
                 email=client.user_info.get('email'),
                 query_object=query_object,
                 token=client.credentials.token,
-                refresh_token=client.credentials.refresh_token
+                refresh_token=client.credentials.refresh_token,
+                use_test_db=args.use_test_db
             )
             if(num_records):
                 qprint(f"Retrieved {num_records} matching records from BTIDALPOOL")
@@ -539,7 +540,8 @@ def main():
             send_btides_to_btidalpool(
                 input_file=out_filename,
                 token=client.credentials.token,
-                refresh_token=client.credentials.refresh_token
+                refresh_token=client.credentials.refresh_token,
+                use_test_db=args.use_test_db
             )
 
 if __name__ == "__main__":

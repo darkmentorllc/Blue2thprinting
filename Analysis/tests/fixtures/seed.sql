@@ -52,6 +52,13 @@ INSERT INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handl
 INSERT INTO bdaddr_to_GPS (bdaddr, bdaddr_random, time, time_type, rssi, lat, lon)
 VALUES ('aa:bb:cc:11:22:02', 1, 1714000000, 0, -55, 38.9072, -77.0369);
 
+-- Vendor-specific UUID128 advertised in an LE adv packet. The UUID
+-- be15beef-6186-407e-8381-0bd89c4d8df4 is in BLEScope's dataset (Anki Drive),
+-- so it triggers the "BLEScope Analysis:" output unless --hide-android-data
+-- is set. Stored without dashes per the column convention.
+INSERT INTO LE_bdaddr_to_UUID128s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s)
+VALUES ('aa:bb:cc:11:22:02', 1, 0, 7, 'be15beef6186407e83810bd89c4d8df4');
+
 -- Device 3: AA:BB:CC:11:22:03 — BT Classic, EIR name + CoD + SDP records
 -- Coverage: --require-SDP, EIR table queries
 INSERT INTO EIR_bdaddr_to_name (bdaddr, device_name_type, name_hex_str)

@@ -115,12 +115,10 @@ def validate_json_content(json_content, registry):
         return False
 
 
-def run_btides_to_sql(filename):
+def run_btides_to_sql(filename, use_test_db=False):
     # Run the primary code from BTIDES_to_SQL.py script
     # TODO: make this run in a separate thread? (Need to check if it's already running in its own thread vs. other queries)
-    b2s_args = btides_to_sql_args(input=[filename], use_test_db=False)
-    # Turn on hardcoded test DB usage...
-    # b2s_args = btides_to_sql_args(input=filename, use_test_db=True)
+    b2s_args = btides_to_sql_args(input=[filename], use_test_db=use_test_db)
     if(btides_to_sql(b2s_args)):
         os.rename(filename, filename + ".processed")
 
@@ -191,7 +189,7 @@ def send_back_response(self, username, type, header, text):
 
 
 # TODO: this entire function should be handled in a separate thread
-def handle_btides_data(self, username, json_content):
+def handle_btides_data(self, username, json_content, use_test_db=False):
     # Parse the JSON data
     try:
         # Convert the data to a string to check the total data size
@@ -240,7 +238,7 @@ def handle_btides_data(self, username, json_content):
             g_unique_files[sha1_hash] = True
 
             # Spawn a new thread to run the BTIDES_to_SQL.py script
-            run_btides_to_sql(filename)
+            run_btides_to_sql(filename, use_test_db=use_test_db)
 
             # Send a success response
             send_back_response(self, username, 200, 'text/plain', b'File saved successfully.')
@@ -251,14 +249,13 @@ def handle_btides_data(self, username, json_content):
         user_log_file.write(f"{current_time}: {username}: Invalid JSON data could not be decoded.\n")
 
 
-def handle_query(self, username, query_object):
+def handle_query(self, username, query_object, use_test_db=False):
     print(query_object)
 
     # Arguments we always want to pass to TellMeEverything.py
     args_array = ["--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
-
-    # Turn on hardcoded test DB usage...
-    #args_array = ["--use-test-db", "--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
+    if use_test_db:
+        args_array.append("--use-test-db")
 
     # Can't just loop through and use everything we're handed in query_object (for security reasons),
     # only use arguments which we are expecting, and ignore everything else
@@ -462,9 +459,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         # Log request
         log_user_access(username, client_ip, post_json_data)
 
+        # Optional test-DB routing — only honored if the client explicitly sets it.
+        use_test_db = bool(post_json_data.get('use_test_db', False))
+
         if post_json_data['command'] == "upload" and 'btides_content' in post_json_data and 'query' not in post_json_data:
             json_content = post_json_data.get('btides_content')
-            handle_btides_data(self, username, json_content)
+            handle_btides_data(self, username, json_content, use_test_db=use_test_db)
         elif post_json_data['command'] == "check_hash" and 'hash' in post_json_data:
             if(post_json_data["hash"] in g_unique_files):
                 send_back_response(self, username, 400, 'text/plain', b'A file with this exact content already exists on the server. No need to upload.')
@@ -472,7 +472,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 send_back_response(self, username, 200, 'text/plain', b'File does not yet exist on server.')
         elif post_json_data['command'] == "query" and 'query' in post_json_data and 'btides_content' not in post_json_data:
             query_object = post_json_data.get('query')
-            handle_query(self, username, query_object)
+            handle_query(self, username, query_object, use_test_db=use_test_db)
         else:
             send_back_response(self, username, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
             return

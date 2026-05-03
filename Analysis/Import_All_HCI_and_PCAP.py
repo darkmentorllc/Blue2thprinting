@@ -50,7 +50,8 @@ def optionally_store_to_SQL(btides_file, to_SQL, to_BTIDALPOOL, token_file, use_
         send_btides_to_btidalpool(
             input_file=btides_file,
             token=client.credentials.token,
-            refresh_token=client.credentials.refresh_token
+            refresh_token=client.credentials.refresh_token,
+            use_test_db=use_test_db
         )
 
     if(btides_to_sql_succeeded and rename):

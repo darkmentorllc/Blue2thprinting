@@ -84,7 +84,7 @@ def validate_json_content(json_content, registry):
         return False
 
 # Import this function to call from external code without invoking via the CLI
-def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
+def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token, use_test_db=False):
 
     # Load the self-signed certificate and key
     cert_path = "BTIDALPOOL-client.crt"
@@ -99,7 +99,8 @@ def retrieve_btides_from_btidalpool(email, query_object, token, refresh_token):
         "command": 'query',
         "query": query_object,
         "token": token,
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "use_test_db": use_test_db,
     }
 
     # Make a request to the server
@@ -205,6 +206,9 @@ def main():
     requirement_group.add_argument('--require-LL_VERSION_IND', action='store_true', help='Pass this argument to only print out information for devices which have LL_VERSION_IND data.')
     requirement_group.add_argument('--require-LMP_VERSION_RES', action='store_true', help='Pass this argument to only print out information for devices which have LMP_VERSION_RES data.')
 
+    testing_group = parser.add_argument_group('Arguments for testing (mostly for developers)')
+    testing_group.add_argument('--use-test-db', action='store_true', required=False, help='Tell the BTIDALPOOL server to query its alternate test database (bttest), used for testing.')
+
     args = parser.parse_args()
 
     query_object = {}
@@ -270,7 +274,8 @@ def main():
             email=client.user_info.get('email'),
             query_object=query_object,
             token=client.credentials.token,
-            refresh_token=client.credentials.refresh_token
+            refresh_token=client.credentials.refresh_token,
+            use_test_db=args.use_test_db
         )
         if(num_records and output_filename):
             print(f"{num_records} BTIDES data records retrieved from BTIDALPOOL and saved to {output_filename}")

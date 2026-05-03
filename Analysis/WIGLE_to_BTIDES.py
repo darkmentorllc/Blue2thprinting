@@ -400,7 +400,8 @@ def main():
         send_btides_to_btidalpool(
             input_file=out_BTIDES_filename,
             token=client.credentials.token,
-            refresh_token=client.credentials.refresh_token
+            refresh_token=client.credentials.refresh_token,
+            use_test_db=args.use_test_db
         )
 
     if(btides_to_sql_succeeded and args.rename):
