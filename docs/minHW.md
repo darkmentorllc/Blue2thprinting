@@ -2,10 +2,6 @@
 
 Note: the below hardware purchase links are Amazon affiliate links that support the [OpenSecurityTraining2](https://ost2.fyi) nonprofit.
 
-# WHAT THIS DOESN'T SUPPORT
-
-[Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) is only available as an x86 binary, therefore **this setup cannot be used for BT Classic custom traffic sending.** For that you will need to upgrade to [a x86-based laptop](./laptopHW.md) or [a x86-based mini-PC](./maxHW.md).
-
 # Assumed Hardware
 If you do not have any of the below, you will need to purchase.
 
