@@ -88,7 +88,7 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, pdu_id FROM SDP_Common LIMIT 10;"
 
 ## Importing BTC LMP data from BTC_2THPRINT.log
 
-Both `central_all_launcher2.py` and my `LMP2thprint.cpp` Braktooth module log information about attempted and successful LL2thprint to the file `/home/user/Blue2thprinting/Logs/BTC_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, (copy the data from your capture system to your analysis system, if applicable, and then) run the following:
+`central_app_launcher.py` invokes `DarkFirmware_VSC_LMP` (BlueZ + Realtek custom firmware) to capture LMP PDUs from each discovered BR/EDR device, and writes attempt/success markers plus the captured PDU stream into `/home/user/Blue2thprinting/Logs/BTC_2THPRINT.log` (or alt user home directory if you reconfigured it). To import this data into the database, (copy the data from your capture system to your analysis system, if applicable, and then) run the following:
 
 ```
 
@@ -96,7 +96,7 @@ cd ~/Blue2thprinting/Analysis/
 python3 ./parse_BTC_2THPRINT_2db.py
 ```
 
-Unfortunately no deduplication of data is possible currently due to the fact that I don't know how to obtain the BDADDR from within Braktooth and add it to every log line. If you know how, LMK! Because currently this is dependent on `central_all_launcher2.py` prepending log entries to let the parsing know what BDADDR the subsequent data is for.
+The launcher prepends a per-device log entry before each invocation so the parser can attribute the subsequent PDU stream to the right BDADDR.
 
 **To confirm that some data was successfully imported, you can issue:**
 

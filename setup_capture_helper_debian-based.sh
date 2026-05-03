@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils
+    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -76,7 +76,7 @@ install_prerequs(){
 enter_venv(){
     python3 -m venv ./venv
     source ./venv/bin/activate
-    pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector
+    pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast
 }
 
 configure_scripts() {
@@ -91,9 +91,9 @@ configure_scripts() {
     print_banner "Appending entry to root crontab to run Scripts/runall.sh at reboot."
     #### This tries to make sure it preserves whatever is already in the crontab
     #### and it just appends an entry to run the runall.sh script at reboot
-    #### which invokes the sub-scripts to run btmon (primary HCI logging),
-    #### bluetoothctl (primary discovery), and central_app_launcher.py
-    #### (orchestration of GATT/SDP/LL/LMP measurements)
+    #### which invokes the sub-scripts to run btmon (primary HCI logging) and
+    #### central_app_launcher.py (which performs in-process BlueZ D-Bus
+    #### discovery and orchestrates GATT/SDP/LL/LMP measurements). See issue #47.
     if [ ! -f "$BASE_PATH/Scripts/.cron_added" ]; then
         cron_entry="@reboot $BASE_PATH/Scripts/runall.sh"
         echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
@@ -135,7 +135,7 @@ compile_toolz() {
         exit
     fi
     ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ] || [ ! -f "$BASE_PATH/bluez-5.66/monitor/btmon" ]; then
     print_tool_working "  Beginning compilation (only the targets we need)."
     # Memory-aware -j. BlueZ's larger source files (client/player.c,
     # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
@@ -150,10 +150,11 @@ compile_toolz() {
     if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
     print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
     # Targeted build: only compile the dependency closure of sdptool +
-    # bluetoothctl. Skips ~80% of BlueZ targets (profiles, mesh, the dozens
-    # of tools we don't use, the test suite). On a Pi this is roughly 40s
-    # vs ~2 min for a full build.
-    make -j"${jobs}" tools/sdptool client/bluetoothctl
+    # bluetoothctl + btmon. Skips ~80% of BlueZ targets (profiles, mesh, the
+    # dozens of tools we don't use, the test suite). On a Pi this is roughly
+    # 60s vs ~2 min for a full build. btmon is required by start_btmon.sh
+    # for HCI capture logging.
+    make -j"${jobs}" tools/sdptool client/bluetoothctl monitor/btmon
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
@@ -166,8 +167,14 @@ compile_toolz() {
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
+    print_tool_working "  Testing btmon runs successfully. If you see the version output, it's working."
+    $BASE_PATH/bluez-5.66/monitor/btmon --version
+    if [ $? != 0 ]; then
+        echo "  Something went wrong with the btmon compilation. Look for an error message, correct it, and try again."
+        exit
+    fi
     else
-        echo "  sdptool and bluetoothctl already exist, skipping recompilation."
+        echo "  sdptool, bluetoothctl, and btmon already exist, skipping recompilation."
     fi
 
     print_banner "Compiling DarkFirmware_VSC_LMP (BlueZ Realtek-VSC LMP fingerprinter)."
@@ -192,6 +199,25 @@ compile_toolz() {
     else
         echo "  DarkFirmware_VSC_LMP is up to date."
     fi
+}
+
+unblock_bluetooth_rfkill() {
+    print_banner "Ensuring Bluetooth is not soft-blocked by rfkill."
+    # Raspbian (and some Ubuntu images) ship with bluetooth soft-blocked at
+    # boot via systemd-rfkill. With it blocked, "hciconfig hciN up" fails
+    # with "Operation not possible due to RF-kill (132)" even when the
+    # firmware loaded fine. We unblock once now, and Scripts/runall.sh
+    # also runs the same unblock at every boot so the state persists.
+    if [ ! -x /usr/sbin/rfkill ] && [ ! -x /sbin/rfkill ]; then
+        echo "  rfkill binary not found; skipping (apt should have installed it)."
+        return 0
+    fi
+    sudo rfkill unblock bluetooth
+    if [ $? != 0 ]; then
+        echo "  rfkill unblock failed; check rfkill list output."
+        return 1
+    fi
+    echo "  Bluetooth is now soft-unblocked."
 }
 
 install_realtek_firmware() {
@@ -344,6 +370,7 @@ do_all(){
     compile_toolz
     flash_sniffle
     install_realtek_firmware
+    unblock_bluetooth_rfkill
     create_aliases
     cd $BASE_PATH
     print_banner "Everything seems to have completed successfully! \o/"

@@ -6,16 +6,14 @@
 Note: the below hardware purchase links are Amazon affiliate links that support the [OpenSecurityTraining2](https://ost2.fyi) nonprofit.
 
 ---
-**Required: x86-based laptop capable of running Ubuntu 24.04 Linux VM within VMware**
+**Required: laptop capable of running Ubuntu 24.04 Linux VM within VMware**
 
-This has only been tested with x86 Macs, but in principle it should work regardless of the host OS, as you only need to pass the USB devices through to the Ubuntu VMware VMs.
-
-The reason it needs to be x86-based, is because [Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) is only available as an x86 binary :-/. Everything except Braktooth works on other platforms. If you are OK without having the capability of sending LMP BT Classic packets, you can use an ARM-based platform.
+This has only been tested with x86 Macs, but in principle it should work regardless of the host OS or architecture, as you only need to pass the USB devices through to the Ubuntu VMware VMs.
 
 ---
-**Required: custom packet sending hardware (for Braktooth/Sniffle)**
+**Required: custom packet sending hardware**
 
-For [Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) - [ESP32-Ethernet-Kit-VE](https://amzn.to/44xxu07) - ~\$55/unit (This replaces the ESP-WROVER-KIT which is mentioned on the Braktooth page, which is no longer sold.)
+For LMP fingerprinting - any [supported Realtek USB BT dongle](https://github.com/darkmentorllc/Blue2thprinting) flashed with the bundled DarkFirmware_real_i firmware (the setup script auto-detects and flashes a compatible Realtek dongle if one is attached).
 
 For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://itead.cc/product/sonoff-zigbee-3-0-usb-dongle-plus/?ref=366) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P” and have a TI CC2652P chip to work with Sniffle!)
 

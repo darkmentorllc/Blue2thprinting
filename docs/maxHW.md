@@ -15,11 +15,9 @@ If you do not have any of the below, you will need to purchase.
 Note: the below hardware purchase links are Amazon affiliate links that support the [OpenSecurityTraining2](https://ost2.fyi) nonprofit.
 
 ---
-**Required: x86-based mini computer**
+**Optional: x86-based mini computer**
 
-The reason it needs to be a x86-based platform, is because [Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) is only available as an x86 binary :-/. Everything except Braktooth works on other platforms. If you are OK without having the capability of sending LMP BT Classic packets, you can use an ARM-based platform.
-
-A small form-factor x86-based PC (because currently Braktooth is only available as x86-64 Linux binaries.) You can use a laptop if you want, but I wanted to create a device I could place in a weather-proof container and lock up somewhere and sniff without fear of it being stolen, so this build is based around that assumed form factor.
+LMP fingerprinting now uses a Realtek BT dongle running custom DarkFirmware_real_i firmware (works on aarch64 Pis and x86 alike), so a x86 platform is no longer required for any single feature. This build is still useful when you want a more powerful CPU than a Pi for parallel analysis, more USB ports, or a weather-proof lockable box.
 
 * 1x - Up Squared (aka UP^2) [Intel Atom® x7-E3950 SKU](https://up-shop.org/default/up-squared-series.html) - \$289 + \$13.99 power supply + \$29.99 "M.2 2230 WiFi kit (RE-WFKIT-9260NVP)"
  * I used this because I had one laying around because it's a decent test platform if you're interested in using Positive Technologies' [Intel ME Exploit](https://github.com/XenoKovah/IntelTXE-PoC) (they're still selling permanently vulnerable boards! :D)
@@ -35,9 +33,9 @@ A small form-factor x86-based PC (because currently Braktooth is only available 
 * * You then need to wire it as 12V battery -> in-plugs -> converter -> out-plugs -> UP^2
 
 ---
-**Required: custom packet sending hardware (for Braktooth/Sniffle)**
+**Required: custom packet sending hardware**
 
-For [Braktooth](https://github.com/Matheus-Garbelini/braktooth_esp32_bluetooth_classic_attacks) - [ESP32-Ethernet-Kit-VE](https://amzn.to/44xxu07) - ~\$55/unit (This replaces the ESP-WROVER-KIT which is mentioned on the Braktooth page, which is no longer sold.)
+For LMP fingerprinting - any [supported Realtek USB BT dongle](https://github.com/darkmentorllc/Blue2thprinting) flashed with the bundled DarkFirmware_real_i firmware (the setup script auto-detects and flashes a compatible Realtek dongle if one is attached).
 
 For [Sniffle](https://github.com/nccgroup/Sniffle) - 2x [Sonoff Zigbee 3.0 USB Dongle Plus-P](https://itead.cc/product/sonoff-zigbee-3-0-usb-dongle-plus/?ref=366) - ~\$20/unit (**NOTE: Don’t buy the “Dongle-E” variants!** It must say “Dongle-P” and have a TI CC2652P chip to work with Sniffle!)
 
@@ -93,7 +91,7 @@ The following are only required if you'll be placing the devices into an outdoor
 * 6 = "Plugs for voltage converter output" above
 * 7 = "Non-separate-power USB-A hub" above
 * 8 = "nRF52840 USB dongle" above
-* 9 = "ESP-WROVER-KIT" above (with USB micro male to USB A male cable (needs data transport))
+* 9 = ESP-WROVER-KIT (legacy Braktooth board, no longer used — Realtek BT dongle replaces this)
 * 10 = "5" Mini screen" above
 * 11 = "Short & flexible HDMI cable" above
 * 12 = "USB micro male to USB A male cable" (only needs power transport) above
@@ -107,7 +105,7 @@ The following are only required if you'll be placing the devices into an outdoor
 ⬆️ Step 2: I place the UP^2 to one side, with the heat-sink facing outward, and one antenna oriented vertically and one horizontally (superstition!) Note, the metal on the antennas is wrapped in tape to avoid it touching any other component's pins.
 
 ![MySetup](./img/Blue2th_IAB4.jpeg)
-⬆️ Step 3: I connect the USB hub to the UP^2. The USB hub has the Nordic USB dongle and wireless mouse dongle plugged in, as well as the ESP-WROVER-KIT data cable. I place the ESP-WROVER-KIT at the opposite side of the box, wrapped in something non-conductive (e.g. bubble wrap in this case), so that its exposed pins don't touch any other components.
+⬆️ Step 3: I connect the USB hub to the UP^2. The USB hub has the Nordic USB dongle and wireless mouse dongle plugged in. (Older photos here also show an ESP-WROVER-KIT for the legacy Braktooth path, which has been removed — current builds use a Realtek BT dongle instead, which only consumes one USB port.)
 
 ![MySetup](./img/Blue2th_IAB5.jpeg)
 ⬆️ Step 4: I connect the keyboard USB cable to the USB hub. And I insert the two 12V batteries, connected via their included splitter. I place the batteries so that there is a gap inbetween them, where the screen will be slotted when not in use later.
