@@ -178,18 +178,14 @@ compile_toolz() {
     ### Compilation ###
     if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ]; then
     print_tool_working "  Beginning compilation (only the targets we need)."
-    # Memory-aware -j. BlueZ's larger source files (client/player.c,
-    # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
-    # 1 GB Pi, an unbounded "make -j" runs as many cc1s as there are cores
-    # and the kernel OOM-killer terminates them mid-build. Budget ~600 MB per
-    # job, capped at nproc, with a floor of 1.
-    mem_kb=$(awk '/MemTotal:/ {print $2; exit}' /proc/meminfo 2>/dev/null || echo 1048576)
-    mem_mb=$(( mem_kb / 1024 ))
-    cores=$(nproc 2>/dev/null || echo 2)
-    jobs=$(( mem_mb / 600 ))
-    if [ "$jobs" -lt 1 ]; then jobs=1; fi
-    if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
-    print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
+    # The dependency closure of tools/sdptool is six small C files
+    # (tools/sdptool.c, src/sdp-xml.c, lib/{bluetooth,hci,sdp,uuid}.c). cc1
+    # peaks well under 100 MB on each, so just use nproc — no memory math
+    # needed. The previous 600 MB/job budget was sized for the full BlueZ
+    # build (client/player.c / client/adv_monitor.c / mesh/* could each push
+    # cc1 to ~500 MB), and would now misclassify a 1 GB Pi 4 as -j1.
+    jobs=$(nproc 2>/dev/null || echo 2)
+    print_tool_working "  Building with make -j${jobs}."
     # Targeted build: only the dependency closure of tools/sdptool. Skips the
     # bulk of BlueZ targets (client/bluetoothctl, monitor/btmon, profiles,
     # mesh, the dozens of tools we don't use, the test suite).
