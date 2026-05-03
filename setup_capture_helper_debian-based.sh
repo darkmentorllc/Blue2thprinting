@@ -82,8 +82,13 @@ enter_venv(){
     # one ourselves. Add a wheel for any new architecture/Python combo by running
     # `pip wheel dbus-fast -w wheels/$(python3 -c 'import platform;print(platform.machine())')/`
     # on that platform once and committing the result.
+    # jsonschema + colorama are required by Scripts/btc_sdp_gatt.py via the
+    # shared TME.* package under Analysis/. jsonschema is pinned to 4.23 because
+    # TME_BTIDES_base uses a constructor that older distro-packaged versions
+    # (e.g. Ubuntu 24.04's) don't have — same pin as setup_analysis_helper.
     pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
-        gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast
+        gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast \
+        jsonschema==4.23 colorama
 }
 
 configure_scripts() {
@@ -132,8 +137,27 @@ compile_toolz() {
             print_tool_working "  Stale Makefile without config.status detected; cleaning before reconfigure."
             make distclean >/dev/null 2>&1 || true
         fi
-        print_tool_working "  Beginning configuration."
-        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated --disable-systemd --with-udevdir=/lib/udev
+        # Discover udev directory. BlueZ 5.66's configure errors out with
+        # "udev directory is required" when --with-udevdir is missing AND
+        # `pkg-config --variable=udevdir udev` returns empty — which happens
+        # on Debian Trixie / Raspbian Bookworm because the udev.pc that ships
+        # there doesn't expose udevdir. Probe the live filesystem instead so
+        # this works on usr-merged (/usr/lib/udev) and pre-merge (/lib/udev)
+        # layouts alike.
+        UDEV_DIR="$(pkg-config --variable=udevdir udev 2>/dev/null || true)"
+        if [ -z "$UDEV_DIR" ] || [ ! -d "$UDEV_DIR" ]; then
+            if [ -d "/usr/lib/udev" ]; then
+                UDEV_DIR="/usr/lib/udev"
+            elif [ -d "/lib/udev" ]; then
+                UDEV_DIR="/lib/udev"
+            else
+                echo "  Could not locate a udev directory (tried pkg-config, /usr/lib/udev, /lib/udev)."
+                echo "  Install systemd / udev or pass --with-udevdir manually, then re-run."
+                exit 1
+            fi
+        fi
+        print_tool_working "  Beginning configuration (udevdir=$UDEV_DIR)."
+        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated --disable-systemd --with-udevdir="$UDEV_DIR"
     else
         echo "  config.status present. Configuration already succeeded."
     fi
