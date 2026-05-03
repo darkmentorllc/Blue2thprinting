@@ -13,6 +13,12 @@ from scapy.layers.bluetooth4LE import *
 from scapy.layers.bluetooth import *
 from scapy.all import *
 
+# scapy >= 2.5.0 renamed BTLE_CONNECT_IND to BTLE_CONNECT_REQ
+try:
+    BTLE_CONNECT_IND
+except NameError:
+    BTLE_CONNECT_IND = BTLE_CONNECT_REQ
+
 # Common code for BTIDES export assuming scapy formatted input data structures
 from scapy_to_BTIDES_common import *
 
