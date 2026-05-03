@@ -880,23 +880,35 @@ def main():
 
     pairing = parser.add_argument_group(
         'Pairing arguments',
-        ('When set, register an org.bluez.Agent1 before opening the ATT '
-         'L2CAP socket so SSP / SMP passkey prompts triggered by the connect '
-         'are routed to this terminal instead of stalling bluetoothd. '
-         'Requires dbus_fast (capture-side venv has it).'))
+        ('A BlueZ Agent (org.bluez.Agent1) is registered before opening the '
+         'ATT L2CAP socket so SSP/SMP passkey prompts triggered by the '
+         'connect are routed to this terminal instead of stalling bluetoothd. '
+         'The default IO capability prefers Just Works; only override it when '
+         'the remote forces a stronger association model. Requires dbus_fast '
+         '(capture-side venv has it).'))
     pairing.add_argument(
-        '--io-capability', choices=VALID_IO_CAPABILITIES, default=None,
-        help=('Register a pairing agent with this IO capability. Omit to keep '
-              'the legacy no-agent behaviour. KeyboardDisplay is the broadest '
-              'choice for an interactive terminal; use NoInputNoOutput for '
-              'non-interactive batch runs (only "Just Works" pairings will '
-              'succeed).'))
+        '--io-capability', choices=VALID_IO_CAPABILITIES, default='NoInputNoOutput',
+        help=('IO capability to register with. Default: NoInputNoOutput, which '
+              'requests Just Works whenever the remote permits it (no human '
+              'interaction; the agent simply auto-allows). Use KeyboardDisplay '
+              'when the remote requires authenticated bonding (MITM) — that '
+              'lets us handle both Numeric Comparison and Passkey Entry. Only '
+              'pick one of the narrower capabilities (DisplayOnly, '
+              'DisplayYesNo, KeyboardOnly) when you specifically want to '
+              'shape the negotiation that way.'))
+    pairing.add_argument(
+        '--no-pairing-agent', action='store_true',
+        help=('Skip agent registration entirely (legacy behaviour). Useful if '
+              'bluetoothctl or another tool already owns the default agent on '
+              'this system and you do not want to displace it. Mutually '
+              'exclusive with --io-capability and --passkey.'))
     pairing.add_argument(
         '--passkey', type=str, default=None,
         help=('Pre-supplied passkey/PIN for non-interactive pairing. Returned '
               'from RequestPasskey/RequestPinCode without prompting; '
               'RequestConfirmation auto-confirms. Implies --io-capability '
-              'KeyboardOnly if --io-capability is unset.'))
+              'KeyboardOnly when --io-capability is left at its NoInputNoOutput '
+              'default (otherwise a static passkey would never be asked for).'))
 
     printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true',
@@ -947,19 +959,27 @@ def main():
                "use --force-gatt to try anyway).")
         return 0
 
-    # Resolve effective IO capability: explicit --io-capability wins; otherwise
-    # --passkey alone implies KeyboardOnly (we can supply a passkey but not
-    # display one to the operator). With neither set, fall back to the original
-    # no-agent code path.
-    io_capability = args.io_capability
-    if io_capability is None and args.passkey is not None:
+    # Resolve effective IO capability:
+    #   --no-pairing-agent: skip agent entirely (legacy behaviour).
+    #   --passkey set + --io-capability still at its NoInputNoOutput default:
+    #       upgrade to KeyboardOnly so the agent will actually be asked to
+    #       supply the passkey (NIO would short-circuit to Just Works and
+    #       never call RequestPasskey).
+    #   Otherwise use whatever --io-capability resolved to (default NIO).
+    io_capability = None if args.no_pairing_agent else args.io_capability
+    if (io_capability == "NoInputNoOutput"
+            and args.passkey is not None
+            # Was --io-capability explicitly given? If so, respect it; the
+            # default-comparison heuristic only kicks in when the user left
+            # it at the default.
+            and "--io-capability" not in sys.argv):
         io_capability = "KeyboardOnly"
 
     qprint(f"Connecting to {bdaddr} on PSM 0x{ATT_PSM:04x} for GATT enumeration...")
     if io_capability is None:
         services = gatt_browse_btc(bdaddr, timeout=args.timeout)
     else:
-        # When pairing is enabled, the L2CAP connect blocks until SSP/SMP
+        # When pairing is enabled the L2CAP connect blocks until SSP/SMP
         # finishes — 60+ seconds is realistic if a human has to read & type
         # the passkey on the remote device. Bump the timeout floor so we
         # don't bail out mid-pairing.
@@ -970,8 +990,15 @@ def main():
                 static_passkey=args.passkey,
             ))
         except ImportError as e:
-            print(f"Error: --io-capability requires dbus_fast: {e}", file=sys.stderr)
+            print(f"Error: pairing agent requires dbus_fast: {e}", file=sys.stderr)
+            print("       Pass --no-pairing-agent to skip the agent and use the legacy code path.",
+                  file=sys.stderr)
             return 1
+        if not services and io_capability == "NoInputNoOutput":
+            qprint("  Hint: if the remote requires MITM-authenticated bonding, "
+                   "Just Works will be refused. Retry with "
+                   "--io-capability KeyboardDisplay (or KeyboardOnly + --passkey "
+                   "for non-interactive runs).")
     if not services:
         qprint("  GATT enumeration produced no services.")
         return 0
