@@ -27,6 +27,7 @@ from handle_venv import activate_venv
 activate_venv()
 
 import argparse
+import asyncio
 import json
 import os
 import re
@@ -677,6 +678,177 @@ def write_gatt_btides(out_path, bdaddr_colon, gatt_services):
 
 
 # ---------------------------------------------------------------------------
+# BlueZ pairing agent (org.bluez.Agent1)
+# ---------------------------------------------------------------------------
+#
+# Why this exists: connecting an L2CAP socket to PSM 0x001f (ATT-over-BR/EDR)
+# on a peer that requires authentication causes the BR/EDR controller to
+# initiate Secure Simple Pairing during the connect itself. bluetoothd then
+# needs an Agent (org.bluez.Agent1) to display or input the SSP passkey on
+# our behalf — without one, pairing stalls and our connect() times out at
+# the L2CAP layer with no useful error. The same applies to BLE SMP when
+# the peer asks for an authenticated bond.
+#
+# We register a transient agent before the GATT phase, route DisplayPasskey /
+# RequestPasskey / RequestConfirmation / etc. to stdout/stdin, and unregister
+# afterwards. The IO capability is configurable so the user can shape SSP/SMP
+# negotiation to whichever interaction they actually have available
+# (terminal-only Pi: KeyboardDisplay; scripted batch: NoInputNoOutput).
+
+BLUEZ_BUS_NAME       = "org.bluez"
+BLUEZ_AGENT_PATH     = "/com/darkmentor/Blue2thprinting/SdpGattAgent"
+BLUEZ_AGENT_IFACE    = "org.bluez.Agent1"
+BLUEZ_AGENT_MGR_PATH = "/org/bluez"
+BLUEZ_AGENT_MGR_IFACE = "org.bluez.AgentManager1"
+
+VALID_IO_CAPABILITIES = (
+    "DisplayOnly", "DisplayYesNo", "KeyboardOnly",
+    "KeyboardDisplay", "NoInputNoOutput",
+)
+
+
+def _build_pairing_agent_class():
+    """Lazily import dbus_fast and return a PairingAgent class.
+
+    Wrapping the import keeps the rest of btc_sdp_gatt.py importable on
+    systems without dbus_fast (e.g. an analysis venv that doesn't include
+    capture-side deps); the module just won't be able to use --io-capability
+    until dbus_fast is installed.
+    """
+    from dbus_fast.service import ServiceInterface, method
+    from dbus_fast import DBusError
+
+    class PairingAgent(ServiceInterface):
+        def __init__(self, static_passkey=None):
+            super().__init__(BLUEZ_AGENT_IFACE)
+            # Optional pre-supplied passkey for non-interactive scripted use.
+            # When set, RequestPasskey / RequestPinCode return it without
+            # prompting; RequestConfirmation auto-confirms; the operator never
+            # has to be at the terminal.
+            self._static_passkey = static_passkey
+
+        async def _read_line(self, prompt):
+            # input() is blocking; run in a worker thread so dbus_fast's event
+            # loop keeps processing other messages (e.g. a follow-up Cancel).
+            return (await asyncio.to_thread(input, prompt)).strip()
+
+        @method()
+        def Release(self):  # noqa: N802 — D-Bus method name
+            qprint("[agent] Released by bluetoothd.")
+
+        @method()
+        async def RequestPinCode(self, device: 'o') -> 's':  # noqa: N802
+            qprint(f"[agent] PIN code requested for {device}.")
+            if self._static_passkey is not None:
+                return str(self._static_passkey)
+            return await self._read_line("[agent] Enter PIN code (1-16 chars): ")
+
+        @method()
+        def DisplayPinCode(self, device: 'o', pincode: 's'):  # noqa: N802
+            qprint(f"[agent] DISPLAY PIN CODE for {device}: {pincode}")
+
+        @method()
+        async def RequestPasskey(self, device: 'o') -> 'u':  # noqa: N802
+            qprint(f"[agent] Passkey requested for {device}.")
+            if self._static_passkey is not None:
+                return int(self._static_passkey)
+            while True:
+                line = await self._read_line(
+                    "[agent] Enter passkey (decimal 000000-999999): "
+                )
+                try:
+                    val = int(line)
+                except ValueError:
+                    qprint("[agent]   Not an integer; try again.")
+                    continue
+                if not 0 <= val <= 999999:
+                    qprint("[agent]   Out of 0..999999 range; try again.")
+                    continue
+                return val
+
+        @method()
+        def DisplayPasskey(self, device: 'o', passkey: 'u', entered: 'q'):  # noqa: N802
+            # `entered` is how many digits the remote has typed so far when
+            # our IO capability says we're displaying for them.
+            qprint(
+                f"[agent] DISPLAY PASSKEY for {device}: {passkey:06d} "
+                f"({entered}/6 entered on remote)"
+            )
+
+        @method()
+        async def RequestConfirmation(self, device: 'o', passkey: 'u'):  # noqa: N802
+            qprint(f"[agent] CONFIRM PASSKEY for {device}: {passkey:06d}")
+            if self._static_passkey is not None:
+                qprint("[agent]   Auto-confirming (static passkey supplied).")
+                return
+            ans = await self._read_line("[agent]   Confirm match on both ends? [y/N]: ")
+            if ans.lower() not in ("y", "yes"):
+                raise DBusError("org.bluez.Error.Rejected", "User rejected confirmation")
+
+        @method()
+        async def RequestAuthorization(self, device: 'o'):  # noqa: N802
+            qprint(f"[agent] AUTHORIZATION requested for {device} (legacy 'Just Works').")
+            if self._static_passkey is not None:
+                return
+            ans = await self._read_line("[agent]   Authorize this pairing? [y/N]: ")
+            if ans.lower() not in ("y", "yes"):
+                raise DBusError("org.bluez.Error.Rejected", "User rejected authorization")
+
+        @method()
+        def AuthorizeService(self, device: 'o', uuid: 's'):  # noqa: N802
+            # Per-service authorization (BR/EDR profile-level). Auto-allow —
+            # if the user paired the device they implicitly trust its services.
+            qprint(f"[agent] AUTHORIZE SERVICE {uuid} for {device} (auto-allowed).")
+
+        @method()
+        def Cancel(self):  # noqa: N802
+            qprint("[agent] Pairing cancelled by remote / bluetoothd.")
+
+    return PairingAgent
+
+
+async def _gatt_browse_with_agent(bdaddr_colon, timeout, io_capability,
+                                  static_passkey=None):
+    """Run gatt_browse_btc with a transient org.bluez.Agent1 registered.
+
+    bluetoothd routes SSP/SMP IO callbacks to whichever agent is "default";
+    we register, request-default, run the enumeration, then unregister.
+    Returns the same shape as gatt_browse_btc().
+    """
+    from dbus_fast.aio import MessageBus
+    from dbus_fast import BusType
+
+    PairingAgent = _build_pairing_agent_class()
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+    try:
+        agent = PairingAgent(static_passkey=static_passkey)
+        bus.export(BLUEZ_AGENT_PATH, agent)
+        introspect = await bus.introspect(BLUEZ_BUS_NAME, BLUEZ_AGENT_MGR_PATH)
+        proxy = bus.get_proxy_object(BLUEZ_BUS_NAME, BLUEZ_AGENT_MGR_PATH, introspect)
+        mgr = proxy.get_interface(BLUEZ_AGENT_MGR_IFACE)
+        await mgr.call_register_agent(BLUEZ_AGENT_PATH, io_capability)
+        try:
+            await mgr.call_request_default_agent(BLUEZ_AGENT_PATH)
+        except Exception as e:
+            # Non-fatal: another agent may already hold default. Our agent is
+            # still registered and will handle requests addressed to it
+            # (which is what bluetoothd does for the device we initiated).
+            qprint(f"[agent] RequestDefaultAgent failed (non-fatal): {e}")
+        qprint(f"[agent] Registered with IO capability '{io_capability}'.")
+        try:
+            services = await asyncio.to_thread(gatt_browse_btc, bdaddr_colon, timeout)
+        finally:
+            try:
+                await mgr.call_unregister_agent(BLUEZ_AGENT_PATH)
+                qprint("[agent] Unregistered.")
+            except Exception as e:
+                qprint(f"[agent] UnregisterAgent failed (non-fatal): {e}")
+        return services
+    finally:
+        bus.disconnect()
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -705,6 +877,26 @@ def main():
                         help='Skip GATT enumeration even if SDP indicates GATT support.')
     parser.add_argument('--force-gatt', action='store_true',
                         help='Attempt GATT enumeration even if SDP did not indicate support.')
+
+    pairing = parser.add_argument_group(
+        'Pairing arguments',
+        ('When set, register an org.bluez.Agent1 before opening the ATT '
+         'L2CAP socket so SSP / SMP passkey prompts triggered by the connect '
+         'are routed to this terminal instead of stalling bluetoothd. '
+         'Requires dbus_fast (capture-side venv has it).'))
+    pairing.add_argument(
+        '--io-capability', choices=VALID_IO_CAPABILITIES, default=None,
+        help=('Register a pairing agent with this IO capability. Omit to keep '
+              'the legacy no-agent behaviour. KeyboardDisplay is the broadest '
+              'choice for an interactive terminal; use NoInputNoOutput for '
+              'non-interactive batch runs (only "Just Works" pairings will '
+              'succeed).'))
+    pairing.add_argument(
+        '--passkey', type=str, default=None,
+        help=('Pre-supplied passkey/PIN for non-interactive pairing. Returned '
+              'from RequestPasskey/RequestPinCode without prompting; '
+              'RequestConfirmation auto-confirms. Implies --io-capability '
+              'KeyboardOnly if --io-capability is unset.'))
 
     printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true',
@@ -755,8 +947,31 @@ def main():
                "use --force-gatt to try anyway).")
         return 0
 
+    # Resolve effective IO capability: explicit --io-capability wins; otherwise
+    # --passkey alone implies KeyboardOnly (we can supply a passkey but not
+    # display one to the operator). With neither set, fall back to the original
+    # no-agent code path.
+    io_capability = args.io_capability
+    if io_capability is None and args.passkey is not None:
+        io_capability = "KeyboardOnly"
+
     qprint(f"Connecting to {bdaddr} on PSM 0x{ATT_PSM:04x} for GATT enumeration...")
-    services = gatt_browse_btc(bdaddr, timeout=args.timeout)
+    if io_capability is None:
+        services = gatt_browse_btc(bdaddr, timeout=args.timeout)
+    else:
+        # When pairing is enabled, the L2CAP connect blocks until SSP/SMP
+        # finishes — 60+ seconds is realistic if a human has to read & type
+        # the passkey on the remote device. Bump the timeout floor so we
+        # don't bail out mid-pairing.
+        gatt_timeout = max(args.timeout, 90.0)
+        try:
+            services = asyncio.run(_gatt_browse_with_agent(
+                bdaddr, gatt_timeout, io_capability,
+                static_passkey=args.passkey,
+            ))
+        except ImportError as e:
+            print(f"Error: --io-capability requires dbus_fast: {e}", file=sys.stderr)
+            return 1
     if not services:
         qprint("  GATT enumeration produced no services.")
         return 0
