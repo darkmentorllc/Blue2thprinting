@@ -76,7 +76,14 @@ install_prerequs(){
 enter_venv(){
     python3 -m venv ./venv
     source ./venv/bin/activate
-    pip install gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast
+    # --find-links lets pip prefer prebuilt wheels under wheels/ over source builds.
+    # This is what saves Pi Zero W (armv6l) installs from a ~90-min dbus-fast source
+    # compile — PyPI/piwheels don't publish armv6l wheels for dbus-fast, so we ship
+    # one ourselves. Add a wheel for any new architecture/Python combo by running
+    # `pip wheel dbus-fast -w wheels/$(python3 -c 'import platform;print(platform.machine())')/`
+    # on that platform once and committing the result.
+    pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
+        gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast
 }
 
 configure_scripts() {
