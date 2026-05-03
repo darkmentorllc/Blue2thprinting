@@ -145,7 +145,13 @@ compile_toolz() {
             fi
         fi
         print_tool_working "  Beginning configuration (udevdir=$UDEV_DIR)."
-        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated --with-udevdir="$UDEV_DIR"
+        # --disable-systemd: BlueZ's configure also wants a systemd system-unit
+        # directory by default (`checking systemd system unit dir... error:
+        # systemd system unit directory is required` on Trixie/Bookworm where
+        # the systemd.pc doesn't expose systemdsystemunitdir). We don't ship
+        # any systemd units (the launcher runs from a root @reboot crontab
+        # entry), so disable that integration entirely.
+        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated --disable-systemd --with-udevdir="$UDEV_DIR"
     else
         echo "  config.status present. Configuration already succeeded."
     fi
