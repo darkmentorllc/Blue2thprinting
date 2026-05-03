@@ -123,10 +123,17 @@ configure_scripts() {
 }
 
 compile_toolz() {
-    print_banner "Compiling the customized BlueZ sdptool & bluetoothctl."
-    #### I use custom BlueZ utilities to output information in a more machine-parsable format (bluetoothctl)
-    #### Or to log invocations so I can compare how many succeeded vs. failed (sdptool)
-    #### gatttool is intentionally not built — it's been deprecated in favor of BetterGetter.py.
+    print_banner "Compiling the customized BlueZ sdptool + btmon."
+    #### sdptool: logs every invocation so we can compare how many SDP browses
+    ####          succeeded vs. failed.
+    #### btmon:   primary HCI logging via Scripts/start_btmon.sh.
+    #### gatttool: not built — deprecated in favor of BetterGetter.py.
+    #### bluetoothctl: not built — discovery is now in-process via BlueZ
+    ####          D-Bus inside central_app_launcher.py (issue #47), so the
+    ####          custom bluetoothctl scan tail is no longer on the runtime
+    ####          path. The Scripts/start_bluetoothctl.sh wrapper is kept
+    ####          around for ad-hoc diagnostics; if you need it, run it
+    ####          against the system-installed bluetoothctl.
     cd $BASE_PATH/bluez-5.66
     ### BlueZ Configuration ###
     # config.status is the autotools completion sentinel, not Makefile. A Makefile
@@ -166,7 +173,7 @@ compile_toolz() {
         exit
     fi
     ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/client/bluetoothctl" ] || [ ! -f "$BASE_PATH/bluez-5.66/monitor/btmon" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/monitor/btmon" ]; then
     print_tool_working "  Beginning compilation (only the targets we need)."
     # Memory-aware -j. BlueZ's larger source files (client/player.c,
     # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
@@ -180,20 +187,13 @@ compile_toolz() {
     if [ "$jobs" -lt 1 ]; then jobs=1; fi
     if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
     print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
-    # Targeted build: only compile the dependency closure of sdptool +
-    # bluetoothctl + btmon. Skips ~80% of BlueZ targets (profiles, mesh, the
-    # dozens of tools we don't use, the test suite). On a Pi this is roughly
-    # 60s vs ~2 min for a full build. btmon is required by start_btmon.sh
-    # for HCI capture logging.
-    make -j"${jobs}" tools/sdptool client/bluetoothctl monitor/btmon
+    # Targeted build: only compile the dependency closure of sdptool + btmon.
+    # Skips the bulk of BlueZ targets (client/bluetoothctl, profiles, mesh,
+    # the dozens of tools we don't use, the test suite). btmon is required by
+    # start_btmon.sh for HCI capture logging.
+    make -j"${jobs}" tools/sdptool monitor/btmon
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/tools/sdptool --help
-    if [ $? != 0 ]; then
-        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
-        exit
-    fi
-    print_tool_working "  Testing custom bluetoothctl runs successfully. If you see the version output = 5.66, it's working."
-    $BASE_PATH/bluez-5.66/client/bluetoothctl --version
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
@@ -205,7 +205,7 @@ compile_toolz() {
         exit
     fi
     else
-        echo "  sdptool, bluetoothctl, and btmon already exist, skipping recompilation."
+        echo "  sdptool and btmon already exist, skipping recompilation."
     fi
 
     print_banner "Compiling DarkFirmware_VSC_LMP (BlueZ Realtek-VSC LMP fingerprinter)."
