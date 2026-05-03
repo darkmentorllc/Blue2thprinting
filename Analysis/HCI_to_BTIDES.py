@@ -9,8 +9,7 @@ activate_venv()
 import argparse
 
 # HCI file reading related adapter to feed into scapy
-import btsnoop.btsnoop.btsnoop as bts
-#import mybtsnoop as bts
+import hci_log_parser as bts
 
 # Scapy related
 from scapy.layers.bluetooth4LE import *

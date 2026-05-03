@@ -69,11 +69,6 @@ git clone https://github.com/XenoKovah/scapy.git
 cd scapy
 pip install .
 cd ..
-# We need this branch of btsnoop which added support for BTSNOOP_FORMAT_MONITOR sufficient to get the data into scapy for parsing
-git clone https://github.com/XenoKovah/btsnoop.git
-cd btsnoop
-pip install .
-cd ..
 
 echo ""
 echo "====================================================================================================================================="

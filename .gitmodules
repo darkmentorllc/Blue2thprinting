@@ -10,9 +10,6 @@
 [submodule "Analysis/scapy"]
 	path = Analysis/scapy
 	url = https://github.com/XenoKovah/scapy.git
-[submodule "Analysis/btsnoop"]
-	path = Analysis/btsnoop
-	url = https://github.com/XenoKovah/btsnoop.git
 [submodule "DarkFirmware_real_i"]
 	path = DarkFirmware_real_i
 	url = https://github.com/darkmentorllc/DarkFirmware_real_i.git
