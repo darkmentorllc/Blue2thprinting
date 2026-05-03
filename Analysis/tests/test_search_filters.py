@@ -270,6 +270,90 @@ def test_GPS_exclude_only_lower_right_errors(run_tme):
     assert rendered_bdaddrs(result.stdout) == set()
 
 
+# ---------------------------------------------------------------------------
+# --bdaddr-type
+# ---------------------------------------------------------------------------
+# Seed shape:
+#   device 1 (aa:bb:cc:11:22:01) — LE Public (bdaddr_random=0): Adv data
+#   device 2 (aa:bb:cc:11:22:02) — LE Random (bdaddr_random=1): GATT
+#   device 3 (aa:bb:cc:11:22:03) — BT Classic (no bdaddr_random column): EIR/CoD/SDP
+#   device 4 (aa:bb:cc:11:22:04) — LE Public (bdaddr_random=0) + LMP/LL_VERSION_IND
+#   device 5 (aa:bb:cc:11:22:05) — LE Public (bdaddr_random=0) + SMP rows
+#
+# When --bdaddr-type is set, get_bdaddrs_by_bdaddr_regex restricts the LE
+# tables to that bdaddr_random value. Tables without a bdaddr_random column
+# (LMP, EIR, SDP) are not constrained, so devices that have data in those
+# tables can leak through regardless of --bdaddr-type. The tests below pin
+# what we expect to be true today (LE Public/Random discrimination) and
+# explicitly note the tables-without-bdaddr_random leakage.
+
+def test_bdaddr_type_0_excludes_LE_random_device(run_tme):
+    """--bdaddr-type 0 (LE Public) must not return the LE Random device 2."""
+    result = run_tme("--bdaddr-regex", ALL_TEST_BDADDR_REGEX, "--bdaddr-type", "0")
+    rendered = rendered_bdaddrs(result.stdout)
+    assert "aa:bb:cc:11:22:02" not in rendered, (
+        f"LE Random device 2 should not match --bdaddr-type 0; got: {rendered}"
+    )
+    # All three pure-LE-Public devices should match.
+    for d in ("aa:bb:cc:11:22:01", "aa:bb:cc:11:22:04", "aa:bb:cc:11:22:05"):
+        assert d in rendered, f"LE Public device {d} should match --bdaddr-type 0; got: {rendered}"
+
+
+def test_bdaddr_type_1_excludes_pure_LE_public_devices(run_tme):
+    """--bdaddr-type 1 (LE Random) must not return LE-Public-only devices.
+    Device 1 and device 5 only have LE-Public-side data, so they should
+    drop. Device 2 (LE Random) must stay."""
+    result = run_tme("--bdaddr-regex", ALL_TEST_BDADDR_REGEX, "--bdaddr-type", "1")
+    rendered = rendered_bdaddrs(result.stdout)
+    assert "aa:bb:cc:11:22:02" in rendered, \
+        f"LE Random device 2 should match --bdaddr-type 1; got: {rendered}"
+    for d in ("aa:bb:cc:11:22:01", "aa:bb:cc:11:22:05"):
+        assert d not in rendered, \
+            f"LE-Public-only device {d} should not match --bdaddr-type 1; got: {rendered}"
+
+
+def test_bdaddr_type_unset_returns_everything(run_tme):
+    """Default (no --bdaddr-type) matches all five seeded devices."""
+    result = run_tme("--bdaddr-regex", ALL_TEST_BDADDR_REGEX)
+    assert ALL_SEEDED.issubset(rendered_bdaddrs(result.stdout))
+
+
+def test_bdaddr_type_renders_data_sections_when_matching(run_tme):
+    """With --bdaddr <public-device> --bdaddr-type 0, the per-device data
+    sections (Name, UUID16, MSD, ...) all render — bdaddr_type matches the
+    stored row."""
+    result = run_tme("--bdaddr", "AA:BB:CC:11:22:01", "--bdaddr-type", "0")
+    assert "DeviceName: TestDevice1" in result.stdout, \
+        f"Expected device 1's name to render; got:\n{result.stdout}"
+    assert "180d" in result.stdout, \
+        f"Expected device 1's Heart Rate UUID16 to render; got:\n{result.stdout}"
+
+
+def test_bdaddr_type_suppresses_data_sections_when_mismatched(run_tme):
+    """With --bdaddr <public-device> --bdaddr-type 1 (LE Random forced), the
+    data sections are filtered out by per-table bdaddr_random=1 lookups,
+    even though the 'For bdaddr = ...' header is still printed because
+    --bdaddr is a direct override that doesn't go through the LE-side regex
+    lookup."""
+    result = run_tme("--bdaddr", "AA:BB:CC:11:22:01", "--bdaddr-type", "1")
+    assert "DeviceName: TestDevice1" not in result.stdout, (
+        f"With --bdaddr-type=1 mismatched against a public device, the name "
+        f"section should be suppressed; got:\n{result.stdout}"
+    )
+
+
+def test_bdaddr_type_random_renders_GATT_for_random_device(run_tme):
+    """Sanity: --bdaddr <random-device> --bdaddr-type 1 still renders GATT
+    sections from device 2."""
+    result = run_tme("--bdaddr", "AA:BB:CC:11:22:02", "--bdaddr-type", "1")
+    assert "TestGATT2" in result.stdout, \
+        f"Expected device 2's name to render with --bdaddr-type 1; got:\n{result.stdout}"
+
+
+# ---------------------------------------------------------------------------
+# --GPS-exclude-upper-left / --GPS-exclude-lower-right (continued)
+# ---------------------------------------------------------------------------
+
 def test_GPS_exclude_does_not_affect_devices_without_gps(run_tme):
     """Devices with no GPS rows at all (seeded devices 1, 3, 4, 5) should be
     immune to the GPS-exclude filter even when the box is global."""

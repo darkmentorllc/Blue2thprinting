@@ -1677,7 +1677,7 @@ def btides_to_sql(args):
                     entry_validator.validate(instance=entry)
                     #qprint("JSON is valid according to BTIDES Schema")
                 except ValidationError as e:
-                    qprint("JSON data is invalid per BTIDES Schema:", e.message)
+                    qprint(f"JSON data is invalid per BTIDES Schema: {e.message}")
                     if(skip_invalid):
                         continue
                     else:
@@ -1757,7 +1757,8 @@ def main():
 
     btides_to_sql_succeeded = btides_to_sql(args)
     if(btides_to_sql_succeeded and args.rename):
-        os.rename(args.input, args.input + ".processed")
+        for input_file in args.input:
+            os.rename(input_file, input_file + ".processed")
 
 if __name__ == "__main__":
     main()

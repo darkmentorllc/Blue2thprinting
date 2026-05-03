@@ -146,6 +146,12 @@ def test_require_GPS_filters_to_device2(run_tme):
     assert rendered_bdaddrs(result.stdout) == {"aa:bb:cc:11:22:02"}
 
 
+def test_require_SDP_filters_to_device3(run_tme):
+    """seed.sql device 3 is the only device with an SDP_Common row."""
+    result = run_tme("--bdaddr-regex", ALL_TEST_BDADDR_REGEX, "--require-SDP")
+    assert rendered_bdaddrs(result.stdout) == {"aa:bb:cc:11:22:03"}
+
+
 def test_require_LL_VERSION_IND_filters_to_device4(run_tme):
     result = run_tme("--bdaddr-regex", ALL_TEST_BDADDR_REGEX, "--require-LL_VERSION_IND")
     assert rendered_bdaddrs(result.stdout) == {"aa:bb:cc:11:22:04"}
