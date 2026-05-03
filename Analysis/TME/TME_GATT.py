@@ -502,7 +502,15 @@ def print_GATT_info(bdaddr, bdaddr_random):
                             if(handle <= svc_end_handle and handle >= svc_begin_handle):
                                 service_match_dict[handle] = 1
                                 error_code = int.from_bytes(byte_values)
-                                fmt_byte_values = Fore.RED + Style.BRIGHT + f"{TME.BT_Data_Types.att_errorcode_to_str[error_code]}"
+                                # ATT spec carves out vendor-defined error ranges
+                                # (0x80-0x9F Application, 0xA0-0xDF Profile/Service,
+                                # 0xE0-0xFF Application again) that aren't in the
+                                # core att_errorcode_to_str table. Fall back to a
+                                # hex-string label rather than KeyError-crashing
+                                # the entire TME run on a single odd device read.
+                                error_str = TME.BT_Data_Types.att_errorcode_to_str.get(
+                                    error_code, f"Unknown ATT error 0x{error_code:02x}")
+                                fmt_byte_values = Fore.RED + Style.BRIGHT + error_str
                                 qprint(f"{i5}GATT error received when attempting read: {fmt_byte_values}")
                     if any(key[0] == handle and key[1] == type_ATT_READ_RSP for key in char_value_handles_dict.keys()):
                         for byte_values in char_value_handles_dict[(handle, type_ATT_READ_RSP)]:
