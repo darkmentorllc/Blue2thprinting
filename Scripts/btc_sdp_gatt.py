@@ -35,6 +35,13 @@ import struct
 import sys
 import time
 
+# This script lives under Scripts/ but imports the TME package, which lives
+# under Analysis/. Make Analysis/ importable regardless of CWD.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_ANALYSIS_DIR = os.path.normpath(os.path.join(_HERE, "..", "Analysis"))
+if _ANALYSIS_DIR not in sys.path:
+    sys.path.insert(0, _ANALYSIS_DIR)
+
 import TME.TME_glob
 from TME.TME_BTIDES_base import (
     write_BTIDES,
