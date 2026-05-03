@@ -7,12 +7,19 @@
 # BlueTooth Information Data Exchange Schema (BTIDES!)
 # as given here: https://darkmentor.com/BTIDES_Schema/BTIDES.html
 
-import json, re
+import json, os, re
 import TME.TME_glob
 
 from jsonschema import validate, ValidationError
 from referencing import Registry, Resource
 from jsonschema import Draft202012Validator
+
+# Resolve the bundled BTIDES_Schema/ path relative to this file rather than CWD,
+# so callers under Scripts/ (e.g. btc_sdp_gatt.py) work without first chdir'ing
+# into Analysis/.
+_BTIDES_SCHEMA_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "BTIDES_Schema")
+)
 
 # Same order as in BTIDES_base.json
 BTIDES_files = ["BTIDES_base.json",
@@ -44,7 +51,7 @@ def write_BTIDES(out_filename):
         return tuple(map(int, (v.split("."))))
 
     for file in BTIDES_files:
-        with open(f"./BTIDES_Schema/{file}", 'r') as f:
+        with open(os.path.join(_BTIDES_SCHEMA_DIR, file), 'r') as f:
             #BTIDES_Schema
             s = json.load(f)
             if file == "BTIDES_base.json":
