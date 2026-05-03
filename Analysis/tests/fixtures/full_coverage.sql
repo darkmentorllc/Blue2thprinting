@@ -257,11 +257,9 @@ VALUES ('aa:bb:cc:dd:ee:7f', 1, 2, 100);
 INSERT INTO LMP_FEATURES_RES_EXT (bdaddr, page, max_page, features)
 VALUES ('aa:bb:cc:dd:ee:7f', 1, 2, 200);
 
--- LMP_POWER_CONTROL_REQ / LMP_POWER_CONTROL_RES are intentionally NOT seeded:
--- BTIDES_to_SQL.py:894 calls bytes.fromhex(power_adj_req) on what the BTIDES
--- schema defines as an integer field, which makes the re-import crash with
--- TypeError. Once that import bug is fixed, add these tables back here and
--- to ROUND_TRIP_TABLES in test_full_coverage_round_trip.py.
+INSERT INTO LMP_POWER_CONTROL_REQ (bdaddr, power_adj_req) VALUES ('aa:bb:cc:dd:ee:7f', 1);
+
+INSERT INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES ('aa:bb:cc:dd:ee:7f', 5);
 
 -- =====
 -- SDP

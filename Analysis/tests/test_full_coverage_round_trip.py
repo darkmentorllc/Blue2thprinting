@@ -70,8 +70,7 @@ _ALL_FIXTURE_TABLES = [
     "LMP_FEATURES_RES", "LMP_FEATURES_RES_EXT",
     "LMP_NAME_RES_defragmented",
     "LMP_NOT_ACCEPTED", "LMP_NOT_ACCEPTED_EXT",
-    # LMP_POWER_CONTROL_REQ / LMP_POWER_CONTROL_RES are NOT here: see fixture
-    # comment for the BTIDES_to_SQL.py:894 type-coercion bug.
+    "LMP_POWER_CONTROL_REQ", "LMP_POWER_CONTROL_RES",
     "LMP_PREFERRED_RATE",
     "LMP_VERSION_REQ", "LMP_VERSION_RES",
     "LMP_empty_opcodes",
