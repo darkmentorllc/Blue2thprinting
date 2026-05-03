@@ -16,6 +16,7 @@ import subprocess
 import threading
 import time
 import glob
+from queue import Queue
 from subprocess import TimeoutExpired
 import traceback
 
@@ -34,6 +35,11 @@ braktooth_enabled = False # When True, runs LMP2thprint via the BlueZ Realtek-VS
 SUPPORT_BRAKTOOTH = False # Set to True only on hosts that still need the legacy ESP32 Braktooth path (requires the FTDI dual-RS232 board). When False, lmp2thprint runs without the FTDI prereq.
 better_getter_enabled = True
 sdptool_enabled = True
+
+# Number of Sonoff dongles to reserve for Better_Getter.py (round-robin). Remaining
+# dongles are allocated to Sniffle per the channel-separation rules in
+# https://github.com/darkmentorllc/Blue2thprinting/issues/26
+MAX_BG = 1
 
 print_skipped = True
 print_verbose = True
@@ -130,20 +136,47 @@ if(Sniffle_thread_enabled or better_getter_enabled or (braktooth_enabled and SUP
             braktooth_enabled = False
             better_getter_enabled = False
 
+def _resolve_dongle_path(by_id_path):
+    """Resolve a /dev/serial/by-id symlink to its underlying /dev/ttyUSB* device path."""
+    relative = os.readlink(by_id_path)
+    return os.path.abspath(os.path.join(os.path.dirname(by_id_path), relative))
+
+# Reserved dongle pools: the first MAX_BG matched dongles are for Better_Getter.py
+# (round-robin), and the remainder are for Sniffle.
+bg_dongles = []
+sniffle_dongles = []
+
 if(Sniffle_thread_enabled or better_getter_enabled):
     # Construct the full pattern path
     full_pattern = os.path.join(base_dir, pattern)
 
-    # Use glob to match the pattern
-    matching_files = glob.glob(full_pattern)
+    # Use glob to match the pattern. Sort to keep the BG/Sniffle assignment stable across reboots.
+    matching_files = sorted(glob.glob(full_pattern))
     if(matching_files):
-        # The first path is reserved for Better_Getter.py
-        # Note: this may need to be updated in the future to be a configurable number of elements, rather than just 1
-        first_sonoff_serial_port_relative_path = os.readlink(matching_files[0])
-        first_sonoff_serial_port_absolute_path = os.path.abspath(os.path.join(os.path.dirname(matching_files[0]), first_sonoff_serial_port_relative_path))
+        resolved_dongles = [_resolve_dongle_path(p) for p in matching_files]
+
+        # Cap MAX_BG at the number of dongles available so we don't accidentally
+        # leave Sniffle starved when fewer dongles are present than configured.
+        effective_max_bg = min(MAX_BG, len(resolved_dongles)) if better_getter_enabled else 0
+        bg_dongles = resolved_dongles[:effective_max_bg]
+        sniffle_dongles = resolved_dongles[effective_max_bg:]
+
+        if(print_verbose):
+            print(f"MAX_BG = {MAX_BG}; effective_max_bg = {effective_max_bg}")
+            print(f"BG dongles ({len(bg_dongles)}): {bg_dongles}")
+            print(f"Sniffle dongles ({len(sniffle_dongles)}): {sniffle_dongles}")
+
+        if(better_getter_enabled and not bg_dongles):
+            print("No dongles available for Better_Getter.py. Disabling better_getter_enabled.")
+            better_getter_enabled = False
+
+        if(Sniffle_thread_enabled and not sniffle_dongles):
+            print("No dongles left for Sniffle after reserving MAX_BG dongles for BG. Disabling Sniffle_thread_enabled.")
+            Sniffle_thread_enabled = False
     else:
         print(f"No Sniffle adapters found, despite code having Sniffle_thread_enabled = True. Setting to False")
         Sniffle_thread_enabled = False
+        better_getter_enabled = False
 
 if(braktooth_enabled and SUPPORT_BRAKTOOTH):
     # Legacy: find the FTDI-based ESP32 Braktooth board.
@@ -160,6 +193,16 @@ else:
     # New BlueZ-based path: no FTDI board needed. The new tool ignores --host-port,
     # but we keep an empty value so the existing cmd construction stays unchanged.
     braktooth_serial_port_absolute_path = ""
+
+#####################################################################################
+# Round-robin pool of dongles available to Better_Getter.py.
+# Sized by MAX_BG. Multiple BG instances may run concurrently — one per dongle.
+# Queue.get() blocks the BLE thread when all BG dongles are in flight, which is what
+# rate-limits us to MAX_BG concurrent BG processes.
+#####################################################################################
+bg_dongle_queue = Queue()
+for _bg_path in bg_dongles:
+    bg_dongle_queue.put(_bg_path)
 
 ##################################################
 # Log print helpers
@@ -200,7 +243,7 @@ def all_2thprints_done(type, bdaddr):
 
 class ApplicationThread(threading.Thread):
     global serial_port_status
-    def __init__(self, process, bdaddr, info_type, timeout, launch_cmd=""):
+    def __init__(self, process, bdaddr, info_type, timeout, launch_cmd="", bg_dongle_path=None):
         threading.Thread.__init__(self)
         self.process = process
         self.timeout = timeout
@@ -208,8 +251,22 @@ class ApplicationThread(threading.Thread):
         self.bdaddr = bdaddr
         self.info_type = info_type
         self.launch_cmd = launch_cmd
+        # When set, the GATT path returns this dongle to bg_dongle_queue on exit so
+        # another BLE bdaddr can claim it next.
+        self.bg_dongle_path = bg_dongle_path
+
+    def _release_bg_dongle(self):
+        if self.bg_dongle_path is not None:
+            bg_dongle_queue.put(self.bg_dongle_path)
+            if(print_verbose): print(f"Released BG dongle {self.bg_dongle_path} back to queue")
 
     def run(self):
+        try:
+            self._run_inner()
+        finally:
+            self._release_bg_dongle()
+
+    def _run_inner(self):
         try:
             retCode = self.process.wait(self.timeout)
             if self.process.poll() is None:
@@ -271,19 +328,16 @@ class ApplicationThread(threading.Thread):
                external_log_write(sdpprint_log_path, f"SDPPRINTING FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "Sniffle"):
                external_log_write(sniffle_stdout_log_path, f"SNIFFLE TIMEOUT FOR: {self.launch_cmd} {datetime.datetime.now()}")
-               # Re-set the status of the serial port to available
+               # Re-set the status of the serial port to available so the sniffle thread relaunches it.
+               # The role (scan vs follow + channel) is held in serial_port_role[key] and is preserved
+               # across relaunches; we only need to flip the state from PID -> 0 (available).
                key = next((k for k, v in serial_port_status.items() if v == self.process.pid), None)
                if(key == None):
                    print(serial_port_status)
                    print("Unknown error occurred. Exiting")
                    exit(-1)
                if(print_verbose): print(f"self.process.pid = {self.process.pid}. Corresponding key in serial_port_status is {key}")
-               # Set the status back to launching with follow or not (-A) based on the current launch status
-               toks = self.launch_cmd.split(" ")
-               if(toks[2] == "-A"):
-                   serial_port_status[key] = 1
-               else:
-                   serial_port_status[key] = 0
+               serial_port_status[key] = 0
                if(print_verbose): print("Notifying sniffle_thread_function to wake up and re-launch a new process/thread for this serial port.")
                with start_sniffle_threads_condition:
                    start_sniffle_threads_condition.notify()
@@ -509,6 +563,13 @@ def ble_thread_function():
                 # We have to check whether bdaddr is still in ble_bdaddrs because it could have been deleted via finding a [DEL] in the bluetoothctl log
                 # This is a race condition...
                 if(not skip_sub_process and bdaddr in ble_bdaddrs):
+                    # Acquire the next available BG dongle. Blocks here when all MAX_BG dongles
+                    # are already running a Better_Getter.py process, which gives us natural
+                    # round-robin distribution across the BG pool (Queue is FIFO).
+                    bg_dongle_path = bg_dongle_queue.get()
+                    if(print_verbose): print(f"BLE: Acquired BG dongle {bg_dongle_path} for {bdaddr}")
+
+                    launched_thread = None
                     with ble_bdaddrs_lock:
                         if(bdaddr in ble_bdaddrs):
                             external_log_write(bgprint_log_path, f"BETTERGETTER ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
@@ -516,7 +577,7 @@ def ble_thread_function():
                             current_time = datetime.datetime.now()
                             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
                             pcap_output = f"-o={BG_output_pcap_path}/{launch_time}_{bdaddr}_BG_{hostname}.pcap"
-                            serial_port = f"-s={first_sonoff_serial_port_absolute_path}"
+                            serial_port = f"-s={bg_dongle_path}"
                             # -u for unbuffered python output (so it streams to log realtime)
                             if(type != "random"):
                                 gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
@@ -537,20 +598,27 @@ def ble_thread_function():
                                 # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                                 force_reboot()
                             if(gatt_process != None):
-                                gatt_thread = ApplicationThread(gatt_process, bdaddr, info_type="GATT", timeout=20) # Unfortunately I found some device that can take ~21 sec(!) even when tested manually
+                                gatt_thread = ApplicationThread(gatt_process, bdaddr, info_type="GATT", timeout=20, bg_dongle_path=bg_dongle_path) # Unfortunately I found some device that can take ~21 sec(!) even when tested manually
                                 try:
                                     gatt_thread.start()
+                                    launched_thread = gatt_thread
                                     ble_external_tool_threads.append(gatt_thread)
                                 except Exception as e:
                                     print(f"Caught an exception while starting GATT thread: {e}")
                                     # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                                     force_reboot()
 
+                    # If we never started a thread (race with [DEL] removed bdaddr, or Popen
+                    # failed silently), the dongle would otherwise be lost from the pool — return it.
+                    if(launched_thread is None):
+                        bg_dongle_queue.put(bg_dongle_path)
+                        if(print_verbose): print(f"BLE: No GATT thread started for {bdaddr}; returned BG dongle {bg_dongle_path} to queue")
 
-            # Wait for all threads to finish, before moving to the next bd_addr
-            for thread in ble_external_tool_threads:
-                thread.join()
-            print(f"BLE: Finished all threads for {bdaddr}")
+            # Reap any finished threads to bound memory growth, but do NOT block on running ones —
+            # the bg_dongle_queue handles back-pressure (BLE thread blocks on queue.get() when all
+            # MAX_BG dongles are in flight). Joining here would serialize launches and defeat
+            # round-robin parallelism when MAX_BG > 1.
+            ble_external_tool_threads = [t for t in ble_external_tool_threads if not t.is_terminated]
 
         print(f"Finished one complete loop through sorted_ble_bdaddrs {datetime.datetime.now()}")
 
@@ -695,48 +763,109 @@ def btc_thread_function():
 # Sniffle-handling thread
 ##################################################
 
-# The key will be serial port like /dev/ttyUSB0, the value will be 0 if the serial port is available and should follow connections, 1 if it's available and should not follow, and a process PID if it's in use
+# Per-dongle state. Status convention:
+#   0   = port available, sniffle thread should (re)launch using the role in serial_port_role
+#   PID = port currently in use by that pid; sniffle thread skips it
 serial_port_status = {}
+# Per-dongle role assignment, fixed at startup by assign_sniffle_roles().
+#   ('follow', None)        => default channel hopping, follow connections (no -A, no -c)
+#   ('scan',   None)        => active scan all advertising channels, no connection follow (-A only)
+#   ('follow', 37|38|39)    => follow connections pinned to a specific advertising channel (-c=N)
+serial_port_role = {}
 start_sniffle_threads_condition = threading.Condition()
+
+
+def assign_sniffle_roles(dongles):
+    """Distribute roles across Sniffle dongles per issue #26.
+
+    With S = number of Sniffle dongles (i.e. total dongles minus MAX_BG):
+        S == 0: nothing to assign (caller should disable Sniffle)
+        S == 1: 1 scan-all-channels-no-follow
+        S == 2: 1 scan-all-channels-no-follow + 1 connection-follower (default channel hop)
+        S == 3: 1 connection-follower pinned per advertising channel (37, 38, 39)
+        S >= 4: 1 follower per channel (37, 38, 39) + (S - 3) scan-all-channels-no-follow
+
+    The first MAX_BG dongles never reach this function — they are reserved for
+    Better_Getter.py and managed by bg_dongle_queue.
+    """
+    s = len(dongles)
+    roles = {}
+    if s == 0:
+        return roles
+    if s == 1:
+        roles[dongles[0]] = ('scan', None)
+    elif s == 2:
+        roles[dongles[0]] = ('scan', None)
+        roles[dongles[1]] = ('follow', None)
+    elif s == 3:
+        roles[dongles[0]] = ('follow', 37)
+        roles[dongles[1]] = ('follow', 38)
+        roles[dongles[2]] = ('follow', 39)
+    else:
+        # S >= 4: pin first three to ch37/38/39 follow, rest are no-follow all-channel scan
+        roles[dongles[0]] = ('follow', 37)
+        roles[dongles[1]] = ('follow', 38)
+        roles[dongles[2]] = ('follow', 39)
+        for path in dongles[3:]:
+            roles[path] = ('scan', None)
+    return roles
+
+
+def build_sniffle_cmd(dongle_path, role, launch_time, short_name, host):
+    """Translate a (mode, channel) role tuple into a sniffle CLI invocation."""
+    mode, channel = role
+    cmd = ["python3", sniffle_path]
+    label_parts = []
+    if mode == 'scan':
+        cmd.append("-A")
+        label_parts.append("no_follow")
+    else:
+        label_parts.append("follow")
+    if channel is not None:
+        cmd.append(f"-c={channel}")
+        label_parts.append(f"ch{channel}")
+    label = "_".join(label_parts)
+    cmd.append(f"-s={dongle_path}")
+    cmd.append(f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_{label}_{host}.pcap")
+    return cmd
+
+
+# Compute the role for every Sniffle dongle once, at module load. The Sniffle
+# thread then reads from serial_port_role to (re)launch.
+serial_port_role = assign_sniffle_roles(sniffle_dongles)
+for _path in serial_port_role:
+    serial_port_status[_path] = 0
+if Sniffle_thread_enabled and not serial_port_role:
+    print("assign_sniffle_roles produced an empty mapping; disabling Sniffle.")
+    Sniffle_thread_enabled = False
+
 
 # Function for the Sniffle thread(s)
 def sniffle_thread_function():
     global sniffle_stdout_logging
     global start_sniffle_threads_condition
-    global available_serial_ports
-    adv_channel = 0 # This will be used as 37 + adv_channel++ mod 3, so that possible values are only 37, 38, and 39
-    create_connection_follower = True
 
-    # Skip the first serial port and leave it for Better_Getter.py, by using the [1:] notation to start from matching_files[1]
-    for serial_port_filename in matching_files[1:]:
-        # Because the files in /dev/serial/by-id are symbolic links, find where it actually points
-        link_target_relative_path = os.readlink(serial_port_filename)
-        link_target_absolute_path = os.path.abspath(os.path.join(os.path.dirname(serial_port_filename), link_target_relative_path))
-        if(print_verbose): print(f"Found viable Sniffle dongle: {serial_port_filename} -> {link_target_absolute_path}")
-        if(print_verbose): print(f"Adding {link_target_absolute_path} to serial_port_status")
-        if(create_connection_follower):
-            serial_port_status[link_target_absolute_path] = 0
-            create_connection_follower = False
-        else:
-            serial_port_status[link_target_absolute_path] = 1
+    if(print_verbose):
+        for _path, _role in serial_port_role.items():
+            print(f"Sniffle role: {_path} -> {_role}")
 
     while(True):
-        for link_target_absolute_path in serial_port_status.keys():
-            # Get just the "ttyUSB# part to append to file names so they're unique
+        # Snapshot keys() so the iteration is safe even if a callback mutates the dict
+        # while we're launching.
+        for link_target_absolute_path in list(serial_port_role.keys()):
+            # Skip dongles whose previous sniffle process is still running. Without this
+            # guard, a wake-up from one timed-out port would re-launch on every dongle,
+            # orphaning the previously-launched processes.
+            if serial_port_status[link_target_absolute_path] != 0:
+                continue
+            # Get just the "ttyUSB#" part to append to file names so they're unique
             short_name = link_target_absolute_path.split("/")[2]
-            target_adv_channel = 37 + adv_channel
-            adv_channel = (adv_channel + 1) % 3
-            # Launch the sniffer as a background thread
             current_time = datetime.datetime.now()
             launch_time = current_time.strftime('%Y-%m-%d-%H-%M-%S')
-            hostname = os.popen('hostname').read().strip()
+            host = os.popen('hostname').read().strip()
+            role = serial_port_role[link_target_absolute_path]
             # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
-            if(serial_port_status[link_target_absolute_path] == 0):
-                sniffle_cmd = ["python3", sniffle_path, f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_follow_{hostname}.pcap"]
-            else:
-                sniffle_cmd = ["python3", sniffle_path, f"-A", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{short_name}_no_follow_{hostname}.pcap"]
-            #TODO: In the future get more clever with launching N -c options once we're at 4 or more dongles. But for now, just launch the first one as a connection follower, and all subsequent ones as active-scanning non-followers (-A)
-            #sniffle_cmd = ["python3", sniffle_path, f"-c={target_adv_channel}", f"-s={link_target_absolute_path}", f"-o={sniffle_pcap_log_folder}/{launch_time}_{target_adv_channel}_{short_name}_no_follow_{hostname}.pcap"]
+            sniffle_cmd = build_sniffle_cmd(link_target_absolute_path, role, launch_time, short_name, host)
 
             try:
                 if(sniffle_stdout_logging):
