@@ -16,7 +16,11 @@ from TME.TME_GATT import match_known_GATT_UUID_or_custom_UUID
 from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
 
 from colorama import Fore, Back, Style, init
-from scapy_to_BTIDES_common import bytes_to_hex_str, bytes_reversed_to_hex_str, bytes_to_utf8
+# bytes_to_hex_str / bytes_reversed_to_hex_str / bytes_to_utf8 actually live in
+# TME.TME_helpers; importing them via scapy_to_BTIDES_common dragged scapy onto
+# the analysis path, which broke `--input-BTIDES`-only runs on capture nodes
+# whose venv doesn't ship scapy.
+from TME.TME_helpers import bytes_to_hex_str, bytes_reversed_to_hex_str, bytes_to_utf8
 init(autoreset=True)
 
 # Returns 0 if there is no SDP info for this BDADDR in any of the SDP tables, else returns 1

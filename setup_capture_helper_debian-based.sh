@@ -86,9 +86,14 @@ enter_venv(){
     # shared TME.* package under Analysis/. jsonschema is pinned to 4.23 because
     # TME_BTIDES_base uses a constructor that older distro-packaged versions
     # (e.g. Ubuntu 24.04's) don't have — same pin as setup_analysis_helper.
+    # pyyaml lets Tell_Me_Everything.py run --input-BTIDES on a capture node
+    # (TME.TME_import loads YAML metadata at import time). google-auth* /
+    # googleapiclient are intentionally NOT installed here — they're only
+    # needed for BTIDALPOOL features and add ~10 MB; install them via
+    # setup_analysis_helper_debian-based.sh if you need that path.
     pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
         gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast \
-        jsonschema==4.23 colorama
+        jsonschema==4.23 colorama pyyaml
 }
 
 configure_scripts() {

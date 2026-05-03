@@ -28,13 +28,14 @@ from TME.TME_metadata import *
 from TME.TME_trackability import *
 from TME.TME_GPS import *
 from TME.TME_glob import verbose_print, quiet_print, verbose_BTIDES
-from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
-from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
-from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
-from PCAP_to_BTIDES import read_pcap
-from HCI_to_BTIDES import read_HCI
 from TME.TME_BTIDES_base import rebuild_SingleBDADDR_index
+# PCAP_to_BTIDES and HCI_to_BTIDES both pull in scapy at module-load time, and
+# scapy isn't part of the capture-side venv. BTIDALPOOL_to_BTIDES /
+# BTIDES_to_BTIDALPOOL / oauth_helper pull in google-auth-oauthlib /
+# googleapiclient, which the capture-side venv also lacks. Import all of these
+# lazily inside the branches that actually need them so a capture node can run
+# --input-BTIDES with just its core deps.
 
 ########################################
 # MAIN #################################
@@ -143,10 +144,12 @@ def main():
     # and collect all the BDADDRs from it for printing.
     #######################################################
     if args.input_pcap is not None:
+        from PCAP_to_BTIDES import read_pcap   # lazy: pulls scapy
         for pcap in args.input_pcap:
             read_pcap(pcap)
 
     if args.input_hci_log is not None:
+        from HCI_to_BTIDES import read_HCI     # lazy: pulls scapy
         for hci_log in args.input_hci_log:
             read_HCI(hci_log)
 
@@ -203,6 +206,9 @@ def main():
     # with the rest of the code as normal.
     #######################################################
     if(args.query_BTIDALPOOL):
+        # Lazy import: pulls oauth_helper -> google_auth_oauthlib + googleapiclient.
+        from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
+        from oauth_helper import AuthClient
         qprint("Querying BTIDALPOOL")
         query_object = {}
         if args.bdaddr:
@@ -545,6 +551,9 @@ def main():
 
         # We can only send the out_filename if --output was passed
         if args.to_BTIDALPOOL:
+            # Lazy import: pulls oauth_helper -> google_auth_oauthlib + googleapiclient.
+            from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
+            from oauth_helper import AuthClient
             # If the token isn't given on the CLI, then redirect them to go login and get one
             client = AuthClient()
             if args.token_file:
