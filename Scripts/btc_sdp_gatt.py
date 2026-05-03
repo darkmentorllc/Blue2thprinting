@@ -50,18 +50,36 @@ from TME.TME_BTIDES_base import (
     ff_SingleBDADDR_base,
 )
 from TME.TME_BTIDES_SDP import ff_SDP_Common, ff_SDP_ERROR_RSP
-from TME.TME_BTIDES_GATT import ff_GATT_Service, ff_GATT_Characteristic
+from TME.TME_BTIDES_GATT import (
+    ff_GATT_Service,
+    ff_GATT_Characteristic,
+    ff_GATT_Characteristic_Value,
+    ff_Descriptor,
+)
 from TME.BT_Data_Types import (
     type_SDP_ERROR_RSP,
     type_SDP_SERVICE_SEARCH_ATTR_REQ,
     type_SDP_SERVICE_SEARCH_ATTR_RSP,
     type_ATT_ERROR_RSP,
     type_ATT_EXCHANGE_MTU_REQ,
+    type_ATT_FIND_INFORMATION_REQ,
+    type_ATT_FIND_INFORMATION_RSP,
+    type_ATT_READ_REQ,
+    type_ATT_READ_RSP,
+    type_ATT_READ_BLOB_REQ,
+    type_ATT_READ_BLOB_RSP,
     type_ATT_READ_BY_TYPE_REQ,
     type_ATT_READ_BY_TYPE_RSP,
     type_ATT_READ_BY_GROUP_TYPE_REQ,
     type_ATT_READ_BY_GROUP_TYPE_RSP,
 )
+
+# ATT spec opcode not currently exported from BT_Data_Types.
+type_ATT_EXCHANGE_MTU_RSP = 0x03
+# ATT error code we use to short-circuit blob continuation.
+ATT_ERROR_ATTRIBUTE_NOT_LONG = 0x0B
+# Characteristic-properties bit (Bluetooth Core Vol 3 Part G §3.3.1.1).
+CHAR_PROP_READ = 0x02
 from TME.BTIDES_Data_Types import type_BTIDES_direction_C2P, type_BTIDES_direction_P2C
 from TME.TME_helpers import qprint, bytes_to_hex_str
 
@@ -386,9 +404,20 @@ def detect_gatt_support(parsed_records):
 # ---------------------------------------------------------------------------
 
 def gatt_browse_btc(bdaddr_colon, timeout=10.0):
-    """Enumerate GATT services & characteristics over BR/EDR (PSM 0x001F).
+    """Enumerate GATT services + characteristics + descriptors over BR/EDR.
 
-    Returns a list of service dicts (as ff_GATT_Service shape), each with an
+    Per characteristic:
+      * If the Read property bit is set, issue ATT_READ_REQ against value_handle
+        and capture the result (or ATT_ERROR_RSP code) as a CharacteristicValue
+        with an io_array entry.
+      * Discover all descriptors in the gap between this characteristic's
+        value_handle+1 and the next characteristic's handle-1 (or the service's
+        end_handle for the trailing characteristic) via ATT_FIND_INFORMATION_REQ.
+      * For well-known descriptor UUIDs (2900-2904), read the descriptor's value
+        and emit a typed BTIDES Descriptor29xx object. 2901 (User Description)
+        gets both the raw hex and the UTF-8 decode where decodable.
+
+    Returns a list of service dicts (ff_GATT_Service shape) each with an
     embedded "characteristics" list. Returns [] on any connection failure.
     """
     try:
@@ -399,24 +428,23 @@ def gatt_browse_btc(bdaddr_colon, timeout=10.0):
 
     services = []
     try:
-        # MTU exchange; nice to have, ignore the response details — we only need
-        # ATT default-MTU (23) semantics for the enumeration to succeed.
-        try:
-            sock.send(struct.pack("<BH", type_ATT_EXCHANGE_MTU_REQ, 517))
-            sock.recv(512)
-        except (socket.timeout, OSError):
-            pass
+        mtu = _att_exchange_mtu(sock, requested=517)
+        if(TME.TME_glob.verbose_print):
+            qprint(f"  Negotiated ATT MTU: {mtu}")
 
         # Discover primary services via ATT_READ_BY_GROUP_TYPE_REQ for 0x2800.
         services = _att_read_by_group_type_loop(sock, 0x2800, "2800")
 
-        # For each service, enumerate characteristics.
+        # For each service, enumerate characteristics, then enrich each char with
+        # its value (where readable) and its descriptors.
         for svc in services:
             chars = _att_read_by_type_characteristics(
                 sock, svc["begin_handle"], svc["end_handle"],
             )
-            if chars:
-                svc["characteristics"] = chars
+            if not chars:
+                continue
+            svc["characteristics"] = chars
+            _enrich_characteristics(sock, svc, chars, mtu)
     finally:
         try:
             sock.close()
@@ -424,6 +452,278 @@ def gatt_browse_btc(bdaddr_colon, timeout=10.0):
             pass
 
     return services
+
+
+def _att_exchange_mtu(sock, requested):
+    """Negotiate ATT MTU. Returns the agreed MTU (defaults to 23 on failure)."""
+    try:
+        sock.send(struct.pack("<BH", type_ATT_EXCHANGE_MTU_REQ, requested))
+        rsp = sock.recv(512)
+    except (socket.timeout, OSError):
+        return 23
+    if not rsp or rsp[0] != type_ATT_EXCHANGE_MTU_RSP or len(rsp) < 3:
+        return 23
+    server_mtu, = struct.unpack("<H", rsp[1:3])
+    return max(23, min(requested, server_mtu))
+
+
+def _enrich_characteristics(sock, svc, chars, mtu):
+    """For each characteristic: optionally read its value, then enumerate its
+    descriptors. Mutates `chars` in place so the BTIDES output gains
+    `char_value` and `descriptors` keys where applicable."""
+    for i, char in enumerate(chars):
+        # 1. Read the characteristic value if the Read property is advertised.
+        if char.get("properties", 0) & CHAR_PROP_READ:
+            io_entry = _att_read_full(sock, char["value_handle"], mtu)
+            if io_entry is not None:
+                char["char_value"] = ff_GATT_Characteristic_Value({
+                    "handle": char["value_handle"],
+                    "value_uuid": char["value_uuid"],
+                    "io_array": [io_entry],
+                })
+
+        # 2. Compute this characteristic's descriptor handle range. The range
+        #    runs from the byte after the value handle up to either the next
+        #    characteristic's declaration handle minus one, or the service's
+        #    end_handle for the trailing characteristic.
+        desc_start = char["value_handle"] + 1
+        if i + 1 < len(chars):
+            desc_end = chars[i + 1]["handle"] - 1
+        else:
+            desc_end = svc["end_handle"]
+        if desc_start > desc_end:
+            continue
+
+        # 3. Enumerate descriptors in [desc_start, desc_end] and read any
+        #    well-known ones (2900..2904).
+        descriptors = _enumerate_and_read_descriptors(sock, desc_start, desc_end, mtu)
+        if descriptors:
+            char["descriptors"] = descriptors
+
+
+def _att_read_handle(sock, handle):
+    """Send ATT_READ_REQ; return (status, payload).
+
+    status ==  True  -> payload is the read value bytes
+    status == False  -> payload is the 1-byte ATT error code (int)
+    status is None   -> transport failure (recv timed out, or unexpected pdu)
+    """
+    try:
+        sock.send(struct.pack("<BH", type_ATT_READ_REQ, handle))
+        rsp = sock.recv(512)
+    except (socket.timeout, OSError):
+        return None, None
+    if not rsp:
+        return None, None
+    if rsp[0] == type_ATT_ERROR_RSP and len(rsp) >= 5:
+        return False, rsp[4]
+    if rsp[0] == type_ATT_READ_RSP:
+        return True, rsp[1:]
+    return None, None
+
+
+def _att_read_blob(sock, handle, offset):
+    """Send ATT_READ_BLOB_REQ at offset; return (status, payload) like above."""
+    try:
+        sock.send(struct.pack("<BHH", type_ATT_READ_BLOB_REQ, handle, offset))
+        rsp = sock.recv(512)
+    except (socket.timeout, OSError):
+        return None, None
+    if not rsp:
+        return None, None
+    if rsp[0] == type_ATT_ERROR_RSP and len(rsp) >= 5:
+        return False, rsp[4]
+    if rsp[0] == type_ATT_READ_BLOB_RSP:
+        return True, rsp[1:]
+    return None, None
+
+
+def _att_read_full(sock, handle, mtu):
+    """Read a complete attribute value (initial ATT_READ_REQ + blob continuations
+    when the response fills MTU-1). Returns a GATTIO dict ready to drop into
+    a CharacteristicValue io_array, or None if the transport collapsed before
+    any byte was read.
+
+    The BTIDES schema requires the io_array entry to record `io_type` +
+    `value_hex_str`, so on ATT_ERROR_RSP we surface the 1-byte error code as a
+    2-character hex string (matching what other tools in this repo emit)."""
+    status, payload = _att_read_handle(sock, handle)
+    if status is None:
+        return None
+    if status is False:
+        return {
+            "io_type": type_ATT_ERROR_RSP,
+            "value_hex_str": f"{payload:02x}",
+        }
+    value = payload
+    chunk_max = mtu - 1
+    # If the first response fills MTU-1, the value may be longer; ATT spec
+    # requires us to use ATT_READ_BLOB_REQ to fetch the rest.
+    while len(payload) == chunk_max:
+        status, payload = _att_read_blob(sock, handle, len(value))
+        if status is None:
+            break
+        if status is False:
+            # Attribute Not Long means we already have the full value;
+            # any other error means stop and keep what we have.
+            break
+        if not payload:
+            break
+        value += payload
+    return {
+        "io_type": type_ATT_READ_RSP,
+        "value_hex_str": value.hex(),
+    }
+
+
+def _enumerate_and_read_descriptors(sock, start, end, mtu):
+    """Walk ATT_FIND_INFORMATION_REQ across [start, end]. For each well-known
+    descriptor UUID (2900..2904), issue ATT_READ_REQ and produce a typed BTIDES
+    Descriptor29xx dict. Descriptors with custom (non-well-known) UUIDs are
+    skipped because the BTIDES schema's `descriptors` array only allows the
+    five spec-defined shapes."""
+    descriptors = []
+    cursor = start
+    while cursor <= end and cursor <= 0xFFFF:
+        try:
+            sock.send(struct.pack("<BHH", type_ATT_FIND_INFORMATION_REQ, cursor, end))
+            rsp = sock.recv(512)
+        except (socket.timeout, OSError):
+            break
+        if not rsp or rsp[0] == type_ATT_ERROR_RSP:
+            break
+        if rsp[0] != type_ATT_FIND_INFORMATION_RSP or len(rsp) < 2:
+            break
+        fmt = rsp[1]
+        body = rsp[2:]
+        if fmt == 0x01:
+            entry_size = 4   # 2 bytes handle + 2 bytes UUID16
+        elif fmt == 0x02:
+            entry_size = 18  # 2 bytes handle + 16 bytes UUID128
+        else:
+            break
+        if len(body) < entry_size:
+            break
+        last_handle = 0
+        for off in range(0, len(body), entry_size):
+            entry = body[off:off + entry_size]
+            if len(entry) < entry_size:
+                break
+            handle = struct.unpack("<H", entry[:2])[0]
+            uuid_bytes = entry[2:]
+            if fmt == 0x01:
+                uuid_str = f"{struct.unpack('<H', uuid_bytes)[0]:04x}"
+            else:
+                # UUID128 is little-endian on the wire; flip for the
+                # human/canonical big-endian hex string.
+                uuid_str = uuid_bytes[::-1].hex()
+            descriptor = _build_typed_descriptor(sock, handle, uuid_str, mtu)
+            if descriptor is not None:
+                descriptors.append(descriptor)
+            last_handle = handle
+        if last_handle == 0 or last_handle >= end or last_handle == 0xFFFF:
+            break
+        cursor = last_handle + 1
+    return descriptors
+
+
+def _safe_utf8(payload):
+    """Decode bytes as UTF-8 without exceptions. Returns '' on failure."""
+    try:
+        return payload.decode("utf-8")
+    except (UnicodeDecodeError, AttributeError):
+        return ""
+
+
+def _build_typed_descriptor(sock, handle, uuid_str, mtu):
+    """Read the descriptor value for one of the five spec-defined descriptor
+    UUIDs and shape it into the matching BTIDES Descriptor29xx object.
+    Returns None for unknown UUIDs or read failures (we only emit objects we
+    can fully populate; the schema demands the type-specific fields)."""
+
+    # 0x2900 — Characteristic Extended Properties (2 bytes, uint16 LE)
+    if uuid_str == "2900":
+        status, payload = _att_read_handle(sock, handle)
+        if status is True and len(payload) >= 2:
+            ext, = struct.unpack("<H", payload[:2])
+            return ff_Descriptor({
+                "UUID": "2900",
+                "handle": handle,
+                "extended_properties": ext,
+            })
+
+    # 0x2901 — Characteristic User Description (UTF-8 string)
+    if uuid_str == "2901":
+        status, payload = _att_read_full_bytes(sock, handle, mtu)
+        if status is True:
+            entry = {
+                "UUID": "2901",
+                "handle": handle,
+                "user_description_hex_str": payload.hex(),
+            }
+            decoded = _safe_utf8(payload)
+            if decoded:
+                entry["utf8_user_description"] = decoded
+            return ff_Descriptor(entry)
+
+    # 0x2902 — Client Characteristic Configuration (2 bytes, uint16 LE)
+    if uuid_str == "2902":
+        status, payload = _att_read_handle(sock, handle)
+        if status is True and len(payload) >= 2:
+            cfg, = struct.unpack("<H", payload[:2])
+            return ff_Descriptor({
+                "UUID": "2902",
+                "handle": handle,
+                "config_bits": cfg,
+            })
+
+    # 0x2903 — Server Characteristic Configuration (2 bytes, uint16 LE)
+    if uuid_str == "2903":
+        status, payload = _att_read_handle(sock, handle)
+        if status is True and len(payload) >= 2:
+            cfg, = struct.unpack("<H", payload[:2])
+            return ff_Descriptor({
+                "UUID": "2903",
+                "handle": handle,
+                "config_bits": cfg,
+            })
+
+    # 0x2904 — Characteristic Presentation Format
+    #   format(1) | exponent(int8) | unit(uint16 LE) | name_space(1) | description(uint16 LE)
+    if uuid_str == "2904":
+        status, payload = _att_read_handle(sock, handle)
+        if status is True and len(payload) >= 7:
+            fmt, exp, unit, ns, desc = struct.unpack("<BbHBH", payload[:7])
+            return ff_Descriptor({
+                "UUID": "2904",
+                "handle": handle,
+                "format": fmt,
+                "exponent": exp,
+                "unit": unit,
+                "name_space": ns,
+                "description": desc,
+            })
+
+    # 0x2905 — Aggregate format etc: schema includes Descriptor2905 but its
+    # body shape is not well-defined; skip until we have a concrete need.
+    return None
+
+
+def _att_read_full_bytes(sock, handle, mtu):
+    """Like _att_read_full() but returns (status, raw_bytes) rather than a
+    GATTIO dict. Used by descriptor readers that need the raw value to repack
+    into per-UUID schema fields."""
+    status, payload = _att_read_handle(sock, handle)
+    if status is None or status is False:
+        return status, payload
+    value = payload
+    chunk_max = mtu - 1
+    while len(payload) == chunk_max:
+        status, payload = _att_read_blob(sock, handle, len(value))
+        if status is None or status is False or not payload:
+            break
+        value += payload
+    return True, value
 
 
 def _att_read_by_group_type_loop(sock, group_uuid16, utype_str):
