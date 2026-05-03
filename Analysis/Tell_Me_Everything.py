@@ -34,6 +34,7 @@ from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from PCAP_to_BTIDES import read_pcap
 from HCI_to_BTIDES import read_HCI
+from TME.TME_BTIDES_base import rebuild_SingleBDADDR_index
 
 ########################################
 # MAIN #################################
@@ -60,6 +61,7 @@ def main():
     btides_group = parser.add_argument_group('BTIDES file output arguments')
     btides_group.add_argument('--input-pcap', action='append',  required=False, help='Input pcap file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout. May be passed multiple times.')
     btides_group.add_argument('--input-hci-log', action='append', required=False, help='Input HCI log file which will be converted to a BTIDES JSON file and imported into the local database, and all the BDADDRs within selected for printout. May be passed multiple times.')
+    btides_group.add_argument('--input-BTIDES', action='append', required=False, help='Input BTIDES JSON file (e.g. one written by btc_sdp_gatt.py, HCI_to_BTIDES.py, or a prior --output run). Loaded directly without going through pcap/HCI conversion, imported into the local database, and all the BDADDRs within selected for printout. May be passed multiple times.')
     btides_group.add_argument('--include-centrals', action='store_true', help='Include the Central BDADDR from connections in the output.')
     btides_group.add_argument('--output', type=str, required=False, help='Output file name for BTIDES JSON file.')
     btides_group.add_argument('--verbose-BTIDES', action='store_true', required=False, help='Include optional fields in BTIDES output that make it more human-readable.')
@@ -147,6 +149,33 @@ def main():
     if args.input_hci_log is not None:
         for hci_log in args.input_hci_log:
             read_HCI(hci_log)
+
+    if args.input_BTIDES is not None:
+        # Each --input-BTIDES file is a top-level JSON list following the
+        # BTIDES schema. Extend (don't replace) TME.TME_glob.BTIDES_JSON so
+        # multiple files combine, and so anything previously populated by
+        # --input-pcap / --input-hci-log isn't lost. The downstream
+        # btides_to_sql call (gated on BTIDES_JSON being non-empty, line ~158)
+        # validates each entry against the schema before SQL import.
+        for btides_path in args.input_BTIDES:
+            if not os.path.isfile(btides_path):
+                print(f"Error: --input-BTIDES file '{btides_path}' does not exist or is not a file.")
+                return
+            try:
+                with open(btides_path, 'r') as f:
+                    loaded = json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"Error: --input-BTIDES file '{btides_path}' is not valid JSON: {e}")
+                return
+            if not isinstance(loaded, list):
+                print(f"Error: --input-BTIDES file '{btides_path}' top-level must be a JSON array (got {type(loaded).__name__}).")
+                return
+            TME.TME_glob.BTIDES_JSON.extend(loaded)
+            qprint(f"Loaded {len(loaded)} BTIDES entries from {btides_path}")
+        # Refresh the bdaddr -> entry index after the bulk extend so subsequent
+        # lookup_SingleBDADDR_base_entry() calls in the analysis path see the
+        # newly loaded items.
+        rebuild_SingleBDADDR_index()
 
     # Fill in bdaddrs[] with the bdaddrs in the BTIDES data, if any
     if(TME.TME_glob.BTIDES_JSON):
