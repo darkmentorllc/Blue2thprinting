@@ -276,12 +276,11 @@ def print_LMP_POWER_CONTROL_info(bdaddr):
         for (power_adj_req,) in g_tmp_lmp_power_req_result:
             qprint(f"{i3}Request: {power_req_classifier.get(power_adj_req, f'reserved for future use')} (0x{power_adj_req:02x})")
             BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_req)
-    # Untested, don't have data for this yet...
     if g_tmp_lmp_power_res_result:
         qprint(f"{i2}BTC LMP Power Adjustment Response:")
         for (power_adj_res,) in g_tmp_lmp_power_res_result:
-            qprint(f"{i3}Response: 0x{power_adj_req:02x}")
-            BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_res)
+            qprint(f"{i3}Response: 0x{power_adj_res:02x}")
+            BTIDES_export_LMP_POWER_CONTROL_RES(bdaddr, power_adj_res)
     g_tmp_lmp_power_req_result = []
     g_tmp_lmp_power_res_result = []
 

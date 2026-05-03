@@ -891,18 +891,17 @@ def import_LMP_POWER_CONTROL_REQ(bdaddr, lmp_entry):
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
         power_adj_req = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
     else:
-        power_adj_req = bytes.fromhex(lmp_entry["power_adj_req"])
+        power_adj_req = lmp_entry["power_adj_req"]
     values = (bdaddr, power_adj_req)
     insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_REQ (bdaddr, power_adj_req) VALUES (%s, %s);"
     execute_insert(insert, values)
 
-# Untested, don't have data for this yet...
 def import_LMP_POWER_CONTROL_RES(bdaddr, lmp_entry):
     # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
         power_adj_res = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
     else:
-        power_adj_res = bytes.fromhex(lmp_entry["power_adj_req"])
+        power_adj_res = lmp_entry["power_adj_res"]
     values = (bdaddr, power_adj_res)
     insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES (%s, %s);"
     execute_insert(insert, values)
