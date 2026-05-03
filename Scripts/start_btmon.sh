@@ -13,15 +13,18 @@ echo "start_btmon.sh start" >> $ERRORLOG
 LOGPATH="$REPO_ROOT/Logs/btmon"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
-BTMON="$REPO_ROOT/bluez-5.66/monitor/btmon"
+# System btmon from the 'bluez' apt package. The Btsnoop file format is
+# stable across BlueZ versions, so anything HCI_to_BTIDES.py expects from a
+# 5.66-built btmon is satisfied by the system one too.
+BTMON="$(command -v btmon || echo /usr/bin/btmon)"
 echo $HN
 echo "Logging to ${LOGPATH}/${DATE}_${HN}.bin"
 
-# Fail loudly instead of silently if btmon was never compiled. The previous
+# Fail loudly instead of silently if btmon isn't available. The previous
 # `RESULT=$(... &)` pattern swallowed missing-binary errors and left the @reboot
 # capture stack thinking everything was fine while no .bin file ever appeared.
 if [ ! -x "$BTMON" ]; then
-    echo "start_btmon.sh aborted: $BTMON does not exist or is not executable. Re-run setup_capture_helper_debian-based.sh." >> $ERRORLOG
+    echo "start_btmon.sh aborted: $BTMON does not exist or is not executable. Install the 'bluez' apt package or re-run setup_capture_helper_debian-based.sh." >> $ERRORLOG
     exit 1
 fi
 

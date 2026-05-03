@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl
+    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl bluez
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -123,10 +123,13 @@ configure_scripts() {
 }
 
 compile_toolz() {
-    print_banner "Compiling the customized BlueZ sdptool + btmon."
+    print_banner "Compiling the customized BlueZ sdptool."
     #### sdptool: logs every invocation so we can compare how many SDP browses
-    ####          succeeded vs. failed.
-    #### btmon:   primary HCI logging via Scripts/start_btmon.sh.
+    ####          succeeded vs. failed. The system sdptool from the bluez apt
+    ####          package can't be substituted because it lacks our logging.
+    #### btmon:   not built — Scripts/start_btmon.sh uses /usr/bin/btmon from
+    ####          the bluez apt package. The Btsnoop format it writes is
+    ####          identical to what bluez-5.66/monitor/btmon would produce.
     #### gatttool: not built — deprecated in favor of BetterGetter.py.
     #### bluetoothctl: not built — discovery is now in-process via BlueZ
     ####          D-Bus inside central_app_launcher.py (issue #47), so the
@@ -173,7 +176,7 @@ compile_toolz() {
         exit
     fi
     ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ] || [ ! -f "$BASE_PATH/bluez-5.66/monitor/btmon" ]; then
+    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ]; then
     print_tool_working "  Beginning compilation (only the targets we need)."
     # Memory-aware -j. BlueZ's larger source files (client/player.c,
     # client/adv_monitor.c, mesh/...) can each push cc1 to ~500 MB peak. On a
@@ -187,26 +190,27 @@ compile_toolz() {
     if [ "$jobs" -lt 1 ]; then jobs=1; fi
     if [ "$jobs" -gt "$cores" ]; then jobs=$cores; fi
     print_tool_working "  Detected ${mem_mb} MB RAM, ${cores} cores; building with make -j${jobs}."
-    # Targeted build: only compile the dependency closure of sdptool + btmon.
-    # Skips the bulk of BlueZ targets (client/bluetoothctl, profiles, mesh,
-    # the dozens of tools we don't use, the test suite). btmon is required by
-    # start_btmon.sh for HCI capture logging.
-    make -j"${jobs}" tools/sdptool monitor/btmon
+    # Targeted build: only the dependency closure of tools/sdptool. Skips the
+    # bulk of BlueZ targets (client/bluetoothctl, monitor/btmon, profiles,
+    # mesh, the dozens of tools we don't use, the test suite).
+    make -j"${jobs}" tools/sdptool
     print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
     $BASE_PATH/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
         exit
     fi
-    print_tool_working "  Testing btmon runs successfully. If you see the version output, it's working."
-    $BASE_PATH/bluez-5.66/monitor/btmon --version
-    if [ $? != 0 ]; then
-        echo "  Something went wrong with the btmon compilation. Look for an error message, correct it, and try again."
-        exit
-    fi
     else
-        echo "  sdptool and btmon already exist, skipping recompilation."
+        echo "  sdptool already exists, skipping recompilation."
     fi
+    # System btmon (provided by the 'bluez' apt package) is what start_btmon.sh
+    # invokes. Surface a clear error here if it didn't get installed.
+    if [ ! -x /usr/bin/btmon ]; then
+        echo "  ERROR: /usr/bin/btmon not found. Install the 'bluez' package: sudo apt-get install -y bluez"
+        exit 1
+    fi
+    print_tool_working "  Confirming /usr/bin/btmon (system btmon used by Scripts/start_btmon.sh)."
+    /usr/bin/btmon --version
 
     print_banner "Compiling DarkFirmware_VSC_LMP (BlueZ Realtek-VSC LMP fingerprinter)."
     # Standalone compile against the system libbluetooth + json-c. The tool
