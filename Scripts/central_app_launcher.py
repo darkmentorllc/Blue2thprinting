@@ -95,6 +95,12 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
                          # Note: can be reset by a device disappearing (BlueZ InterfacesRemoved)
                          # and then being re-discovered (InterfacesAdded), which happens when a
                          # device's signal drops below BlueZ's tracking threshold and then recovers.
+# Cumulative per-launcher-run attempt counter. NOT reset by InterfacesAdded re-fires
+# (so the Realtek-cycle-induced re-discovery loop can't bypass the cap by zeroing
+# device_connect_attempts via _device_added). Hard ceiling regardless of how many
+# times BlueZ removes and re-adds the device.
+device_total_attempts = {}
+max_total_attempts = 10
 
 ##################################################
 # Paths resolved from this file's location so the repo works from any clone path.
@@ -856,7 +862,7 @@ def _maybe_deprioritize(bdaddr, kind, mfr_keys):
 
 def _device_added(path, props):
     """Handle a newly-discovered device. props is the org.bluez.Device1 a{sv} dict."""
-    global device_connect_attempts
+    global device_connect_attempts, device_total_attempts
     bdaddr = _address(props)
     if bdaddr is None:
         return
@@ -864,6 +870,7 @@ def _device_added(path, props):
     atype = _addr_type(props)
     rssi = _rssi(props)
     device_connect_attempts[bdaddr] = 0  # reset attempt counter on (re)appearance
+    device_total_attempts.setdefault(bdaddr, 0)  # cumulative; intentionally NOT reset on re-appearance
     # BlueZ can re-emit InterfacesAdded for the same device with different Device1
     # property sets — e.g., a dual-mode device whose first advertisement was a BR/EDR
     # inquiry response (Class present → BTC) and whose later LE advertisement omits
@@ -905,11 +912,35 @@ def _device_removed(path):
 
 def _device_props_changed(path, changed):
     """Handle RSSI / ManufacturerData updates on an existing Device1."""
-    global device_connect_attempts
+    global device_connect_attempts, device_total_attempts
     suffix = path.rsplit("/", 1)[-1]
     if not suffix.startswith("dev_"):
         return
     bdaddr = suffix[4:].replace("_", ":").lower()
+
+    # BLE->BTC promotion. BlueZ fires PropertiesChanged (not InterfacesAdded) when
+    # an existing Device1 gains its Class property — i.e., when a dual-mode device
+    # whose first advert was an LE-only adv (no Class) later sends a BR/EDR inquiry
+    # response. Without this promotion, such devices stay stuck in ble_bdaddrs (or
+    # ble_deprioritized_bdaddrs if they have Apple ManufacturerData) and the BTC
+    # worker never sees them. Done before the RSSI/ManufacturerData handlers below
+    # so the subsequent RSSI update lands in btc_bdaddrs.
+    if "Class" in changed:
+        promoted_state = None  # (atype, rssi) if promotion happens
+        with ble_bdaddrs_lock:
+            if bdaddr in ble_bdaddrs:
+                promoted_state = ble_bdaddrs.pop(bdaddr)
+        if promoted_state is None:
+            with ble_deprioritized_bdaddrs_lock:
+                if bdaddr in ble_deprioritized_bdaddrs:
+                    (atype, rssi, _vendor) = ble_deprioritized_bdaddrs.pop(bdaddr)
+                    promoted_state = (atype, rssi)
+        if promoted_state is not None:
+            with btc_bdaddrs_lock:
+                btc_bdaddrs[bdaddr] = promoted_state
+            device_connect_attempts[bdaddr] = 0
+            device_total_attempts.setdefault(bdaddr, 0)
+            if(BTC_thread_enabled): print(f"[PROMOTE BLE->BTC] {bdaddr} (atype={promoted_state[0]}, rssi={promoted_state[1]})")
 
     # RSSI update
     if "RSSI" in changed:
@@ -1109,7 +1140,7 @@ def reprioritize_btc_bdaddr(bdaddr):
 
 # Function for the first thread
 def ble_thread_function():
-    global device_connect_attempts
+    global device_connect_attempts, device_total_attempts
     ble_external_tool_threads = []
     while True:
         # Get the BDADDRs sorted in descending order of their RSSI, so we process higher RSSI first.
@@ -1129,9 +1160,13 @@ def ble_thread_function():
             # Only try collecting data from a given bd_addr max_connect_attempts times before skipping forever thereafter
             # This is so that we don't waste time trying to get info from something that will never give it to us,
             # when we could be spending that time trying new devices
-            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts)):
+            total_for_addr = device_total_attempts.get(bdaddr, 0)
+            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts) or (total_for_addr >= max_total_attempts)):
                 if(print_skipped):
-                    print(f"BLE: Max connect attempts exceeded for {bdaddr}, skipping")
+                    if total_for_addr >= max_total_attempts:
+                        print(f"BLE: Total attempts cap reached for {bdaddr} ({total_for_addr}/{max_total_attempts}), skipping")
+                    else:
+                        print(f"BLE: Max connect attempts exceeded for {bdaddr}, skipping")
                 skip_count += 1
                 if(print_skipped):
                     print(f"BLE: skip_count = {skip_count} of {len(sorted_ble_bdaddrs)}")
@@ -1149,6 +1184,7 @@ def ble_thread_function():
                 continue
             else:
                 device_connect_attempts[bdaddr] += 1
+                device_total_attempts[bdaddr] = total_for_addr + 1
 
             if(print_verbose): print(f"BLE Address: {bdaddr}")
 
@@ -1240,7 +1276,7 @@ def ble_thread_function():
 
 # Function for the second thread
 def btc_thread_function():
-    global device_connect_attempts
+    global device_connect_attempts, device_total_attempts
     btc_external_tool_threads = []
     while True:
         # Get the BDADDRs sorted in descending order of their RSSI, so we process higher RSSI first.
@@ -1260,9 +1296,13 @@ def btc_thread_function():
             # Only try collecting data from a given bd_addr max_connect_attempts times before skipping forever thereafter
             # This is so that we don't waste time trying to get info from something that will never give it to us,
             # when we could be spending that time trying new devices
-            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts)):
+            total_for_addr = device_total_attempts.get(bdaddr, 0)
+            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts) or (total_for_addr >= max_total_attempts)):
                 if(print_skipped):
-                    print(f"BTC: Max connect attempts exceeded for {bdaddr}, skipping")
+                    if total_for_addr >= max_total_attempts:
+                        print(f"BTC: Total attempts cap reached for {bdaddr} ({total_for_addr}/{max_total_attempts}), skipping")
+                    else:
+                        print(f"BTC: Max connect attempts exceeded for {bdaddr}, skipping")
                 skip_count += 1
                 if(print_skipped):
                     print(f"BTC: skip_count = {skip_count} of {len(sorted_btc_bdaddrs)}")
@@ -1279,6 +1319,7 @@ def btc_thread_function():
                 continue
             else:
                 device_connect_attempts[bdaddr] += 1
+                device_total_attempts[bdaddr] = total_for_addr + 1
 
             if(lmp2thprint_enabled):
                 skip_sub_process = False
