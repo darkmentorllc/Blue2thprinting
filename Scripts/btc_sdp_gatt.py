@@ -137,11 +137,65 @@ def _require_bluez():
             "Install Python with Bluetooth socket support."
         )
 
-def _open_l2cap(bdaddr_colon, psm, timeout):
-    """Open an L2CAP connection-oriented socket to (bdaddr, psm)."""
+_HCICONFIG_BDADDR_RE = re.compile(r'BD Address:\s*([0-9A-Fa-f:]{17})')
+
+def _hci_address(hci_idx):
+    """Resolve hciN to its BDADDR (colon-delimited). Used to bind() L2CAP
+    sockets to a specific local controller for `--hci`.
+
+    Reading /sys/class/bluetooth/hciN/address would be cleaner, but on at
+    least Raspbian Trixie that file isn't exposed (the directory contains
+    only `device`, `power`, `rfkillN`, `subsystem`, `uevent`), so we shell
+    out to hciconfig — it's in the `bluez` apt package this repo already
+    depends on, and its output format ("\\tBD Address: AA:BB:CC:DD:EE:FF ...")
+    has been stable for over a decade.
+
+    Raises RuntimeError with a friendly message when the adapter doesn't
+    exist or hciconfig is missing, so a `--hci 5` typo on a 2-adapter box
+    fails clearly rather than producing an opaque bind() error later."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["hciconfig", f"hci{hci_idx}"],
+            capture_output=True, text=True, timeout=5,
+        )
+    except FileNotFoundError:
+        raise RuntimeError(
+            "hciconfig not found. Install the 'bluez' apt package "
+            "(`sudo apt-get install -y bluez`) or pick an hci adapter "
+            "another way.")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"hciconfig hci{hci_idx} timed out after 5s.")
+    if out.returncode != 0 or not out.stdout:
+        msg = (out.stderr or out.stdout or "").strip()
+        raise RuntimeError(
+            f"hci{hci_idx} not found by hciconfig. "
+            f"Try `hciconfig` to see available adapters."
+            + (f" ({msg})" if msg else ""))
+    m = _HCICONFIG_BDADDR_RE.search(out.stdout)
+    if not m:
+        raise RuntimeError(
+            f"hciconfig hci{hci_idx} did not include a 'BD Address:' line. "
+            f"Output:\n{out.stdout}")
+    return m.group(1).upper()
+
+
+def _open_l2cap(bdaddr_colon, psm, timeout, source_bdaddr=None):
+    """Open an L2CAP connection-oriented socket to (bdaddr, psm).
+
+    When source_bdaddr is given, bind the socket to that local controller's
+    BDADDR before connecting. The kernel uses the source-address binding to
+    route the outbound connect through the matching hci interface, which is
+    how `--hci N` selects between e.g. the Realtek dongle on hci0 and the
+    Pi's onboard Cypress on hci1."""
     _require_bluez()
     sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP)
     sock.settimeout(timeout)
+    if source_bdaddr is not None:
+        # bind tuple is (local_bdaddr, psm=0). PSM=0 here means "any local
+        # PSM" for the outbound side; what matters is the local_bdaddr,
+        # which pins the socket to a specific controller.
+        sock.bind((source_bdaddr, 0))
     sock.connect((bdaddr_colon, psm))
     return sock
 
@@ -278,7 +332,8 @@ def _flatten_attr_pairs(flat):
 # SDP browse: send SDP_SERVICE_SEARCH_ATTR_REQ, capture every PDU exchanged.
 # ---------------------------------------------------------------------------
 
-def sdp_browse(bdaddr_colon, timeout=10.0, max_attr_byte_count=4096):
+def sdp_browse(bdaddr_colon, timeout=10.0, max_attr_byte_count=4096,
+               source_bdaddr=None):
     """Run SDP_SERVICE_SEARCH_ATTR against the device.
 
     Returns (pdus, parsed_records) where:
@@ -286,9 +341,11 @@ def sdp_browse(bdaddr_colon, timeout=10.0, max_attr_byte_count=4096):
               (suitable for direct insertion into BTIDES SDPArray).
         parsed_records: list of attribute-id->value dicts, one per service
               record returned (used for terse display + GATT detection).
+
+    source_bdaddr (optional): local controller BDADDR to bind to, for `--hci`.
     """
     pdus = []
-    sock = _open_l2cap(bdaddr_colon, SDP_PSM, timeout)
+    sock = _open_l2cap(bdaddr_colon, SDP_PSM, timeout, source_bdaddr=source_bdaddr)
     try:
         # Get the actual L2CAP MTU for the connection so we can populate the
         # l2cap_len field in BTIDES entries with realistic numbers.
@@ -403,7 +460,7 @@ def detect_gatt_support(parsed_records):
 # ATT-over-BR/EDR GATT enumeration
 # ---------------------------------------------------------------------------
 
-def gatt_browse_btc(bdaddr_colon, timeout=10.0):
+def gatt_browse_btc(bdaddr_colon, timeout=10.0, source_bdaddr=None):
     """Enumerate GATT services + characteristics + descriptors over BR/EDR.
 
     Per characteristic:
@@ -417,11 +474,13 @@ def gatt_browse_btc(bdaddr_colon, timeout=10.0):
         and emit a typed BTIDES Descriptor29xx object. 2901 (User Description)
         gets both the raw hex and the UTF-8 decode where decodable.
 
+    source_bdaddr (optional): local controller BDADDR to bind to, for `--hci`.
+
     Returns a list of service dicts (ff_GATT_Service shape) each with an
     embedded "characteristics" list. Returns [] on any connection failure.
     """
     try:
-        sock = _open_l2cap(bdaddr_colon, ATT_PSM, timeout)
+        sock = _open_l2cap(bdaddr_colon, ATT_PSM, timeout, source_bdaddr=source_bdaddr)
     except OSError as e:
         qprint(f"  GATT-over-BR/EDR connect to PSM 0x{ATT_PSM:04x} failed: {e}")
         return []
@@ -1141,7 +1200,8 @@ def _build_pairing_agent_class():
 
 
 async def _gatt_browse_with_agent(bdaddr_colon, timeout, io_capability,
-                                  static_passkey=None, no_interactive=False):
+                                  static_passkey=None, no_interactive=False,
+                                  source_bdaddr=None):
     """Run gatt_browse_btc with a transient org.bluez.Agent1 registered.
 
     bluetoothd routes SSP/SMP IO callbacks to whichever agent is "default";
@@ -1170,7 +1230,8 @@ async def _gatt_browse_with_agent(bdaddr_colon, timeout, io_capability,
             qprint(f"[agent] RequestDefaultAgent failed (non-fatal): {e}")
         qprint(f"[agent] Registered with IO capability '{io_capability}'.")
         try:
-            services = await asyncio.to_thread(gatt_browse_btc, bdaddr_colon, timeout)
+            services = await asyncio.to_thread(
+                gatt_browse_btc, bdaddr_colon, timeout, source_bdaddr)
         finally:
             try:
                 await mgr.call_unregister_agent(BLUEZ_AGENT_PATH)
@@ -1202,6 +1263,14 @@ def main():
     )
     parser.add_argument('--bdaddr', type=str, required=True,
                         help='Target BT Classic BDADDR (AA:BB:CC:DD:EE:FF or with dashes).')
+    parser.add_argument('--hci', type=int, default=None,
+                        help=('Bind L2CAP sockets to a specific local HCI '
+                              'adapter (e.g. --hci 0 for hci0, --hci 1 for '
+                              'hci1). The local controller BDADDR is read '
+                              'from /sys/class/bluetooth/hciN/address and '
+                              'passed to bind() so the kernel routes both '
+                              'the SDP and ATT connects through that adapter. '
+                              'Default: leave the routing to the kernel.'))
     parser.add_argument('--timeout', type=float, default=10.0,
                         help='L2CAP receive timeout in seconds (default: 10).')
     parser.add_argument('--output-dir', type=str, default=None,
@@ -1271,6 +1340,17 @@ def main():
               "pairing flows are rejected fast).", file=sys.stderr)
         return 2
 
+    # Resolve --hci to a local controller BDADDR for L2CAP bind(). Done up
+    # front so a typo (`--hci 5` on a 2-adapter box) fails before any
+    # connect attempt.
+    source_bdaddr = None
+    if args.hci is not None:
+        try:
+            source_bdaddr = _hci_address(args.hci)
+        except RuntimeError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 2
+
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.quiet_print = args.quiet_print
@@ -1288,7 +1368,8 @@ def main():
 
     qprint(f"Connecting to {bdaddr} for SDP browse...")
     try:
-        pdus, records = sdp_browse(bdaddr, timeout=args.timeout)
+        pdus, records = sdp_browse(bdaddr, timeout=args.timeout,
+                                   source_bdaddr=source_bdaddr)
     except RuntimeError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
@@ -1334,18 +1415,34 @@ def main():
 
     qprint(f"Connecting to {bdaddr} on PSM 0x{ATT_PSM:04x} for GATT enumeration...")
     if io_capability is None:
-        services = gatt_browse_btc(bdaddr, timeout=args.timeout)
+        services = gatt_browse_btc(bdaddr, timeout=args.timeout,
+                                   source_bdaddr=source_bdaddr)
     else:
         # When pairing is enabled the L2CAP connect blocks until SSP/SMP
-        # finishes — 60+ seconds is realistic if a human has to read & type
-        # the passkey on the remote device. Bump the timeout floor so we
-        # don't bail out mid-pairing.
-        gatt_timeout = max(args.timeout, 90.0)
+        # finishes. Two regimes:
+        #
+        #   --no-interactive-pairing: there's no human at this terminal, so
+        #     the only pairings we can complete are Just Works (sub-5s) and
+        #     anything our agent auto-allows. If the remote forces MITM
+        #     (Numeric Comparison / Passkey Entry / legacy PIN) bluetoothd
+        #     will NOT call our agent — it knows our NoInputNoOutput
+        #     capability can't satisfy that flow — so the L2CAP connect
+        #     just hangs until the remote's pair UI resolves. Cap the
+        #     timeout aggressively (use --timeout, default 10s) so we move
+        #     on instead of waiting on a human at the *other* end too.
+        #
+        #   Interactive: a human typing a passkey here can easily take a
+        #     minute, so the 90s floor still applies.
+        if args.no_interactive_pairing:
+            gatt_timeout = args.timeout
+        else:
+            gatt_timeout = max(args.timeout, 90.0)
         try:
             services = asyncio.run(_gatt_browse_with_agent(
                 bdaddr, gatt_timeout, io_capability,
                 static_passkey=args.passkey,
                 no_interactive=args.no_interactive_pairing,
+                source_bdaddr=source_bdaddr,
             ))
         except ImportError as e:
             print(f"Error: pairing agent requires dbus_fast: {e}", file=sys.stderr)
