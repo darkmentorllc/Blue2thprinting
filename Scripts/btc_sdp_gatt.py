@@ -1019,18 +1019,33 @@ def _build_pairing_agent_class():
     from dbus_fast import DBusError
 
     class PairingAgent(ServiceInterface):
-        def __init__(self, static_passkey=None):
+        def __init__(self, static_passkey=None, no_interactive=False):
             super().__init__(BLUEZ_AGENT_IFACE)
             # Optional pre-supplied passkey for non-interactive scripted use.
             # When set, RequestPasskey / RequestPinCode return it without
             # prompting; RequestConfirmation auto-confirms; the operator never
             # has to be at the terminal.
             self._static_passkey = static_passkey
+            # Headless / autonomous mode (set by --no-interactive-pairing on
+            # the CLI). Reject any pairing flow that would normally need typed
+            # input — Passkey Entry, legacy PIN, Numeric Comparison — by
+            # raising org.bluez.Error.Rejected immediately rather than
+            # blocking the launcher on input(). Just Works (single
+            # RequestAuthorization, no typed value) still goes through.
+            self._no_interactive = no_interactive
 
         async def _read_line(self, prompt):
             # input() is blocking; run in a worker thread so dbus_fast's event
             # loop keeps processing other messages (e.g. a follow-up Cancel).
             return (await asyncio.to_thread(input, prompt)).strip()
+
+        def _reject_interactive(self, kind):
+            qprint(
+                f"[agent] {kind} requested but --no-interactive-pairing is "
+                f"set; rejecting to fail-fast back to bluetoothd."
+            )
+            raise DBusError("org.bluez.Error.Rejected",
+                            f"{kind} not supported in non-interactive mode")
 
         @method()
         def Release(self):  # noqa: N802 — D-Bus method name
@@ -1039,17 +1054,25 @@ def _build_pairing_agent_class():
         @method()
         async def RequestPinCode(self, device: 'o') -> 's':  # noqa: N802
             qprint(f"[agent] PIN code requested for {device}.")
+            if self._no_interactive:
+                self._reject_interactive("Legacy PIN entry")
             if self._static_passkey is not None:
                 return str(self._static_passkey)
             return await self._read_line("[agent] Enter PIN code (1-16 chars): ")
 
         @method()
         def DisplayPinCode(self, device: 'o', pincode: 's'):  # noqa: N802
+            # bluetoothd shouldn't call this on a NoInputNoOutput agent, but if
+            # it does (legacy PIN flow with display capability advertised by
+            # the remote), there's nothing we can usefully do headless — log
+            # and let the natural pair timeout end the flow.
             qprint(f"[agent] DISPLAY PIN CODE for {device}: {pincode}")
 
         @method()
         async def RequestPasskey(self, device: 'o') -> 'u':  # noqa: N802
             qprint(f"[agent] Passkey requested for {device}.")
+            if self._no_interactive:
+                self._reject_interactive("Passkey Entry")
             if self._static_passkey is not None:
                 return int(self._static_passkey)
             while True:
@@ -1069,7 +1092,9 @@ def _build_pairing_agent_class():
         @method()
         def DisplayPasskey(self, device: 'o', passkey: 'u', entered: 'q'):  # noqa: N802
             # `entered` is how many digits the remote has typed so far when
-            # our IO capability says we're displaying for them.
+            # our IO capability says we're displaying for them. With
+            # NoInputNoOutput this method shouldn't be called by bluetoothd;
+            # log if it ever is so we can spot the spec violation.
             qprint(
                 f"[agent] DISPLAY PASSKEY for {device}: {passkey:06d} "
                 f"({entered}/6 entered on remote)"
@@ -1078,6 +1103,10 @@ def _build_pairing_agent_class():
         @method()
         async def RequestConfirmation(self, device: 'o', passkey: 'u'):  # noqa: N802
             qprint(f"[agent] CONFIRM PASSKEY for {device}: {passkey:06d}")
+            if self._no_interactive:
+                # Numeric Comparison requires a human looking at both sides.
+                # Reject so bluetoothd aborts the pair rather than waiting.
+                self._reject_interactive("Numeric Comparison")
             if self._static_passkey is not None:
                 qprint("[agent]   Auto-confirming (static passkey supplied).")
                 return
@@ -1088,7 +1117,11 @@ def _build_pairing_agent_class():
         @method()
         async def RequestAuthorization(self, device: 'o'):  # noqa: N802
             qprint(f"[agent] AUTHORIZATION requested for {device} (legacy 'Just Works').")
-            if self._static_passkey is not None:
+            # Just Works: no typed value, just a single yes/no. Auto-allow
+            # in non-interactive mode (the whole point of Just Works is that
+            # it can complete without operator input) and when a static
+            # passkey was supplied (operator opted into autopilot).
+            if self._no_interactive or self._static_passkey is not None:
                 return
             ans = await self._read_line("[agent]   Authorize this pairing? [y/N]: ")
             if ans.lower() not in ("y", "yes"):
@@ -1108,7 +1141,7 @@ def _build_pairing_agent_class():
 
 
 async def _gatt_browse_with_agent(bdaddr_colon, timeout, io_capability,
-                                  static_passkey=None):
+                                  static_passkey=None, no_interactive=False):
     """Run gatt_browse_btc with a transient org.bluez.Agent1 registered.
 
     bluetoothd routes SSP/SMP IO callbacks to whichever agent is "default";
@@ -1121,7 +1154,8 @@ async def _gatt_browse_with_agent(bdaddr_colon, timeout, io_capability,
     PairingAgent = _build_pairing_agent_class()
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
     try:
-        agent = PairingAgent(static_passkey=static_passkey)
+        agent = PairingAgent(static_passkey=static_passkey,
+                             no_interactive=no_interactive)
         bus.export(BLUEZ_AGENT_PATH, agent)
         introspect = await bus.introspect(BLUEZ_BUS_NAME, BLUEZ_AGENT_MGR_PATH)
         proxy = bus.get_proxy_object(BLUEZ_BUS_NAME, BLUEZ_AGENT_MGR_PATH, introspect)
@@ -1209,6 +1243,16 @@ def main():
               'RequestConfirmation auto-confirms. Implies --io-capability '
               'KeyboardOnly when --io-capability is left at its NoInputNoOutput '
               'default (otherwise a static passkey would never be asked for).'))
+    pairing.add_argument(
+        '--no-interactive-pairing', action='store_true',
+        help=('Headless / autonomous mode (intended for invocations from '
+              'central_app_launcher.py). Forces --io-capability NoInputNoOutput '
+              'so SSP/SMP picks Just Works whenever the remote allows it, and '
+              'fails fast (raises org.bluez.Error.Rejected immediately) if the '
+              'remote forces Passkey Entry, Numeric Comparison, or legacy PIN '
+              'entry — those need a human at the terminal. RequestAuthorization '
+              '(the single Just Works yes/no with no typed value) is still '
+              'auto-allowed. Mutually exclusive with --passkey.'))
 
     printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true',
@@ -1219,6 +1263,13 @@ def main():
                                 help='Hide all print output.')
 
     args = parser.parse_args()
+
+    # CLI mutex checks (run before any I/O so bad invocations exit immediately).
+    if args.no_interactive_pairing and args.passkey is not None:
+        print("Error: --no-interactive-pairing is incompatible with --passkey "
+              "(a supplied passkey would never be reachable when interactive "
+              "pairing flows are rejected fast).", file=sys.stderr)
+        return 2
 
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
@@ -1261,13 +1312,19 @@ def main():
 
     # Resolve effective IO capability:
     #   --no-pairing-agent: skip agent entirely (legacy behaviour).
+    #   --no-interactive-pairing: force NoInputNoOutput so SSP/SMP nudges
+    #       toward Just Works regardless of what --io-capability said. The
+    #       agent's reject-interactive guard is the safety net for cases
+    #       where the remote forces a stronger model.
     #   --passkey set + --io-capability still at its NoInputNoOutput default:
     #       upgrade to KeyboardOnly so the agent will actually be asked to
     #       supply the passkey (NIO would short-circuit to Just Works and
     #       never call RequestPasskey).
     #   Otherwise use whatever --io-capability resolved to (default NIO).
     io_capability = None if args.no_pairing_agent else args.io_capability
-    if (io_capability == "NoInputNoOutput"
+    if args.no_interactive_pairing:
+        io_capability = "NoInputNoOutput"
+    elif (io_capability == "NoInputNoOutput"
             and args.passkey is not None
             # Was --io-capability explicitly given? If so, respect it; the
             # default-comparison heuristic only kicks in when the user left
@@ -1288,6 +1345,7 @@ def main():
             services = asyncio.run(_gatt_browse_with_agent(
                 bdaddr, gatt_timeout, io_capability,
                 static_passkey=args.passkey,
+                no_interactive=args.no_interactive_pairing,
             ))
         except ImportError as e:
             print(f"Error: pairing agent requires dbus_fast: {e}", file=sys.stderr)

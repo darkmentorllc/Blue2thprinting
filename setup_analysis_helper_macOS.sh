@@ -52,7 +52,7 @@ else
 fi
 if [ "$success" -ne 1 ]; then
     echo "================================================================================================================================================="
-    echo "Python3 > 3.11 is required. You may need to install with \"brew install python3\" on macOS to get a high enough version.
+    echo "Python3 > 3.11 is required. You may need to install with \"brew install python3\" on macOS to get a high enough version."
     echo "================================================================================================================================================="
     exit -1
 else
@@ -63,21 +63,21 @@ python3 -m venv ./venv
 source ./venv/bin/activate
 pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
 
-# Using my branch until all of my and Antonio's changes are merged in
-cd Analysis
-git clone https://github.com/XenoKovah/scapy.git
-cd scapy
-pip install .
-cd ..
-
 echo ""
 echo "====================================================================================================================================="
 echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
 echo "====================================================================================================================================="
 git submodule update --init --recursive
 
+cd Analysis
+
+# scapy is pulled in via the Analysis/scapy submodule above; just install it.
+cd scapy
+pip install .
+cd ..
+
 # Next commands assume they run from the Analysis folder
-cd ./Analysis/one_time_initialization
+cd ./one_time_initialization
 
 echo ""
 echo "==================================="

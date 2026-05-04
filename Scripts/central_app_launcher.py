@@ -80,6 +80,11 @@ REALTEK_MAX_CONSECUTIVE_CYCLE_FAILURES = 3
 print_skipped = True
 print_verbose = True
 print_finished_bdaddrs = True
+# Per-update "Updated BLE/BTC RSSI (-NN) for AA:BB:..." lines are extremely
+# noisy in CAL.log (one per advertising packet that bluetoothd forwards via
+# PropertiesChanged). Off by default; flip to True to debug RSSI tracking
+# behaviour or the connect-attempt-decrement-on-rising-RSSI heuristic.
+print_rssi_updates = False
 sniffle_stdout_logging = False
 sniffle_log_rotate_in_seconds = 3600 # This will create a new log every hour if timeout=3600
 
@@ -959,7 +964,7 @@ def _device_props_changed(path, changed):
                         print(f"Higher RSSI observed. Decrementing device_connect_attempts {bdaddr} to {device_connect_attempts[bdaddr]-1}")
                         device_connect_attempts[bdaddr] -= 1
                     ble_bdaddrs[bdaddr] = (atype, new_rssi)
-                    if(BLE_thread_enabled and print_verbose): print(f"Updated BLE RSSI ({new_rssi}) for {bdaddr}")
+                    if(BLE_thread_enabled and print_rssi_updates): print(f"Updated BLE RSSI ({new_rssi}) for {bdaddr}")
             with btc_bdaddrs_lock:
                 if bdaddr in btc_bdaddrs:
                     (atype, old_rssi) = btc_bdaddrs[bdaddr]
@@ -967,7 +972,7 @@ def _device_props_changed(path, changed):
                         print(f"Higher RSSI observed. Decrementing device_connect_attempts {bdaddr} to {device_connect_attempts[bdaddr]-1}")
                         device_connect_attempts[bdaddr] -= 1
                     btc_bdaddrs[bdaddr] = (atype, new_rssi)
-                    if(BTC_thread_enabled and print_verbose): print(f"Updated BTC RSSI ({new_rssi}) for {bdaddr}")
+                    if(BTC_thread_enabled and print_rssi_updates): print(f"Updated BTC RSSI ({new_rssi}) for {bdaddr}")
 
     # ManufacturerData update — may arrive after the initial InterfacesAdded.
     if "ManufacturerData" in changed:
@@ -1388,7 +1393,13 @@ def btc_thread_function():
                     # btc_sdp_gatt.py self-resolves Analysis/ for its TME imports, and
                     # TME_BTIDES_base resolves BTIDES_Schema/ relative to its own file,
                     # so the launcher's CWD doesn't matter.
-                    btc_sdp_gatt_cmd = ["python3", "-u", btc_sdp_gatt_path, f"--bdaddr={bdaddr}", "--quiet-print"]
+                    # --no-interactive-pairing makes the agent reject Passkey Entry,
+                    # Numeric Comparison, and legacy PIN flows immediately rather
+                    # than blocking on input() — there's no human at this terminal
+                    # to type a passkey. Just Works pairings still complete.
+                    btc_sdp_gatt_cmd = ["python3", "-u", btc_sdp_gatt_path,
+                                        f"--bdaddr={bdaddr}", "--quiet-print",
+                                        "--no-interactive-pairing"]
                     try:
                         btc_sdp_gatt_process = launch_application(btc_sdp_gatt_cmd, default_cwd)
                     except BlockingIOError as e:
