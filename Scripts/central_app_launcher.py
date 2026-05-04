@@ -523,6 +523,21 @@ class ApplicationThread(threading.Thread):
                        external_log_write(sdpprint_log_path, f"BTC_SDP_GATT FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "Sniffle"):
                        external_log_write(sniffle_stdout_log_path, f"SNIFFLE LAUNCH FAILURE 0x{retCode:02x} FOR: {self.launch_cmd} {datetime.datetime.now()}")
+                       # Release the port so the sniffle worker can relaunch.
+                       # Without this the failed port would stay marked as
+                       # in-use (pid of the dead process) for the whole
+                       # launcher run — the 2026-05-04 bug. Flag for
+                       # usbreset too: a non-zero exit from sniff_receiver
+                       # right after launch is dominantly EIO on serial open
+                       # (Errno 5), which the cp210x clears via a USB reset.
+                       key = next((k for k, v in serial_port_status.items() if v == self.process.pid), None)
+                       if key is not None:
+                           with sniffle_state_lock:
+                               serial_port_needs_usb_reset[key] = True
+                               serial_port_pcap_last_seen.pop(key, None)
+                           serial_port_status[key] = 0
+                           with start_sniffle_threads_condition:
+                               start_sniffle_threads_condition.notify()
 
             self.is_terminated = True
         except TimeoutExpired:
@@ -1480,6 +1495,31 @@ serial_port_status = {}
 serial_port_role = {}
 start_sniffle_threads_condition = threading.Condition()
 
+# Sniffle wedge-recovery state. Reaches an EIO-on-open wedge when the cp210x
+# bridge / Sonoff firmware locks up; observed in the 2026-05-04 14:37 incident
+# where ttyUSB2 + ttyUSB3 both started returning [Errno 5] on serial open and
+# stayed unrecoverable until reboot. Two-prong fix:
+#
+#   * Stall detector kills a running sniffer whose pcap file hasn't grown for
+#     SNIFFLE_STALL_THRESHOLD_S so we catch the wedge *before* it progresses
+#     to the hard EIO state. The kill triggers the standard relaunch path,
+#     which then notices needs_usb_reset and recovers.
+#
+#   * needs_usb_reset[port] is set whenever a sniffler exits non-zero (likely
+#     EIO) or the stall detector kills one. The sniffle worker consumes the
+#     flag by running usbreset against the underlying USB device before the
+#     next launch attempt; that issues USBDEVFS_RESET, which preserves the
+#     device address (so /dev/ttyUSBN stays valid) and clears the cp210x
+#     state in practice.
+SNIFFLE_STALL_THRESHOLD_S = 300       # 5 min of zero pcap growth -> wedge
+SNIFFLE_STALL_CHECK_PERIOD_S = 60     # how often the detector polls
+SNIFFLE_FRESH_LAUNCH_GRACE_S = 60     # don't accuse a sniffer of stalling in its first minute
+serial_port_needs_usb_reset = {}      # path -> bool
+serial_port_pcap_path = {}            # path -> currently-writing pcap path
+serial_port_pcap_last_seen = {}       # path -> (size, time.monotonic())
+serial_port_launch_time = {}          # path -> time.monotonic() of most recent successful Popen
+sniffle_state_lock = threading.Lock()
+
 
 def assign_sniffle_roles(dongles):
     """Distribute roles across Sniffle dongles per issue #26.
@@ -1541,6 +1581,114 @@ def build_sniffle_cmd(dongle_path, role, launch_time, short_name, host):
 # The Sniffle worker doesn't start until that's done, so it never sees an empty role map.
 
 
+def _usbreset_dongle(tty_path):
+    """Send a USB-level reset (USBDEVFS_RESET) to the device backing
+    /dev/ttyUSBN. Used to clear the cp210x EIO wedge documented in the
+    2026-05-04 incident.
+
+    Resolves /dev/ttyUSBN -> /sys/class/tty/ttyUSBN/device (the USB interface
+    sysfs path) -> parent dir (the USB device) -> busnum + devnum ->
+    /dev/bus/usb/BBB/DDD, then exec()s `usbreset` against it. Returns True
+    on a successful reset, False otherwise. The kernel preserves the device
+    address through USBDEVFS_RESET so /dev/ttyUSBN stays valid; the cp210x
+    driver unbinds + rebinds, which clears its error state.
+    """
+    short_name = os.path.basename(tty_path)  # e.g. ttyUSB2
+    sysfs_iface = f"/sys/class/tty/{short_name}/device"
+    if not os.path.exists(sysfs_iface):
+        print(f"_usbreset_dongle: {sysfs_iface} not present; can't reset {tty_path}")
+        return False
+    # `device` is a symlink to the USB *interface* dir (e.g. 1-1.1.3.2:1.0).
+    # The USB device dir is its parent (1-1.1.3.2), which exposes busnum/devnum.
+    usb_device_dir = os.path.normpath(os.path.join(os.path.realpath(sysfs_iface), ".."))
+    try:
+        with open(os.path.join(usb_device_dir, "busnum")) as f:
+            busnum = int(f.read().strip())
+        with open(os.path.join(usb_device_dir, "devnum")) as f:
+            devnum = int(f.read().strip())
+    except (FileNotFoundError, ValueError) as e:
+        print(f"_usbreset_dongle: failed to read busnum/devnum for {tty_path}: {e}")
+        return False
+    bus_path = f"/dev/bus/usb/{busnum:03d}/{devnum:03d}"
+    print(f"_usbreset_dongle: running usbreset on {bus_path} for {tty_path}")
+    try:
+        result = subprocess.run(
+            ["usbreset", bus_path],
+            timeout=10, capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        print("_usbreset_dongle: 'usbreset' binary not found on PATH; "
+              "install it (apt install usbutils) or skip recovery.")
+        return False
+    except subprocess.TimeoutExpired:
+        print(f"_usbreset_dongle: usbreset {bus_path} timed out after 10s")
+        return False
+    if result.returncode != 0:
+        print(f"_usbreset_dongle: usbreset {bus_path} returned {result.returncode} "
+              f"(stdout={result.stdout!r} stderr={result.stderr!r})")
+        return False
+    # Wait briefly for udev to re-fire the cp210x bind + re-create the
+    # /dev/serial/by-id/... symlink before the caller relaunches sniff_receiver.
+    time.sleep(3)
+    print(f"_usbreset_dongle: usbreset {bus_path} OK")
+    return True
+
+
+def sniffle_stall_detector_thread():
+    """Periodically check each running sniffer's pcap file for growth. Files
+    that have not grown for SNIFFLE_STALL_THRESHOLD_S indicate the firmware
+    has stopped emitting packets — the python process is healthy, the kernel
+    keeps the device file open, but the dongle is silently wedged. Kill the
+    process so the standard relaunch path picks up the port; flag it for
+    usbreset so the next launch starts from a clean cp210x state.
+
+    Skips the first SNIFFLE_FRESH_LAUNCH_GRACE_S after a (re)launch so a slow
+    startup doesn't get misdiagnosed as a stall.
+    """
+    while True:
+        time.sleep(SNIFFLE_STALL_CHECK_PERIOD_S)
+        now = time.monotonic()
+        # Snapshot items so we don't fight the sniffle thread mutating the dict.
+        for port, pid in list(serial_port_status.items()):
+            if pid <= 0:
+                continue
+            with sniffle_state_lock:
+                pcap_path = serial_port_pcap_path.get(port)
+                launch_time = serial_port_launch_time.get(port, 0)
+            if not pcap_path:
+                continue
+            if now - launch_time < SNIFFLE_FRESH_LAUNCH_GRACE_S:
+                continue
+            try:
+                size = os.path.getsize(pcap_path)
+            except OSError:
+                continue
+            with sniffle_state_lock:
+                prev = serial_port_pcap_last_seen.get(port)
+                if prev is None or prev[0] != size:
+                    # First observation or file is still growing.
+                    serial_port_pcap_last_seen[port] = (size, now)
+                    continue
+                stalled_for = now - prev[1]
+            if stalled_for < SNIFFLE_STALL_THRESHOLD_S:
+                continue
+            print(f"[stall] sniffer pid {pid} on {port} has not produced packets "
+                  f"for {stalled_for:.0f}s (pcap stuck at {size} bytes). "
+                  f"Killing + flagging for usbreset before relaunch.")
+            external_log_write(
+                sniffle_stdout_log_path,
+                f"SNIFFLE STALL on {port}: pid {pid} stuck at {size} bytes for "
+                f"{stalled_for:.0f}s; killing and flagging for usbreset "
+                f"{datetime.datetime.now()}")
+            with sniffle_state_lock:
+                serial_port_needs_usb_reset[port] = True
+                serial_port_pcap_last_seen.pop(port, None)
+            try:
+                os.kill(pid, 9)  # SIGKILL — sniff_receiver doesn't trap signals
+            except ProcessLookupError:
+                pass
+
+
 # Function for the Sniffle thread(s)
 def sniffle_thread_function():
     global sniffle_stdout_logging
@@ -1568,6 +1716,16 @@ def sniffle_thread_function():
             # IMPORTANT NOTE: Even though sniffle on the CLI doesn't need an = after the arguments, when launched this way, it does!
             sniffle_cmd = build_sniffle_cmd(link_target_absolute_path, role, launch_time, short_name, host)
 
+            # Wedge recovery: if the previous incarnation of this sniffer
+            # exited with EIO or got SIGKILLed by the stall detector, the
+            # dongle's cp210x state needs a USB-level reset before the next
+            # open() will succeed. Consume the flag and reset before
+            # launching.
+            with sniffle_state_lock:
+                needs_reset = serial_port_needs_usb_reset.pop(link_target_absolute_path, False)
+            if needs_reset:
+                _usbreset_dongle(link_target_absolute_path)
+
             try:
                 if(sniffle_stdout_logging):
                     sniffle_append_stdout = open(f"{sniffle_pcap_log_folder}/Sniffle_stdout.log", "a")
@@ -1576,6 +1734,18 @@ def sniffle_thread_function():
                 sniffle_process = launch_application(sniffle_cmd, default_cwd, stdout=sniffle_append_stdout)
                 if(print_verbose): print(f"Setting {link_target_absolute_path} pid to {sniffle_process.pid}")
                 serial_port_status[link_target_absolute_path] = sniffle_process.pid
+                # Record the pcap output path + launch wall-time so the stall
+                # detector knows what file to watch and whether to grant the
+                # fresh-launch grace window.
+                pcap_path_for_stall_detector = None
+                for tok in sniffle_cmd:
+                    if tok.startswith("-o="):
+                        pcap_path_for_stall_detector = tok[3:]
+                        break
+                with sniffle_state_lock:
+                    serial_port_pcap_path[link_target_absolute_path] = pcap_path_for_stall_detector
+                    serial_port_pcap_last_seen.pop(link_target_absolute_path, None)
+                    serial_port_launch_time[link_target_absolute_path] = time.monotonic()
             except BlockingIOError as e:
                 print(f"Caught BlockingIOError while launching Sniffle application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
                 # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -1647,6 +1817,9 @@ def _start_workers_after_dongle_init(args):
         threading.Thread(target=btc_thread_function, daemon=True).start()
     if(Sniffle_thread_enabled):
         threading.Thread(target=sniffle_thread_function, daemon=True).start()
+        # Detector for silently-wedged dongles (pcap-file growth stops while
+        # the python sniffer keeps running). See SNIFFLE_STALL_THRESHOLD_S.
+        threading.Thread(target=sniffle_stall_detector_thread, daemon=True).start()
         with start_sniffle_threads_condition:
             start_sniffle_threads_condition.notify()
 
