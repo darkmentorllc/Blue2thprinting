@@ -331,7 +331,11 @@ flash_sniffle(){
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 2Mbps dongles found. No flashing attempted."
         else
-            echo "$dongles" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
+            # -I {} already implies one execution per input line, so the -n 1
+            # we used to pass was redundant; xargs warns about the combination
+            # ("--max-args and --replace are mutually exclusive") and ignores
+            # the -n 1. Drop it to silence the warning.
+            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
             echo "  Sonoff firmware flashing complete."
         fi
     else
@@ -343,7 +347,7 @@ flash_sniffle(){
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 921600 baud dongles found. No flashing attempted."
         else
-            echo "$dongles" | xargs -n 1 -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_1M.hex
+            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_1M.hex
             echo "  Sonoff firmware flashing complete."
         fi
     else
