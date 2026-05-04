@@ -47,7 +47,7 @@ btc_sdp_gatt_enabled = True # When True, runs Scripts/btc_sdp_gatt.py for SDP en
 # Number of Sonoff dongles to reserve for Better_Getter.py (round-robin). Remaining
 # dongles are allocated to Sniffle per the channel-separation rules in
 # https://github.com/darkmentorllc/Blue2thprinting/issues/26
-MAX_BG = 1
+MAX_BG = 2
 
 # Realtek custom-firmware adapter cycling via per-port USB power switching.
 # Empirically, the DarkFirmware_real_i firmware on the Realtek dongle wedges
@@ -455,9 +455,23 @@ class ApplicationThread(threading.Thread):
         # When set, the GATT path returns this dongle to bg_dongle_queue on exit so
         # another BLE bdaddr can claim it next.
         self.bg_dongle_path = bg_dongle_path
+        # Wall-clock at thread construction. _run_inner uses elapsed time vs this
+        # to detect "Better_Getter exited almost instantly with non-zero rc" — the
+        # cp210x EIO-on-serial-open signature — and flag the dongle for usbreset
+        # before returning it to the queue.
+        self.started_at = datetime.datetime.now()
+        self._bg_dongle_needs_usbreset = False
 
     def _release_bg_dongle(self):
         if self.bg_dongle_path is not None:
+            if self._bg_dongle_needs_usbreset:
+                # EIO on serial open wedges the cp210x driver state until a USB-level
+                # reset rebinds it. Without this, the same wedged dongle would come
+                # straight back out of bg_dongle_queue on the next BLE pickup and burn
+                # through up to max_total_attempts addresses before another BG dongle
+                # happens to be the one handed out.
+                print(f"BG: {self.bg_dongle_path} likely wedged (fast non-zero exit); running usbreset before re-queueing")
+                _usbreset_dongle(self.bg_dongle_path)
             bg_dongle_queue.put(self.bg_dongle_path)
             if(print_verbose): print(f"Released BG dongle {self.bg_dongle_path} back to queue")
 
@@ -515,6 +529,14 @@ class ApplicationThread(threading.Thread):
                 else:
                     if(self.info_type == "GATT"):
                        external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
+                       # An EIO at serial open (cp210x wedge) makes Better_Getter.py
+                       # exit in well under a second — long before it could attempt
+                       # any BLE connect. Real GATT failures take seconds. Use a
+                       # short elapsed-time gate to flag the dongle for usbreset
+                       # before _release_bg_dongle re-queues it.
+                       elapsed_s = (datetime.datetime.now() - self.started_at).total_seconds()
+                       if self.bg_dongle_path is not None and elapsed_s < 1.5:
+                           self._bg_dongle_needs_usbreset = True
                     elif(self.info_type == "LMP2thprint"):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "SDP"):
