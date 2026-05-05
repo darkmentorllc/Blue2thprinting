@@ -107,6 +107,17 @@ max_connect_attempts = 3 # How many times to attempt connections before skipping
 device_total_attempts = {}
 max_total_attempts = 10
 
+# Last datetime we saw any D-Bus signal (InterfacesAdded or PropertiesChanged) for
+# each bdaddr. Updated by the discovery loop on every advert; consulted by the BLE
+# worker's deprioritized-fallback path to skip stale entries that BlueZ still has
+# cached but haven't actually been heard from in a while.
+device_last_seen = {}
+# Reprioritization recency window: only fall back onto deprioritized bdaddrs that
+# we've still been hearing from within this many seconds. Otherwise an old Apple
+# device that wandered out of range still consumes connect attempts and burns
+# time we could spend on present devices.
+DEPRIORITIZED_RECENCY_S = 60
+
 ##################################################
 # Paths resolved from this file's location so the repo works from any clone path.
 ##################################################
@@ -405,9 +416,42 @@ def _maybe_disable_cycling():
 #####################################################################################
 bg_dongle_queue = Queue()
 
+# Per-BG-dongle consecutive non-zero-exit counter, keyed by /dev/ttyUSBN. Reset
+# to 0 on a BG success or after a usbreset. The release path runs usbreset when
+# this hits BG_CONSECUTIVE_FAILURE_THRESHOLD on a given path, independent of the
+# elapsed-time fast-fail heuristic — Python interpreter cold-start on a Pi takes
+# several seconds, so a "fast EIO at Serial open" actually surfaces as ~5-6s of
+# wall time, indistinguishable from a normal connection failure by clock alone.
+# A pure clock heuristic missed every wedge in practice; the counter catches
+# them by their pattern instead.
+# Safe to mutate without a lock because the bg_dongle_queue serializes access:
+# only one ApplicationThread holds a given path between get() and put(), so a
+# given key has at most one writer at any moment.
+bg_dongle_consecutive_failures = {}
+BG_CONSECUTIVE_FAILURE_THRESHOLD = 3
+# Elapsed-time fast-path. cp210x EIO at Serial open + Python interpreter cold
+# start typically completes in well under this on Pi-class hardware (observed
+# 5-6s), while real GATT runs use most or all of the 20s timeout. False
+# positives here cost only a 3s usbreset delay per BG run; a missed wedge
+# burns up to max_total_attempts BLE addresses on a dead dongle.
+BG_FAST_FAIL_S = 8.0
+
 ##################################################
 # Log print helpers
 ##################################################
+
+def tprint(msg):
+    """Thread-safe single-write equivalent of print(msg).
+
+    Built-in print() does two writes per call — the formatted text, then end='\\n'.
+    With many worker threads all printing to the same stdout (BLE/BTC/Sniffle workers
+    plus per-launch ApplicationThread instances), another thread's text can land
+    between the two writes, producing garbled lines like
+    'Released BG dongle X back to queueBLE: Acquired BG dongle Y for ...'.
+    Bundling the newline into a single write makes the line atomic against any
+    other writer that's also doing single-write emissions.
+    """
+    sys.stdout.write(msg + "\n")
 
 def external_log_write(log_path, fmt_str):
     with open(log_path, 'a') as file:
@@ -463,6 +507,7 @@ class ApplicationThread(threading.Thread):
         self._bg_dongle_needs_usbreset = False
 
     def _release_bg_dongle(self):
+        global _last_bg_uhubctl_cycle_at
         if self.bg_dongle_path is not None:
             if self._bg_dongle_needs_usbreset:
                 # EIO on serial open wedges the cp210x driver state until a USB-level
@@ -470,10 +515,44 @@ class ApplicationThread(threading.Thread):
                 # straight back out of bg_dongle_queue on the next BLE pickup and burn
                 # through up to max_total_attempts addresses before another BG dongle
                 # happens to be the one handed out.
-                print(f"BG: {self.bg_dongle_path} likely wedged (fast non-zero exit); running usbreset before re-queueing")
-                _usbreset_dongle(self.bg_dongle_path)
+                consec = bg_dongle_consecutive_failures.get(self.bg_dongle_path, 0)
+                tprint(f"BG: {self.bg_dongle_path} likely wedged ({consec} consecutive failures); running usbreset before re-queueing")
+                ok = _usbreset_dongle(self.bg_dongle_path)
+                if not ok:
+                    # usbreset failing typically means the cp210x has fully detached
+                    # from the kernel (USBDEVFS_RESET → ENODEV), beyond what driver-
+                    # level recovery can clear. Fall back to a hub power-cycle, which
+                    # forces the device to re-enumerate from scratch. Serialize across
+                    # threads + cooldown so we don't cycle the same hub repeatedly
+                    # while every dongle on it is mid-rebind from the prior cycle.
+                    with _bg_uhubctl_cycle_lock:
+                        now = time.monotonic()
+                        if now - _last_bg_uhubctl_cycle_at < UHUBCTL_BG_COOLDOWN_S:
+                            tprint(f"BG: usbreset of {self.bg_dongle_path} failed; skipping uhubctl (cooldown active, {now - _last_bg_uhubctl_cycle_at:.0f}s since last cycle)")
+                        else:
+                            tprint(f"BG: usbreset of {self.bg_dongle_path} failed; falling back to uhubctl power-cycle (will also bounce other dongles on the hub)")
+                            # Set the timestamp BEFORE the cycle so concurrent
+                            # ApplicationThread releases see the cooldown window
+                            # immediately and don't pile on with their own cycles.
+                            _last_bg_uhubctl_cycle_at = now
+                            cycled = _uhubctl_cycle_for_tty(self.bg_dongle_path)
+                            if cycled:
+                                # The cycle just bounced every cp210x on the hub —
+                                # any failures their threads racked up before the
+                                # cycle are stale. Reset all counters so we don't
+                                # immediately re-flag them on their next pickup.
+                                for k in list(bg_dongle_consecutive_failures.keys()):
+                                    bg_dongle_consecutive_failures[k] = 0
+                            else:
+                                # Cycle didn't actually happen (no PPPS ancestor,
+                                # uhubctl missing, etc.). Don't hold the cooldown
+                                # against future genuine attempts.
+                                _last_bg_uhubctl_cycle_at = 0.0
+                # Whether the recovery succeeded or not, clear THIS dongle's counter —
+                # we tried what we could and shouldn't re-flag on the very next exit.
+                bg_dongle_consecutive_failures[self.bg_dongle_path] = 0
             bg_dongle_queue.put(self.bg_dongle_path)
-            if(print_verbose): print(f"Released BG dongle {self.bg_dongle_path} back to queue")
+            if(print_verbose): tprint(f"Released BG dongle {self.bg_dongle_path} back to queue")
 
     def run(self):
         try:
@@ -493,6 +572,12 @@ class ApplicationThread(threading.Thread):
                 if(retCode == 0): #Success!
                     if(self.info_type == "GATT"):
                        external_log_write(bgprint_log_path, f"BETTERGETTER SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
+                       # A successful BG run on this dongle proves it isn't wedged.
+                       # Reset the consecutive-failure counter so a long-stable
+                       # dongle isn't forced through usbreset because of failures
+                       # that happened earlier in the session.
+                       if self.bg_dongle_path is not None:
+                           bg_dongle_consecutive_failures[self.bg_dongle_path] = 0
                        with gatt_success_bdaddrs_lock:
                            gatt_success_bdaddrs[self.bdaddr] = 1
                            # Should only remove from ble_bdaddrs if all BLE-type prints are done
@@ -529,14 +614,19 @@ class ApplicationThread(threading.Thread):
                 else:
                     if(self.info_type == "GATT"):
                        external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
-                       # An EIO at serial open (cp210x wedge) makes Better_Getter.py
-                       # exit in well under a second — long before it could attempt
-                       # any BLE connect. Real GATT failures take seconds. Use a
-                       # short elapsed-time gate to flag the dongle for usbreset
-                       # before _release_bg_dongle re-queues it.
-                       elapsed_s = (datetime.datetime.now() - self.started_at).total_seconds()
-                       if self.bg_dongle_path is not None and elapsed_s < 1.5:
-                           self._bg_dongle_needs_usbreset = True
+                       # Two independent triggers for usbreset, ORed together:
+                       #   * elapsed_s < BG_FAST_FAIL_S — fast exit pattern, suggestive of
+                       #     EIO at Serial open before any BLE work; observed Pi clock
+                       #     time for that case is ~5-6s due to interpreter cold start.
+                       #   * consecutive >= BG_CONSECUTIVE_FAILURE_THRESHOLD — repeated
+                       #     non-zero exits on the same dongle regardless of timing,
+                       #     covering wedges that don't fit the fast-fail signature.
+                       if self.bg_dongle_path is not None:
+                           elapsed_s = (datetime.datetime.now() - self.started_at).total_seconds()
+                           consecutive = bg_dongle_consecutive_failures.get(self.bg_dongle_path, 0) + 1
+                           bg_dongle_consecutive_failures[self.bg_dongle_path] = consecutive
+                           if elapsed_s < BG_FAST_FAIL_S or consecutive >= BG_CONSECUTIVE_FAILURE_THRESHOLD:
+                               self._bg_dongle_needs_usbreset = True
                     elif(self.info_type == "LMP2thprint"):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "SDP"):
@@ -570,6 +660,16 @@ class ApplicationThread(threading.Thread):
             self.is_terminated = True
             if(self.info_type == "GATT"):
                external_log_write(bgprint_log_path, f"BETTERGETTER FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
+               # Timeouts count toward the consecutive-failure threshold too —
+               # the dongle was held for the full timeout and produced nothing,
+               # which is itself a wedge symptom on a long enough streak.
+               # Don't trigger the fast-fail leg here (a timeout is by
+               # definition not fast).
+               if self.bg_dongle_path is not None:
+                   consecutive = bg_dongle_consecutive_failures.get(self.bg_dongle_path, 0) + 1
+                   bg_dongle_consecutive_failures[self.bg_dongle_path] = consecutive
+                   if consecutive >= BG_CONSECUTIVE_FAILURE_THRESHOLD:
+                       self._bg_dongle_needs_usbreset = True
             elif(self.info_type == "LMP2thprint"):
                external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "SDP"):
@@ -913,6 +1013,7 @@ def _device_added(path, props):
     rssi = _rssi(props)
     device_connect_attempts[bdaddr] = 0  # reset attempt counter on (re)appearance
     device_total_attempts.setdefault(bdaddr, 0)  # cumulative; intentionally NOT reset on re-appearance
+    device_last_seen[bdaddr] = datetime.datetime.now()
     # BlueZ can re-emit InterfacesAdded for the same device with different Device1
     # property sets — e.g., a dual-mode device whose first advertisement was a BR/EDR
     # inquiry response (Class present → BTC) and whose later LE advertisement omits
@@ -959,6 +1060,9 @@ def _device_props_changed(path, changed):
     if not suffix.startswith("dev_"):
         return
     bdaddr = suffix[4:].replace("_", ":").lower()
+    # Any PropertiesChanged for a device path means we just heard from the device
+    # (BlueZ fires this for every advert seen with DuplicateData=true).
+    device_last_seen[bdaddr] = datetime.datetime.now()
 
     # BLE->BTC promotion. BlueZ fires PropertiesChanged (not InterfacesAdded) when
     # an existing Device1 gains its Class property — i.e., when a dual-mode device
@@ -1194,7 +1298,6 @@ def ble_thread_function():
         if(print_verbose):
             print(f"Begin loop through sorted_ble_bdaddrs {datetime.datetime.now()}")
             print(f"sorted_ble_bdaddrs = {sorted_ble_bdaddrs}")
-            print(f"ble_deprioritized_bdaddrs = {ble_deprioritized_bdaddrs}")
 
         skip_count = int(0)
         for bdaddr in sorted_ble_bdaddrs:
@@ -1218,10 +1321,21 @@ def ble_thread_function():
 
                 if(skip_count == len(sorted_ble_bdaddrs) and len(ble_deprioritized_bdaddrs) > 0):
                     print("BLE: Everything's being skipped. We could go ahead and do some deprioritized bdaddrs now...")
-                    print(ble_deprioritized_bdaddrs)
-                    bdaddr = list(ble_deprioritized_bdaddrs.keys())[0] # Grab a single bdaddr
-                    reprioritize_ble_bdaddr(bdaddr)
-                    print(ble_deprioritized_bdaddrs)
+                    # Only fall back onto deprioritized bdaddrs that we've still been
+                    # hearing adverts from in the last DEPRIORITIZED_RECENCY_S seconds.
+                    # Old entries (e.g., an Apple device that wandered out of range and
+                    # never got [DEL]'d because BlueZ kept it around) would otherwise
+                    # consume connect attempts on devices that aren't even present.
+                    cutoff = datetime.datetime.now() - datetime.timedelta(seconds=DEPRIORITIZED_RECENCY_S)
+                    with ble_deprioritized_bdaddrs_lock:
+                        recent_candidates = [b for b in ble_deprioritized_bdaddrs
+                                             if device_last_seen.get(b, datetime.datetime.min) >= cutoff]
+                    if recent_candidates:
+                        bdaddr = recent_candidates[0]
+                        print(f"BLE: Reprioritizing {bdaddr} (recently heard; {len(recent_candidates)} of {len(ble_deprioritized_bdaddrs)} deprioritized still active)")
+                        reprioritize_ble_bdaddr(bdaddr)
+                    else:
+                        print(f"BLE: No deprioritized bdaddrs heard in last {DEPRIORITIZED_RECENCY_S}s; nothing to reprioritize")
 
                 continue
             else:
@@ -1248,7 +1362,7 @@ def ble_thread_function():
                     # are already running a Better_Getter.py process, which gives us natural
                     # round-robin distribution across the BG pool (Queue is FIFO).
                     bg_dongle_path = bg_dongle_queue.get()
-                    if(print_verbose): print(f"BLE: Acquired BG dongle {bg_dongle_path} for {bdaddr}")
+                    if(print_verbose): tprint(f"BLE: Acquired BG dongle {bg_dongle_path} for {bdaddr}")
 
                     launched_thread = None
                     with ble_bdaddrs_lock:
@@ -1293,7 +1407,7 @@ def ble_thread_function():
                     # failed silently), the dongle would otherwise be lost from the pool — return it.
                     if(launched_thread is None):
                         bg_dongle_queue.put(bg_dongle_path)
-                        if(print_verbose): print(f"BLE: No GATT thread started for {bdaddr}; returned BG dongle {bg_dongle_path} to queue")
+                        if(print_verbose): tprint(f"BLE: No GATT thread started for {bdaddr}; returned BG dongle {bg_dongle_path} to queue")
 
             # Reap any finished threads to bound memory growth, but do NOT block on running ones —
             # the bg_dongle_queue handles back-pressure (BLE thread blocks on queue.get() when all
@@ -1620,9 +1734,29 @@ def _usbreset_dongle(tty_path):
     if not os.path.exists(sysfs_iface):
         print(f"_usbreset_dongle: {sysfs_iface} not present; can't reset {tty_path}")
         return False
-    # `device` is a symlink to the USB *interface* dir (e.g. 1-1.1.3.2:1.0).
-    # The USB device dir is its parent (1-1.1.3.2), which exposes busnum/devnum.
-    usb_device_dir = os.path.normpath(os.path.join(os.path.realpath(sysfs_iface), ".."))
+    # The kernel layout for cp210x has varied across versions:
+    #   * older: /sys/class/tty/ttyUSBN/device -> .../1-1.1.3.2:1.0  (interface dir)
+    #     → device dir is one parent up
+    #   * newer (Pi kernel 6.12.x observed): -> .../1-1.1.3.2:1.0/ttyUSBN  (a child
+    #     subdir of the interface) → device dir is two parents up
+    # busnum + devnum live at the device dir, not the interface. Walk upward from
+    # the realpath until we find a dir containing both files; cap at 6 hops to
+    # avoid runaway when the symlink chain is broken.
+    real = os.path.realpath(sysfs_iface)
+    usb_device_dir = None
+    cur = real
+    for _ in range(6):
+        if (os.path.exists(os.path.join(cur, "busnum"))
+                and os.path.exists(os.path.join(cur, "devnum"))):
+            usb_device_dir = cur
+            break
+        parent = os.path.dirname(cur)
+        if parent == cur:  # reached /
+            break
+        cur = parent
+    if usb_device_dir is None:
+        print(f"_usbreset_dongle: could not locate busnum/devnum for {tty_path} starting from {real}")
+        return False
     try:
         with open(os.path.join(usb_device_dir, "busnum")) as f:
             busnum = int(f.read().strip())
@@ -1654,6 +1788,102 @@ def _usbreset_dongle(tty_path):
     time.sleep(3)
     print(f"_usbreset_dongle: usbreset {bus_path} OK")
     return True
+
+
+# Serializes uhubctl-based recovery so concurrent ApplicationThread releases
+# don't each try to cycle the same hub. Combined with _last_bg_uhubctl_cycle_at,
+# this gives us "exactly one cycle per cooldown window" semantics across threads.
+_bg_uhubctl_cycle_lock = threading.Lock()
+_last_bg_uhubctl_cycle_at = 0.0
+# Don't re-cycle within this many seconds of a previous cycle. After a hub-wide
+# power-off + power-on, every dongle on the (ganged) hub is mid-rebind and any
+# BG launches against them WILL fail-fast with EIO/ENOENT — that's expected,
+# not a fresh wedge. The cooldown prevents the cascade of re-cycles that would
+# otherwise lock the hub in continuous reset.
+UHUBCTL_BG_COOLDOWN_S = 60.0
+
+
+def _sysfs_id_from_tty(tty_path):
+    """Return the USB sysfs device id (e.g. '1-1.2.3.4') for /dev/ttyUSBN, or
+    None if the device isn't present or the realpath chain doesn't expose a
+    standard USB device dir. Walks up the tty's `device` symlink target until
+    it hits a basename that looks like a USB device id (dots, no colon)."""
+    short_name = os.path.basename(tty_path)
+    sysfs_iface = f"/sys/class/tty/{short_name}/device"
+    if not os.path.exists(sysfs_iface):
+        return None
+    cur = os.path.realpath(sysfs_iface)
+    for _ in range(8):
+        base = os.path.basename(cur)
+        # USB device dirs look like '1-1.2.3.4'. Interface dirs have ':' (e.g.
+        # '1-1.2.3.4:1.0'). The leaf may also be a tty subdir like 'ttyUSB6'.
+        if "." in base and ":" not in base and "-" in base:
+            return base
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return None
+        cur = parent
+    return None
+
+
+def _uhubctl_cycle_for_tty(tty_path):
+    """Power-cycle the closest PPPS-capable hub-port whose subtree contains
+    /dev/ttyUSBN. Walks up the USB topology from the dongle's immediate parent
+    looking for a hub uhubctl can drive.
+
+    No safety check on the subtree — on ganged hubs this also bounces every
+    other device on the same hub. That tradeoff is intentional: the only
+    software recovery for a deeper-than-driver wedge (cp210x ETIMEDOUT +
+    USBDEVFS_RESET ENODEV) is power loss, and the user has explicitly accepted
+    ganged collateral damage in exchange for getting the dongle back at all.
+    The bounced neighbors get a forced "preventative reset" out of the deal.
+
+    Caller must hold _bg_uhubctl_cycle_lock and update _last_bg_uhubctl_cycle_at
+    around this call so concurrent BG ApplicationThread releases don't each
+    issue their own cycle for the same hub.
+
+    Returns True on a successful cycle, False otherwise.
+    """
+    sysfs_id = _sysfs_id_from_tty(tty_path)
+    if sysfs_id is None:
+        print(f"_uhubctl_cycle_for_tty: could not determine USB sysfs id for {tty_path}")
+        return False
+    parts = sysfs_id.split(".")
+    if len(parts) < 2:
+        print(f"_uhubctl_cycle_for_tty: sysfs id {sysfs_id} has no parent hub")
+        return False
+    # Walk upward: i=1 is direct parent, i=2 is grandparent, etc. Stop short of
+    # the root host controller (parts[0] alone, e.g. '1-1') since uhubctl can't
+    # really cycle that — it's the host controller's port.
+    for i in range(1, len(parts)):
+        candidate_hub = ".".join(parts[:-i])
+        candidate_port = parts[-i]
+        if not _hub_supports_ppps(candidate_hub):
+            continue
+        print(f"_uhubctl_cycle_for_tty: cycling hub {candidate_hub} port {candidate_port} for {tty_path}")
+        try:
+            result = subprocess.run(
+                ["uhubctl", "-l", candidate_hub, "-p", candidate_port, "-a", "cycle"],
+                timeout=15, capture_output=True, text=True,
+            )
+        except FileNotFoundError:
+            print("_uhubctl_cycle_for_tty: 'uhubctl' not on PATH; can't recover")
+            return False
+        except subprocess.TimeoutExpired:
+            print(f"_uhubctl_cycle_for_tty: uhubctl cycle timed out on {candidate_hub} port {candidate_port}")
+            return False
+        if result.returncode != 0:
+            print(f"_uhubctl_cycle_for_tty: uhubctl rc={result.returncode}, "
+                  f"stderr={result.stderr.strip()[:200]}")
+            return False
+        # Wait for udev to re-bind the cp210x driver and re-create /dev/ttyUSBN
+        # plus the /dev/serial/by-id symlinks. On the .183 test bench, full
+        # rebind across a ganged hub takes ~5-7s; 10s is generous.
+        time.sleep(10)
+        print(f"_uhubctl_cycle_for_tty: cycle of {candidate_hub} port {candidate_port} OK for {tty_path}")
+        return True
+    print(f"_uhubctl_cycle_for_tty: no PPPS-capable ancestor found for {tty_path}")
+    return False
 
 
 def sniffle_stall_detector_thread():
