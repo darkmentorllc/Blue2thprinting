@@ -11,6 +11,11 @@ source "$REPO_ROOT/Scripts/lib_bluetooth.sh"
 ERRORLOG="/tmp/runall.log"
 echo "start_btmon.sh start" >> $ERRORLOG
 LOGPATH="$REPO_ROOT/Logs/btmon"
+# Older clones on the capture fleet predate Logs/btmon/.gitkeep being tracked in
+# the repo, and absent that directory btmon dies inside the first second: bash
+# can't open the stderr redirect or the -w output target, so the child exits
+# with an open() error before it ever execs btmon. Create idempotently.
+mkdir -p "$LOGPATH"
 DATE=$(/bin/date +%F-%H-%M-%S)
 HN=$(hostname)
 # System btmon from the 'bluez' apt package. The Btsnoop file format is
