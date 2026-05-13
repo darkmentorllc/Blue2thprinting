@@ -1,0 +1,21 @@
+[package]
+name = "import-all-BTIDES"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Bulk converter: walk input folders, detect PCAP vs BTSnoop/HCI by magic bytes, dispatch to the right backend, emit one BTIDES file per input."
+
+[[bin]]
+name = "import-all-BTIDES"
+path = "src/main.rs"
+
+[dependencies]
+BTIDES-model   = { path = "../../BTIDES_Schema/rust/BTIDES-model" }
+BTIDES-pcap    = { path = "../../BTIDES_Schema/rust/BTIDES-pcap" }
+BTIDES-btsnoop = { path = "../../BTIDES_Schema/rust/BTIDES-btsnoop" }
+BTIDES-bt      = { path = "../../BTIDES_Schema/rust/BTIDES-bt" }
+BTIDES-hci     = { path = "../../BTIDES_Schema/rust/BTIDES-hci" }
+serde_json.workspace = true
+clap.workspace = true
+thiserror.workspace = true

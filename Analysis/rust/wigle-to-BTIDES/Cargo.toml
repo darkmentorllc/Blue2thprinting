@@ -1,0 +1,19 @@
+[package]
+name = "wigle-to-BTIDES"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "CLI: convert a WiGLE Android backup SQLite into a BTIDES JSON file (GPS + name)."
+
+[[bin]]
+name = "wigle-to-BTIDES"
+path = "src/main.rs"
+
+[dependencies]
+BTIDES-model = { path = "../../BTIDES_Schema/rust/BTIDES-model" }
+serde_json.workspace = true
+clap.workspace = true
+thiserror.workspace = true
+rusqlite.workspace = true
+mysql.workspace = true

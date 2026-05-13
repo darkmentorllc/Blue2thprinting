@@ -1,0 +1,36 @@
+[workspace]
+# Blue2thprinting-specific Rust binaries. These depend on the generic protocol
+# parsers in `../BTIDES_Schema/rust/` (a separate workspace, vendored as a git
+# submodule) but add Blue2thprinting-specific orchestration and DB schemas:
+#
+#   * wigle-to-BTIDES — uses the local bt2 / bttest MySQL schema to look up
+#     bdaddr_random for BLE devices observed by WiGLE.
+#   * import-all-BTIDES — bulk converter that walks a directory of capture
+#     files and dispatches them to the BTIDES_Schema converter libraries.
+members = [
+    "wigle-to-BTIDES",
+    "import-all-BTIDES",
+]
+# btides_to_sql_rs is its own standalone crate and not part of this workspace.
+exclude = ["btides_to_sql_rs"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Xeno Kovah / Dark Mentor LLC"]
+license = "GPL-3.0-or-later"
+
+[workspace.dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+clap = { version = "4", features = ["derive"] }
+thiserror = "2"
+# bundled feature builds SQLite from source so we don't depend on a system libsqlite3.
+rusqlite = { version = "0.31", features = ["bundled"] }
+# minimal-only sync MySQL client; no SSL/compression (we only talk to localhost mariadb/mysql).
+mysql = { version = "26", default-features = false, features = ["minimal"] }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3

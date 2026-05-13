@@ -37,31 +37,45 @@ if [ ! $? ]; then
     exit -1
 fi
 
-# Get the Python version and remove the "Python " part
-python_version=$(python3 --version 2>&1 | awk '{print $2}')
-
-# Extract major and minor version numbers
-major_version=$(echo $python_version | cut -d '.' -f 1)
-minor_version=$(echo $python_version | cut -d '.' -f 2)
-
-# Compare version numbers
-if [ "$major_version" -gt 3 ] || { [ "$major_version" -eq 3 ] && [ "$minor_version" -ge 11 ]; }; then
-    success=1
-else
-    success=0
-fi
-if [ "$success" -ne 1 ]; then
+tshark --version
+if [ ! $? ]; then
     echo "================================================================================================================================================="
-    echo "Python3 > 3.11 is required. You may need to install with \"brew install python3\" on macOS to get a high enough version."
+    echo "This script assumes you've already run \"brew install wireshark\" on macOS per the instructions in the git repository. Please run that first."
     echo "================================================================================================================================================="
     exit -1
-else
-    echo "Python > 3.11 found"
 fi
+
+echo ""
+echo "====================================================================="
+echo "Installing Rust toolchain (needed to build Analysis/BTIDES_Schema/rust/ workspace)."
+echo "====================================================================="
+# Install as the invoking user — brew refuses to run as root.
+if ! sudo -u "$USERNAME" bash -lc 'command -v cargo' >/dev/null 2>&1; then
+    sudo -u "$USERNAME" brew install rust
+fi
+# Re-resolve cargo for the current (root) shell so the build step below can find it.
+USER_HOME="$(eval echo ~"$USERNAME")"
+CARGO_BIN="$(sudo -u "$USERNAME" bash -lc 'command -v cargo' 2>/dev/null)"
+if [[ -z "$CARGO_BIN" ]]; then
+    echo "Rust toolchain install failed — 'cargo' is not on \$PATH for $USERNAME."
+    exit -1
+fi
+echo "Using cargo: $CARGO_BIN"
 
 python3 -m venv ./venv
 source ./venv/bin/activate
 pip install jsonschema==4.23 mysql-connector-python pyyaml requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client colorama
+
+# Using my branch until all of my and Antonio's changes are merged in
+git clone https://github.com/XenoKovah/scapy.git
+cd scapy
+pip install .
+cd ..
+# We need this branch of btsnoop which added support for BTSNOOP_FORMAT_MONITOR sufficient to get the data into scapy for parsing
+git clone https://github.com/XenoKovah/btsnoop.git
+cd btsnoop
+pip install .
+cd ..
 
 echo ""
 echo "====================================================================================================================================="
@@ -69,15 +83,8 @@ echo "Fixing this repository if you didn't clone it with a recursive pull of the
 echo "====================================================================================================================================="
 git submodule update --init --recursive
 
-cd Analysis
-
-# scapy is pulled in via the Analysis/scapy submodule above; just install it.
-cd scapy
-pip install .
-cd ..
-
 # Next commands assume they run from the Analysis folder
-cd ./one_time_initialization
+cd ./Analysis/one_time_initialization
 
 echo ""
 echo "==================================="
@@ -137,6 +144,29 @@ echo "==========================================================================
 echo "You should see 10 mappings between UUI128s and Android package names after the next command:"
 echo "============================================================================================"
 mysql -u user -pa --database='bt2' --execute="SELECT * from USB_CID_to_company order by id desc limit 10;"
+
+echo ""
+echo "================================================================================="
+echo "Building the Rust BTIDES converters. Two Cargo workspaces:"
+echo "  * Analysis/BTIDES_Schema/rust/ — schema-agnostic converters"
+echo "      (pcap-to-BTIDES, hci-to-BTIDES, sdp-to-BTIDES, library crates)"
+echo "  * Analysis/rust/ — Blue2thprinting-specific tools"
+echo "      (wigle-to-BTIDES, import-all-BTIDES)"
+echo "Release builds, may take a minute or two."
+echo "================================================================================="
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && cargo build --release"
+if [ $? -ne 0 ]; then
+    echo "cargo build failed in Analysis/BTIDES_Schema/rust. Check the output above."
+    exit -1
+fi
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/rust' && cargo build --release"
+if [ $? -ne 0 ]; then
+    echo "cargo build failed in Analysis/rust. Check the output above."
+    exit -1
+fi
+echo "Built binaries are at:"
+echo "  $BASE_PATH/Analysis/BTIDES_Schema/rust/target/release/"
+echo "  $BASE_PATH/Analysis/rust/target/release/"
 
 echo "======================================================="
 echo "Correcting permissions on the Blue2thprinting folder."
