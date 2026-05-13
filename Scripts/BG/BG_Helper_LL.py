@@ -309,7 +309,7 @@ def incoming_LL_errors(actual_body_len, dpkt):
         vmultiprint(header_ACID, ll_len_ACID, ll_ctl_opcode, ll_reject_opcode, ll_error_code)
         if(ll_ctl_opcode == opcode_LL_REJECT_EXT_IND):
             if(globals.current_ll_ctrl_state.last_sent_ll_ctrl_pkt_opcode == opcode_LL_LENGTH_REQ and ll_reject_opcode == opcode_LL_LENGTH_REQ):
-                print(f"--> LL_LENGTH* phase done, (Rejected with reason {ll_field}). Moving to next phase")
+                print(f"--> LL_LENGTH* phase done, (Rejected with reason {ll_error_code}). Moving to next phase")
                 update_LL_LENGTH_state(ll_ctl_opcode, "Rejected")
 
     clear_pending_packet_state()
