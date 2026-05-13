@@ -72,9 +72,14 @@ def print_all_info():
 #        vprint(f"Handle 0x{handle:04x} = UUID 0x{UUID128}")
         store_descriptors_in_existing_format_expectations(handle, UUID128)
 
-        # Set aside "Primary Service Descriptor" (0x2800) and "Secondary Service Descriptor" (0x2801) data for later post-processing
+        # Set aside "Primary Service Descriptor" (0x2800) and "Secondary Service Descriptor" (0x2801) data for later post-processing.
+        # Guard against missing values: discovery can finish with handles whose
+        # descriptor UUID we know (received_handles) but whose value-read never
+        # completed (all_handles_received_values). Without the guard this raised
+        # KeyError 23 times in the NYC capture, aborting the whole enumeration.
         if(globals.received_handles[handle] == b'\x00\x28' or globals.received_handles[handle] == b'\x01\x28'):
-            globals.service_received_handles[handle] = globals.all_handles_received_values[handle]
+            if(handle in globals.all_handles_received_values):
+                globals.service_received_handles[handle] = globals.all_handles_received_values[handle]
         # Process "Characteristic Descriptor" (0x2803) data now
         elif(globals.received_handles[handle] == b'\x03\x28'):
             if(handle in globals.all_handles_received_values):
