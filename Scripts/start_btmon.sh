@@ -34,14 +34,17 @@ if [ ! -x "$BTMON" ]; then
 fi
 
 wait_for_bluetooth || { echo "start_btmon.sh aborted: bluetooth not ready" >> $ERRORLOG; exit 1; }
-# Detach btmon properly: redirect stdin from /dev/null and stdout/stderr to a
-# log file (not /dev/null) so we can debug future failures, and use disown so
-# the process survives this script exiting under cron.
+# Detach btmon properly: redirect stdin from /dev/null, send btmon's
+# human-readable stdout trace to /dev/null (it would otherwise duplicate the
+# binary capture going to ${DATE}_${HN}.bin and fill the SD card — observed
+# 2.8 GB across the 2-day NYC capture), and keep stderr in btmon_stderr.log
+# so we can debug future failures. Use disown so the process survives this
+# script exiting under cron.
 # No `-i N` flag: monitor ALL hci interfaces. The launcher cycles the Realtek
 # dongle via USB rebind which renumbers it (hci0 -> hci2 -> ...), and we want
 # btmon to keep capturing whichever number it ends up at.
 nohup "$BTMON" -T -w "${LOGPATH}/${DATE}_${HN}.bin" \
-    </dev/null >>"${LOGPATH}/btmon_stderr.log" 2>&1 &
+    </dev/null >/dev/null 2>>"${LOGPATH}/btmon_stderr.log" &
 BTMON_PID=$!
 disown $BTMON_PID 2>/dev/null || true
 sleep 1
