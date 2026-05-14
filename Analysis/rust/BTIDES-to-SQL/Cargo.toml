@@ -1,0 +1,30 @@
+[package]
+name = "BTIDES-to-SQL"
+version = "0.1.0"
+edition = "2021"
+
+# The Rust identifier for the library (used in `use` statements) cannot
+# contain dashes, so we explicitly set it to the snake_case form. This is
+# the standard Cargo convention — by default it'd auto-convert `BTIDES-to-SQL`
+# to `BTIDES_to_SQL` anyway, but pinning it makes the import paths in main.rs
+# and import-all-BTIDES unambiguous.
+[lib]
+name = "BTIDES_to_SQL"
+path = "src/lib.rs"
+
+[[bin]]
+name = "BTIDES-to-SQL"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+mysql = { version = "28", default-features = false, features = ["minimal", "buffer-pool"] }
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+regex = "1"
+once_cell = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1

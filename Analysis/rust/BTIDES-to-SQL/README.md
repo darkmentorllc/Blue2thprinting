@@ -1,28 +1,32 @@
-# btides_to_sql_rs
+# BTIDES-to-SQL
 
 Rust port of `Analysis/BTIDES_to_SQL.py`. Imports BTIDES JSON files into
 the `bt2` (production) or `bttest` (test) MySQL database, byte-for-byte
 identical to the Python importer on every table I've tested.
 
+Also publishes a Rust library (`BTIDES_to_SQL`) used by sibling tools such
+as `import-all-BTIDES --to-SQL` (which calls `import_files_with_pool`
+directly to avoid per-file process spawn).
+
 ## Build
 
 ```bash
-cd Analysis/rust/btides_to_sql_rs
+cd Analysis/rust/BTIDES-to-SQL
 cargo build --release
 ```
 
-Binary lands at `target/release/btides_to_sql_rs`.
+Binary lands at `target/release/BTIDES-to-SQL`.
 
 ## Usage
 
 ```
-btides_to_sql_rs --input <file.btides> [--input <other.btides> ...]
-                 [--use-test-db]
-                 [--reader-threads N]   # parse N files in parallel (default 1)
-                 [--writer-threads N]   # split DB writes across N connections (default 1)
-                 [--deadlock-retries N] # retry InnoDB 1213/1205 victims (default 8)
-                 [--verbose]
-                 [--db-host HOST] [--db-user USER] [--db-password PW]
+BTIDES-to-SQL --input <file.btides> [--input <other.btides> ...]
+              [--use-test-db]
+              [--reader-threads N]   # parse N files in parallel (default 1)
+              [--writer-threads N]   # split DB writes across N connections (default 1)
+              [--deadlock-retries N] # retry InnoDB 1213/1205 victims (default 8)
+              [--verbose]
+              [--db-host HOST] [--db-user USER] [--db-password PW]
 ```
 
 ## Recommended invocation patterns
@@ -36,7 +40,7 @@ btides_to_sql_rs --input <file.btides> [--input <other.btides> ...]
   ```bash
   find logs/ -name '*.btides*' -print0 \
     | xargs -0 -n 1 -P 8 -I {} \
-        Analysis/rust/btides_to_sql_rs/target/release/btides_to_sql_rs \
+        Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
         --input {} --use-test-db
   ```
 

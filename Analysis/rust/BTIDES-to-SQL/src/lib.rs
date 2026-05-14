@@ -8,10 +8,16 @@
 // INSERT IGNORE per table at the end (chunked). GPS and LMP_NAME_RES
 // preserve the special semantics from the Python (rssi=0 promotion,
 // per-bdaddr fragment defragmentation).
+//
+// The crate identifier `BTIDES_to_SQL` is the auto-derived snake-case form
+// of the package name `BTIDES-to-SQL`, but it preserves the `BTIDES` /
+// `SQL` capitalization (matching the convention used by the sibling
+// `BTIDES_bt`, `BTIDES_pcap`, `BTIDES_hci`, ... crates in
+// `Analysis/BTIDES_Schema/rust/`). Suppress the default snake_case warning.
+#![allow(non_snake_case)]
 
-use clap::Parser;
 use mysql::prelude::*;
-use mysql::{Opts, OptsBuilder, Pool, Row, Value};
+use mysql::{Opts, OptsBuilder, Row, Value};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use serde_json::Value as J;
@@ -19,6 +25,195 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::File;
 use std::io::BufReader;
 use std::time::Instant;
+
+// ---------------------------- public API ------------------------------------
+// import-all-BTIDES uses this library to run per-file imports inside its own
+// worker pool. The Pool can be shared across threads (Arc-clone the pool, or
+// pass &Pool — `import_files_with_pool` only does `get_conn()`s internally).
+
+/// Re-exported so consumers don't need to depend on `mysql` directly to hold
+/// onto a connection pool returned by `build_pool`.
+pub use mysql::Pool;
+
+/// Tunables for an import call. See the `BTIDES-to-SQL` CLI flag docs for
+/// what each one does. `Default` matches the CLI defaults.
+#[derive(Clone, Debug)]
+pub struct ImportOpts {
+    pub writer_threads: usize,
+    pub reader_threads: usize,
+    pub deadlock_retries: usize,
+    pub one_transaction: bool,
+    pub verbose: bool,
+}
+
+impl Default for ImportOpts {
+    fn default() -> Self {
+        Self {
+            writer_threads: 1,
+            reader_threads: 1,
+            deadlock_retries: 8,
+            one_transaction: true,
+            verbose: false,
+        }
+    }
+}
+
+/// Counts returned from `import_files_with_pool`. `attempted` includes
+/// duplicates; `inserted` is the new-row count.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ImportStats {
+    pub files: usize,
+    pub attempted: u64,
+    pub inserted: u64,
+    pub gps_updates: usize,
+    pub gps_inserts: usize,
+}
+
+/// Build a MySQL connection pool against `bt2` (or `bttest` if `use_test_db`),
+/// using the same defaults TME_helpers.py uses (user='user', pass='a',
+/// host='localhost').
+pub fn build_pool(
+    host: &str,
+    user: &str,
+    pass: &str,
+    use_test_db: bool,
+) -> mysql::Result<Pool> {
+    let opts: Opts = OptsBuilder::new()
+        .ip_or_hostname(Some(host))
+        .user(Some(user))
+        .pass(Some(pass))
+        .db_name(Some(if use_test_db { "bttest" } else { "bt2" }))
+        .into();
+    Pool::new(opts)
+}
+
+/// Import one or more BTIDES JSON files into MySQL through the supplied pool.
+///
+/// Mirrors the CLI binary's flow: parse (optionally in parallel via
+/// `reader_threads`), merge, then write via `flush_all` (or
+/// `flush_parallel_with_retry` if `writer_threads > 1`), with deadlock retry
+/// wrapped around the write phase. GPS rows are applied last via
+/// `apply_gps_batch` because of their read-modify-write semantics.
+///
+/// Atomicity: when `writer_threads <= 1` the entire write phase runs in a
+/// single transaction (START TRANSACTION / COMMIT). When `writer_threads > 1`
+/// each writer thread holds its own per-table transaction; the table sets are
+/// disjoint, so the result is still atomic per-table. Either way, on a
+/// deadlock victim (MySQL error 1213) the entire phase is rolled back and
+/// replayed up to `deadlock_retries` times.
+///
+/// Safe to call concurrently from multiple threads against the same pool —
+/// each call uses its own pooled connections, and the InnoDB deadlock retry
+/// handles cross-call gap-lock conflicts on INSERT IGNORE.
+pub fn import_files_with_pool(
+    pool: &Pool,
+    paths: &[String],
+    opts: &ImportOpts,
+) -> mysql::Result<ImportStats> {
+    if paths.is_empty() {
+        return Ok(ImportStats::default());
+    }
+
+    // utf8mb4 to match what TME_helpers.py negotiates.
+    {
+        let mut conn = pool.get_conn()?;
+        let _ = conn.query_drop("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+    }
+
+    // ---------------- Parse phase ----------------
+    let t_parse = Instant::now();
+    let mut buffers = if opts.reader_threads <= 1 || paths.len() <= 1 {
+        let mut acc = Buffers::default();
+        for path in paths {
+            let b = parse_file(path);
+            merge_buffers(&mut acc, b);
+        }
+        acc
+    } else {
+        let n = opts.reader_threads.min(paths.len());
+        let mut groups: Vec<Vec<String>> = (0..n).map(|_| Vec::new()).collect();
+        for (i, path) in paths.iter().enumerate() {
+            groups[i % n].push(path.clone());
+        }
+        let handles: Vec<_> = groups
+            .into_iter()
+            .map(|g| {
+                std::thread::spawn(move || {
+                    let mut acc = Buffers::default();
+                    for p in &g {
+                        let b = parse_file(p);
+                        merge_buffers(&mut acc, b);
+                    }
+                    acc
+                })
+            })
+            .collect();
+        let mut acc = Buffers::default();
+        for h in handles {
+            match h.join() {
+                Ok(b) => merge_buffers(&mut acc, b),
+                Err(e) => eprintln!("reader thread panic: {:?}", e),
+            }
+        }
+        acc
+    };
+    finalize_lmp_name_res_defrag(&mut buffers);
+    if opts.verbose {
+        eprintln!(
+            "Parsed {} file(s) with {} reader thread(s) in {:.2}s",
+            paths.len(),
+            opts.reader_threads,
+            t_parse.elapsed().as_secs_f64()
+        );
+    }
+
+    // ---------------- Write phase (with deadlock retry) ----------------
+    let t_write = Instant::now();
+    let (attempted, inserted) =
+        retry_on_deadlock("flush_all", opts.deadlock_retries, || {
+            if opts.writer_threads <= 1 {
+                let mut conn2 = pool.get_conn()?;
+                conn2.query_drop("START TRANSACTION")?;
+                let r = flush_all(&mut conn2, &buffers, opts.verbose)?;
+                conn2.query_drop("COMMIT")?;
+                Ok(r)
+            } else {
+                let owned = build_table_list_owned(&buffers);
+                Ok(flush_parallel_with_retry(
+                    pool,
+                    owned,
+                    opts.writer_threads,
+                    opts.verbose,
+                    opts.deadlock_retries,
+                ))
+            }
+        })?;
+    let (gps_updates, gps_inserts) =
+        retry_on_deadlock("gps", opts.deadlock_retries, || {
+            let mut conn_gps = pool.get_conn()?;
+            apply_gps_batch(&mut conn_gps, &buffers)
+        })?;
+    if opts.verbose {
+        eprintln!(
+            "Wrote {} rows ({} new) + GPS ({} updates / {} inserts) in {:.2}s ({} writer threads)",
+            attempted,
+            inserted,
+            gps_updates,
+            gps_inserts,
+            t_write.elapsed().as_secs_f64(),
+            opts.writer_threads
+        );
+    }
+    Ok(ImportStats {
+        files: paths.len(),
+        attempted,
+        inserted,
+        gps_updates,
+        gps_inserts,
+    })
+}
+
+// ---------------------------- internals -------------------------------------
 
 // ------------------------------- constants ----------------------------------
 // Mirrors the dispatch table values in Analysis/TME/BT_Data_Types.py and
@@ -2687,175 +2882,3 @@ fn flush_all(conn: &mut mysql::PooledConn, b: &Buffers, verbose: bool) -> mysql:
     Ok((total_rows, total_affected))
 }
 
-// --------------------------- main -------------------------------------------
-
-#[derive(Parser, Debug)]
-#[command(about = "BTIDES to MySQL importer (Rust port of BTIDES_to_SQL.py)")]
-struct Args {
-    /// Input file name for BTIDES JSON file. May be passed multiple times.
-    #[arg(long, action = clap::ArgAction::Append, required = true)]
-    input: Vec<String>,
-
-    /// Use the alternate bttest database (matches --use-test-db in Python).
-    #[arg(long)]
-    use_test_db: bool,
-
-    /// Print per-table statistics.
-    #[arg(long, alias = "verbose-print")]
-    verbose: bool,
-
-    /// MySQL host (default localhost).
-    #[arg(long, default_value = "localhost")]
-    db_host: String,
-
-    /// MySQL user (default 'user' — matches TME_helpers.py).
-    #[arg(long, default_value = "user")]
-    db_user: String,
-
-    /// MySQL password (default 'a' — matches TME_helpers.py).
-    #[arg(long, default_value = "a")]
-    db_password: String,
-
-    /// Disable per-statement autocommit and commit once at the end.
-    #[arg(long, default_value_t = true)]
-    one_transaction: bool,
-
-    /// Use N parallel writer connections (each handles a disjoint set of
-    /// destination tables). Default 1 = serial. GPS always runs serially at
-    /// the end because of its read-modify-write semantics.
-    #[arg(long, default_value_t = 1)]
-    writer_threads: usize,
-
-    /// Parse N input files concurrently into per-thread row buffers, then
-    /// merge them before the write phase. Default 1 = serial parsing. Each
-    /// reader operates on its own file(s), so there is no contention. Has no
-    /// effect when only one --input file is provided.
-    #[arg(long, default_value_t = 1)]
-    reader_threads: usize,
-
-    /// On MySQL error 1213 (deadlock victim), roll back and retry the
-    /// transaction up to N times. Each retry sleeps an exponentially
-    /// backed-off, jittered delay before re-running. Default 8 — sufficient
-    /// for ~5 concurrent processes hammering the same table.
-    #[arg(long, default_value_t = 8)]
-    deadlock_retries: usize,
-}
-
-fn main() {
-    let args = Args::parse();
-
-    let opts: Opts = OptsBuilder::new()
-        .ip_or_hostname(Some(&args.db_host))
-        .user(Some(&args.db_user))
-        .pass(Some(&args.db_password))
-        .db_name(Some(if args.use_test_db { "bttest" } else { "bt2" }))
-        .into();
-    let pool = Pool::new(opts).expect("MySQL pool");
-    let mut conn = pool.get_conn().expect("MySQL conn");
-
-    // utf8mb4 to match what TME_helpers.py negotiates.
-    let _ = conn.query_drop("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
-
-    // ---------------- Parse phase ----------------
-    // With reader_threads > 1, split args.input across that many worker
-    // threads, each parsing its assigned files into its own Buffers; then
-    // merge.
-    let t_parse = Instant::now();
-    let mut buffers = if args.reader_threads <= 1 || args.input.len() <= 1 {
-        // Serial parse: re-use the per-file path, accumulating into one Buffers.
-        let mut acc = Buffers::default();
-        for path in &args.input {
-            let b = parse_file(path);
-            merge_buffers(&mut acc, b);
-        }
-        acc
-    } else {
-        // Split files round-robin across reader_threads worker threads.
-        let n = args.reader_threads.min(args.input.len());
-        let mut groups: Vec<Vec<String>> = (0..n).map(|_| Vec::new()).collect();
-        for (i, path) in args.input.iter().enumerate() {
-            groups[i % n].push(path.clone());
-        }
-        let handles: Vec<_> = groups
-            .into_iter()
-            .map(|paths| {
-                std::thread::spawn(move || {
-                    let mut acc = Buffers::default();
-                    for p in &paths {
-                        let b = parse_file(p);
-                        merge_buffers(&mut acc, b);
-                    }
-                    acc
-                })
-            })
-            .collect();
-        let mut acc = Buffers::default();
-        for h in handles {
-            match h.join() {
-                Ok(b) => merge_buffers(&mut acc, b),
-                Err(e) => eprintln!("reader thread panic: {:?}", e),
-            }
-        }
-        acc
-    };
-    finalize_lmp_name_res_defrag(&mut buffers);
-    let parse_elapsed = t_parse.elapsed();
-    eprintln!(
-        "Parsed {} file(s) with {} reader thread(s) in {:.2}s",
-        args.input.len(),
-        args.reader_threads,
-        parse_elapsed.as_secs_f64()
-    );
-
-    // ---------------- Write phase ----------------
-    // Wrap the per-mode write in retry-on-deadlock — InnoDB's gap locks on
-    // INSERT IGNORE against a unique index will deadlock when two processes
-    // try to insert overlapping key ranges in opposite orders. MySQL returns
-    // 1213, and the only valid response is to roll back and replay.
-    let t_write = Instant::now();
-    let (attempted, inserted) =
-        retry_on_deadlock("flush_all", args.deadlock_retries, || {
-            if args.writer_threads <= 1 {
-                let mut conn2 = pool.get_conn()?;
-                conn2.query_drop("START TRANSACTION")?;
-                let r = flush_all(&mut conn2, &buffers, args.verbose)?;
-                conn2.query_drop("COMMIT")?;
-                Ok(r)
-            } else {
-                let owned = build_table_list_owned(&buffers);
-                Ok(flush_parallel_with_retry(
-                    &pool,
-                    owned,
-                    args.writer_threads,
-                    args.verbose,
-                    args.deadlock_retries,
-                ))
-            }
-        })
-        .expect("flush retry exhausted");
-    let (gps_updates, gps_inserts) =
-        retry_on_deadlock("gps", args.deadlock_retries, || {
-            let mut conn_gps = pool.get_conn()?;
-            apply_gps_batch(&mut conn_gps, &buffers)
-        })
-        .expect("gps retry exhausted");
-    let write_elapsed = t_write.elapsed();
-    eprintln!(
-        "Wrote {} rows ({} new) + GPS ({} updates / {} inserts) in {:.2}s ({} writer threads)",
-        attempted,
-        inserted,
-        gps_updates,
-        gps_inserts,
-        write_elapsed.as_secs_f64(),
-        args.writer_threads
-    );
-    let total_attempted = attempted + (gps_updates as u64) + (gps_inserts as u64);
-    let total_inserted = inserted + (gps_updates as u64) + (gps_inserts as u64);
-
-    eprintln!(
-        "Done. Total rows attempted: {}, total new rows: {}, duplicates: {}",
-        total_attempted,
-        total_inserted,
-        total_attempted.saturating_sub(total_inserted)
-    );
-}

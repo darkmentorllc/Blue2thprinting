@@ -11,11 +11,14 @@ name = "import-all-BTIDES"
 path = "src/main.rs"
 
 [dependencies]
-BTIDES-model   = { path = "../../BTIDES_Schema/rust/BTIDES-model" }
-BTIDES-pcap    = { path = "../../BTIDES_Schema/rust/BTIDES-pcap" }
-BTIDES-btsnoop = { path = "../../BTIDES_Schema/rust/BTIDES-btsnoop" }
-BTIDES-bt      = { path = "../../BTIDES_Schema/rust/BTIDES-bt" }
-BTIDES-hci     = { path = "../../BTIDES_Schema/rust/BTIDES-hci" }
+BTIDES-model    = { path = "../../BTIDES_Schema/rust/BTIDES-model" }
+BTIDES-pcap     = { path = "../../BTIDES_Schema/rust/BTIDES-pcap" }
+BTIDES-btsnoop  = { path = "../../BTIDES_Schema/rust/BTIDES-btsnoop" }
+BTIDES-bt       = { path = "../../BTIDES_Schema/rust/BTIDES-bt" }
+BTIDES-hci      = { path = "../../BTIDES_Schema/rust/BTIDES-hci" }
+# Path dep on the standalone BTIDES-to-SQL crate (deliberately excluded
+# from the workspace) for the --to-SQL feature.
+"BTIDES-to-SQL" = { path = "../BTIDES-to-SQL" }
 serde_json.workspace = true
 clap.workspace = true
 thiserror.workspace = true

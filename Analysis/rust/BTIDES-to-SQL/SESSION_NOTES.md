@@ -1,4 +1,4 @@
-# Session continuation notes — btides_to_sql_rs
+# Session continuation notes — BTIDES-to-SQL (originally btides_to_sql_rs)
 
 Notes for picking this work up in a fresh Claude Code session. Not user-facing
 docs (those are in `README.md`); these are the things that aren't obvious from
@@ -7,7 +7,7 @@ the code or commit message.
 ## Current state (commit `ecffa71` on `BlueZ_RTL_VSC_experimental`)
 
 - Rust port of `Analysis/BTIDES_to_SQL.py` lives at
-  `Analysis/rust/btides_to_sql_rs/` (binary crate, ~1900 LOC in `src/main.rs`).
+  `Analysis/rust/BTIDES-to-SQL/` (binary crate, ~1900 LOC in `src/main.rs`).
 - Verified byte-identical to the Python importer on every table populated by
   the test corpora. Verification method: per-table
   `SHA2(GROUP_CONCAT(SHA2(row, 256) ORDER BY ...), 256)` snapshots, then `diff`.
@@ -49,7 +49,7 @@ cd /Users/user/Blue2thprinting/Analysis
 /tmp/snapshot_bttest.sh /tmp/snap_py.txt
 
 /tmp/wipe_bttest.sh
-../Analysis/rust/btides_to_sql_rs/target/release/btides_to_sql_rs --input <file> --use-test-db
+../Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL --input <file> --use-test-db
 /tmp/snapshot_bttest.sh /tmp/snap_rs.txt
 
 diff /tmp/snap_py.txt /tmp/snap_rs.txt    # expect 0 lines
@@ -175,13 +175,13 @@ files I tested with didn't have data of these types:
    code is settled.
 
 7. **Push docs upstream** — `Analysis/README.md` (if there is one) might
-   want a pointer to `Analysis/rust/btides_to_sql_rs/README.md`.
+   want a pointer to `Analysis/rust/BTIDES-to-SQL/README.md`.
 
 ## Files & paths
 
-- Code: `Analysis/rust/btides_to_sql_rs/{Cargo.toml, Cargo.lock, src/main.rs,
+- Code: `Analysis/rust/BTIDES-to-SQL/{Cargo.toml, Cargo.lock, src/main.rs,
         README.md, .gitignore}`
-- Binary after build: `Analysis/rust/btides_to_sql_rs/target/release/btides_to_sql_rs`
+- Binary after build: `Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL`
 - Python reference: `Analysis/BTIDES_to_SQL.py` (+ TME/ + BTIDES_Schema/ submodule)
 - Wipe helper: `/tmp/wipe_bttest.sh` (regenerable; see commit log earlier in
   the chat for the table list)
@@ -191,7 +191,7 @@ files I tested with didn't have data of these types:
 ## Commit ancestry
 
 ```
-ecffa71  Add Analysis/rust/btides_to_sql_rs (this commit, BlueZ_RTL_VSC_experimental)
+ecffa71  Add Analysis/rust/BTIDES-to-SQL (formerly btides_to_sql_rs) (this commit, BlueZ_RTL_VSC_experimental)
 e677e54  Add Analysis/SDP_to_BTIDES.py: convert sdptool XML to BTIDES
 8f2b932  central_app_launcher: 7 fixes from NYC Day-2&3 log analysis
 ```

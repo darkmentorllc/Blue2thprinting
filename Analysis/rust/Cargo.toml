@@ -11,8 +11,8 @@ members = [
     "wigle-to-BTIDES",
     "import-all-BTIDES",
 ]
-# btides_to_sql_rs is its own standalone crate and not part of this workspace.
-exclude = ["btides_to_sql_rs"]
+# BTIDES-to-SQL is its own standalone crate and not part of this workspace.
+exclude = ["BTIDES-to-SQL"]
 resolver = "2"
 
 [workspace.package]

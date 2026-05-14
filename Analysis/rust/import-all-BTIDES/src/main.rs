@@ -33,6 +33,7 @@ use BTIDES_btsnoop::BtsnoopReader;
 use BTIDES_hci::{handle_packet as handle_hci_packet, HciState};
 use BTIDES_model::Btides;
 use BTIDES_pcap::PcapReader;
+use BTIDES_to_SQL::{build_pool, import_files_with_pool, ImportOpts, Pool};
 
 const LINKTYPE_BLUETOOTH_LE_LL_WITH_PHDR: u32 = 256;
 
@@ -66,6 +67,45 @@ struct Cli {
     /// Print one-line summary per file.
     #[arg(long, default_value_t = false)]
     verbose: bool,
+
+    // --- --to-SQL: per-file import into MySQL after each conversion ---
+    //
+    // When enabled, each worker calls into the `BTIDES-to-SQL` library
+    // (path-deped from ../BTIDES-to-SQL) with just its single output file
+    // immediately after writing it. On success, the file is renamed to
+    // `<stem>.btides.processed` so future runs (and the in-flight job
+    // collector above) skip it. On failure, the `.btides` is left alone for
+    // retry. Per-file atomicity is provided by the library's own
+    // transaction + deadlock-retry; the shared MySQL Pool below is safe to
+    // call across workers concurrently.
+    /// After each conversion, also import the resulting .btides into MySQL
+    /// via the BTIDES-to-SQL library. The .btides file is renamed to
+    /// `.btides.processed` on success and left in place on failure.
+    #[arg(long = "to-SQL", default_value_t = false)]
+    to_sql: bool,
+    /// Use the alternate `bttest` database instead of `bt2`. Pass-through to
+    /// the importer.
+    #[arg(long, default_value_t = false)]
+    use_test_db: bool,
+    /// MySQL host (default localhost).
+    #[arg(long, default_value = "localhost")]
+    db_host: String,
+    /// MySQL user (default 'user' — matches TME_helpers.py).
+    #[arg(long, default_value = "user")]
+    db_user: String,
+    /// MySQL password (default 'a' — matches TME_helpers.py).
+    #[arg(long, default_value = "a")]
+    db_password: String,
+    /// Per-file MySQL deadlock retry count (default 8). Each retry uses
+    /// exponential backoff with jitter inside the library.
+    #[arg(long, default_value_t = 8)]
+    deadlock_retries: usize,
+    /// Skip renaming `<stem>.btides` to `<stem>.btides.processed` after a
+    /// successful SQL import. Off by default (i.e. by default we DO rename,
+    /// to match the existing skip-already-processed convention in
+    /// `collect_jobs`).
+    #[arg(long, default_value_t = false)]
+    keep_btides_after_sql: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -247,6 +287,34 @@ fn walkdir(root: &Path) -> Vec<PathBuf> {
     out
 }
 
+// Per-file SQL import. Returns Ok(()) on success (rows committed), Err(_) on
+// any failure — caller leaves the .btides in place so the next run can retry.
+//
+// The library wraps the whole write phase in a single transaction with
+// deadlock-retry (MySQL error 1213), so this call is atomic per-file even
+// when many workers hit overlapping tables (LE_bdaddr_to_name etc.)
+// concurrently.
+fn sql_import_one(
+    pool: &Pool,
+    btides_path: &Path,
+    deadlock_retries: usize,
+    verbose: bool,
+) -> Result<BTIDES_to_SQL::ImportStats, Box<dyn std::error::Error + Send + Sync>> {
+    let opts = ImportOpts {
+        // Per-file imports are tiny relative to the multi-worker concurrency
+        // we already have at the import-all-BTIDES level — keep the in-call
+        // writer / reader threads at 1 to avoid nested thread pools.
+        writer_threads: 1,
+        reader_threads: 1,
+        deadlock_retries,
+        one_transaction: true,
+        verbose,
+    };
+    let paths = vec![btides_path.to_string_lossy().into_owned()];
+    let stats = import_files_with_pool(pool, &paths, &opts)?;
+    Ok(stats)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     if cli.folder.is_empty() {
@@ -262,19 +330,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     eprintln!(
-        "import-all-BTIDES: {} job(s), {} worker thread(s)",
-        total, n_workers
+        "import-all-BTIDES: {} job(s), {} worker thread(s){}",
+        total,
+        n_workers,
+        if cli.to_sql { " (with --to-SQL)" } else { "" }
     );
+
+    // Build the MySQL pool ONCE up front when --to-SQL is enabled. The pool
+    // is `Send + Sync` (it's an Arc-of-connections internally), so we share
+    // an `Arc<Pool>` across all worker threads. Failing early here avoids
+    // running thousands of conversions before discovering bad DB creds.
+    let sql_pool: Option<Arc<Pool>> = if cli.to_sql {
+        let pool = build_pool(&cli.db_host, &cli.db_user, &cli.db_password, cli.use_test_db)
+            .map_err(|e| format!("MySQL pool init failed: {e}"))?;
+        Some(Arc::new(pool))
+    } else {
+        None
+    };
 
     let t0 = Instant::now();
     let queue = Arc::new(Mutex::new(jobs));
     let next_idx = Arc::new(AtomicUsize::new(0));
     let ok = Arc::new(AtomicUsize::new(0));
     let err = Arc::new(AtomicUsize::new(0));
+    let sql_ok = Arc::new(AtomicUsize::new(0));
+    let sql_err = Arc::new(AtomicUsize::new(0));
     let schema_dir = Arc::new(cli.schema_dir.clone());
     let verbose_btides = cli.verbose_btides;
     let validate = !cli.no_validate;
     let verbose = cli.verbose;
+    let to_sql = cli.to_sql;
+    let keep_btides_after_sql = cli.keep_btides_after_sql;
+    let deadlock_retries = cli.deadlock_retries;
 
     let mut handles = Vec::new();
     for _ in 0..n_workers {
@@ -282,7 +369,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let next_idx = next_idx.clone();
         let ok = ok.clone();
         let err = err.clone();
+        let sql_ok = sql_ok.clone();
+        let sql_err = sql_err.clone();
         let schema_dir = schema_dir.clone();
+        let sql_pool = sql_pool.clone();
         let handle = thread::spawn(move || loop {
             let i = next_idx.fetch_add(1, Ordering::SeqCst);
             let job = {
@@ -296,7 +386,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     kind: q[i].kind,
                 }
             };
-            let t0 = Instant::now();
+            let t_conv = Instant::now();
             let res = match job.kind {
                 Kind::Pcap => convert_pcap(
                     &job.input,
@@ -313,7 +403,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     validate,
                 ),
             };
-            let elapsed = t0.elapsed();
+            let conv_elapsed = t_conv.elapsed();
             match res {
                 Ok(()) => {
                     ok.fetch_add(1, Ordering::SeqCst);
@@ -323,8 +413,66 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             job.kind,
                             job.input.display(),
                             job.output.display(),
-                            elapsed.as_secs_f64()
+                            conv_elapsed.as_secs_f64()
                         );
+                    }
+                    // Per-file SQL import. We only attempt this after a
+                    // successful conversion — a half-converted BTIDES file
+                    // would otherwise be partially-imported. The library
+                    // guarantees its own per-file atomicity (transaction +
+                    // deadlock retry); any error here is logged and the
+                    // .btides is left in place for manual retry.
+                    if to_sql {
+                        if let Some(pool) = sql_pool.as_deref() {
+                            let t_sql = Instant::now();
+                            match sql_import_one(
+                                pool,
+                                &job.output,
+                                deadlock_retries,
+                                verbose,
+                            ) {
+                                Ok(stats) => {
+                                    sql_ok.fetch_add(1, Ordering::SeqCst);
+                                    if verbose {
+                                        eprintln!(
+                                            "  [SQL] {} -> +{} new rows, {} dup ({:.2}s)",
+                                            job.output.display(),
+                                            stats.inserted,
+                                            stats.attempted.saturating_sub(stats.inserted),
+                                            t_sql.elapsed().as_secs_f64()
+                                        );
+                                    }
+                                    if !keep_btides_after_sql {
+                                        // Mark as processed so a re-run of
+                                        // import-all-BTIDES skips it (see
+                                        // `collect_jobs` above which already
+                                        // looks for `.btides.processed`).
+                                        let mut processed = job.output.clone();
+                                        let new_name = format!(
+                                            "{}.processed",
+                                            job.output.file_name().and_then(|s| s.to_str()).unwrap_or("out.btides")
+                                        );
+                                        processed.set_file_name(new_name);
+                                        if let Err(re) =
+                                            std::fs::rename(&job.output, &processed)
+                                        {
+                                            eprintln!(
+                                                "  [SQL] WARN: rename {} -> {} failed: {re}",
+                                                job.output.display(),
+                                                processed.display()
+                                            );
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    sql_err.fetch_add(1, Ordering::SeqCst);
+                                    eprintln!(
+                                        "  [SQL] ERROR importing {}: {e}  (leaving .btides in place for retry)",
+                                        job.output.display()
+                                    );
+                                }
+                            }
+                        }
                     }
                 }
                 Err(e) => {
@@ -339,11 +487,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _ = h.join();
     }
     let elapsed = t0.elapsed();
-    eprintln!(
-        "Done: {} ok, {} err in {:.2}s",
-        ok.load(Ordering::SeqCst),
-        err.load(Ordering::SeqCst),
-        elapsed.as_secs_f64()
-    );
+    if to_sql {
+        eprintln!(
+            "Done: {} converted, {} convert errors, {} SQL-imported, {} SQL errors in {:.2}s",
+            ok.load(Ordering::SeqCst),
+            err.load(Ordering::SeqCst),
+            sql_ok.load(Ordering::SeqCst),
+            sql_err.load(Ordering::SeqCst),
+            elapsed.as_secs_f64()
+        );
+    } else {
+        eprintln!(
+            "Done: {} ok, {} err in {:.2}s",
+            ok.load(Ordering::SeqCst),
+            err.load(Ordering::SeqCst),
+            elapsed.as_secs_f64()
+        );
+    }
     Ok(())
 }
