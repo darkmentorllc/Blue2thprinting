@@ -230,6 +230,23 @@ def clean_directory(root: Path, dry_run: bool, verbose: bool) -> int:
             stats["parse_errors"] += 1
             continue
 
+        # ----- Empty-file fast path -----
+        # A 0-byte .pcap is junk by definition: no global header, no records,
+        # nothing to misinterpret as a non-BG format. Delete unconditionally.
+        # This is a common artifact of BetterGetter being killed before it
+        # ever wrote its first byte to disk.
+        if size == 0:
+            stats["deleted_by_size"] += 1
+            action = "WOULD-DELETE-SIZE" if dry_run else "DELETE-SIZE"
+            print(f"  {action} {path}  (0 B empty file)")
+            if not dry_run:
+                try:
+                    path.unlink()
+                except OSError as e:
+                    print(f"    unlink failed: {e}", file=sys.stderr)
+                    stats["unlink_errors"] += 1
+            continue
+
         # ----- Fast path: size below provable minimum -----
         # We still have to read the 24-byte pcap global header even on the
         # fast path so we don't accidentally delete a 100-byte pcap that's
