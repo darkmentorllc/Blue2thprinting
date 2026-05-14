@@ -64,12 +64,4 @@ Which scripts launch which other scripts, and what logs what data to where is ca
 
 ![](./img/Blue2thprinting_script_to_data_diagram.png)
 
-# GPS
-
-I originally added support for GPS logging of where devices were seen, before I learned that [WiGLE.net](https://WiGLE.net) had support for crowdsourced Bluetooth logging. These days I tend to not use my GPS dongle, and instead I just run a junk Pixel phone with WiGLE and consider its capture good enough. (Also the phone's GPS seemed to generally be more reliable than the USB GPS dongle.)
-
-So currently I primarily get GPS data from WiGLE and import it via `~/Blue2thprinting/Analysis/WIGLE_to_BTIDES.py`.
-
-Therefore I have moved discussion of the linux native GPS setup to a [separate page](./GPS.md) to simplify the default system setup. If you'd like to re-enable this capability, follow the instructions on that page. (Keep in mind they haven't been tested in a couple years though...)
-
 Copyright(c) © Dark Mentor LLC 2023-2026

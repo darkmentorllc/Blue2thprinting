@@ -19,7 +19,6 @@ BTIDALPOOL can be used from Blue2thprinting tools by adding CLI arguments such a
 [`BTIDES_to_BTIDALPOOL.py`]()
 [`PCAP_to_BTIDES.py`]()
 [`HCI_to_BTIDES.py`]()
-[`Import_All_HCI_and_PCAP.py`]()
 
 ![](./img/BTIDES_Upload.png)
 
