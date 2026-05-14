@@ -87,8 +87,14 @@ struct Cli {
     /// the importer.
     #[arg(long, default_value_t = false)]
     use_test_db: bool,
-    /// MySQL host (default localhost).
-    #[arg(long, default_value = "localhost")]
+    /// MySQL host (default 127.0.0.1). Defaults to IPv4 loopback explicitly
+    /// rather than `localhost` because the Rust `mysql` crate's address
+    /// resolver appears to try IPv6 `::1` first on macOS even when
+    /// /etc/hosts lists `127.0.0.1 localhost` ahead of `::1 localhost`; if
+    /// mysqld is bound to IPv4-only (`bind-address = 127.0.0.1`, the
+    /// Homebrew default), that yields a confusing "Connection refused"
+    /// from the importer despite `mysql -u user -pa` working fine.
+    #[arg(long, default_value = "127.0.0.1")]
     db_host: String,
     /// MySQL user (default 'user' — matches TME_helpers.py).
     #[arg(long, default_value = "user")]
