@@ -295,6 +295,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
     GATT_characteristics_result = execute_query(query, values)
     characteristic_declaration_handles_dict = {declaration_handle: (char_properties, char_value_handle, UUID) for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
+    char_value_handle_to_uuid = {char_value_handle: add_dashes_to_UUID128(UUID) for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result}
     for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
@@ -308,7 +309,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
     char_value_handles_dict = {}
     for bdaddr_random2, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
-        data = {"handle": char_value_handle, "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
+        data = {"handle": char_value_handle, "value_uuid": char_value_handle_to_uuid.get(char_value_handle, "0000"), "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
         if(char_value_handle in char_value_handles_dict.keys()):

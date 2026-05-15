@@ -13,26 +13,38 @@
 from TME.BT_Data_Types import *
 
 # Advertisement channel types
-type_BTIDES_ADV_IND           = 0
-type_BTIDES_ADV_DIRECT_IND    = 1
-type_BTIDES_ADV_NONCONN_IND   = 2
-type_BTIDES_ADV_SCAN_IND      = 3
-type_BTIDES_AUX_ADV_IND       = 10
-type_BTIDES_SCAN_RSP          = 20
-type_BTIDES_AUX_SCAN_RSP      = 21
-type_BTIDES_CONNECT_IND       = 40
-type_BTIDES_EIR               = 50
+type_BTIDES_ADV_IND                  = 0
+type_BTIDES_ADV_DIRECT_IND           = 1
+type_BTIDES_ADV_NONCONN_IND          = 2
+type_BTIDES_ADV_SCAN_IND             = 3
+type_BTIDES_ADV_EXT_IND              = 4
+type_BTIDES_ADV_DECISION_IND         = 5
+type_BTIDES_AUX_ADV_IND              = 10
+type_BTIDES_AUX_CHAIN_IND            = 11
+type_BTIDES_AUX_SYNC_IND             = 12
+type_BTIDES_AUX_SYNC_SUBEVENT_IND    = 13
+type_BTIDES_AUX_SYNC_SUBEVENT_RSP    = 14
+type_BTIDES_SCAN_RSP                 = 20
+type_BTIDES_AUX_SCAN_RSP             = 21
+type_BTIDES_CONNECT_IND              = 40
+type_BTIDES_EIR                      = 50
 
 adv_chan_types_to_strings = {
-    type_BTIDES_ADV_IND:            "ADV_IND",
-    type_BTIDES_ADV_DIRECT_IND:     "ADV_DIRECT_IND",
-    type_BTIDES_ADV_NONCONN_IND:    "ADV_NONCONN_IND",
-    type_BTIDES_ADV_SCAN_IND:       "ADV_SCAN_IND",
-    type_BTIDES_AUX_ADV_IND:        "AUX_ADV_IND",
-    type_BTIDES_SCAN_RSP:           "SCAN_RSP",
-    type_BTIDES_AUX_SCAN_RSP:       "AUX_SCAN_RSP",
-    type_BTIDES_CONNECT_IND:        "CONNECT_IND",
-    type_BTIDES_EIR:                "EIR"
+    type_BTIDES_ADV_IND:                "ADV_IND",
+    type_BTIDES_ADV_DIRECT_IND:         "ADV_DIRECT_IND",
+    type_BTIDES_ADV_NONCONN_IND:        "ADV_NONCONN_IND",
+    type_BTIDES_ADV_SCAN_IND:           "ADV_SCAN_IND",
+    type_BTIDES_ADV_EXT_IND:            "ADV_EXT_IND",
+    type_BTIDES_ADV_DECISION_IND:       "ADV_DECISION_IND",
+    type_BTIDES_AUX_ADV_IND:            "AUX_ADV_IND",
+    type_BTIDES_AUX_CHAIN_IND:          "AUX_CHAIN_IND",
+    type_BTIDES_AUX_SYNC_IND:           "AUX_SYNC_IND",
+    type_BTIDES_AUX_SYNC_SUBEVENT_IND:  "AUX_SYNC_SUBEVENT_IND",
+    type_BTIDES_AUX_SYNC_SUBEVENT_RSP:  "AUX_SYNC_SUBEVENT_RSP",
+    type_BTIDES_SCAN_RSP:               "SCAN_RSP",
+    type_BTIDES_AUX_SCAN_RSP:           "AUX_SCAN_RSP",
+    type_BTIDES_CONNECT_IND:            "CONNECT_IND",
+    type_BTIDES_EIR:                    "EIR"
 }
 
 # Directions for post-connection packet communication
