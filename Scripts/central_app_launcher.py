@@ -1681,6 +1681,14 @@ def btc_thread_function():
 
                 if(not skip_sub_process and bdaddr in btc_bdaddrs): # Double check that bdaddr hasn't been deleted out of btc_bdaddrs by a [DEL]
                     external_log_write(sdpprint_log_path, f"SDPPRINTING ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
+                    # Defense in depth: the module-level os.makedirs(sdptool_log_path)
+                    # above already runs at import time, but Logs/sdptool/.gitkeep was
+                    # deleted in master commit e28726e — so a checkout of master that
+                    # doesn't include the module-level guard (or a worker that races
+                    # with someone deleting the directory) would otherwise crash here
+                    # with FileNotFoundError. exist_ok=True makes this a no-op when
+                    # the directory already exists, which is the common case.
+                    os.makedirs(sdptool_log_path, exist_ok=True)
                     output_file = open(f"{sdptool_log_path}/{bdaddr}_sdp.xml", "a") # redirect stdout to an output XML file
                     sdpprint_cmd = [sdptool_exec_path, "browse", "--xml", bdaddr]
                     try:

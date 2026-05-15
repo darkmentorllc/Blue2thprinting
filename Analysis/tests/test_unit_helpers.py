@@ -85,27 +85,28 @@ class TestWriteBTIDESVersionGate:
         return dst_schema
 
     def test_rejects_older_schema(self, tmp_path, schema_dir, monkeypatch):
-        self._stage_schema_dir(tmp_path, schema_dir, "0.4.9")
-        monkeypatch.chdir(tmp_path)
+        staged = self._stage_schema_dir(tmp_path, schema_dir, "0.4.9")
 
-        # write_BTIDES reads "./BTIDES_Schema/..." so cwd determines which
-        # schemas it sees. Import after chdir to avoid any pre-bound paths.
+        # write_BTIDES reads schemas from the absolute _BTIDES_SCHEMA_DIR
+        # constant (resolved relative to TME_BTIDES_base.py), not cwd, so
+        # monkeypatch that constant to the staged directory.
         import TME.TME_glob
-        from TME.TME_BTIDES_base import write_BTIDES
+        import TME.TME_BTIDES_base
+        monkeypatch.setattr(TME.TME_BTIDES_base, "_BTIDES_SCHEMA_DIR", str(staged))
 
         TME.TME_glob.BTIDES_JSON = [{"bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 0}]
         with pytest.raises(ValueError, match="0.4.9.*less than.*0.5.0"):
-            write_BTIDES(str(tmp_path / "out.btides"))
+            TME.TME_BTIDES_base.write_BTIDES(str(tmp_path / "out.btides"))
 
     def test_accepts_current_schema(self, tmp_path, schema_dir, monkeypatch):
         """Sanity-check: the same staging path with the real version passes."""
         real_version = json.loads((schema_dir / "BTIDES_base.json").read_text())["version"]
-        self._stage_schema_dir(tmp_path, schema_dir, real_version)
-        monkeypatch.chdir(tmp_path)
+        staged = self._stage_schema_dir(tmp_path, schema_dir, real_version)
 
         import TME.TME_glob
-        from TME.TME_BTIDES_base import write_BTIDES
+        import TME.TME_BTIDES_base
+        monkeypatch.setattr(TME.TME_BTIDES_base, "_BTIDES_SCHEMA_DIR", str(staged))
 
         TME.TME_glob.BTIDES_JSON = [{"bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 0}]
-        write_BTIDES(str(tmp_path / "out.btides"))  # must not raise
+        TME.TME_BTIDES_base.write_BTIDES(str(tmp_path / "out.btides"))  # must not raise
         assert (tmp_path / "out.btides").exists()

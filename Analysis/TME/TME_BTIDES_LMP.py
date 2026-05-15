@@ -177,8 +177,14 @@ def ff_LMP_POWER_CONTROL_REQ(power_adj_req):
     return obj
 
 
-def ff_LMP_POWER_CONTROL_RES(power_adj_rsp):
-    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_POWER_CONTROL_RES, "power_adj_rsp": power_adj_rsp}
+def ff_LMP_POWER_CONTROL_RES(power_adj_res):
+    # BTIDES schema renamed this field from `power_adj_res` to `power_adj_rsp`
+    # to match BT spec versions after 5.2 (the 5.2 spec used `res`; newer
+    # specs use `rsp`). The DB column name and the Python parameter name are
+    # still `power_adj_res` for backward compatibility — only the on-wire
+    # BTIDES JSON key matches the schema. Importer (BTIDES_to_SQL.py) also
+    # accepts the new key and is the symmetric counterpart of this change.
+    obj = {"escape_127": type_LMP_ESCAPE_127, "extended_opcode": type_ext_opcode_LMP_POWER_CONTROL_RES, "power_adj_rsp": power_adj_res}
     if(TME.TME_glob.verbose_BTIDES):
         obj["extended_opcode_str"] = "LMP_POWER_CONTROL_RES"
     return obj
@@ -339,9 +345,9 @@ def BTIDES_export_LMP_POWER_CONTROL_REQ(bdaddr, power_adj_req):
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 
-def BTIDES_export_LMP_POWER_CONTROL_RES(bdaddr, power_adj_rsp):
+def BTIDES_export_LMP_POWER_CONTROL_RES(bdaddr, power_adj_res):
     global BTIDES_JSON
-    data = ff_LMP_POWER_CONTROL_RES(power_adj_rsp)
+    data = ff_LMP_POWER_CONTROL_RES(power_adj_res)
     generic_SingleBDADDR_insertion_into_BTIDES_first_level_array(bdaddr, 0, data, "LMPArray")
 
 

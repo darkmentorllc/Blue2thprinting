@@ -901,7 +901,13 @@ def import_LMP_POWER_CONTROL_RES(bdaddr, lmp_entry):
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
         power_adj_res = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
     else:
-        power_adj_res = lmp_entry["power_adj_rsp"]
+        # BTIDES schema field is `power_adj_rsp` (renamed in post-5.2 specs).
+        # Accept legacy `power_adj_res` too so this importer keeps working on
+        # BTIDES files produced by older Tell_Me_Everything --output runs.
+        if "power_adj_rsp" in lmp_entry:
+            power_adj_res = lmp_entry["power_adj_rsp"]
+        else:
+            power_adj_res = lmp_entry["power_adj_res"]
     values = (bdaddr, power_adj_res)
     insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES (%s, %s);"
     execute_insert(insert, values)

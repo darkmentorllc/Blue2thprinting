@@ -123,6 +123,31 @@ def run_tme(test_db):
     return _run
 
 
+@pytest.fixture
+def run_tme_bt2():
+    """Run Tell_Me_Everything.py as a subprocess against the production `bt2`
+    database (the default — no `--use-test-db` is passed).
+
+    Deliberately does NOT depend on the `test_db` fixture, so it doesn't
+    trigger a wasted bttest reset for tests that only care about bt2 (e.g.
+    smoke tests of read-only commands like `--UUID16-stats`). Returns the
+    CompletedProcess.
+    """
+    def _run(*args, expect_success=True, timeout=120):
+        result = subprocess.run(
+            [sys.executable, "Tell_Me_Everything.py", *args],
+            cwd=str(ANALYSIS_DIR),
+            capture_output=True, text=True, timeout=timeout,
+        )
+        if expect_success and result.returncode != 0:
+            raise AssertionError(
+                f"Tell_Me_Everything.py failed (exit {result.returncode}):\n"
+                f"args: {args}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+            )
+        return result
+    return _run
+
+
 @pytest.fixture(scope="session")
 def schema_dir():
     return SCHEMA_DIR
