@@ -53,11 +53,22 @@ INSERT INTO bdaddr_to_GPS (bdaddr, bdaddr_random, time, time_type, rssi, lat, lo
 VALUES ('aa:bb:cc:11:22:02', 1, 1714000000, 0, -55, 38.9072, -77.0369);
 
 -- Vendor-specific UUID128 advertised in an LE adv packet. The UUID
--- be15beef-6186-407e-8381-0bd89c4d8df4 is in BLEScope's dataset (Anki Drive),
--- so it triggers the "BLEScope Analysis:" output unless --hide-android-data
--- is set. Stored without dashes per the column convention.
+-- 1deca38d-dc21-484e-83f2-e90866ac40b1 is in BLEScope's dataset as a
+-- Service (uuid_type=1, packages include com.eBestIoT.main, com.wdtl.scs.*,
+-- com.sw1848.pepsilealtad), so it triggers the "BLEScope Analysis:"
+-- output unless --hide-android-data is set. Stored without dashes per
+-- the column convention.
+--
+-- Originally be15beef-6186-407e-8381-0bd89c4d8df4 (Anki Drive), but the
+-- CLUES_Schema reorg added an LLM-derived web-search entry for that
+-- UUID — CLUES now short-circuits the BLEScope fallback and silently
+-- broke this test. The replacement is BLEScope-only (no CLUES match in
+-- any of the three tiers) AND uuid_type=1 (Service), which matters
+-- because the seed declares list_type=7 (Complete UUID128 Service list)
+-- and TME's BLEScope lookup filters by uuid_type matching the list
+-- context.
 INSERT INTO LE_bdaddr_to_UUID128s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s)
-VALUES ('aa:bb:cc:11:22:02', 1, 0, 7, 'be15beef6186407e83810bd89c4d8df4');
+VALUES ('aa:bb:cc:11:22:02', 1, 0, 7, '1deca38ddc21484e83f2e90866ac40b1');
 
 -- Device 3: AA:BB:CC:11:22:03 — BT Classic, EIR name + CoD + SDP records
 -- Coverage: --require-SDP, EIR table queries

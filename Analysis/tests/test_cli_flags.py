@@ -85,10 +85,18 @@ def test_max_records_output_one(run_tme):
 # --hide-android-data
 # ---------------------------------------------------------------------------
 # Device 2 has a vendor-specific UUID128 in LE_bdaddr_to_UUID128s_list seeded
-# in seed.sql (Anki Drive UUID, present in the BLEScope_UUID128s lookup table).
-# Without --hide-android-data, the BLEScope analysis section should print the
-# Android package name. With --hide-android-data, both the analysis header and
-# the package name should be suppressed.
+# in seed.sql — a UUID that is in the BLEScope_UUID128s lookup table and NOT
+# in any of the three CLUES files (so the CLUES match doesn't short-circuit
+# the BLEScope fallback). Without --hide-android-data, the BLEScope analysis
+# section should print the Android package name. With --hide-android-data,
+# both the analysis header and the package name should be suppressed.
+#
+# Originally seeded as be15beef-...-Anki-Drive, but a CLUES_data_LLM_web_search
+# entry started claiming that UUID and silently disabled the BLEScope code
+# path. Swapped to 1deca38d-dc21-484e-83f2-e90866ac40b1 which is BLEScope-
+# only AND uuid_type=1 (Service) — both constraints matter because the
+# seed declares list_type=7 (Complete UUID128 Service list) and TME's
+# BLEScope lookup matches uuid_type=1 for service-list contexts.
 
 def test_hide_android_data_default_shows_blescope_match(run_tme):
     result = run_tme("--bdaddr", "AA:BB:CC:11:22:02")
@@ -96,8 +104,9 @@ def test_hide_android_data_default_shows_blescope_match(run_tme):
         f"Expected BLEScope analysis output by default for device 2.\n"
         f"stdout:\n{result.stdout}"
     )
-    assert "com.anki.drive" in result.stdout, (
-        f"Expected Anki Drive package name in BLEScope output.\n"
+    assert "com.eBestIoT.main" in result.stdout, (
+        f"Expected eBestIoT package name (one of the 4 BLEScope packages "
+        f"associated with the seeded UUID) in output.\n"
         f"stdout:\n{result.stdout}"
     )
 

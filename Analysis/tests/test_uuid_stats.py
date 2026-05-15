@@ -156,12 +156,16 @@ def test_uuid16_stats_no_test_db_smoke(run_tme_bt2):
 #   * SerialPort (Service Class table)        — sig_alias
 #   * Huawei 0xFE35 (Member UUID table)       — sig_alias
 #   * Made-up 0xCCCC (no SIG-table match)     — sig_alias_unknown
-#   * Real custom UUID128 (be15beef…)         — unknown (no annotation)
+#   * Fictional UUID128 (cafecafe…)            — unknown (no annotation;
+#                                                 a deliberately-fake pattern that
+#                                                 isn't in any CLUES tier or in
+#                                                 BLEScope_UUID128s, so the
+#                                                 classifier returns "unknown")
 _SEED_UUID128_ROWS = [
     ("aa:bb:cc:11:22:90", "0000110100001000800000805f9b34fb"),  # SerialPort
     ("aa:bb:cc:11:22:91", "0000fe3500001000800000805f9b34fb"),  # Huawei
     ("aa:bb:cc:11:22:92", "0000cccc00001000800000805f9b34fb"),  # unassigned
-    ("aa:bb:cc:11:22:93", "be15beef6186407e83810bd89c4d8df4"),  # custom
+    ("aa:bb:cc:11:22:93", "cafecafecafecafecafecafecafecafe"),  # custom
 ]
 
 
@@ -216,10 +220,10 @@ def test_uuid128_stats_use_test_db_resolves_sig_aliases(run_tme):
 
         # Genuine custom UUID128 — present in the listing but NOT given a
         # SIG annotation (because it isn't a SIG-Base alias).
-        assert "be15beef6186407e83810bd89c4d8df4" in result.stdout
+        assert "cafecafecafecafecafecafecafecafe" in result.stdout
         # The annotation column on that row must NOT contain a SIG marker.
         for line in result.stdout.splitlines():
-            if "be15beef6186407e83810bd89c4d8df4" in line:
+            if "cafecafecafecafecafecafecafecafe" in line:
                 assert "SIG-Base alias" not in line, \
                     f"Custom UUID128 should not be annotated as SIG alias: {line}"
 
