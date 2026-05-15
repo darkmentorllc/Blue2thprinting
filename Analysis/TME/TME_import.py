@@ -38,30 +38,36 @@ def import_private_metadata_v2():
 # metadata/private/<base>_private.json — same priority tier as its public
 # counterpart but loaded immediately after to override.
 #
+# As of the CLUES_Schema reorg, the submodule's data files moved from
+# CLUES_Schema/*.json to CLUES_Schema/data/*.json, and the canonical
+# hand-verified file was renamed from CLUES_data.json to
+# CLUES_data_human_verified.json to make the contents explicit. Private
+# canonical overrides mirror the new name for consistency.
+#
 # Priority order (low → high) — later files OVERWRITE earlier ones for
-# overlapping UUIDs, so the canonical hand-curated CLUES_data.json always
-# wins against LLM-derived content for the same UUID. Among LLM-derived
-# tiers, APK-extracted data wins over web-search data because the APK
-# evidence is more trustworthy — the UUID was observed embedded in an
-# actual Android app's compiled code, vs. inferred from prose on a
-# webpage:
+# overlapping UUIDs, so the hand-verified canonical always wins against
+# LLM-derived content for the same UUID. Among LLM-derived tiers, APK-
+# extracted data wins over web-search data because the APK evidence is
+# more trustworthy — the UUID was observed embedded in an actual
+# Android app's compiled code, vs. inferred from prose on a webpage:
 #
 #   1. CLUES_data_LLM_web_search.json            (LLM scrape of web sources)
 #   2. CLUES_data_LLM_Android_APK_search.json    (LLM scrape of APK decompilations)
-#   3. CLUES_data.json                           (canonical, hand-curated)
+#   3. CLUES_data_human_verified.json            (canonical, hand-curated)
 #
-# Only the canonical CLUES_data.json is required; the LLM-derived files
-# and every private override are optional and silently skipped if missing.
+# Only the canonical CLUES_data_human_verified.json is required; the
+# LLM-derived files and every private override are optional and silently
+# skipped if missing.
 _CLUES_DATA_FILES = [
     # (public_path, private_path, required)
-    ('./CLUES_Schema/CLUES_data_LLM_web_search.json',
+    ('./CLUES_Schema/data/CLUES_data_LLM_web_search.json',
      './metadata/private/CLUES_data_LLM_web_search_private.json',
      False),
-    ('./CLUES_Schema/CLUES_data_LLM_Android_APK_search.json',
+    ('./CLUES_Schema/data/CLUES_data_LLM_Android_APK_search.json',
      './metadata/private/CLUES_data_LLM_Android_APK_search_private.json',
      False),
-    ('./CLUES_Schema/CLUES_data.json',
-     './metadata/private/CLUES_data_private.json',
+    ('./CLUES_Schema/data/CLUES_data_human_verified.json',
+     './metadata/private/CLUES_data_human_verified_private.json',
      True),
 ]
 
@@ -74,10 +80,10 @@ def _load_clues_file(path, required):
     higher-priority files win the overlap.
 
     `required=True` raises if the file is missing (used for the canonical
-    CLUES_data.json). Otherwise missing files are silently skipped, which
-    is the right behavior for optional LLM-derived files and for the
-    optional private overrides that may not exist on every developer's
-    checkout.
+    CLUES_data_human_verified.json). Otherwise missing files are silently
+    skipped, which is the right behavior for optional LLM-derived files
+    and for the optional private overrides that may not exist on every
+    developer's checkout.
     """
     try:
         f = open(path, 'r')
