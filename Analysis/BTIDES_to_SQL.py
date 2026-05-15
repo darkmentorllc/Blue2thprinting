@@ -900,10 +900,10 @@ def import_LMP_POWER_CONTROL_REQ(bdaddr, lmp_entry):
 def import_LMP_POWER_CONTROL_RES(bdaddr, lmp_entry):
     # Check if it's a full_pkt_hex_str-type entry, and if so, parse the raw bytes out of the string
     if("full_pkt_hex_str" in lmp_entry.keys() and lmp_entry["full_pkt_hex_str"] != None and len(lmp_entry["full_pkt_hex_str"]) == 2):
-        power_adj_res = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
+        power_adj_rsp = int.from_bytes(hex_str_to_bytes(lmp_entry["full_pkt_hex_str"][0:2]), byteorder='little')
     else:
-        power_adj_res = bytes.fromhex(lmp_entry["power_adj_req"])
-    values = (bdaddr, power_adj_res)
+        power_adj_rsp = bytes.fromhex(lmp_entry["power_adj_rsp"])
+    values = (bdaddr, power_adj_rsp)
     insert = f"INSERT IGNORE INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES (%s, %s);"
     execute_insert(insert, values)
 

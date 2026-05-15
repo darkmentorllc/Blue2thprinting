@@ -7,6 +7,8 @@
 
 import argparse
 import json
+import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -60,3 +62,50 @@ class TestBTIDESSchemas:
     def test_base_schema_present(self, schema_dir):
         base = schema_dir / "BTIDES_base.json"
         assert base.exists(), "BTIDES_base.json is the root schema; it must exist"
+
+
+class TestWriteBTIDESVersionGate:
+    """write_BTIDES() refuses to export when the on-disk BTIDES_base.json
+    advertises a schema version older than what the code requires.
+    """
+
+    @staticmethod
+    def _stage_schema_dir(dst_root: Path, src_schema_dir: Path, version: str):
+        """Copy the real BTIDES_Schema/ to dst_root/BTIDES_Schema/ with
+        BTIDES_base.json's "version" field rewritten to `version`.
+        """
+        dst_schema = dst_root / "BTIDES_Schema"
+        dst_schema.mkdir()
+        for src in src_schema_dir.glob("BTIDES_*.json"):
+            shutil.copy(src, dst_schema / src.name)
+        base = dst_schema / "BTIDES_base.json"
+        data = json.loads(base.read_text())
+        data["version"] = version
+        base.write_text(json.dumps(data))
+        return dst_schema
+
+    def test_rejects_older_schema(self, tmp_path, schema_dir, monkeypatch):
+        self._stage_schema_dir(tmp_path, schema_dir, "0.4.9")
+        monkeypatch.chdir(tmp_path)
+
+        # write_BTIDES reads "./BTIDES_Schema/..." so cwd determines which
+        # schemas it sees. Import after chdir to avoid any pre-bound paths.
+        import TME.TME_glob
+        from TME.TME_BTIDES_base import write_BTIDES
+
+        TME.TME_glob.BTIDES_JSON = [{"bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 0}]
+        with pytest.raises(ValueError, match="0.4.9.*less than.*0.5.0"):
+            write_BTIDES(str(tmp_path / "out.btides"))
+
+    def test_accepts_current_schema(self, tmp_path, schema_dir, monkeypatch):
+        """Sanity-check: the same staging path with the real version passes."""
+        real_version = json.loads((schema_dir / "BTIDES_base.json").read_text())["version"]
+        self._stage_schema_dir(tmp_path, schema_dir, real_version)
+        monkeypatch.chdir(tmp_path)
+
+        import TME.TME_glob
+        from TME.TME_BTIDES_base import write_BTIDES
+
+        TME.TME_glob.BTIDES_JSON = [{"bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 0}]
+        write_BTIDES(str(tmp_path / "out.btides"))  # must not raise
+        assert (tmp_path / "out.btides").exists()
