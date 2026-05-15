@@ -607,4 +607,24 @@ def main():
             )
 
 if __name__ == "__main__":
-    main()
+    # SIGPIPE → SIG_DFL above isn't sufficient on its own: when stdout is a
+    # closed pipe (e.g. user did `--UUID128-stats | less` then `q`),
+    # Python's BufferedWriter — and colorama's StreamWrapper layered on
+    # top of it — catches the underlying write()'s EPIPE and raises
+    # BrokenPipeError BEFORE the queued SIGPIPE can terminate the
+    # process. The exception propagates up through every colorama write
+    # frame to here and prints a deep traceback on stderr. The fix from
+    # the Python docs (https://docs.python.org/3/library/signal.html
+    # #note-on-sigpipe) is to catch BrokenPipeError at the top level and
+    # redirect remaining stdout writes to /dev/null so the interpreter's
+    # shutdown-time stream flush doesn't trip a second BrokenPipeError
+    # ("Exception ignored in: ..." line in the user's report).
+    try:
+        main()
+    except BrokenPipeError:
+        try:
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+        except OSError:
+            pass
+        sys.exit(1)
