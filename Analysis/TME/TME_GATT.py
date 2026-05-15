@@ -162,59 +162,39 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
         else:
             qprint(f"{indent}PnP ID present, but length is not 7 bytes, so cannot decode. Length = {len(bytes)} bytes.")
 
-# Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
+# Returns True if there is any GATT info for this BDADDR in any of the GATT
+# tables, else False.
+#
+# All four GATT tables share the same unique-index layout (bdaddr_random,
+# bdaddr, ...), so a `WHERE bdaddr = %s` without bdaddr_random would fall
+# off the leftmost prefix and trigger full table scans. The shared
+# `device_row_exists_by_bdaddr_random` helper forces the index by either
+# binding bdaddr_random when supplied, or probing both 0 and 1 when not.
 def device_has_GATT_any(bdaddr, bdaddr_random):
-    # Query the database for all GATT services
-    if(bdaddr_random is not None):
-        values = (bdaddr, bdaddr_random)
-        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        values = (bdaddr,)
-        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s";
-    GATT_services_result = execute_query(query, values)
-    if(len(GATT_services_result) != 0):
-        return True
-
-    if(bdaddr_random is not None):
-        query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        query = "SELECT attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr = %s";
-    GATT_attribute_handles_result = execute_query(query, values)
-    if(len(GATT_attribute_handles_result) != 0):
-        return True
-
-    if(bdaddr_random is not None):
-        query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        query = "SELECT declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr = %s";
-    GATT_characteristics_result = execute_query(query, values)
-    if(len(GATT_characteristics_result) != 0):
-        return True
-
-    if(bdaddr_random is not None):
-        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
-    GATT_characteristics_values_result = execute_query(query, values)
-    if(len(GATT_characteristics_values_result) != 0):
-        return True
-
+    for table in ("GATT_services", "GATT_attribute_handles",
+                  "GATT_characteristics", "GATT_characteristics_values"):
+        if device_row_exists_by_bdaddr_random(table, bdaddr, bdaddr_random):
+            return True
     return False
 
-# Returns 0 if there is no GATT info for this BDADDR in any of the GATT tables, else returns 1
+
+# Returns True if there is at least one read characteristic VALUE for this
+# BDADDR in GATT_characteristics_values, else False.
+#
+# Previously this had two bugs:
+#   1. When --bdaddr-type was passed (bdaddr_random is not None), the
+#      function silently queried GATT_services instead of
+#      GATT_characteristics_values — so the result reflected service
+#      existence rather than value existence.
+#   2. When --bdaddr-type was NOT passed, the query was
+#      `WHERE bdaddr = %s` against GATT_characteristics_values, which
+#      doesn't filter on the leftmost-prefix column (bdaddr_random) of the
+#      uni_name index and therefore did a full table scan (cost ~25k on
+#      bt2). With N candidates from --UUID-regex that was N full table
+#      scans per --require-GATT-values invocation.
 def device_has_GATT_values(bdaddr, bdaddr_random):
-    # Query the database for all GATT services
-    if(bdaddr_random is not None):
-        values = (bdaddr, bdaddr_random)
-        query = "SELECT begin_handle, end_handle, UUID FROM GATT_services WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        values = (bdaddr,)
-        query = "SELECT char_value_handle, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
-    GATT_characteristics_values_result = execute_query(query, values)
-    if(len(GATT_characteristics_values_result) != 0):
-        return True
-
-    return False
+    return device_row_exists_by_bdaddr_random(
+        "GATT_characteristics_values", bdaddr, bdaddr_random)
 
 def descriptor_print(indent, UUID, operation, byte_values):
     if(UUID == "2900"):

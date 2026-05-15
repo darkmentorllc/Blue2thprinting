@@ -12,29 +12,21 @@ from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within p
 # Lookup helpers
 ########################################
 
-# Returns 0 if there is no LL_VERSION_IND info for this BDADDR, else returns 1
+# Returns True if there is any LL_VERSION_IND info for this BDADDR, else
+# False. LL_VERSION_IND's unique index is (bdaddr_random, bdaddr, ...), so
+# the shared helper forces an indexed lookup by binding bdaddr_random when
+# supplied or probing both 0 and 1 when not.
 def device_has_LL_VERSION_IND_info(bdaddr, bdaddr_random):
-    if(bdaddr_random is not None):
-        values = (bdaddr, bdaddr_random)
-        version_query = "SELECT device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s AND bdaddr_random = %s"
-    else:
-        values = (bdaddr,)
-        version_query = "SELECT device_BT_CID FROM LL_VERSION_IND WHERE bdaddr = %s"
-    version_result = execute_query(version_query, values)
-    if(len(version_result) != 0):
-        return True
-    else:
-        return False
+    return device_row_exists_by_bdaddr_random(
+        "LL_VERSION_IND", bdaddr, bdaddr_random)
 
-# Returns 0 if there is no LMP_VERSION_RES info for this BDADDR, else returns 1
+
+# Returns True if there is any LMP_VERSION_RES info for this BDADDR, else
+# False. LMP_VERSION_RES is BT Classic-only (no bdaddr_random column) and
+# its unique index has `bdaddr` as the leftmost-prefix column, so a plain
+# `WHERE bdaddr = %s` is already indexed.
 def device_has_LMP_VERSION_RES_info(bdaddr):
-    values = (bdaddr,)
-    version_query = "SELECT device_BT_CID FROM LMP_VERSION_RES WHERE bdaddr = %s"
-    version_result = execute_query(version_query, values)
-    if(len(version_result) != 0):
-        return True
-    else:
-        return False
+    return device_row_exists_by_bdaddr("LMP_VERSION_RES", bdaddr)
 
 def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
     vprint(nameregex)

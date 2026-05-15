@@ -23,16 +23,13 @@ from colorama import Fore, Back, Style, init
 from TME.TME_helpers import bytes_to_hex_str, bytes_reversed_to_hex_str, bytes_to_utf8
 init(autoreset=True)
 
-# Returns 0 if there is no SDP info for this BDADDR in any of the SDP tables, else returns 1
+# Returns True if there is any SDP info for this BDADDR, else False.
+# SDP_Common is a BT Classic-only table (no bdaddr_random column) and its
+# unique index has `bdaddr` as the leftmost-prefix column, so a plain
+# `WHERE bdaddr = %s` is already indexed. The shared helper just narrows
+# the SELECT to `1 ... LIMIT 1` for a covering-index existence probe.
 def device_has_SDP_info(bdaddr):
-    # Query the database for all GATT services
-    values = (bdaddr,)
-    query = "SELECT bdaddr FROM SDP_Common WHERE bdaddr = %s";
-    SDP_result = execute_query(query, values)
-    if(len(SDP_result) != 0):
-        return 1;
-
-    return 0;
+    return device_row_exists_by_bdaddr("SDP_Common", bdaddr)
 
 # Per spec "DATA ELEMENT SIZE DESCRIPTOR" section
 data_element_size_to_actual_size = {

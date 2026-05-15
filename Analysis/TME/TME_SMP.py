@@ -15,35 +15,23 @@ from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within p
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
 
-# Returns 0 if there is no SMP info for this BDADDR in any of the SMP tables, else returns 1
+# Returns True if there is any SMP info for this BDADDR, else False.
+# SMP_Pairing_Req_Res's unique index is (bdaddr_random, bdaddr, ...), so the
+# shared helper forces an indexed lookup instead of letting the WHERE clause
+# fall off the leftmost prefix when bdaddr_random isn't constrained.
 def device_has_SMP_info(bdaddr, bdaddr_random):
-    # Query the database for SMP info
-    if(bdaddr_random is not None):
-        values = (bdaddr, bdaddr_random)
-        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s AND bdaddr_random = %s";
-    else:
-        values = (bdaddr,)
-        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE bdaddr = %s";
-    SMP_result = execute_query(query, values)
-    if(len(SMP_result) != 0):
-        return 1;
+    return device_row_exists_by_bdaddr_random(
+        "SMP_Pairing_Req_Res", bdaddr, bdaddr_random)
 
-    return 0;
 
-# Returns 1 if this device did not request Secure Connections,
-# which would lead to it using legacy pairing even when an eavesdropper isn't trying to force it
+# Returns True if this device did not request Secure Connections (auth_req
+# bit 3 clear), which forces legacy pairing even without an active downgrade
+# attempt. Otherwise False. The auth_req predicate is ANDed onto the same
+# leftmost-prefix indexed lookup as device_has_SMP_info.
 def device_SMP_legacy_pairing(bdaddr, bdaddr_random):
-    if(bdaddr_random is not None):
-        values = (bdaddr, bdaddr_random)
-        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s AND bdaddr_random = %s";
-    else:
-        values = (bdaddr,)
-        query = "SELECT bdaddr FROM SMP_Pairing_Req_Res WHERE auth_req & 8 = 0 and bdaddr = %s";
-    SMP_result = execute_query(query, values)
-    if(len(SMP_result) != 0):
-        return 1;
-
-    return 0;
+    return device_row_exists_by_bdaddr_random(
+        "SMP_Pairing_Req_Res", bdaddr, bdaddr_random,
+        extra_sql="auth_req & 8 = 0")
 
 
 def key_dist_print(who, key_dist):

@@ -26,15 +26,13 @@ def is_GPS_coordinate_within_exclusion_box(bdaddr, gps_exclude_upper_left_tuple,
     return False
 
 def device_has_GPS(bdaddr):
-    values = (bdaddr,)
-    # The WiGLE data is not capable of distinguishing between Classic and LE,
-    # so we need to check the bdaddr_random value for both Classic and LE
-    select_query = f"SELECT time FROM bdaddr_to_GPS WHERE bdaddr = %s;"
-    select_results = execute_query(select_query, values)
-    if (len(select_results) == 0):
-        return False
-    else:
-        return True
+    # bdaddr_to_GPS's unique index has `bdaddr` as the leftmost-prefix
+    # column, so a plain `WHERE bdaddr = %s` is already indexed (no need
+    # to probe bdaddr_random). The shared helper just narrows the read to
+    # `SELECT 1 ... LIMIT 1` so we never pull the time column for what is
+    # purely an existence check. WiGLE data doesn't distinguish Classic vs
+    # LE, so we intentionally don't constrain bdaddr_random here either.
+    return device_row_exists_by_bdaddr("bdaddr_to_GPS", bdaddr)
 
 time_type_to_str = {
     0: "unix_time",

@@ -123,6 +123,64 @@ def execute_insert(query, values):
         # Connection is module-level persistent; do not close it here.
 
 ########################################
+# Indexed existence-check helpers
+########################################
+# Used by the `device_has_*` functions that back the `--require-*` CLI
+# flags. The slow naive form
+#     SELECT <cols> FROM <table> WHERE bdaddr = %s
+# falls off the leftmost-prefix of the typical unique index
+#     (bdaddr_random, bdaddr, ...)
+# whenever the caller doesn't constrain `bdaddr_random`, and MySQL falls
+# back to a full table scan (~25k cost on bt2 today). With 10 candidate
+# bdaddrs that's ten table scans per `--require-*` filter call.
+#
+# The helpers below force the index to be used:
+#   * `SELECT 1 ... LIMIT 1` for a covering-index existence probe.
+#   * When the caller didn't constrain `bdaddr_random`, probe both 0 and 1
+#     via the index instead of leaving the leftmost prefix unbound.
+
+def device_row_exists_by_bdaddr_random(table, bdaddr, bdaddr_random,
+                                       extra_sql="", extra_values=()):
+    """Existence check for tables whose unique index puts
+    `bdaddr_random` as the leftmost-prefix column and `bdaddr` second
+    (GATT_*, SMP_Pairing_Req_Res, LL_VERSION_IND, etc.).
+
+    `extra_sql` / `extra_values` let callers tack on additional ANDed
+    predicates (e.g. `auth_req & 8 = 0` for SMP legacy-pairing detection).
+
+    Returns True/False. Cost: at most two single-row index lookups
+    (~4 rows each in EXPLAIN), regardless of table size.
+    """
+    where = "bdaddr_random = %s AND bdaddr = %s"
+    if extra_sql:
+        where += " AND " + extra_sql
+    q = f"SELECT 1 FROM {table} WHERE {where} LIMIT 1"
+    if bdaddr_random is not None:
+        return bool(execute_query(q, (bdaddr_random, bdaddr) + tuple(extra_values)))
+    # bdaddr_random not constrained: probe both 0 and 1 via the index to
+    # avoid the WHERE clause falling off the leftmost prefix.
+    if execute_query(q, (0, bdaddr) + tuple(extra_values)):
+        return True
+    if execute_query(q, (1, bdaddr) + tuple(extra_values)):
+        return True
+    return False
+
+
+def device_row_exists_by_bdaddr(table, bdaddr, extra_sql="", extra_values=()):
+    """Existence check for tables whose unique index puts `bdaddr` as the
+    leftmost-prefix column (bdaddr_to_GPS, SDP_Common, LMP_VERSION_RES).
+
+    No bdaddr_random probing needed — `WHERE bdaddr = %s` already hits the
+    index directly.
+    """
+    where = "bdaddr = %s"
+    if extra_sql:
+        where += " AND " + extra_sql
+    q = f"SELECT 1 FROM {table} WHERE {where} LIMIT 1"
+    return bool(execute_query(q, (bdaddr,) + tuple(extra_values)))
+
+
+########################################
 # Helpers
 ########################################
 
