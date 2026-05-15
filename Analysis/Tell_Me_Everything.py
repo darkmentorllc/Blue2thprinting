@@ -10,6 +10,18 @@ from pathlib import Path
 from handle_venv import activate_venv
 activate_venv()
 
+# Restore the default Unix SIGPIPE behavior so that piping our output to
+# pagers / head / etc. and quitting early (e.g. `--UUID128-stats | less`
+# followed by `q`) terminates this process quietly instead of unwinding
+# into the deep `BrokenPipeError` traceback Python's default handler
+# would otherwise produce on the next print. Wrapped because SIGPIPE
+# doesn't exist on Windows and can't be set off the main thread.
+import signal
+try:
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+except (AttributeError, ValueError):
+    pass
+
 import argparse
 # Import from my files
 from TME.TME_helpers import *
