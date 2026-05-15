@@ -117,6 +117,18 @@ def main():
     if args.to_BTIDALPOOL and not out_filename:
         # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
         out_filename = "/tmp/tme.btides"
+
+    # Default --token-file to ./tf (resolved relative to this script's own
+    # directory, NOT the CWD) when either --query-BTIDALPOOL or
+    # --to-BTIDALPOOL is used without an explicit --token-file. Matches
+    # the convention the test suite and docs use (Analysis/tf). If ./tf
+    # doesn't exist, leave args.token_file as None so the existing
+    # interactive Google-SSO flow downstream can still kick in and the
+    # user isn't silently routed to a nonexistent file.
+    if (args.query_BTIDALPOOL or args.to_BTIDALPOOL) and not args.token_file:
+        default_token = Path(__file__).resolve().parent / "tf"
+        if default_token.is_file() and default_token.stat().st_size > 0:
+            args.token_file = str(default_token)
     TME.TME_glob.verbose_print = args.verbose_print
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
