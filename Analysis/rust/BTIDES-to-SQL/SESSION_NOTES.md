@@ -49,7 +49,7 @@ cd /Users/user/Blue2thprinting/Analysis
 /tmp/snapshot_bttest.sh /tmp/snap_py.txt
 
 /tmp/wipe_bttest.sh
-../Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL --input <file> --use-test-db
+../Analysis/rust/target/release/BTIDES-to-SQL --input <file> --use-test-db
 /tmp/snapshot_bttest.sh /tmp/snap_rs.txt
 
 diff /tmp/snap_py.txt /tmp/snap_rs.txt    # expect 0 lines
@@ -179,9 +179,10 @@ files I tested with didn't have data of these types:
 
 ## Files & paths
 
-- Code: `Analysis/rust/BTIDES-to-SQL/{Cargo.toml, Cargo.lock, src/main.rs,
-        README.md, .gitignore}`
-- Binary after build: `Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL`
+- Code: `Analysis/rust/BTIDES-to-SQL/{Cargo.toml, src/main.rs, src/lib.rs,
+        README.md, .gitignore}` (workspace member of `Analysis/rust/`; the
+        workspace owns the single Cargo.lock at `Analysis/rust/Cargo.lock`)
+- Binary after build: `Analysis/rust/target/release/BTIDES-to-SQL`
 - Python reference: `Analysis/BTIDES_to_SQL.py` (+ TME/ + BTIDES_Schema/ submodule)
 - Wipe helper: `/tmp/wipe_bttest.sh` (regenerable; see commit log earlier in
   the chat for the table list)

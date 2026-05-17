@@ -29,8 +29,7 @@ All the bulk import paths below now use the Rust ports of the original Python im
 
 ```
 cd ~/Blue2thprinting/Analysis/BTIDES_Schema/rust && cargo build --release
-cd ~/Blue2thprinting/Analysis/rust            && cargo build --release
-cd ~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL && cargo build --release
+cd ~/Blue2thprinting/Analysis/rust               && cargo build --release
 ```
 
 This produces the following binaries that the rest of this document refers to:
@@ -40,7 +39,7 @@ This produces the following binaries that the rest of this document refers to:
 | `import-all-BTIDES` | `Analysis/rust/target/release/`               | Bulk convert+import for PCAP / btmon HCI logs |
 | `sdp-to-BTIDES`     | `Analysis/BTIDES_Schema/rust/target/release/` | Convert `sdptool` XML to BTIDES JSON |
 | `wigle-to-BTIDES`   | `Analysis/rust/target/release/`               | Convert WiGLE SQLite backup to BTIDES JSON |
-| `BTIDES-to-SQL`     | `Analysis/rust/BTIDES-to-SQL/target/release/` | Import any BTIDES JSON into MySQL |
+| `BTIDES-to-SQL`     | `Analysis/rust/target/release/`               | Import any BTIDES JSON into MySQL |
 
 ## Importing data from btmon .bin HCI log files and Sniffle .pcap files
 
@@ -105,7 +104,7 @@ Because both already produce BTIDES JSON, importing is a single call to `BTIDES-
 **Import one device's data (single file):**
 
 ```
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input ~/Blue2thprinting/Logs/btc_sdp_gatt/sdp_AA-BB-CC-DD-EE-FF.btides \
     --input ~/Blue2thprinting/Logs/btc_sdp_gatt/gatt_AA-BB-CC-DD-EE-FF.btides \
     --input ~/Blue2thprinting/Logs/DarkFirmwareLMPLog/AA:BB:CC:DD:EE:FF.btides
@@ -116,7 +115,7 @@ Because both already produce BTIDES JSON, importing is a single call to `BTIDES-
 **Import everything in both folders at once (bulk):**
 
 ```
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     $(find ~/Blue2thprinting/Logs/btc_sdp_gatt        -name '*.btides' -printf '--input %p ') \
     $(find ~/Blue2thprinting/Logs/DarkFirmwareLMPLog -name '*.btides' -printf '--input %p ') \
     --reader-threads 4 --writer-threads 4
@@ -159,7 +158,7 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, lmp_version, device_BT_CID FROM LMP_
     --output /tmp/sdp_single.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/sdp_single.btides
 ```
 
@@ -171,7 +170,7 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, lmp_version, device_BT_CID FROM LMP_
     --output /tmp/sdp_all.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/sdp_all.btides
 ```
 
@@ -206,7 +205,7 @@ The WiGLE Android app's "Database → Backup" produces a `.sqlite` file containi
     --output /tmp/wigle.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/wigle.btides
 ```
 

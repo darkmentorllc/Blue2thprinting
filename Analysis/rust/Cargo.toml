@@ -7,12 +7,13 @@
 #     bdaddr_random for BLE devices observed by WiGLE.
 #   * import-all-BTIDES — bulk converter that walks a directory of capture
 #     files and dispatches them to the BTIDES_Schema converter libraries.
+#   * BTIDES-to-SQL — Rust port of Analysis/BTIDES_to_SQL.py; imports BTIDES
+#     JSON into bt2/bttest. Also publishes a library used by import-all-BTIDES.
 members = [
     "wigle-to-BTIDES",
     "import-all-BTIDES",
+    "BTIDES-to-SQL",
 ]
-# BTIDES-to-SQL is its own standalone crate and not part of this workspace.
-exclude = ["BTIDES-to-SQL"]
 resolver = "2"
 
 [workspace.package]
