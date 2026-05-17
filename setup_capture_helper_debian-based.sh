@@ -358,7 +358,7 @@ install_realtek_firmware() {
 flash_sniffle(){
     print_banner "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
     cd $BASE_PATH/Sniffle/cc2538-bsl/
-    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_2M.hex" ]; then
+    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.11.0_Sonoff_2M.hex" ]; then
         dongles=$(find /dev/serial/by-id/ -name "usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 2Mbps dongles found. No flashing attempted."
@@ -367,19 +367,19 @@ flash_sniffle(){
             # we used to pass was redundant; xargs warns about the combination
             # ("--max-args and --replace are mutually exclusive") and ignores
             # the -n 1. Drop it to silence the warning.
-            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_2M.hex
+            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.11.0_Sonoff_2M.hex
             echo "  Sonoff firmware flashing complete."
         fi
     else
         echo "  No Sonoff 2Mbps firmware file found, not attempting firmware flashing."
     fi
 
-    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.10.0_Sonoff_1M.hex" ]; then
+    if [ -f "$BASE_PATH/Sniffle/cc2538-bsl/Sniffle_fw_v1.11.0_Sonoff_1M.hex" ]; then
         dongles=$(find /dev/serial/by-id/ -name "usb-Silicon_Labs_Sonoff_Zigbee_3.0_USB_Dongle_Plus_*")
         if [ -z "$dongles" ]; then
             echo "  No Sonoff 921600 baud dongles found. No flashing attempted."
         else
-            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.10.0_Sonoff_1M.hex
+            echo "$dongles" | xargs -I {} python3 ./cc2538-bsl.py -p {} --bootloader-sonoff-usb -ewv ./Sniffle_fw_v1.11.0_Sonoff_1M.hex
             echo "  Sonoff firmware flashing complete."
         fi
     else
