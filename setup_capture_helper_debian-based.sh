@@ -102,6 +102,26 @@ enter_venv(){
         jsonschema==4.23 colorama pyyaml==6.0.2
 }
 
+ensure_sniffle_venv(){
+    # Fast path for --flash-sniffle: if the venv already exists and the modules
+    # cc2538-bsl.py imports are present, skip the slow `python3 -m venv` plus
+    # full `pip install` cycle. On a Pi Zero W (armv6l) that cycle is ~3-5 min
+    # for repeat runs even when nothing needs reinstallation, because pip still
+    # hits PyPI/piwheels for resolution on every package. Falls back to the
+    # full enter_venv on the first install (no venv yet) or if cc2538-bsl's
+    # deps got removed.
+    if [ -d "$BASE_PATH/venv" ]; then
+        # shellcheck source=/dev/null
+        source "$BASE_PATH/venv/bin/activate"
+        if python3 -c "import serial, intelhex" 2>/dev/null; then
+            echo "  Reusing existing venv (pyserial + intelhex already importable)."
+            return 0
+        fi
+        deactivate 2>/dev/null || true
+    fi
+    enter_venv
+}
+
 configure_scripts() {
     #### Scripts and binaries now resolve their own repo root via BASH_SOURCE / __file__
     #### / /proc/self/exe, so there's no longer anything to sed-rewrite post-clone.
@@ -389,7 +409,7 @@ for arg in "$@"; do
     case "$arg" in
         --flash-sniffle)
             check_env
-            enter_venv
+            ensure_sniffle_venv
             flash_sniffle
             cd $BASE_PATH
             exit 0
