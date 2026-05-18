@@ -11,6 +11,17 @@ This class takes on average about 8.5h to complete, and is by far the best way t
 
 # 💥Breaking changes💥
 
+**Sniffle host-side receiver is now a Rust binary.** `central_app_launcher.py` spawns
+`Sniffle/sniffle_receiver_rust` (a compiled native binary, drop-in CLI-compatible with
+`Sniffle/python_cli/sniff_receiver.py`) instead of the Python `sniff_receiver.py`. The
+Rust receiver gives the Pi Zero W enough headroom to drive all 6 Sonoff dongles
+concurrently without the host-side CPU-starvation `Ignoring message due to missing CRLF`
+errors the Python version caused. `setup_capture_helper_debian-based.sh` now installs
+`rustc`+`cargo` from apt and builds the binary automatically; existing checkouts can
+just rerun the setup script, or `./setup_capture_helper_debian-based.sh --build-rust`
+to only rebuild it. Source lives in `Sniffle/sniffle_receiver_rust/` with build/usage
+docs in its own README.
+
 If you have data from running Blue2thprinting before tag `2.2.0`, you will need to execute the following commands to migrate the table names after tag `2.2.0` (commit `ac416c8c2f78a93038be15ecdec6a62913d97ad9`):
 
 ```

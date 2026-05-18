@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl bluez
+    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl bluez rustc cargo
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -131,26 +131,53 @@ configure_scripts() {
     chmod +x *.sh
     echo "  Done"
 
-    print_banner "Appending entry to root crontab to run Scripts/runall.sh at reboot."
-    #### This tries to make sure it preserves whatever is already in the crontab
-    #### and it just appends an entry to run the runall.sh script at reboot
-    #### which invokes the sub-scripts to run btmon (primary HCI logging) and
-    #### central_app_launcher.py (which performs in-process BlueZ D-Bus
-    #### discovery and orchestrates GATT/SDP/LL/LMP measurements). See issue #47.
-    if [ ! -f "$BASE_PATH/Scripts/.cron_added" ]; then
-        cron_entry="@reboot $BASE_PATH/Scripts/runall.sh"
-        echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
-        sudo crontab -u root -l > /tmp/crontab.root.bak
-        sudo cp /tmp/crontab.root.bak /tmp/crontab.root.new
-        echo "  Appending new entry: $cron_entry"
-        echo "$cron_entry" >> /tmp/crontab.root.new
-        echo "  Importing new crontab from /tmp/crontab.root.new"
-        sudo cat /tmp/crontab.root.new | sudo crontab -u root -
-        echo "  Setting flag in $BASE_PATH/Scripts/.cron_added to avoid re-settting."
-        touch "$BASE_PATH/Scripts/.cron_added"
-    else
-        echo "  Skipped, because already added."
+    print_banner "Ensuring root crontab has exactly one @reboot Scripts/runall.sh entry."
+    #### Preserves everything else in the crontab. Strips ALL existing
+    #### `@reboot … Scripts/runall.sh` lines first (regardless of path)
+    #### before appending one for the current $BASE_PATH. This makes a
+    #### `rm -rf ~/Blue2thprinting && git clone && ./setup...sh` reinstall
+    #### idempotent: the stale entry from the deleted checkout gets
+    #### removed and replaced by the new one, never duplicated. The old
+    #### sentinel-file approach (Scripts/.cron_added) couldn't dedupe
+    #### across reinstalls because the sentinel lived inside the
+    #### now-deleted directory.
+    ####
+    #### runall.sh invokes the sub-scripts to run btmon (primary HCI
+    #### logging) and central_app_launcher.py (which performs in-process
+    #### BlueZ D-Bus discovery and orchestrates GATT/SDP/LL/LMP/Sniffle
+    #### measurements). See issue #47.
+    cron_entry="@reboot $BASE_PATH/Scripts/runall.sh"
+    existing=$(sudo crontab -u root -l 2>/dev/null || true)
+
+    echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
+    printf '%s\n' "$existing" > /tmp/crontab.root.bak
+
+    # Remove any pre-existing @reboot runall.sh entry (any path), then
+    # append the canonical one for this install. The grep pattern only
+    # matches lines that are *exactly* an @reboot wrapper around
+    # Scripts/runall.sh — a more complex line that happens to mention
+    # runall.sh (e.g. chained with && or piping to a logger) is
+    # preserved untouched.
+    printf '%s\n' "$existing" \
+        | grep -vE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*$' \
+        > /tmp/crontab.root.new || true
+    echo "  Adding entry: $cron_entry"
+    echo "$cron_entry" >> /tmp/crontab.root.new
+
+    # Compare before/after, log how many entries got cleaned up.
+    removed=$(diff <(grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*$' \
+                      /tmp/crontab.root.bak 2>/dev/null || echo 0) \
+                   <(echo 0) | head -1 | awk '{print $2-0}')
+    if [ "${removed:-0}" -gt 0 ]; then
+        echo "  Removed $removed pre-existing @reboot Scripts/runall.sh entry(ies) before re-adding."
     fi
+
+    sudo crontab -u root /tmp/crontab.root.new
+    echo "  Crontab now ends with: $(sudo crontab -u root -l | tail -1)"
+
+    # Keep the sentinel for backward compat with any external tooling
+    # that checks it; it's no longer used as a dedup gate.
+    touch "$BASE_PATH/Scripts/.cron_added"
 }
 
 compile_toolz() {
@@ -355,6 +382,32 @@ install_realtek_firmware() {
     fi
 }
 
+build_sniffle_receiver_rust() {
+    print_banner "Building the Rust Sniffle host-side receiver."
+    # Replacement for sniff_receiver.py — central_app_launcher.py invokes
+    # this binary directly. Without it, central_app would fail to spawn
+    # sniffers because the file path it points at wouldn't exist.
+    #
+    # On a Pi Zero W the first build takes ~6–12 min single-threaded.
+    # Subsequent rebuilds are seconds.
+    cd "$BASE_PATH/Sniffle/sniffle_receiver_rust"
+    # Cargo.lock written by a newer cargo would be rejected by Debian's
+    # apt-installed cargo (1.65 on Bookworm); start fresh and let it
+    # regenerate. --offline avoids a 5-minute crates.io sync on the
+    # Pi Zero W's slow link (project has zero external deps anyway).
+    rm -f Cargo.lock
+    if ! cargo build --release --offline; then
+        echo ""
+        echo "Blue2thprinting: cargo build of sniffle_receiver_rust FAILED."
+        echo "central_app_launcher.py will not be able to spawn Sniffle sniffers without it."
+        exit -1
+    fi
+    cp -f target/release/sniffle_receiver_rust ../sniffle_receiver_rust
+    chmod 755 ../sniffle_receiver_rust
+    echo "  Installed $(ls -la ../sniffle_receiver_rust | awk '{print $5}') bytes at Sniffle/sniffle_receiver_rust"
+    cd "$BASE_PATH"
+}
+
 flash_sniffle(){
     print_banner "Attempting to flash Sniffle firmware to any attached Sonoff dongles."
     cd $BASE_PATH/Sniffle/cc2538-bsl/
@@ -414,6 +467,12 @@ for arg in "$@"; do
             cd $BASE_PATH
             exit 0
             ;;
+        --build-rust)
+            check_env
+            build_sniffle_receiver_rust
+            cd $BASE_PATH
+            exit 0
+            ;;
         --install-rtl-firmware)
             check_env
             install_realtek_firmware
@@ -427,7 +486,7 @@ for arg in "$@"; do
             exit 0
             ;;
         --help)
-            echo "Usage: $0 [--flash-sniffle | --install-rtl-firmware | --force-reinstall-rtl-firmware]"
+            echo "Usage: $0 [--flash-sniffle | --build-rust | --install-rtl-firmware | --force-reinstall-rtl-firmware]"
             echo "       $0 (no args) runs the full setup."
             exit 0
             ;;
@@ -440,6 +499,7 @@ do_all(){
     enter_venv
     configure_scripts
     compile_toolz
+    build_sniffle_receiver_rust
     flash_sniffle
     install_realtek_firmware
     unblock_bluetooth_rfkill
