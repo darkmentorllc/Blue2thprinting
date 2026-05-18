@@ -50,9 +50,10 @@ This produces the following binaries that the rest of this document refers to:
 ```
 ~/Blue2thprinting/Analysis/rust/target/release/import-all-BTIDES \
     --folder ~/Blue2thprinting/ExampleData/ \
-    --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema \
     --to-SQL
 ```
+
+`--schema-dir` defaults to `Analysis/BTIDES_Schema/` (resolved relative to the binary's own path), so you only need to pass it if the submodule lives elsewhere.
 
 **To confirm that some data was successfully imported, you can issue:**
 
@@ -70,7 +71,6 @@ Pass `--folder` multiple times to mix PCAP and HCI directories in a single run:
 ~/Blue2thprinting/Analysis/rust/target/release/import-all-BTIDES \
     --folder ~/Blue2thprinting/Logs/btmon/ \
     --folder ~/Blue2thprinting/Logs/sniffle/ \
-    --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema \
     --to-SQL
 ```
 
@@ -83,6 +83,9 @@ Pass `--folder` multiple times to mix PCAP and HCI directories in a single run:
 - `--verbose` — print a one-line summary per converted file plus per-table SQL insert counts.
 - `--keep-btides-after-sql` — keep the intermediate `.btides` file after a successful import (off by default, where it's renamed to `.btides.processed`).
 - `--no-validate` — skip JSON-schema validation of the intermediate BTIDES output (faster; only use when you trust the converters).
+- `--schema-dir DIR` — override the default JSON-schema directory (defaults to `<binary_dir>/../../../BTIDES_Schema` — i.e. `Analysis/BTIDES_Schema/` next to the binary's standard `Analysis/rust/target/{debug,release}/` build location).
+- `--overwrite-existing` — re-convert capture files even when a `.btides` (or `.btides.processed`) is already present. Mutually exclusive with `--read-existing-BTIDES`.
+- `--read-existing-BTIDES` — if a `.btides` file already exists next to a capture file, skip conversion and hand the existing file straight to the downstream stage (e.g. `--to-SQL`). `.btides.processed` files are still skipped. Mirrors `Import_All_HCI_and_PCAP.py --read-existing-BTIDES`.
 - `--deadlock-retries N` — per-file MySQL 1213 retry budget (default 8, exponential backoff with jitter).
 
 
