@@ -1,0 +1,46 @@
+[package]
+name = "btidalpool-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "BTIDALPOOL server: HTTPS endpoint, OAuth check, rate limit, BTIDES-to-SQL ingest."
+
+[[bin]]
+name = "btidalpool-server"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+btidalpool-proto = { path = "../btidalpool-proto" }
+# Optional: link against the existing Analysis/rust/BTIDES-to-SQL library so the
+# Rust server can ingest uploaded files in-process (matches requirement #5 from
+# the task brief). Gated behind the `sql-ingest` feature so `cargo test` in
+# this workspace doesn't require the MySQL client headers.
+BTIDES-to-SQL = { path = "../../../Analysis/rust/BTIDES-to-SQL", optional = true }
+serde.workspace = true
+serde_json.workspace = true
+serde_bytes = { workspace = true }
+thiserror.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+tiny_http.workspace = true
+ureq.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+parking_lot.workspace = true
+log.workspace = true
+env_logger.workspace = true
+
+[dev-dependencies]
+btidalpool-client = { path = "../btidalpool-client" }
+rcgen.workspace = true
+tempfile = "3"
+
+[features]
+default = []
+# Enable the BTIDES-to-SQL link. The production server build sets this; the
+# default unit-test build does not, so `cargo test` works without MySQL.
+sql-ingest = ["dep:BTIDES-to-SQL"]

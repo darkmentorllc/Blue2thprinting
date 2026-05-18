@@ -1,0 +1,25 @@
+[package]
+name = "btidalpool-client"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "BTIDALPOOL client: `btidalpool` CLI binary with upload/query subcommands."
+
+[[bin]]
+name = "btidalpool"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+btidalpool-proto = { path = "../btidalpool-proto" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+ureq.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true

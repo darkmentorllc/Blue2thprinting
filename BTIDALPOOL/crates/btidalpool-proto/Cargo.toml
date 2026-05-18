@@ -1,0 +1,17 @@
+[package]
+name = "btidalpool-proto"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "BTIDALPOOL wire protocol: CBOR-encoded envelopes inside zstd-compressed frames, with zip-bomb guards."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+serde_bytes.workspace = true
+ciborium.workspace = true
+zstd.workspace = true
+thiserror.workspace = true
+sha1.workspace = true
+hex.workspace = true

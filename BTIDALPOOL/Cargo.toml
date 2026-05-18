@@ -1,0 +1,76 @@
+[workspace]
+# BTIDALPOOL Rust workspace.
+#
+# Reimplementation of the BTIDALPOOL server and clients (previously
+# Analysis/Server_BTIDALPOOL.py + Analysis/BTIDES_to_BTIDALPOOL.py +
+# Analysis/BTIDALPOOL_to_BTIDES.py) in Rust, with a compact CBOR + zstd
+# wire protocol replacing the old "raw JSON over HTTPS" body.
+#
+# Crates:
+#   * btidalpool-proto  — shared types + codec (CBOR-in-zstd, zip-bomb-guarded).
+#                         Linked by both server and client; the *only* place
+#                         that defines the wire format. Tests live here.
+#   * btidalpool-server — HTTPS endpoint, OAuth check, rate limiter, dispatch
+#                         to BTIDES-to-SQL ingest + Tell_Me_Everything query.
+#                         Depends on btidalpool-proto and on the existing
+#                         Analysis/rust/BTIDES-to-SQL library crate.
+#   * btidalpool-client — `btidalpool` CLI binary that the existing Python
+#                         shims (BTIDES_to_BTIDALPOOL.py /
+#                         BTIDALPOOL_to_BTIDES.py) shell out to. Single binary
+#                         with `upload` and `query` subcommands.
+members = [
+    "crates/btidalpool-proto",
+    "crates/btidalpool-server",
+    "crates/btidalpool-client",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Xeno Kovah / Dark Mentor LLC"]
+license = "GPL-3.0-or-later"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+# preserve_order matches the Python json.dumps semantics used everywhere else
+# in Blue2thprinting and keeps SHA1 hashes stable across the Python/Rust
+# boundary while both implementations coexist.
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_bytes = "0.11"
+ciborium = "0.2"
+# zstd-safe gives us the streaming Decoder that lets us cap the *output*
+# size before allocating, which is the only reliable defense against zip bombs.
+zstd = { version = "0.13", default-features = false }
+thiserror = "2"
+sha1 = "0.10"
+hex = "0.4"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+# HTTP server: synchronous, thread-per-request. Matches the Python server's
+# threading model and keeps memory predictable on the underpowered AWS VM.
+# `ssl-rustls` brings in rustls so we don't depend on a system OpenSSL.
+tiny_http = { version = "0.12", default-features = false, features = ["ssl-rustls"] }
+# HTTP client: synchronous, blocking, single-shot. Matches the Python client
+# control flow (one POST per upload/query) and avoids pulling in tokio.
+# Use the `tls` feature for ureq's own rustls integration (ureq 2.x calls
+# its rustls feature "tls"); we then layer our own `.tls_config(...)` on top
+# for CA pinning. ureq 2.12 uses rustls 0.23 under this feature.
+ureq = { version = "2", default-features = false, features = ["tls", "json"] }
+# Cert pinning + cert generation for tests (rcgen is dev-only). Pin rustls
+# to ONLY the `ring` crypto provider so we don't pull in aws-lc-rs (which
+# needs CMake on the build host) AND so rustls 0.23's auto-default kicks in
+# without us having to call `CryptoProvider::install_default()` manually.
+rustls = { version = "0.23", default-features = false, features = ["std", "ring", "tls12", "logging"] }
+rustls-pemfile = "2"
+rcgen = "0.13"
+# State + concurrency.
+parking_lot = "0.12"
+# OAuth/userinfo response parsing in the server.
+log = "0.4"
+env_logger = "0.11"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
