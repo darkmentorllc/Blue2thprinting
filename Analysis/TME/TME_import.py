@@ -5,9 +5,24 @@
 
 import json
 import csv
+import os
+import sys
 import yaml
 import TME.TME_glob
 from TME.TME_helpers import *
+
+# CLUES_Schema ships a shared loader (clues_io.py) that transparently
+# handles both single-file and 16-shard hex-split layouts. Add the
+# submodule's scripts/ dir to sys.path so we can import it without
+# duplicating the layout logic here. Path is relative to this file so it
+# works regardless of the caller's cwd.
+_CLUES_SCHEMA_SCRIPTS = os.path.normpath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    '..', 'CLUES_Schema', 'scripts',
+))
+if _CLUES_SCHEMA_SCRIPTS not in sys.path:
+    sys.path.insert(0, _CLUES_SCHEMA_SCRIPTS)
+from clues_io import clues_exists, load_clues  # noqa: E402
 
 ########################################
 # BEGIN FILL DATA FROM JSON ############
@@ -58,6 +73,13 @@ def import_private_metadata_v2():
 # Only the canonical CLUES_data_human_verified.json is required; the
 # LLM-derived files and every private override are optional and silently
 # skipped if missing.
+#
+# Each path below is a *logical* CLUES file. On disk it may live as a
+# single combined .json OR as 16 hex-bucketed shards (e.g.
+# CLUES_data_LLM_Android_APK_search_0.json .. _f.json) when the file has
+# grown past ~100 MB. The shared `clues_io.load_clues()` helper imported
+# above resolves either layout transparently, so callers reference only
+# the single-file path here and never need to know which form is on disk.
 _CLUES_DATA_FILES = [
     # (public_path, private_path, required)
     ('./CLUES_Schema/data/CLUES_data_LLM_web_search.json',
@@ -79,21 +101,18 @@ def _load_clues_file(path, required):
     responsible for invoking lowest-priority files first so that
     higher-priority files win the overlap.
 
-    `required=True` raises if the file is missing (used for the canonical
+    `required=True` raises if the file is missing in BOTH the single-file
+    and 16-shard hex-split layouts (used for the canonical
     CLUES_data_human_verified.json). Otherwise missing files are silently
     skipped, which is the right behavior for optional LLM-derived files
     and for the optional private overrides that may not exist on every
     developer's checkout.
     """
-    try:
-        f = open(path, 'r')
-    except FileNotFoundError:
+    if not clues_exists(path):
         if required:
-            raise
+            raise FileNotFoundError(path)
         return
-    with f:
-        data = json.load(f)
-    for entry in data:
+    for entry in load_clues(path):
         entry['UUID'] = entry['UUID'].replace('-', '')
         TME.TME_glob.clues[entry['UUID']] = entry
         if "regex" in entry.keys():
