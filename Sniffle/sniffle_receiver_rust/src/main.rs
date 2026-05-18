@@ -31,6 +31,9 @@ use std::os::unix::io::{AsRawFd, RawFd};
 use std::process::ExitCode;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+mod advdata;
+mod advdata_constants;
+
 // =====================================================================
 // Constants — kept identical to constants.py / firmware
 // =====================================================================
@@ -390,11 +393,151 @@ fn open_serial(path: &str, baud: u32) -> std::io::Result<File> {
     Ok(unsafe { File::from_raw_fd(fd) })
 }
 
-#[cfg(not(target_os = "linux"))]
+// =====================================================================
+// macOS serial port (XNU/BSD termios) — same minimal hand-rolled FFI.
+//
+// Differences from the Linux block:
+//   - tcflag_t and speed_t are 64-bit on macOS (the kernel uses u_long).
+//   - NCCS is 20, no c_line field, c_ispeed/c_ospeed live in the struct.
+//   - Constants are POSIX-named but use the BSD numeric values.
+//   - There is no B2000000 baud constant — to set arbitrary baud
+//     (incl. 2 Mbaud) you do tcsetattr() then issue the macOS-specific
+//     IOSSIOSPEED ioctl with a speed_t value.
+//
+// Tested against /dev/cu.usbserial-1320 (CP2102N Sonoff at 2 Mbaud).
+// =====================================================================
+
+#[cfg(target_os = "macos")]
+mod sys {
+    use std::os::raw::*;
+
+    pub const O_RDWR: c_int = 0x0002;
+    pub const O_NOCTTY: c_int = 0x20000;
+    pub const O_NONBLOCK: c_int = 0x0004;
+    pub const F_GETFL: c_int = 3;
+    pub const F_SETFL: c_int = 4;
+
+    // c_iflag
+    pub const IGNBRK: c_ulong = 0x0001;
+    pub const BRKINT: c_ulong = 0x0002;
+    pub const PARMRK: c_ulong = 0x0008;
+    pub const ISTRIP: c_ulong = 0x0020;
+    pub const INLCR: c_ulong = 0x0040;
+    pub const IGNCR: c_ulong = 0x0080;
+    pub const ICRNL: c_ulong = 0x0100;
+    pub const IXON: c_ulong = 0x0200;
+    // c_oflag
+    pub const OPOST: c_ulong = 0x0001;
+    // c_lflag
+    pub const ECHO: c_ulong = 0x0008;
+    pub const ECHONL: c_ulong = 0x0010;
+    pub const ISIG: c_ulong = 0x0080;
+    pub const ICANON: c_ulong = 0x0100;
+    pub const IEXTEN: c_ulong = 0x0400;
+    // c_cflag
+    pub const CSIZE: c_ulong = 0x0300;
+    pub const CS8: c_ulong = 0x0300;
+    pub const PARENB: c_ulong = 0x1000;
+    pub const CREAD: c_ulong = 0x0800;
+    pub const CLOCAL: c_ulong = 0x8000;
+
+    pub const NCCS: usize = 20;
+    pub const VTIME: usize = 17;
+    pub const VMIN: usize = 16;
+
+    pub const TCSANOW: c_int = 0;
+    pub const TCIOFLUSH: c_int = 3;
+    pub const FIONREAD: c_ulong = 0x4004_667F;
+
+    // ioctl<termios_set_speed>(fd, IOSSIOSPEED, &speed_t)
+    // Numeric value verified against <IOKit/serial/ioss.h>:
+    //   _IOW('T', 2, speed_t) => 0x80085402 (speed_t is 8 bytes)
+    pub const IOSSIOSPEED: c_ulong = 0x8008_5402;
+
+    pub type SpeedT = u64;
+    pub type TcflagT = u64;
+    pub type CcT = c_uchar;
+
+    #[repr(C)]
+    pub struct Termios {
+        pub c_iflag: TcflagT,
+        pub c_oflag: TcflagT,
+        pub c_cflag: TcflagT,
+        pub c_lflag: TcflagT,
+        pub c_cc: [CcT; NCCS],
+        pub _padding: [u8; 4],   // align c_ispeed to 8 bytes (struct is 72 bytes)
+        pub c_ispeed: SpeedT,
+        pub c_ospeed: SpeedT,
+    }
+
+    extern "C" {
+        pub fn open(pathname: *const c_char, flags: c_int) -> c_int;
+        pub fn close(fd: c_int) -> c_int;
+        pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;
+        pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
+        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+        pub fn tcgetattr(fd: c_int, termios_p: *mut Termios) -> c_int;
+        pub fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
+        pub fn tcflush(fd: c_int, queue_selector: c_int) -> c_int;
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn open_serial(path: &str, baud: u32) -> std::io::Result<File> {
+    use sys::*;
+    let cpath = std::ffi::CString::new(path).unwrap();
+    let fd = unsafe { open(cpath.as_ptr(), O_RDWR | O_NOCTTY | O_NONBLOCK) };
+    if fd < 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    unsafe {
+        let flags = fcntl(fd, F_GETFL, 0);
+        fcntl(fd, F_SETFL, flags & !O_NONBLOCK);
+    }
+    let mut tio: Termios = unsafe { std::mem::zeroed() };
+    if unsafe { tcgetattr(fd, &mut tio) } != 0 {
+        let e = std::io::Error::last_os_error();
+        unsafe { close(fd); }
+        return Err(e);
+    }
+    tio.c_iflag &= !(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    tio.c_oflag &= !OPOST;
+    tio.c_lflag &= !(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    tio.c_cflag &= !(CSIZE | PARENB);
+    tio.c_cflag |= CS8 | CLOCAL | CREAD;
+    tio.c_cc[VMIN] = 1;
+    tio.c_cc[VTIME] = 0;
+    if unsafe { tcsetattr(fd, TCSANOW, &tio) } != 0 {
+        let e = std::io::Error::last_os_error();
+        unsafe { close(fd); }
+        return Err(e);
+    }
+    // macOS-specific: set non-standard baud via IOSSIOSPEED ioctl.
+    // Required because there is no B2000000 constant on macOS.
+    let speed: sys::SpeedT = baud as sys::SpeedT;
+    if unsafe { ioctl(fd, IOSSIOSPEED, &speed as *const sys::SpeedT) } != 0 {
+        let e = std::io::Error::last_os_error();
+        unsafe { close(fd); }
+        return Err(e);
+    }
+    unsafe { tcflush(fd, TCIOFLUSH); }
+    use std::os::unix::io::FromRawFd;
+    Ok(unsafe { File::from_raw_fd(fd) })
+}
+
+#[cfg(target_os = "macos")]
+fn tty_inq(fd: RawFd) -> i32 {
+    let mut n: i32 = 0;
+    unsafe { sys::ioctl(fd, sys::FIONREAD, &mut n as *mut i32) };
+    n
+}
+
+// Fallback for OSes that aren't Linux or macOS — refuse to open.
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn open_serial(_path: &str, _baud: u32) -> std::io::Result<File> {
     Err(std::io::Error::new(
         std::io::ErrorKind::Unsupported,
-        "sniffle_receiver_rust only supports Linux",
+        "sniffle_receiver_rust supports only Linux and macOS",
     ))
 }
 
@@ -404,7 +547,7 @@ fn tty_inq(fd: RawFd) -> i32 {
     unsafe { sys::ioctl(fd, sys::FIONREAD, &mut n as *mut i32) };
     n
 }
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn tty_inq(_fd: RawFd) -> i32 { -1 }
 
 // =====================================================================
@@ -830,6 +973,54 @@ fn parse_auxptr_from_ext(body: &[u8]) -> Option<AuxPtr> {
 /// Extended-adv "AdvMode" field (00=non-conn/non-scan, 01=conn, 10=scan, 11=RFU).
 fn adv_mode_from_ext(body: &[u8]) -> u8 {
     if body.len() < 3 { 0 } else { body[2] >> 6 }
+}
+
+/// Walk the ADV_EXT_IND / AUX_ADV_IND extended header and return the
+/// byte offset where adv_data begins (i.e. just past all fields the
+/// header-flags byte advertised + any ACAD). Returns None if the
+/// header is malformed/truncated. Mirrors AdvExtIndMessage.__init__
+/// in packet_decoder.py.
+fn ext_adv_data_offset(body: &[u8]) -> Option<usize> {
+    if body.len() < 4 { return None; }
+    let hdr_body_len = (body[2] & 0x3F) as usize;
+    if body.len() < hdr_body_len + 1 { return None; }
+    let hdr_flags = body[3];
+    let mut pos = 4;
+    if hdr_flags & 0x01 != 0 { pos += 6; }   // AdvA
+    if hdr_flags & 0x02 != 0 { pos += 6; }   // TargetA
+    if hdr_flags & 0x04 != 0 { pos += 1; }   // CTEInfo
+    if hdr_flags & 0x08 != 0 { pos += 2; }   // AdvDataInfo
+    if hdr_flags & 0x10 != 0 { pos += 3; }   // AuxPtr
+    if hdr_flags & 0x20 != 0 { pos += 18; }  // SyncInfo
+    if hdr_flags & 0x40 != 0 { pos += 1; }   // TxPower
+    // ACAD fills any remaining bytes in the extended header (anything
+    // between the structured fields and the header_body_len boundary).
+    let extended_header_end = 3 + hdr_body_len;
+    if pos < extended_header_end { pos = extended_header_end; }
+    if pos > body.len() { return None; }
+    Some(pos)
+}
+
+/// Locate the advertising data bytes within a PDU body, given the
+/// classified PDU type. Returns None for PDU types that don't carry
+/// AD data (e.g. ScanReq, ConnectInd, data-channel PDUs).
+fn adv_data_slice<'a>(klass: PduClass, body: &'a [u8]) -> Option<&'a [u8]> {
+    match klass {
+        // AdvaMessage family: 2-byte header + 6-byte AdvA, then adv_data
+        PduClass::AdvInd | PduClass::AdvNonconnInd | PduClass::ScanRsp | PduClass::AdvScanInd => {
+            if body.len() >= 8 { Some(&body[8..]) } else { None }
+        }
+        // AdvDirectInd: 2-byte header + 6-byte AdvA + 6-byte TargetA, then (usually empty) adv_data
+        PduClass::AdvDirectInd => {
+            if body.len() >= 14 { Some(&body[14..]) } else { None }
+        }
+        // Extended advertising: walk the variable-length header
+        PduClass::AdvExtInd | PduClass::AuxAdvInd | PduClass::AuxScanRsp | PduClass::AuxChainInd => {
+            let off = ext_adv_data_offset(body)?;
+            if off <= body.len() { Some(&body[off..]) } else { None }
+        }
+        _ => None,
+    }
 }
 
 /// Parse a ConnectInd/AuxConnectReq body (need aa + CRCInit for state update).
@@ -1289,6 +1480,7 @@ fn print_packet(
     pkt: &ParsedPacket,
     dstate: &DecoderState,
     quiet: bool,
+    decode_ad: bool,
 ) -> String {
     let ts_print = pkt.ts_rel_s;
     let phy_name = PHY_NAMES.get(pkt.phy as usize).copied().unwrap_or("?");
@@ -1391,6 +1583,16 @@ fn print_packet(
             }
         }
     }
+    // -d / --decode: walk the LTV adv_data of any AdvA-bearing PDU.
+    // Mirrors sniff_receiver.py: only AdvaMessage / AdvDirectInd /
+    // ScanRsp / AdvExtInd-family PDUs have adv_data to decode.
+    if decode_ad {
+        if let Some(ad_bytes) = adv_data_slice(klass, pkt.body) {
+            for rec in advdata::decode(ad_bytes) {
+                let _ = writeln!(out, "{}", rec);
+            }
+        }
+    }
     hexdump(&mut out, pkt.body);
     out.push('\n');
     out
@@ -1438,6 +1640,7 @@ struct Args {
     label: String,
     baud: u32,
     print_stdout: bool,
+    decode_ad: bool,
 }
 
 fn parse_mac(s: &str) -> Result<[u8; 6], String> {
@@ -1544,6 +1747,7 @@ fn parse_args() -> Result<Args, String> {
         label: String::new(),
         baud: 2_000_000,
         print_stdout: false,
+        decode_ad: false,
     };
     let mut adv_chan_was_default = true;
     let mut explicit_hop = false;
@@ -1584,7 +1788,7 @@ fn parse_args() -> Result<Args, String> {
             "-n" | "--nophychange" => args.phy_preload = None,
             "-C" | "--crcerr" => args.capture_crc_err = true,
             "-p" | "--pause" => args.pause_done = true,
-            "-d" | "--decode" => { /* advdata decode not implemented; accept and ignore */ }
+            "-d" | "--decode" => args.decode_ad = true,
             "--print" => args.print_stdout = true,
             "--duration" => args.duration_s = Some(take_val()?.parse().map_err(|_| "bad --duration".to_string())?),
             "--label" => args.label = take_val()?,
@@ -1851,7 +2055,7 @@ fn run(args: &Args) -> std::io::Result<Counters> {
                 }
                 // optional pretty-print
                 if args.print_stdout {
-                    let s = print_packet(klass, &pkt, &dstate, args.quiet);
+                    let s = print_packet(klass, &pkt, &dstate, args.quiet, args.decode_ad);
                     if !s.is_empty() {
                         print!("{}", s);
                     }
@@ -1923,6 +2127,36 @@ fn run(args: &Args) -> std::io::Result<Counters> {
 }
 
 fn main() -> ExitCode {
+    // Diagnostic short-circuit: --decode-hex HEX runs advdata::decode on
+    // the given hex string and prints the same one-record-per-line output
+    // that `-d --print` produces, then exits. Used for offline parity
+    // comparisons against Python's `decode_adv_data`. Bypasses everything
+    // else — no serial port, no pcap.
+    let argv: Vec<String> = env::args().collect();
+    if let Some(idx) = argv.iter().position(|a|
+        a == "--decode-hex" || a.starts_with("--decode-hex="))
+    {
+        let hex = if argv[idx].starts_with("--decode-hex=") {
+            argv[idx]["--decode-hex=".len()..].to_string()
+        } else if idx + 1 < argv.len() {
+            argv[idx + 1].clone()
+        } else {
+            String::new()
+        };
+        match hex_to_bytes(&hex) {
+            Some(bytes) => {
+                for rec in advdata::decode(&bytes) {
+                    println!("{}", rec);
+                }
+                return ExitCode::SUCCESS;
+            }
+            None => {
+                eprintln!("error: --decode-hex value must be valid hex");
+                return ExitCode::from(2);
+            }
+        }
+    }
+
     let args = match parse_args() {
         Ok(a) => a,
         Err(e) => { eprintln!("error: {}", e); print_usage(); return ExitCode::from(2); }
@@ -1931,4 +2165,15 @@ fn main() -> ExitCode {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => { eprintln!("error: {}", e); ExitCode::from(1) }
     }
+}
+
+fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
+    let trimmed: String = s.chars().filter(|c| !c.is_whitespace() && *c != ':').collect();
+    if trimmed.len() % 2 != 0 { return None; }
+    let mut out = Vec::with_capacity(trimmed.len() / 2);
+    for i in (0..trimmed.len()).step_by(2) {
+        let byte = u8::from_str_radix(&trimmed[i..i + 2], 16).ok()?;
+        out.push(byte);
+    }
+    Some(out)
 }

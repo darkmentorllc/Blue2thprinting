@@ -28,19 +28,28 @@ actually invokes):
 * Pcap output (`DLT_BLUETOOTH_LE_LL_WITH_PHDR`) with correct
   `pdu_type`/`aux_type` for every packet class
 * Optional packet pretty-print on stdout via `--print` (Python parity)
+* Advertising-data decoder (`-d`) with the same per-AD-record output as
+  `sniff_receiver.py -d`: Flags, ServiceList16/32/128 (with assigned-
+  numbers lookup), Local Name, TX Power, ServiceData16/32/128, and
+  Manufacturer-Specific Data including Apple Continuity (iBeacon /
+  AirPlay Target / Nearby Info typed) and Microsoft BLE Beacon
+  subdecoders. Constants table (~3700 BT-SIG-assigned company IDs,
+  AD types, 16-bit service UUIDs) auto-generated from Sniffle's
+  `constants.py` by `gen_advdata_constants.py`.
 * Two extras the launcher uses: `--duration=SEC` and `--label=NAME`
 
 Deliberately not ported (out of scope for the UART/Sonoff use case):
 
 * SDR back-ends (`sniffle_sdr.py`)
-* `decode_adv_data` (`-d` flag — accepted but no-op)
 * Relay master/protocol
 
 ## Build
 
 Single source file, no external crate dependencies — pure `std` plus a
-small hand-rolled libc FFI block. Build with the apt-installable Rust
-toolchain on Raspberry Pi OS Bookworm:
+small hand-rolled libc FFI block (Linux and macOS branches; other
+Unix-likes refuse to open the serial port).
+
+On Raspberry Pi OS Bookworm:
 
 ```bash
 sudo apt-get install -y rustc cargo
@@ -48,7 +57,21 @@ cd Sniffle/sniffle_receiver_rust
 cargo build --release --offline
 ```
 
-That produces `target/release/sniffle_receiver_rust` (~378 KB).
+On macOS (with Homebrew rustc):
+
+```bash
+brew install rust
+cd Sniffle/sniffle_receiver_rust
+cargo build --release
+# /dev/cu.usbserial-* should already be world-rw — no sudo needed
+./target/release/sniffle_receiver_rust -s=/dev/cu.usbserial-1320 -o=cap.pcap -A
+```
+
+The macOS port handles the 2 Mbaud setup with the macOS-specific
+`IOSSIOSPEED` ioctl (since `<termios.h>` has no `B2000000` constant).
+Useful for local development against a Sonoff plugged into a Mac.
+
+That produces `target/release/sniffle_receiver_rust` (~360-380 KB).
 
 On a Pi Zero W the first build takes ~6–10 minutes (single core,
 512 MB). Incremental rebuilds are seconds.
