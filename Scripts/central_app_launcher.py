@@ -148,7 +148,7 @@ bgprint_log_path = str(REPO_ROOT / "Logs/GATTprint.log")
 sdpprint_log_path = str(REPO_ROOT / "Logs/SDPprint.log")
 
 sniffle_stdout_log_path = str(REPO_ROOT / "Logs/Sniffle_stdout.log")
-sniffle_path = str(REPO_ROOT / "Sniffle/python_cli/sniff_receiver.py")
+sniffle_path = str(REPO_ROOT / "Sniffle/sniffle_receiver_rust")  # Rust drop-in replacement for Sniffle/python_cli/sniff_receiver.py
 sniffle_pcap_log_folder = str(REPO_ROOT / "Logs/sniffle")
 
 # Ensure the per-tool log directories exist before workers try to write into them.
@@ -1803,7 +1803,7 @@ def assign_sniffle_roles(dongles):
 def build_sniffle_cmd(dongle_path, role, launch_time, short_name, host):
     """Translate a (mode, channel) role tuple into a sniffle CLI invocation."""
     mode, channel = role
-    cmd = ["python3", sniffle_path]
+    cmd = [sniffle_path]  # native binary, no python3 wrapper
     label_parts = []
     if mode == 'scan':
         cmd.append("-A")
