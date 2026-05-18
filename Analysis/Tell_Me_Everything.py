@@ -10,6 +10,15 @@ from pathlib import Path
 from handle_venv import activate_venv
 activate_venv()
 
+# Make the BTIDALPOOL Python shims importable under their historical names
+# (`from BTIDES_to_BTIDALPOOL import …` / `from BTIDALPOOL_to_BTIDES import …`).
+# The actual implementations moved to `BTIDALPOOL/python/` in the Rust
+# rewrite; this `sys.path` insert keeps the import paths unchanged so the
+# rest of this file (and any operator muscle memory) doesn't shift.
+_btidalpool_shim_dir = (Path(__file__).resolve().parent.parent / "BTIDALPOOL" / "python")
+if _btidalpool_shim_dir.is_dir():
+    sys.path.insert(0, str(_btidalpool_shim_dir))
+
 # Restore the default Unix SIGPIPE behavior so that piping our output to
 # pagers / head / etc. and quitting early (e.g. `--UUID128-stats | less`
 # followed by `q`) terminates this process quietly instead of unwinding
