@@ -1,22 +1,41 @@
 # BTIDALPOOL (Rust reimplementation)
 
 Rust port of the BTIDALPOOL crowdsourced-database server and its two client
-tools. Replaces three Python files that previously lived in `Analysis/` and
-`Scripts/`:
+tools. **The original Python implementation is intentionally kept in
+parallel** so the two can run side by side during the rollout — the Python
+server keeps serving production traffic on its current port while the Rust
+server is shaken out on a different port; flip over (or run both) when
+ready.
 
-| Old (Python)                                              | New (Rust)                    |
-| --------------------------------------------------------- | ----------------------------- |
-| `Analysis/Server_BTIDALPOOL.py`                           | `crates/btidalpool-server`    |
-| `Analysis/BTIDES_to_BTIDALPOOL.py` (upload client)        | `crates/btidalpool-client`    |
-| `Analysis/BTIDALPOOL_to_BTIDES.py` (query client)         | `crates/btidalpool-client`    |
-| `Scripts/google-SSO-redirect-and-token-print-server.py`   | _unchanged_ (Google OAuth flow stays in Python; the Rust server only validates already-issued tokens) |
+| Concern                  | Python (still present)                                   | Rust (this folder)                |
+| ------------------------ | -------------------------------------------------------- | --------------------------------- |
+| Server                   | `Analysis/Server_BTIDALPOOL.py`                          | `crates/btidalpool-server`        |
+| Upload client            | `Analysis/BTIDES_to_BTIDALPOOL.py`                       | `crates/btidalpool-client`        |
+| Query client             | `Analysis/BTIDALPOOL_to_BTIDES.py`                       | `crates/btidalpool-client`        |
+| Google OAuth token issue | `Scripts/google-SSO-redirect-and-token-print-server.py`  | _unchanged — shared by both_      |
 
-The two old Python client tools are merged into a single `btidalpool` Rust
-binary with `upload` and `query` subcommands. Per requirement #6, the
-user-facing CLI of `Tell_Me_Everything.py` does **not** change; the existing
-`BTIDES_to_BTIDALPOOL.py` / `BTIDALPOOL_to_BTIDES.py` filenames stay around
-as thin Python shims that exec the Rust binary (added in a follow-up commit
-that lands `python/`).
+The two Rust client tools are merged into a single `btidalpool` binary with
+`upload`, `query`, and `check-hash` subcommands; per the task brief it is
+fine that the merged Rust client CLI differs from the original two Python
+CLIs. `Analysis/Tell_Me_Everything.py` continues to import the original
+Python clients via the original `Analysis/`-level imports — it is unchanged
+by this branch.
+
+The `python/` directory here contains a *separate* set of Python shims
+(`BTIDES_to_BTIDALPOOL.py` + `BTIDALPOOL_to_BTIDES.py`) that wrap the new
+Rust binary while preserving the same `send_btides_to_btidalpool()` /
+`retrieve_btides_from_btidalpool()` function signatures the old Python
+clients exposed. They are *not* on Python's import path by default; a
+caller that wants to route through Rust instead of the Python clients
+points `PYTHONPATH` at this folder (or imports them explicitly), e.g.
+
+```sh
+PYTHONPATH=$(realpath BTIDALPOOL/python):$PYTHONPATH \
+  python3 Analysis/Tell_Me_Everything.py --query-BTIDALPOOL …
+```
+
+That way the choice between "old Python path" and "new Rust path" is per
+caller, with the Python path remaining the default.
 
 ## Why a rewrite
 
@@ -121,17 +140,21 @@ cargo build --release --features sql-ingest -p btidalpool-server
 
 ## Tell_Me_Everything.py integration
 
-`Analysis/Tell_Me_Everything.py` now adds `BTIDALPOOL/python/` to
-`sys.path` near the top of the file, so its existing imports
+`Analysis/Tell_Me_Everything.py` is **unchanged** by this branch — its
+existing imports
 
 ```python
 from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 ```
 
-resolve to the new shims here instead of the deleted Analysis/-level
-files. The function signatures are preserved verbatim, so no other
-caller needs to change.
+continue to resolve to the original Python implementations at
+`Analysis/BTIDES_to_BTIDALPOOL.py` / `Analysis/BTIDALPOOL_to_BTIDES.py`
+(which are still present), and those still talk to the original Python
+server. To route a particular invocation through the new Rust client +
+server instead, set `PYTHONPATH` to put `BTIDALPOOL/python/` ahead of
+`Analysis/` (see the example one-liner above). The new shims expose the
+same function signatures, so the rest of TME is happy either way.
 
 The shims read three environment variables when spawning the Rust binary:
 

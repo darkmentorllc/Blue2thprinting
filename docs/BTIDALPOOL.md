@@ -31,7 +31,10 @@ BTIDALPOOL can be used from Blue2thprinting tools by adding CLI arguments such a
 
 ## 3rd party access
 
-3rd party clients wishing to upload/download data can use the `btidalpool` Rust binary built from [`BTIDALPOOL/`](../BTIDALPOOL/), or the thin Python shims at [`BTIDALPOOL/python/BTIDES_to_BTIDALPOOL.py`](../BTIDALPOOL/python/BTIDES_to_BTIDALPOOL.py) and [`BTIDALPOOL/python/BTIDALPOOL_to_BTIDES.py`](../BTIDALPOOL/python/BTIDALPOOL_to_BTIDES.py). The wire format (CBOR-encoded envelope inside a zstd-compressed frame, with explicit zip-bomb guards) is defined once in [`BTIDALPOOL/crates/btidalpool-proto/`](../BTIDALPOOL/crates/btidalpool-proto/) and is the same on both client and server. See [`BTIDALPOOL/README.md`](../BTIDALPOOL/README.md) for the protocol details.
+3rd party clients wishing to upload/download data have two options that currently run side by side:
+
+* **Original Python implementation** — [`Analysis/BTIDES_to_BTIDALPOOL.py`](../Analysis/BTIDES_to_BTIDALPOOL.py) (upload) and [`Analysis/BTIDALPOOL_to_BTIDES.py`](../Analysis/BTIDALPOOL_to_BTIDES.py) (download). Reading `send_btides_to_btidalpool()` in the upload script (or `do_POST()` in [`Analysis/Server_BTIDALPOOL.py`](../Analysis/Server_BTIDALPOOL.py)) shows the legacy raw-JSON request/response shape.
+* **Rust reimplementation** — the `btidalpool` binary built from [`BTIDALPOOL/`](../BTIDALPOOL/), or the equivalent Python shims at [`BTIDALPOOL/python/BTIDES_to_BTIDALPOOL.py`](../BTIDALPOOL/python/BTIDES_to_BTIDALPOOL.py) and [`BTIDALPOOL/python/BTIDALPOOL_to_BTIDES.py`](../BTIDALPOOL/python/BTIDALPOOL_to_BTIDES.py) (same function signatures as the originals, but shell out to the Rust binary). The Rust wire format (CBOR-encoded envelope inside a zstd-compressed frame, with explicit zip-bomb guards) is defined once in [`BTIDALPOOL/crates/btidalpool-proto/`](../BTIDALPOOL/crates/btidalpool-proto/) and is the same on client and server. See [`BTIDALPOOL/README.md`](../BTIDALPOOL/README.md) for the protocol details.
 
 ## Rate limits
 
