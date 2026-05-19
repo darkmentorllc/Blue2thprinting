@@ -104,7 +104,7 @@ def update_LL_LENGTH_state(opcode, state_str, ll_length_max_rx_octet=None, ll_le
 def send_LL_TERMINATE_IND():
     # LL Ctrl Opcode = LL_TERMINATE_IND
     # ErrorCode = 0x13 (Remote User Terminated Connection)
-    packet_bytes = v1b(opcode_LL_LENGTH_REQ) + v1b(0x13)
+    packet_bytes = v1b(opcode_LL_TERMINATE_IND) + v1b(0x13)
     write_outbound_pkt(LLID_ctrl, packet_bytes)
     vprint("Sent LL_TERMINATE_IND!")
 
