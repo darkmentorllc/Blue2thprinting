@@ -15,11 +15,18 @@
 #   * post-reboot: CAL.log has 0 Python tracebacks
 #
 # Usage: ./install_from_scratch_test.sh [--host USER@HOST] [--branch BRANCH]
-#                                       [--repo URL] [--skip-reboot]
+#                                       [--repo URL | --local-source PATH]
+#                                       [--skip-reboot]
 #
 # Defaults:  --host user@192.168.1.206
 #            --branch master
 #            --repo https://github.com/darkmentorllc/Blue2thprinting.git
+#
+# --local-source PATH overrides --repo / --branch and rsync's the local
+# checkout at PATH onto the target instead of cloning. Useful for
+# testing un-pushed commits, or for an air-gapped target. Submodule
+# contents must already be populated in PATH (this script does not
+# re-init them on the local side).
 #
 # Exit 0 = all checks passed, non-zero = first failure code (3..9).
 #
@@ -31,21 +38,35 @@ set -uo pipefail
 HOST="user@192.168.1.206"
 BRANCH="master"
 REPO="https://github.com/darkmentorllc/Blue2thprinting.git"
+LOCAL_SOURCE=""
 SKIP_REBOOT=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --host)         HOST="$2"; shift 2;;
-        --branch)       BRANCH="$2"; shift 2;;
-        --repo)         REPO="$2"; shift 2;;
-        --skip-reboot)  SKIP_REBOOT=1; shift;;
+        --host)          HOST="$2"; shift 2;;
+        --branch)        BRANCH="$2"; shift 2;;
+        --repo)          REPO="$2"; shift 2;;
+        --local-source)  LOCAL_SOURCE="$2"; shift 2;;
+        --skip-reboot)   SKIP_REBOOT=1; shift;;
         -h|--help)
-            grep -E '^#( |$)' "$0" | sed 's/^# \{0,1\}//' | head -40
+            grep -E '^#( |$)' "$0" | sed 's/^# \{0,1\}//' | head -60
             exit 0
             ;;
         *) echo "unknown arg: $1" >&2; exit 2;;
     esac
 done
+
+# Normalize and validate --local-source if given.
+if [ -n "$LOCAL_SOURCE" ]; then
+    # Expand to absolute, strip trailing slash so rsync semantics are
+    # predictable (we want the dir CONTENTS to land at REMOTE_DIR, not
+    # become REMOTE_DIR/<basename>).
+    LOCAL_SOURCE="${LOCAL_SOURCE%/}"
+    [ -d "$LOCAL_SOURCE" ] || { echo "--local-source: not a directory: $LOCAL_SOURCE" >&2; exit 2; }
+    [ -f "$LOCAL_SOURCE/setup_capture_helper_debian-based.sh" ] || {
+        echo "--local-source: missing setup_capture_helper_debian-based.sh in $LOCAL_SOURCE" >&2; exit 2; }
+    command -v rsync >/dev/null || { echo "--local-source needs rsync on PATH" >&2; exit 2; }
+fi
 
 # REMOTE_DIR is populated below from the remote `echo $HOME` once we
 # can talk to the target. Don't pre-set it to '$HOME/Blue2thprinting'
@@ -70,7 +91,7 @@ pre_uptime=$(s "uptime") || fail "host unreachable" 9
 REMOTE_HOME=$(s 'echo $HOME')
 REMOTE_DIR="$REMOTE_HOME/Blue2thprinting"
 pre_crontab=$(s "sudo crontab -u root -l 2>/dev/null | wc -l")
-pre_runall_entries=$(s "sudo crontab -u root -l 2>/dev/null | grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*\$' || echo 0")
+pre_runall_entries=$(s "sudo crontab -u root -l 2>/dev/null | grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*\$' || echo 0" | head -1)
 pre_dongles=$(s 'ls /dev/ttyUSB* 2>/dev/null | wc -l')
 ok "host reachable: $pre_uptime"
 ok "remote home:    $REMOTE_HOME (REMOTE_DIR=$REMOTE_DIR)"
@@ -89,18 +110,45 @@ s 'sudo pkill -9 -f "Scripts/central_app_launcher\.py" 2>/dev/null;
 ok "running services stopped"
 
 # ----------------------------------------------------------------------
-step "Wiping and re-cloning $REMOTE_DIR @ $BRANCH"
+if [ -n "$LOCAL_SOURCE" ]; then
+    step "Wiping and rsync'ing $LOCAL_SOURCE -> $HOST:$REMOTE_DIR"
+else
+    step "Wiping and re-cloning $REMOTE_DIR @ $BRANCH"
+fi
 # `sudo` because a Blue2thprinting that's been used will have root-owned
 # files inside it (__pycache__ written by central_app_launcher.py under
 # sudo, pcap files, Logs/, etc.). A plain user rm would silently leave
 # those behind and trip up the subsequent clone.
 s "sudo rm -rf $REMOTE_DIR" || fail "rm -rf failed" 3
-# --recurse-submodules so BTIDES_Schema etc. are populated. Use -j2 for
-# parallel clone of submodules.
-s "git clone --branch '$BRANCH' --recurse-submodules -j2 '$REPO' $REMOTE_DIR" \
-    || fail "git clone failed" 3
-clone_head=$(s "cd $REMOTE_DIR && git log --oneline -1")
-ok "cloned: $clone_head"
+
+if [ -n "$LOCAL_SOURCE" ]; then
+    # rsync the local checkout. Exclude scratch / build / venv dirs that
+    # would either bloat the transfer or are platform-specific (a macOS
+    # target/ from cargo would be wrong on aarch64 Linux anyway, and
+    # `cargo build` will regenerate it cleanly on the remote).
+    rsync -aH --delete \
+        --exclude=.git/objects/pack/tmp_pack_\* \
+        --exclude=target/ \
+        --exclude=venv/ \
+        --exclude=__pycache__/ \
+        --exclude=Logs/ \
+        --exclude=.claude/ \
+        --exclude=Analysis/tmp/ \
+        --exclude=btsnoop.DELETEME/ \
+        --exclude=scapy.DELETEME/ \
+        --exclude=\*.DELETEME/ \
+        "$LOCAL_SOURCE/" "$HOST:$REMOTE_DIR/" \
+        || fail "rsync failed" 3
+    src_head=$(cd "$LOCAL_SOURCE" && git log --oneline -1 2>/dev/null || echo "(no git)")
+    ok "rsync'd local source ($src_head)"
+else
+    # --recurse-submodules so BTIDES_Schema etc. are populated. Use -j2
+    # for parallel clone of submodules.
+    s "git clone --branch '$BRANCH' --recurse-submodules -j2 '$REPO' $REMOTE_DIR" \
+        || fail "git clone failed" 3
+    clone_head=$(s "cd $REMOTE_DIR && git log --oneline -1")
+    ok "cloned: $clone_head"
+fi
 
 # ----------------------------------------------------------------------
 step "Running setup_capture_helper_debian-based.sh (long; ~15-25 min on Pi Zero W)"
@@ -172,7 +220,7 @@ fi
 ok "Sniffle/sniffle_receiver_rust present (${size} bytes)"
 
 # Crontab dedup: should be EXACTLY 1 @reboot runall.sh entry
-post_runall_entries=$(s "sudo crontab -u root -l | grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*\$' || echo 0")
+post_runall_entries=$(s "sudo crontab -u root -l | grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*\$' || echo 0" | head -1)
 if [ "$post_runall_entries" = "1" ]; then
     ok "crontab dedup: exactly 1 @reboot runall.sh entry (was $pre_runall_entries pre-test)"
 else
@@ -220,21 +268,62 @@ if ! s "pgrep -af central_app_launcher\\.py | grep -qv pgrep"; then
 fi
 ok "central_app_launcher.py running"
 
-# Wait another 30 s for sniffle_receiver_rust children to spawn
+# Wait 30 s for subprocess workers to start spawning under the launcher.
 sleep 30
-n_sniffers=$(s "pgrep -af 'Sniffle/sniffle_receiver_rust' | grep -cv pgrep")
-if [ "$n_sniffers" -lt 1 ]; then
-    s "pgrep -af central_app_launcher\\.py"
-    s "sudo tail -20 $REMOTE_DIR/Logs/CAL.log 2>/dev/null"
-    fail "no sniffle_receiver_rust processes running" 8
-fi
-ok "$n_sniffers sniffle_receiver_rust process(es) running"
 
-# Let it accumulate log for 30 s, then grep for errors
+# Figure out the launcher's MAX_BG (Better_Getter dongle reservation).
+# central_app_launcher.py partitions the Sonoff pool: the first MAX_BG
+# dongles go to BG, the remainder go to Sniffle. If N_dongles <= MAX_BG,
+# Sniffle is auto-disabled (CAL.log emits "Disabling Sniffle_thread_enabled")
+# and zero sniffle_receiver_rust processes is the *expected* outcome —
+# the rust binary still has to build and install correctly (verified
+# pre-reboot above), but it won't run because the launcher has nothing
+# to give it. On the Pi (6 dongles) this branch is never taken; on a
+# 2-dongle dev VM it always is.
+max_bg=$(s "grep -E '^MAX_BG[[:space:]]*=' $REMOTE_DIR/Scripts/central_app_launcher.py | head -1 | awk -F= '{print \$2}' | tr -d ' '")
+ok "launcher MAX_BG=$max_bg, host has $pre_dongles Sonoff dongle(s)"
+
+n_sniffers=$(s "pgrep -af 'Sniffle/sniffle_receiver_rust' | grep -cv pgrep || true")
+n_bg_procs=$(s "pgrep -af 'Scripts/BG/Better_Getter\\.py' | grep -cv pgrep || true")
+
+# Sniffer-required vs sniffer-optional, based on dongle math.
+if [ "$pre_dongles" -gt "$max_bg" ]; then
+    # Plenty of dongles — Sniffle MUST be active.
+    if [ "$n_sniffers" -lt 1 ]; then
+        s "pgrep -af central_app_launcher\\.py"
+        s "sudo tail -30 $REMOTE_DIR/Logs/CAL.log 2>/dev/null"
+        fail "no sniffle_receiver_rust processes (N=$pre_dongles, MAX_BG=$max_bg → Sniffle should be active)" 8
+    fi
+    ok "$n_sniffers sniffle_receiver_rust process(es) running (required for N>MAX_BG)"
+else
+    # Too few dongles for Sniffle. Confirm the launcher itself agrees
+    # and that the BG pool is doing the work instead.
+    if s "sudo grep -q 'Disabling Sniffle_thread_enabled' $REMOTE_DIR/Logs/CAL.log 2>/dev/null"; then
+        ok "Sniffle auto-disabled by launcher (N=$pre_dongles ≤ MAX_BG=$max_bg); 0 sniffers expected"
+    else
+        warn "N=$pre_dongles ≤ MAX_BG=$max_bg but launcher didn't log Sniffle-disable — investigate"
+    fi
+    # The BG subprocesses are short-lived (one per discovered BLE peer)
+    # so a point-in-time pgrep often returns 0. The launch line in CAL.log
+    # is the durable evidence the BG pool is actually being used.
+    bg_launches=$(s "sudo grep -c 'launched.*Scripts/BG/Better_Getter\\.py' $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0" | head -1)
+    if [ "$bg_launches" -lt 1 ]; then
+        s "sudo tail -30 $REMOTE_DIR/Logs/CAL.log 2>/dev/null"
+        fail "BG pool never spawned any Better_Getter.py worker (N=$pre_dongles ≤ MAX_BG=$max_bg → BG should be active)" 8
+    fi
+    ok "BG pool spawned $bg_launches Better_Getter.py launch(es), $n_bg_procs running right now"
+fi
+
+# Let logs accumulate 30 s more, then grep for error signatures
+# common to BOTH the rust and python receiver paths.
 sleep 30
-crlf_errs=$(s "grep -c 'missing CRLF' $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0")
-py_tracebacks=$(s "grep -c 'Traceback' $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0")
-log_size=$(s "stat -c%s $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0")
+# `grep -c PATTERN file` exits 1 when count is 0, and the `|| echo 0`
+# guard then emits a SECOND "0" — leaving the variable with "0\n0",
+# which silently fails string-equality checks downstream. `| head -1`
+# trims to the real first-line count regardless of which path produced it.
+crlf_errs=$(s "grep -c 'missing CRLF' $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0" | head -1)
+py_tracebacks=$(s "grep -c 'Traceback' $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0" | head -1)
+log_size=$(s "stat -c%s $REMOTE_DIR/Logs/CAL.log 2>/dev/null || echo 0" | head -1)
 ok "CAL.log $log_size bytes, $crlf_errs 'missing CRLF' line(s), $py_tracebacks traceback(s)"
 
 # Hard pass criterion: zero missing-CRLF lines from sniff_receiver.py
@@ -252,5 +341,9 @@ echo "  branch:         $BRANCH"
 echo "  setup time:     $(( elapsed / 60 ))m$(( elapsed % 60 ))s"
 echo "  crontab:        1 deduped @reboot entry"
 echo "  binary:         ${size} bytes at Sniffle/sniffle_receiver_rust"
-echo "  post-reboot:    $n_sniffers Rust sniffer(s), 0 CAL.log errors"
+if [ "$pre_dongles" -gt "$max_bg" ]; then
+    echo "  post-reboot:    $n_sniffers Rust sniffer(s), 0 CAL.log errors"
+else
+    echo "  post-reboot:    Sniffle auto-disabled (N=$pre_dongles ≤ MAX_BG=$max_bg), BG pool active, 0 CAL.log errors"
+fi
 exit 0
