@@ -29,8 +29,7 @@ All the bulk import paths below now use the Rust ports of the original Python im
 
 ```
 cd ~/Blue2thprinting/Analysis/BTIDES_Schema/rust && cargo build --release
-cd ~/Blue2thprinting/Analysis/rust            && cargo build --release
-cd ~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL && cargo build --release
+cd ~/Blue2thprinting/Analysis/rust               && cargo build --release
 ```
 
 This produces the following binaries that the rest of this document refers to:
@@ -40,7 +39,7 @@ This produces the following binaries that the rest of this document refers to:
 | `import-all-BTIDES` | `Analysis/rust/target/release/`               | Bulk convert+import for PCAP / btmon HCI logs |
 | `sdp-to-BTIDES`     | `Analysis/BTIDES_Schema/rust/target/release/` | Convert `sdptool` XML to BTIDES JSON |
 | `wigle-to-BTIDES`   | `Analysis/rust/target/release/`               | Convert WiGLE SQLite backup to BTIDES JSON |
-| `BTIDES-to-SQL`     | `Analysis/rust/BTIDES-to-SQL/target/release/` | Import any BTIDES JSON into MySQL |
+| `BTIDES-to-SQL`     | `Analysis/rust/target/release/`               | Import any BTIDES JSON into MySQL |
 
 ## Importing data from btmon .bin HCI log files and Sniffle .pcap files
 
@@ -51,9 +50,10 @@ This produces the following binaries that the rest of this document refers to:
 ```
 ~/Blue2thprinting/Analysis/rust/target/release/import-all-BTIDES \
     --folder ~/Blue2thprinting/ExampleData/ \
-    --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema \
     --to-SQL
 ```
+
+`--schema-dir` defaults to `Analysis/BTIDES_Schema/` (resolved relative to the binary's own path), so you only need to pass it if the submodule lives elsewhere.
 
 **To confirm that some data was successfully imported, you can issue:**
 
@@ -71,7 +71,6 @@ Pass `--folder` multiple times to mix PCAP and HCI directories in a single run:
 ~/Blue2thprinting/Analysis/rust/target/release/import-all-BTIDES \
     --folder ~/Blue2thprinting/Logs/btmon/ \
     --folder ~/Blue2thprinting/Logs/sniffle/ \
-    --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema \
     --to-SQL
 ```
 
@@ -84,6 +83,9 @@ Pass `--folder` multiple times to mix PCAP and HCI directories in a single run:
 - `--verbose` — print a one-line summary per converted file plus per-table SQL insert counts.
 - `--keep-btides-after-sql` — keep the intermediate `.btides` file after a successful import (off by default, where it's renamed to `.btides.processed`).
 - `--no-validate` — skip JSON-schema validation of the intermediate BTIDES output (faster; only use when you trust the converters).
+- `--schema-dir DIR` — override the default JSON-schema directory (defaults to `<binary_dir>/../../../BTIDES_Schema` — i.e. `Analysis/BTIDES_Schema/` next to the binary's standard `Analysis/rust/target/{debug,release}/` build location).
+- `--overwrite-existing` — re-convert capture files even when a `.btides` (or `.btides.processed`) is already present. Mutually exclusive with `--read-existing-BTIDES`.
+- `--read-existing-BTIDES` — if a `.btides` file already exists next to a capture file, skip conversion and hand the existing file straight to the downstream stage (e.g. `--to-SQL`). `.btides.processed` files are still skipped. Mirrors `Import_All_HCI_and_PCAP.py --read-existing-BTIDES`.
 - `--deadlock-retries N` — per-file MySQL 1213 retry budget (default 8, exponential backoff with jitter).
 
 
@@ -105,7 +107,7 @@ Because both already produce BTIDES JSON, importing is a single call to `BTIDES-
 **Import one device's data (single file):**
 
 ```
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input ~/Blue2thprinting/Logs/btc_sdp_gatt/sdp_AA-BB-CC-DD-EE-FF.btides \
     --input ~/Blue2thprinting/Logs/btc_sdp_gatt/gatt_AA-BB-CC-DD-EE-FF.btides \
     --input ~/Blue2thprinting/Logs/DarkFirmwareLMPLog/AA:BB:CC:DD:EE:FF.btides
@@ -116,7 +118,7 @@ Because both already produce BTIDES JSON, importing is a single call to `BTIDES-
 **Import everything in both folders at once (bulk):**
 
 ```
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     $(find ~/Blue2thprinting/Logs/btc_sdp_gatt        -name '*.btides' -printf '--input %p ') \
     $(find ~/Blue2thprinting/Logs/DarkFirmwareLMPLog -name '*.btides' -printf '--input %p ') \
     --reader-threads 4 --writer-threads 4
@@ -159,7 +161,7 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, lmp_version, device_BT_CID FROM LMP_
     --output /tmp/sdp_single.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/sdp_single.btides
 ```
 
@@ -171,7 +173,7 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, lmp_version, device_BT_CID FROM LMP_
     --output /tmp/sdp_all.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/sdp_all.btides
 ```
 
@@ -206,7 +208,7 @@ The WiGLE Android app's "Database → Backup" produces a `.sqlite` file containi
     --output /tmp/wigle.btides \
     --schema-dir ~/Blue2thprinting/Analysis/BTIDES_Schema
 
-~/Blue2thprinting/Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+~/Blue2thprinting/Analysis/rust/target/release/BTIDES-to-SQL \
     --input /tmp/wigle.btides
 ```
 
