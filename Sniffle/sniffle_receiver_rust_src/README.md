@@ -49,11 +49,18 @@ Single source file, no external crate dependencies — pure `std` plus a
 small hand-rolled libc FFI block (Linux and macOS branches; other
 Unix-likes refuse to open the serial port).
 
+**Source directory layout note:** the cargo project lives at
+`Sniffle/sniffle_receiver_rust_src/` (the `_src` suffix exists to keep
+that path distinct from the deployed binary at
+`Sniffle/sniffle_receiver_rust` — without the suffix `cp file ../dir/`
+during install would copy the binary *into* the cargo dir instead of
+replacing it).
+
 On Raspberry Pi OS Bookworm:
 
 ```bash
 sudo apt-get install -y rustc cargo
-cd Sniffle/sniffle_receiver_rust
+cd Sniffle/sniffle_receiver_rust_src
 cargo build --release --offline
 ```
 
@@ -61,7 +68,7 @@ On macOS (with Homebrew rustc):
 
 ```bash
 brew install rust
-cd Sniffle/sniffle_receiver_rust
+cd Sniffle/sniffle_receiver_rust_src
 cargo build --release
 # /dev/cu.usbserial-* should already be world-rw — no sudo needed
 ./target/release/sniffle_receiver_rust -s=/dev/cu.usbserial-1320 -o=cap.pcap -A

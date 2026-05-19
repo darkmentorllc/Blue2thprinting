@@ -385,12 +385,19 @@ install_realtek_firmware() {
 build_sniffle_receiver_rust() {
     print_banner "Building the Rust Sniffle host-side receiver."
     # Replacement for sniff_receiver.py — central_app_launcher.py invokes
-    # this binary directly. Without it, central_app would fail to spawn
-    # sniffers because the file path it points at wouldn't exist.
+    # this binary at Sniffle/sniffle_receiver_rust. Without it, central_app
+    # would fail to spawn sniffers because the file path it points at
+    # wouldn't exist.
+    #
+    # Source lives at Sniffle/sniffle_receiver_rust_src/ (a cargo project).
+    # The `_src` suffix avoids a path collision with the deployed binary
+    # at Sniffle/sniffle_receiver_rust (a regular file) — cp file dir/
+    # would otherwise copy *into* the cargo project dir, hiding the
+    # binary from central_app_launcher.
     #
     # On a Pi Zero W the first build takes ~6–12 min single-threaded.
     # Subsequent rebuilds are seconds.
-    cd "$BASE_PATH/Sniffle/sniffle_receiver_rust"
+    cd "$BASE_PATH/Sniffle/sniffle_receiver_rust_src"
     # Cargo.lock written by a newer cargo would be rejected by Debian's
     # apt-installed cargo (1.65 on Bookworm); start fresh and let it
     # regenerate. --offline avoids a 5-minute crates.io sync on the
@@ -402,9 +409,11 @@ build_sniffle_receiver_rust() {
         echo "central_app_launcher.py will not be able to spawn Sniffle sniffers without it."
         exit -1
     fi
-    cp -f target/release/sniffle_receiver_rust ../sniffle_receiver_rust
-    chmod 755 ../sniffle_receiver_rust
-    echo "  Installed $(ls -la ../sniffle_receiver_rust | awk '{print $5}') bytes at Sniffle/sniffle_receiver_rust"
+    # Use install(1) (not cp) for atomic, mode-aware deployment.
+    # Explicitly name the destination FILE to avoid any future ambiguity
+    # if a directory ever sneaks in next to the binary.
+    install -m 755 target/release/sniffle_receiver_rust "$BASE_PATH/Sniffle/sniffle_receiver_rust"
+    echo "  Installed $(ls -l "$BASE_PATH/Sniffle/sniffle_receiver_rust" | awk '{print $5}') bytes at Sniffle/sniffle_receiver_rust"
     cd "$BASE_PATH"
 }
 

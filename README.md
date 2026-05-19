@@ -19,8 +19,9 @@ concurrently without the host-side CPU-starvation `Ignoring message due to missi
 errors the Python version caused. `setup_capture_helper_debian-based.sh` now installs
 `rustc`+`cargo` from apt and builds the binary automatically; existing checkouts can
 just rerun the setup script, or `./setup_capture_helper_debian-based.sh --build-rust`
-to only rebuild it. Source lives in `Sniffle/sniffle_receiver_rust/` with build/usage
-docs in its own README.
+to only rebuild it. Source lives in `Sniffle/sniffle_receiver_rust_src/` (the `_src`
+suffix keeps the cargo project dir distinct from the deployed binary at
+`Sniffle/sniffle_receiver_rust`) with build/usage docs in its own README.
 
 If you have data from running Blue2thprinting before tag `2.2.0`, you will need to execute the following commands to migrate the table names after tag `2.2.0` (commit `ac416c8c2f78a93038be15ecdec6a62913d97ad9`):
 
