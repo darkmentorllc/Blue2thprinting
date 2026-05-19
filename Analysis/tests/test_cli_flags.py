@@ -91,12 +91,17 @@ def test_max_records_output_one(run_tme):
 # section should print the Android package name. With --hide-android-data,
 # both the analysis header and the package name should be suppressed.
 #
-# Originally seeded as be15beef-...-Anki-Drive, but a CLUES_data_LLM_web_search
-# entry started claiming that UUID and silently disabled the BLEScope code
-# path. Swapped to 1deca38d-dc21-484e-83f2-e90866ac40b1 which is BLEScope-
-# only AND uuid_type=1 (Service) — both constraints matter because the
-# seed declares list_type=7 (Complete UUID128 Service list) and TME's
-# BLEScope lookup matches uuid_type=1 for service-list contexts.
+# Fixture history (each prior UUID got auto-claimed by a CLUES update):
+#   1. be15beef-... (Anki Drive)     — claimed by CLUES_data_LLM_web_search.json
+#   2. 1deca38d-...                  — claimed by CLUES_data_LLM_Android_APK_search_1.json
+#                                       in the hex-split CLUES expansion
+#   3. 2aaceb00-c5a5-44fd-0000-3fd42d703a4f — current. BLEScope-only AND
+#      uuid_type=1 (Service); both constraints matter because the seed
+#      declares list_type=7 (Complete UUID128 Service list) and TME's
+#      BLEScope lookup matches uuid_type=1 for service-list contexts. The
+#      anti-join used to pick it (see seed.sql) considers the union of
+#      every CLUES file including the 16 hex shards of
+#      CLUES_data_LLM_Android_APK_search_[0-f].json.
 
 def test_hide_android_data_default_shows_blescope_match(run_tme):
     result = run_tme("--bdaddr", "AA:BB:CC:11:22:02")
@@ -104,8 +109,11 @@ def test_hide_android_data_default_shows_blescope_match(run_tme):
         f"Expected BLEScope analysis output by default for device 2.\n"
         f"stdout:\n{result.stdout}"
     )
-    assert "com.eBestIoT.main" in result.stdout, (
-        f"Expected eBestIoT package name (one of the 4 BLEScope packages "
+    # Any one of the 23 BLEScope packages associated with the seeded UUID
+    # would do here; com.openlife.checkme is picked because it's the most
+    # recognizable name in the set and is unlikely to be renamed.
+    assert "com.openlife.checkme" in result.stdout, (
+        f"Expected com.openlife.checkme (one of the BLEScope packages "
         f"associated with the seeded UUID) in output.\n"
         f"stdout:\n{result.stdout}"
     )
@@ -117,7 +125,7 @@ def test_hide_android_data_suppresses_blescope(run_tme):
         f"--hide-android-data should suppress 'BLEScope Analysis:' header.\n"
         f"stdout:\n{result.stdout}"
     )
-    assert "com.anki.drive" not in result.stdout, (
+    assert "com.openlife.checkme" not in result.stdout, (
         f"--hide-android-data should suppress Android package name lookup.\n"
         f"stdout:\n{result.stdout}"
     )
