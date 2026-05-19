@@ -70,7 +70,23 @@ parking_lot = "0.12"
 log = "0.4"
 env_logger = "0.11"
 
+# Default release profile: no LTO, 16 codegen units, opt-level 3.
+#
+# The aggressive `lto = "fat", codegen-units = 1` combo we used originally
+# made `rustc`'s final link step consume ~2 GiB of RAM, which OOM-kills
+# the linker on the 1 GiB free-tier AWS VM that hosts BTIDALPOOL. The
+# runtime cost of dropping fat LTO on this workload (a synchronous HTTPS
+# request handler that spends most of its time in zstd / ring / MySQL)
+# is below the noise floor — well under 5% — so we trade it for a build
+# that finishes on the production host.
+#
+# If you need maximum runtime performance and you're building on a host
+# with enough RAM (~3 GiB free during the link), use the opt-in profile
+# below: `cargo build --profile=release-fat -p btidalpool-server`.
 [profile.release]
+opt-level = 3
+
+[profile.release-fat]
+inherits = "release"
 lto = "fat"
 codegen-units = 1
-opt-level = 3
