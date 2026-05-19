@@ -131,6 +131,22 @@ configure_scripts() {
     chmod +x *.sh
     echo "  Done"
 
+    print_banner "Creating Logs/ directory tree."
+    #### Logs/ is .gitignored, so a fresh `git clone` produces a checkout
+    #### without it. The custom-compiled sdptool opens
+    #### $BASE_PATH/Logs/SDPprint.log unconditionally on every invocation
+    #### (including its own --help self-test below) and exits 1 with
+    #### "Failed to open the file." if the directory is missing. Pre-create
+    #### Logs/ and the per-tool subdirs central_app_launcher.py expects so
+    #### the install-from-scratch path doesn't depend on any tool having
+    #### been run previously.
+    mkdir -p "$BASE_PATH/Logs" \
+             "$BASE_PATH/Logs/BetterGetter" \
+             "$BASE_PATH/Logs/sdptool" \
+             "$BASE_PATH/Logs/btc_sdp_gatt" \
+             "$BASE_PATH/Logs/DarkFirmwareLMPLog"
+    echo "  Created $BASE_PATH/Logs/ + per-tool subdirs."
+
     print_banner "Ensuring root crontab has exactly one @reboot Scripts/runall.sh entry."
     #### Preserves everything else in the crontab. Strips ALL existing
     #### `@reboot … Scripts/runall.sh` lines first (regardless of path)
@@ -237,7 +253,7 @@ compile_toolz() {
     fi
     if [ $? != 0 ]; then
         echo "  Something went wrong with the ./configure. Look for an error message, correct it, and try again."
-        exit
+        exit 1
     fi
     ### Compilation ###
     if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ]; then
@@ -258,7 +274,7 @@ compile_toolz() {
     $BASE_PATH/bluez-5.66/tools/sdptool --help
     if [ $? != 0 ]; then
         echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
-        exit
+        exit 1
     fi
     else
         echo "  sdptool already exists, skipping recompilation."
@@ -288,7 +304,7 @@ compile_toolz() {
             -lbluetooth -lpthread
         if [ $? != 0 ]; then
             echo "  Compilation of DarkFirmware_VSC_LMP failed. Resolve the error above and try again."
-            exit
+            exit 1
         fi
         echo "  Built tools/DarkFirmware_VSC_LMP."
     else
