@@ -1,8 +1,8 @@
 #!/bin/bash
 
 echo "Initial setup"
-mysql -u root -e "CREATE USER 'user'@'localhost' IDENTIFIED BY 'a'"
-mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';"
+sudo mysql -u root -e "CREATE USER 'user'@'localhost' IDENTIFIED BY 'a'"
+sudo mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'user'@'localhost';"
 mysql -u user -pa -e "create database bt2;"
 
 echo "Creating BT Classic tables"

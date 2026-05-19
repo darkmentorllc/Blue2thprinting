@@ -56,6 +56,7 @@ print_banner "Stopping any running Blue2thprinting processes."
 # nothing to kill.
 pkill -f 'Scripts/central_app_launcher\.py' 2>/dev/null || true
 pkill -f 'Sniffle/python_cli/sniff_receiver\.py' 2>/dev/null || true
+pkill -f 'Sniffle/sniffle_receiver_rust' 2>/dev/null || true   # Rust drop-in replacement
 pkill -f 'Scripts/BG/Better_Getter\.py' 2>/dev/null || true
 pkill -f 'bluez-5\.66/tools/DarkFirmware_VSC_LMP' 2>/dev/null || true
 pkill -f 'bluez-5\.66/tools/sdptool' 2>/dev/null || true
