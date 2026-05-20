@@ -147,11 +147,13 @@ mysql -u user -pa --database='bt2' --execute="SELECT * from USB_CID_to_company o
 
 echo ""
 echo "================================================================================="
-echo "Building the Rust BTIDES converters. Two Cargo workspaces:"
+echo "Building the Rust BTIDES tools. Three Cargo workspaces:"
 echo "  * Analysis/BTIDES_Schema/rust/ — schema-agnostic converters"
 echo "      (pcap-to-BTIDES, hci-to-BTIDES, sdp-to-BTIDES, library crates)"
 echo "  * Analysis/rust/ — Blue2thprinting-specific tools"
 echo "      (wigle-to-BTIDES, import-all-BTIDES)"
+echo "  * BTIDALPOOL/ — Rust BTIDALPOOL server + client"
+echo "      (btidalpool-server [with sql-ingest], btidalpool-client)"
 echo "Release builds, may take a minute or two."
 echo "================================================================================="
 sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && cargo build --release"
@@ -164,9 +166,25 @@ if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/rust. Check the output above."
     exit -1
 fi
+# BTIDALPOOL server + client. The server is built with the sql-ingest feature
+# so it can ingest uploads into the local bt2/bttest MySQL the way the Python
+# server does (the underlying BTIDES-to-SQL crate is pure-Rust MySQL, so no
+# system MySQL dev libraries are needed). The client is the merged
+# upload/query CLI that the Python shims under BTIDALPOOL/python/ exec.
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && cargo build --release -p btidalpool-server --features sql-ingest"
+if [ $? -ne 0 ]; then
+    echo "cargo build failed in BTIDALPOOL (btidalpool-server). Check the output above."
+    exit -1
+fi
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && cargo build --release -p btidalpool-client"
+if [ $? -ne 0 ]; then
+    echo "cargo build failed in BTIDALPOOL (btidalpool-client). Check the output above."
+    exit -1
+fi
 echo "Built binaries are at:"
 echo "  $BASE_PATH/Analysis/BTIDES_Schema/rust/target/release/"
 echo "  $BASE_PATH/Analysis/rust/target/release/"
+echo "  $BASE_PATH/BTIDALPOOL/target/release/"
 
 echo "======================================================="
 echo "Correcting permissions on the Blue2thprinting folder."
