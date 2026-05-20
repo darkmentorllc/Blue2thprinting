@@ -30,6 +30,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
+from btidalpool_query_args import build_query_args
 
 g_local_testing = False
 
@@ -257,79 +258,12 @@ def handle_query(self, username, query_object, use_test_db=False):
     if use_test_db:
         args_array.append("--use-test-db")
 
-    # Can't just loop through and use everything we're handed in query_object (for security reasons),
-    # only use arguments which we are expecting, and ignore everything else
-    if("bdaddr" in query_object):
-        args_array.append(f"--bdaddr")
-        args_array.append(f"{query_object['bdaddr']}")
-    if("NOT_bdaddr" in query_object):
-        for entry in query_object['NOT_bdaddr']:
-            args_array.append(f"--NOT-bdaddr")
-            args_array.append(f"{entry}")
-    if("bdaddr_regex" in query_object):
-        for entry in query_object['bdaddr_regex']:
-            args_array.append(f"--bdaddr-regex")
-            args_array.append(f"{entry}")
-    if("NOT_bdaddr_regex" in query_object):
-        for entry in query_object['NOT_bdaddr_regex']:
-            args_array.append(f"--NOT-bdaddr-regex")
-            args_array.append(f"{entry}")
-    if("name_regex" in query_object):
-        for entry in query_object['name_regex']:
-            args_array.append(f"--name-regex")
-            args_array.append(f"{entry}")
-    if("NOT_name_regex" in query_object):
-        for entry in query_object['NOT_name_regex']:
-            args_array.append(f"--NOT-name-regex")
-            args_array.append(f"{entry}")
-    if("company_regex" in query_object):
-        for entry in query_object['company_regex']:
-            args_array.append(f"--company-regex")
-            args_array.append(f"{entry}")
-    if("NOT_company_regex" in query_object):
-        for entry in query_object['NOT_company_regex']:
-            args_array.append(f"--NOT-company-regex")
-            args_array.append(f"{entry}")
-    if("UUID_regex" in query_object):
-        for entry in query_object['UUID_regex']:
-            args_array.append(f"--UUID-regex")
-            args_array.append(f"{entry}")
-    if("NOT_UUID_regex" in query_object):
-        for entry in query_object['NOT_UUID_regex']:
-            args_array.append(f"--NOT-UUID-regex")
-            args_array.append(f"{entry}")
-    if("MSD_regex" in query_object):
-        for entry in query_object['MSD_regex']:
-            args_array.append(f"--MSD-regex")
-            args_array.append(f"{entry}")
-    if("LL_VERSION_IND" in query_object):
-        args_array.append(f"--LL_VERSION_IND")
-        args_array.append(f"{query_object['LL_VERSION_IND']}")
-    if("LMP_VERSION_RES" in query_object):
-        args_array.append(f"--LMP_VERSION_RES")
-        args_array.append(f"{query_object['LMP_VERSION_RES']}")
-    if("GPS_exclude_upper_left" in query_object):
-        args_array.append(f"--GPS-exclude-upper-left")
-        args_array.append(f"{query_object['GPS_exclude_upper_left']}")
-    if("GPS_exclude_lower_right" in query_object):
-        args_array.append(f"--GPS-exclude-lower-right")
-        args_array.append(f"{query_object['GPS_exclude_lower_right']}")
-    if("require_GPS" in query_object):
-        args_array.append(f"--require-GPS")
-    if("require_GATT_any" in query_object):
-        args_array.append(f"--require-GATT-any")
-    if("require_GATT_values" in query_object):
-        args_array.append(f"--require-GATT-values")
-    if("require_SMP" in query_object):
-        args_array.append(f"--require-SMP")
-    if("require_SMP_legacy_pairing" in query_object):
-        args_array.append(f"--require-SMP-legacy-pairing")
-    if("require_SDP" in query_object):
-        args_array.append(f"--require-SDP")
-    if("require_LL_VERSION_IND" in query_object):
-        args_array.append(f"--require-LL_VERSION_IND")
-    if("require_LMP_VERSION_RES" in query_object):
-        args_array.append(f"--require-LMP_VERSION_RES")
+    # Append the query-filter flags. The cascade was extracted into the
+    # shared btidalpool_query_args module so the Rust server's equivalent
+    # (btidalpool_server::query::tme_query_args) can be parity-tested against
+    # this exact logic. Only allow-listed keys are honored (for security);
+    # everything else in query_object is ignored.
+    args_array += build_query_args(query_object)
 
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     random = os.urandom(4).hex()

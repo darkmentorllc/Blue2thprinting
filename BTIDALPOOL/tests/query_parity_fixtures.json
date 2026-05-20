@@ -1,0 +1,162 @@
+{
+  "_comment": [
+    "Shared test vectors for BTIDALPOOL query-flag parity.",
+    "Each entry: a query object (the same shape the client sends and the",
+    "server allow-lists) plus the golden 'expected_args' — the exact",
+    "Tell_Me_Everything query-filter flags it must produce.",
+    "",
+    "Both the Python server's btidalpool_query_args.build_query_args and the",
+    "Rust server's btidalpool_server::query::tme_query_args are tested against",
+    "these vectors. Because both match the same golden, they match each other,",
+    "so a given query yields the identical TME invocation (hence identical",
+    "query results) under both servers.",
+    "",
+    "Coverage: there is one single-field fixture for every allow-listed query",
+    "type (all 23), plus an empty query and an ordering combo. A meta-test in",
+    "each language asserts the union of all fixture query keys equals the full",
+    "set of 23 allow-listed fields, so a newly-added query type can't be",
+    "forgotten here."
+  ],
+  "fixtures": [
+    {
+      "name": "empty",
+      "query": {},
+      "expected_args": []
+    },
+    {
+      "name": "bdaddr",
+      "query": { "bdaddr": "AA:BB:CC:DD:EE:FF" },
+      "expected_args": ["--bdaddr", "AA:BB:CC:DD:EE:FF"]
+    },
+    {
+      "name": "NOT_bdaddr",
+      "query": { "NOT_bdaddr": ["11:22:33:44:55:66", "AA:BB:CC:DD:EE:FF"] },
+      "expected_args": ["--NOT-bdaddr", "11:22:33:44:55:66", "--NOT-bdaddr", "AA:BB:CC:DD:EE:FF"]
+    },
+    {
+      "name": "bdaddr_regex",
+      "query": { "bdaddr_regex": ["^AA:BB", "CC$"] },
+      "expected_args": ["--bdaddr-regex", "^AA:BB", "--bdaddr-regex", "CC$"]
+    },
+    {
+      "name": "NOT_bdaddr_regex",
+      "query": { "NOT_bdaddr_regex": ["^00:"] },
+      "expected_args": ["--NOT-bdaddr-regex", "^00:"]
+    },
+    {
+      "name": "name_regex",
+      "query": { "name_regex": ["Pixel", "Galaxy"] },
+      "expected_args": ["--name-regex", "Pixel", "--name-regex", "Galaxy"]
+    },
+    {
+      "name": "NOT_name_regex",
+      "query": { "NOT_name_regex": ["TestDevice"] },
+      "expected_args": ["--NOT-name-regex", "TestDevice"]
+    },
+    {
+      "name": "company_regex",
+      "query": { "company_regex": ["Apple", "Google"] },
+      "expected_args": ["--company-regex", "Apple", "--company-regex", "Google"]
+    },
+    {
+      "name": "NOT_company_regex",
+      "query": { "NOT_company_regex": ["Microsoft"] },
+      "expected_args": ["--NOT-company-regex", "Microsoft"]
+    },
+    {
+      "name": "UUID_regex",
+      "query": { "UUID_regex": ["180a", "180f"] },
+      "expected_args": ["--UUID-regex", "180a", "--UUID-regex", "180f"]
+    },
+    {
+      "name": "NOT_UUID_regex",
+      "query": { "NOT_UUID_regex": ["fe2c"] },
+      "expected_args": ["--NOT-UUID-regex", "fe2c"]
+    },
+    {
+      "name": "MSD_regex",
+      "query": { "MSD_regex": ["^4c00"] },
+      "expected_args": ["--MSD-regex", "^4c00"]
+    },
+    {
+      "name": "LL_VERSION_IND",
+      "query": { "LL_VERSION_IND": "0c:000f:0000" },
+      "expected_args": ["--LL_VERSION_IND", "0c:000f:0000"]
+    },
+    {
+      "name": "LMP_VERSION_RES",
+      "query": { "LMP_VERSION_RES": "06:000f:0000" },
+      "expected_args": ["--LMP_VERSION_RES", "06:000f:0000"]
+    },
+    {
+      "name": "GPS_exclude_box",
+      "query": {
+        "GPS_exclude_upper_left": "(39.171951,-77.615936)",
+        "GPS_exclude_lower_right": "(38.568929,-76.385467)"
+      },
+      "expected_args": [
+        "--GPS-exclude-upper-left", "(39.171951,-77.615936)",
+        "--GPS-exclude-lower-right", "(38.568929,-76.385467)"
+      ]
+    },
+    {
+      "name": "require_GPS",
+      "query": { "require_GPS": true },
+      "expected_args": ["--require-GPS"]
+    },
+    {
+      "name": "require_GATT_any",
+      "query": { "require_GATT_any": true },
+      "expected_args": ["--require-GATT-any"]
+    },
+    {
+      "name": "require_GATT_values",
+      "query": { "require_GATT_values": true },
+      "expected_args": ["--require-GATT-values"]
+    },
+    {
+      "name": "require_SMP",
+      "query": { "require_SMP": true },
+      "expected_args": ["--require-SMP"]
+    },
+    {
+      "name": "require_SMP_legacy_pairing",
+      "query": { "require_SMP_legacy_pairing": true },
+      "expected_args": ["--require-SMP-legacy-pairing"]
+    },
+    {
+      "name": "require_SDP",
+      "query": { "require_SDP": true },
+      "expected_args": ["--require-SDP"]
+    },
+    {
+      "name": "require_LL_VERSION_IND",
+      "query": { "require_LL_VERSION_IND": true },
+      "expected_args": ["--require-LL_VERSION_IND"]
+    },
+    {
+      "name": "require_LMP_VERSION_RES",
+      "query": { "require_LMP_VERSION_RES": true },
+      "expected_args": ["--require-LMP_VERSION_RES"]
+    },
+    {
+      "name": "combo_ordering",
+      "query": {
+        "bdaddr": "AA:BB:CC:DD:EE:FF",
+        "name_regex": ["X"],
+        "UUID_regex": ["180a"],
+        "LL_VERSION_IND": "0c:000f:0000",
+        "require_GPS": true,
+        "require_SDP": true
+      },
+      "expected_args": [
+        "--bdaddr", "AA:BB:CC:DD:EE:FF",
+        "--name-regex", "X",
+        "--UUID-regex", "180a",
+        "--LL_VERSION_IND", "0c:000f:0000",
+        "--require-GPS",
+        "--require-SDP"
+      ]
+    }
+  ]
+}

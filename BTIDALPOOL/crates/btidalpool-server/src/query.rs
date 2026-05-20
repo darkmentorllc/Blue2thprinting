@@ -82,18 +82,24 @@ impl QueryEngine for SubprocessQueryEngine {
         );
         let out_path = tmpdir.join(stem);
 
+        // Build the argv in the SAME order Server_BTIDALPOOL.py's
+        // handle_query uses — infra flags, then optional --use-test-db,
+        // then the query-filter cascade, then --output last. argparse is
+        // order-independent so this doesn't change results, but keeping the
+        // order identical means the only difference between the Python and
+        // Rust TME invocations is the (per-run random) --output path.
         let mut args: Vec<String> = vec![
             self.script.to_string_lossy().into_owned(),
             "--max-records-output".into(),
             max_records.to_string(),
             "--quiet-print".into(),
-            "--output".into(),
-            out_path.to_string_lossy().into_owned(),
         ];
         if use_test_db {
             args.push("--use-test-db".into());
         }
-        append_query_flags(&mut args, params);
+        args.extend(tme_query_args(params));
+        args.push("--output".into());
+        args.push(out_path.to_string_lossy().into_owned());
 
         let status = Command::new(&self.python)
             .args(&args)
@@ -122,6 +128,21 @@ impl QueryEngine for SubprocessQueryEngine {
             records,
         })
     }
+}
+
+/// Build ONLY the query-filter TME flags for `params` (the "cascade"), in
+/// the exact order `Server_BTIDALPOOL.py`'s `handle_query` /
+/// `btidalpool_query_args.build_query_args` emit them. Exposed so the
+/// cross-language parity test and the `print-query-args` QA binary can
+/// compare this against the Python server's flag construction.
+///
+/// Does NOT include the infrastructure flags (--max-records-output /
+/// --quiet-print / --use-test-db / --output) — those are identical between
+/// the two servers by construction and don't affect which records match.
+pub fn tme_query_args(params: &QueryParams) -> Vec<String> {
+    let mut args = Vec::new();
+    append_query_flags(&mut args, params);
+    args
 }
 
 /// Reproduces the if-let cascade in the Python server's `handle_query`,
@@ -429,5 +450,102 @@ mod tests {
         assert!(args.contains(&"180f".to_string()));
         assert!(args.contains(&"--require-GPS".to_string()));
         assert!(!args.contains(&"--require-GATT-any".to_string()));
+    }
+
+    // ---------------------- query-parity fixtures ----------------------
+    // These tests load the shared golden vectors at
+    // BTIDALPOOL/tests/query_parity_fixtures.json (also consumed by the
+    // Python test in BTIDALPOOL/python/test_query_parity.py) and assert the
+    // Rust `tme_query_args` produces exactly the golden flags for every
+    // query type. Both languages testing against the same golden is what
+    // guarantees identical TME invocations — hence identical query output —
+    // across the Python and Rust servers.
+
+    #[derive(serde::Deserialize)]
+    struct ParityFile {
+        fixtures: Vec<ParityFixture>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ParityFixture {
+        name: String,
+        query: serde_json::Value,
+        expected_args: Vec<String>,
+    }
+
+    fn load_fixtures() -> Vec<ParityFixture> {
+        // CARGO_MANIFEST_DIR = BTIDALPOOL/crates/btidalpool-server; the
+        // shared fixture lives two levels up under tests/.
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/query_parity_fixtures.json");
+        let text = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("reading fixtures {}: {e}", path.display()));
+        let parsed: ParityFile =
+            serde_json::from_str(&text).expect("parsing query_parity_fixtures.json");
+        parsed.fixtures
+    }
+
+    /// The full set of query keys the Python server (and this Rust server)
+    /// allow-list. Kept here as the canonical list so the coverage test can
+    /// fail loudly if a new query type is added to the protocol without a
+    /// fixture.
+    const ALL_QUERY_FIELDS: &[&str] = &[
+        "bdaddr",
+        "NOT_bdaddr",
+        "bdaddr_regex",
+        "NOT_bdaddr_regex",
+        "name_regex",
+        "NOT_name_regex",
+        "company_regex",
+        "NOT_company_regex",
+        "UUID_regex",
+        "NOT_UUID_regex",
+        "MSD_regex",
+        "LL_VERSION_IND",
+        "LMP_VERSION_RES",
+        "GPS_exclude_upper_left",
+        "GPS_exclude_lower_right",
+        "require_GPS",
+        "require_GATT_any",
+        "require_GATT_values",
+        "require_SMP",
+        "require_SMP_legacy_pairing",
+        "require_SDP",
+        "require_LL_VERSION_IND",
+        "require_LMP_VERSION_RES",
+    ];
+
+    #[test]
+    fn rust_query_args_match_golden_for_every_fixture() {
+        for f in load_fixtures() {
+            let params: QueryParams = serde_json::from_value(f.query.clone())
+                .unwrap_or_else(|e| panic!("fixture '{}' query -> QueryParams: {e}", f.name));
+            let got = tme_query_args(&params);
+            assert_eq!(
+                got, f.expected_args,
+                "fixture '{}': Rust tme_query_args diverged from golden",
+                f.name
+            );
+        }
+    }
+
+    #[test]
+    fn fixtures_cover_every_query_field() {
+        use std::collections::BTreeSet;
+        let mut seen: BTreeSet<String> = BTreeSet::new();
+        for f in load_fixtures() {
+            if let serde_json::Value::Object(map) = &f.query {
+                for k in map.keys() {
+                    seen.insert(k.clone());
+                }
+            }
+        }
+        let expected: BTreeSet<String> =
+            ALL_QUERY_FIELDS.iter().map(|s| s.to_string()).collect();
+        assert_eq!(
+            seen, expected,
+            "fixture coverage drift: every allow-listed query field must be \
+             exercised by at least one fixture (and no extras)"
+        );
     }
 }
