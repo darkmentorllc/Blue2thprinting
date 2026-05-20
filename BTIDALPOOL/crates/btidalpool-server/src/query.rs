@@ -101,16 +101,35 @@ impl QueryEngine for SubprocessQueryEngine {
         args.push("--output".into());
         args.push(out_path.to_string_lossy().into_owned());
 
-        let status = Command::new(&self.python)
+        // Capture stdout+stderr (rather than inheriting them) so that when
+        // Tell_Me_Everything fails we can surface *why* — both into the
+        // server log and back to the client — instead of an opaque "exited
+        // with status 1". TME writes its results to the --output file, not
+        // stdout, so capturing doesn't swallow anything we need.
+        let output = Command::new(&self.python)
             .args(&args)
             .current_dir(&self.cwd)
-            .status()
+            .output()
             .map_err(|e| QueryError::Backend(format!("spawn python3: {e}")))?;
-        if !status.success() {
+        if !output.status.success() {
             // Clean up the (possibly partial) output file before bailing.
             let _ = std::fs::remove_file(&out_path);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Log the full stderr server-side for the operator...
+            log::error!(
+                "Tell_Me_Everything failed (status {}). cwd={} script={}\nstderr:\n{}",
+                output.status,
+                self.cwd.display(),
+                self.script.display(),
+                stderr
+            );
+            // ...and return a trimmed tail to the client so a remote caller
+            // (e.g. the live test) sees the actual error without shell access.
+            let tail = tail_chars(&stderr, 1500);
             return Err(QueryError::Backend(format!(
-                "python subprocess exited with status {status}"
+                "Tell_Me_Everything exited with status {}; stderr tail:\n{}",
+                output.status,
+                tail.trim()
             )));
         }
 
@@ -128,6 +147,15 @@ impl QueryEngine for SubprocessQueryEngine {
             records,
         })
     }
+}
+
+/// Return the last `n` characters of `s` (char-safe, so it never splits a
+/// multi-byte UTF-8 sequence). Used to bound the size of a subprocess
+/// stderr tail we echo back to the client.
+fn tail_chars(s: &str, n: usize) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    let start = chars.len().saturating_sub(n);
+    chars[start..].iter().collect()
 }
 
 /// Build ONLY the query-filter TME flags for `params` (the "cascade"), in
