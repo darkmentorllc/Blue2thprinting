@@ -12,14 +12,14 @@
 //! `--token-file` and trusts that the embedded `{token, refresh_token}` is
 //! valid. The Python shim runs the SSO flow before invoking us.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use anyhow::{Context, Result};
+use btidalpool_client::refresh;
 use btidalpool_client::transport::{CertTrust, Transport};
-use btidalpool_client::{build_check_hash, build_query, build_upload};
 use btidalpool_proto::{
-    canonical_sha1, AuthFields, ErrorKind, QueryParams, Response,
+    canonical_sha1, AuthFields, Envelope, ErrorKind, Payload, QueryParams, Response,
 };
 use clap::{Parser, Subcommand};
 
@@ -100,7 +100,7 @@ fn main() -> ExitCode {
 fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
 
-    let auth = load_auth(&cli.token_file, cli.use_test_db)?;
+    let mut auth = load_auth(&cli.token_file, cli.use_test_db)?;
     // Trust precedence: --insecure > --system-roots > bundled cert.
     // The bundled-cert default reproduces the Python client's
     // `verify=./btidalpool.ddns.net.crt` behavior so the common case
@@ -118,13 +118,80 @@ fn run() -> Result<ExitCode> {
         Command::Upload {
             input,
             no_preflight,
-        } => Ok(do_upload(&transport, &auth, &input, no_preflight)?),
+        } => Ok(do_upload(
+            &transport,
+            &cli.token_file,
+            &mut auth,
+            &input,
+            no_preflight,
+        )?),
         Command::Query {
             output,
             query_json,
-        } => Ok(do_query(&transport, &auth, &output, &query_json)?),
-        Command::CheckHash { hash } => Ok(do_check_hash(&transport, &auth, &hash)?),
+        } => Ok(do_query(
+            &transport,
+            &cli.token_file,
+            &mut auth,
+            &output,
+            &query_json,
+        )?),
+        Command::CheckHash { hash } => {
+            Ok(do_check_hash(&transport, &cli.token_file, &mut auth, &hash)?)
+        }
     }
+}
+
+/// Send one request, and if the server rejects the OAuth token as expired
+/// (`Unauthorized`), refresh the token once (via the OAuth helper server),
+/// persist the fresh token back to `token_file`, and retry exactly once.
+///
+/// Mirrors the Python `oauth_helper` behavior, which transparently refreshes
+/// an expired access token using the long-lived refresh token. `auth` is
+/// updated in place so a caller that issues several requests in a row (e.g.
+/// upload's CheckHash pre-flight then the Upload itself) reuses the
+/// refreshed token for the later requests without refreshing again.
+fn round_trip_refreshing(
+    transport: &Transport,
+    token_file: &Path,
+    auth: &mut AuthFields,
+    payload: Payload,
+) -> Result<Response> {
+    let env = Envelope {
+        auth: auth.clone(),
+        payload: payload.clone(),
+    };
+    let resp = transport.round_trip(&env)?;
+    if let Response::Err {
+        kind: ErrorKind::Unauthorized,
+        ..
+    } = &resp
+    {
+        match refresh::refresh(&auth.refresh_token)? {
+            Some((token, refresh_token)) => {
+                auth.token = token;
+                auth.refresh_token = refresh_token;
+                if let Err(e) =
+                    refresh::persist_token_file(token_file, &auth.token, &auth.refresh_token)
+                {
+                    eprintln!(
+                        "warning: token refreshed but could not be written back to {}: {e:#}",
+                        token_file.display()
+                    );
+                }
+                eprintln!("OAuth access token was expired; refreshed it and retrying.");
+                let env2 = Envelope {
+                    auth: auth.clone(),
+                    payload,
+                };
+                return transport.round_trip(&env2);
+            }
+            // Refresh declined (e.g. the refresh token is also dead) — fall
+            // through and return the original Unauthorized so the command
+            // reports it the normal way.
+            None => {}
+        }
+    }
+    Ok(resp)
 }
 
 fn load_auth(token_file: &std::path::Path, use_test_db: bool) -> Result<AuthFields> {
@@ -146,7 +213,8 @@ fn load_auth(token_file: &std::path::Path, use_test_db: bool) -> Result<AuthFiel
 
 fn do_upload(
     transport: &Transport,
-    auth: &AuthFields,
+    token_file: &Path,
+    auth: &mut AuthFields,
     input: &std::path::Path,
     no_preflight: bool,
 ) -> Result<ExitCode> {
@@ -155,8 +223,12 @@ fn do_upload(
     let sha1 = canonical_sha1(&bytes).context("hashing input file")?;
 
     if !no_preflight {
-        let env = build_check_hash(auth.clone(), sha1.clone());
-        let resp = transport.round_trip(&env)?;
+        let resp = round_trip_refreshing(
+            transport,
+            token_file,
+            auth,
+            Payload::CheckHash { hash: sha1.clone() },
+        )?;
         match resp {
             // Server already has the file — nothing to do.
             Response::Err {
@@ -180,8 +252,12 @@ fn do_upload(
         }
     }
 
-    let env = build_upload(auth.clone(), bytes);
-    let resp = transport.round_trip(&env)?;
+    let resp = round_trip_refreshing(
+        transport,
+        token_file,
+        auth,
+        Payload::Upload { btides_json: bytes },
+    )?;
     match resp {
         Response::Ok { message } => {
             println!("{message}");
@@ -200,14 +276,19 @@ fn do_upload(
 
 fn do_query(
     transport: &Transport,
-    auth: &AuthFields,
+    token_file: &Path,
+    auth: &mut AuthFields,
     output: &std::path::Path,
     query_json: &str,
 ) -> Result<ExitCode> {
     let params: QueryParams =
         serde_json::from_str(query_json).context("parsing --query-json")?;
-    let env = build_query(auth.clone(), params);
-    let resp = transport.round_trip(&env)?;
+    let resp = round_trip_refreshing(
+        transport,
+        token_file,
+        auth,
+        Payload::Query { params },
+    )?;
     match resp {
         Response::QueryResult {
             records,
@@ -231,9 +312,20 @@ fn do_query(
     }
 }
 
-fn do_check_hash(transport: &Transport, auth: &AuthFields, hash: &str) -> Result<ExitCode> {
-    let env = build_check_hash(auth.clone(), hash.to_string());
-    let resp = transport.round_trip(&env)?;
+fn do_check_hash(
+    transport: &Transport,
+    token_file: &Path,
+    auth: &mut AuthFields,
+    hash: &str,
+) -> Result<ExitCode> {
+    let resp = round_trip_refreshing(
+        transport,
+        token_file,
+        auth,
+        Payload::CheckHash {
+            hash: hash.to_string(),
+        },
+    )?;
     match resp {
         Response::Ok { message } => {
             println!("{message}");

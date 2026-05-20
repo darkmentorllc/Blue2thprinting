@@ -5,6 +5,7 @@
 //! `btidalpool-server/tests/loopback.rs` can drive the client logic
 //! without spawning a subprocess.
 
+pub mod refresh;
 pub mod transport;
 
 use btidalpool_proto::{AuthFields, Envelope, Payload, QueryParams};

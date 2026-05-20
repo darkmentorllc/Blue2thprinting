@@ -23,3 +23,6 @@ clap.workspace = true
 ureq.workspace = true
 rustls.workspace = true
 rustls-pemfile.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
