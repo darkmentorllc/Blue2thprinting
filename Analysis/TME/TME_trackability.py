@@ -188,6 +188,28 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
             print_unique_ID_header_if_needed()
             qprint(f"{i3}Bluetooth Classic BDADDR, which is not randomized over time, of value {BTC_BDADDR_str} is embedded in Microsoft Swift Pair advertised Manufacturer-Specific Data, and therefore can be used to track the device.")
 
+    # Or if it has a Meta Quest serial number embedded in Meta Platforms Technologies MSD
+    # (Meta Platforms Technologies, LLC company ID = 0x058e = 1422). The Meta Quest 3(S)
+    # advertises a 14-byte UTF-8 device serial number as its only MSD payload.
+    if(bdaddr_random is not None):
+        values = (bdaddr_random, bdaddr)
+        meta_msd_query = "SELECT DISTINCT manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s AND bdaddr = %s AND device_BT_CID = 1422"
+    else:
+        values = (bdaddr,)
+        meta_msd_query = "SELECT DISTINCT manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE bdaddr = %s AND device_BT_CID = 1422"
+    meta_msd_result = execute_query(meta_msd_query, values)
+
+    for (manufacturer_specific_data,) in meta_msd_result:
+        if(len(manufacturer_specific_data) != 28): # 14 bytes * 2 chars per byte
+            continue
+        try:
+            serial_str = bytes.fromhex(manufacturer_specific_data).decode("utf-8")
+        except (UnicodeDecodeError, ValueError):
+            continue
+        print_unique_ID_header_if_needed()
+        qprint(f"{i3}* Meta Quest serial number of value '{serial_str}' is embedded in Meta Platforms Technologies advertised Manufacturer-Specific Data, and therefore can be used to track the device.")
+        TME.TME_glob.privacy_report_no_results_found = False
+
     #===================================================#
     # GATT "Serial Number" (0x2a25) Characteristic data #
     #===================================================#

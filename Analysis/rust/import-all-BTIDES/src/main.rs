@@ -13,10 +13,11 @@
 // processing PCAPs first then HCI logs (PCAPs are typically larger /
 // heavier so prioritizing them keeps cores busy longer).
 
+use std::collections::HashSet;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Instant;
 
@@ -46,18 +47,33 @@ struct Cli {
     /// Input folder; can be passed multiple times.
     #[arg(long, action = clap::ArgAction::Append)]
     folder: Vec<PathBuf>,
-    /// Auto-detect file type by leading magic bytes (recommended).
-    #[arg(long, default_value_t = true)]
-    auto_detect: bool,
-    /// Path to BTIDES_Schema directory (required for validation).
+    // NOTE: file-type detection is unconditional — collect_jobs() always sniffs
+    // each file's leading magic bytes via detect_kind(), and there is no
+    // alternative (e.g. extension-based) detection path. The former
+    // `--auto-detect` flag (a default-true bool that could never be turned off
+    // and was never read) was removed as dead/misleading CLI surface.
+    /// Path to BTIDES_Schema directory (used for output JSON-schema validation
+    /// unless `--no-validate` is set). If omitted, defaults to
+    /// `<binary_dir>/../../../BTIDES_Schema` — i.e. the schema submodule that
+    /// sits alongside the `rust/` workspace inside `Analysis/` when this binary
+    /// is run from its standard `Analysis/rust/target/{debug,release}/` build
+    /// location.
     #[arg(long)]
-    schema_dir: PathBuf,
+    schema_dir: Option<PathBuf>,
     /// Skip JSON-schema validation on output.
     #[arg(long, default_value_t = false)]
     no_validate: bool,
-    /// Re-emit even if a `.btides` already exists next to the input.
-    #[arg(long, default_value_t = false)]
+    /// Re-emit even if a `.btides` already exists next to the input. Mutually
+    /// exclusive with `--read-existing-BTIDES`.
+    #[arg(long, default_value_t = false, conflicts_with = "read_existing_btides")]
     overwrite_existing: bool,
+    /// If a `.btides` already exists next to a capture file, skip conversion
+    /// and process the existing `.btides` directly (e.g. SQL-import it via
+    /// `--to-SQL`). `.btides.processed` files are still skipped. Mutually
+    /// exclusive with `--overwrite-existing`. Mirrors the Python
+    /// `--read-existing-BTIDES` flag in `Import_All_HCI_and_PCAP.py`.
+    #[arg(long = "read-existing-BTIDES", default_value_t = false)]
+    read_existing_btides: bool,
     /// Concurrency. Defaults to max(1, ncpu-4).
     #[arg(long)]
     workers: Option<usize>,
@@ -118,6 +134,26 @@ struct Cli {
 enum Kind {
     Pcap,
     Hci,
+    /// `--read-existing-BTIDES`: a `.btides` file already exists next to a
+    /// capture file. Skip conversion and just hand the existing file to the
+    /// downstream stage (SQL import when `--to-SQL` is set; otherwise a no-op).
+    ReadExisting,
+}
+
+/// Default `--schema-dir` location when the user doesn't pass one explicitly:
+/// `<dir-containing-binary>/../../../BTIDES_Schema`. Under the standard
+/// `Analysis/rust/target/{debug,release}/import-all-BTIDES` layout that
+/// resolves to `Analysis/BTIDES_Schema/` — the submodule that ships with
+/// every Blue2thprinting checkout.
+fn default_schema_dir() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    // exe = .../Analysis/rust/target/<profile>/import-all-BTIDES
+    //   .parent() -> .../Analysis/rust/target/<profile>
+    //   .parent() -> .../Analysis/rust/target
+    //   .parent() -> .../Analysis/rust
+    //   .parent() -> .../Analysis
+    let analysis = exe.parent()?.parent()?.parent()?.parent()?;
+    Some(analysis.join("BTIDES_Schema"))
 }
 
 fn detect_kind(path: &Path) -> Option<Kind> {
@@ -238,11 +274,38 @@ struct Job {
     kind: Kind,
 }
 
-fn collect_jobs(folders: &[PathBuf], overwrite: bool) -> Vec<Job> {
+fn collect_jobs(folders: &[PathBuf], overwrite: bool, read_existing: bool) -> Vec<Job> {
     let mut pcaps = Vec::new();
     let mut hcis = Vec::new();
+    let mut existing = Vec::new();
+    // Dedupe ReadExisting jobs by their .btides path: a folder containing both
+    // `capture.pcap` and `capture.btides` would otherwise emit one ReadExisting
+    // when visited via the capture file *and* another via the .btides file.
+    let mut existing_set: HashSet<PathBuf> = HashSet::new();
     for folder in folders {
         for entry in walkdir(folder) {
+            let name = entry.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            // Finalized output — never re-process.
+            if name.ends_with(".btides.processed") {
+                continue;
+            }
+            // Bare `.btides` file. In --read-existing-BTIDES mode, emit a
+            // ReadExisting job even when no sibling capture lives next to it
+            // (common workflow: ship just the .btides files to the analysis
+            // host and SQL-import them). Outside that mode, skip — `.btides`
+            // is an output, not an input.
+            if name.ends_with(".btides") {
+                if read_existing && existing_set.insert(entry.clone()) {
+                    existing.push(Job {
+                        input: entry.clone(),
+                        output: entry,
+                        kind: Kind::ReadExisting,
+                    });
+                }
+                continue;
+            }
+            // Otherwise treat the file as a potential capture: classify by
+            // magic bytes.
             let Some(kind) = detect_kind(&entry) else {
                 continue;
             };
@@ -250,8 +313,25 @@ fn collect_jobs(folders: &[PathBuf], overwrite: bool) -> Vec<Job> {
             let stem = entry.file_stem().and_then(|s| s.to_str()).unwrap_or("output");
             let out = parent.join(format!("{stem}.btides"));
             let processed = parent.join(format!("{stem}.btides.processed"));
-            if !overwrite && (out.exists() || processed.exists()) {
+            // Already finalized — skip in every mode unless --overwrite-existing.
+            if processed.exists() && !overwrite {
                 continue;
+            }
+            if out.exists() {
+                if overwrite {
+                    // Fall through and re-convert from the source capture.
+                } else if read_existing {
+                    if existing_set.insert(out.clone()) {
+                        existing.push(Job {
+                            input: out.clone(),
+                            output: out,
+                            kind: Kind::ReadExisting,
+                        });
+                    }
+                    continue;
+                } else {
+                    continue;
+                }
             }
             let job = Job {
                 input: entry,
@@ -265,11 +345,18 @@ fn collect_jobs(folders: &[PathBuf], overwrite: bool) -> Vec<Job> {
             }
         }
     }
-    // PCAPs first so cores burn them down before starting HCIs.
+    // PCAPs first (heaviest), then HCIs, then ReadExisting (cheapest — pure
+    // SQL import) so cores stay busy on conversion work while DB writes
+    // dribble in at the tail.
     pcaps.extend(hcis);
+    pcaps.extend(existing);
     pcaps
 }
 
+// Return every regular file under `root`. Filtering of .btides/.btides.processed
+// is now `collect_jobs`'s job, because `--read-existing-BTIDES` mode wants to
+// see bare `.btides` files (folders that only ship the converted output, with
+// the source captures pruned).
 fn walkdir(root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack = vec![root.to_path_buf()];
@@ -282,10 +369,6 @@ fn walkdir(root: &Path) -> Vec<PathBuf> {
             if p.is_dir() {
                 stack.push(p);
             } else if p.is_file() {
-                let name = p.file_name().and_then(|s| s.to_str()).unwrap_or("");
-                if name.ends_with(".btides") || name.ends_with(".btides.processed") {
-                    continue;
-                }
                 out.push(p);
             }
         }
@@ -329,7 +412,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let n_workers = cli
         .workers
         .unwrap_or_else(|| std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1).saturating_sub(4).max(1));
-    let jobs = collect_jobs(&cli.folder, cli.overwrite_existing);
+    // Resolve --schema-dir: explicit user value wins; otherwise derive from
+    // the binary's own location. We only insist the path exists when
+    // validation is actually going to run (i.e. !--no-validate).
+    let schema_dir_path = match cli.schema_dir.clone() {
+        Some(p) => p,
+        None => default_schema_dir()
+            .ok_or("could not derive default --schema-dir from binary path; pass --schema-dir explicitly")?,
+    };
+    if !cli.no_validate && !schema_dir_path.exists() {
+        return Err(format!(
+            "--schema-dir {} does not exist (pass --schema-dir or --no-validate)",
+            schema_dir_path.display()
+        )
+        .into());
+    }
+    let jobs = collect_jobs(&cli.folder, cli.overwrite_existing, cli.read_existing_btides);
     let total = jobs.len();
     if total == 0 {
         eprintln!("No new files to convert.");
@@ -361,13 +459,77 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let err = Arc::new(AtomicUsize::new(0));
     let sql_ok = Arc::new(AtomicUsize::new(0));
     let sql_err = Arc::new(AtomicUsize::new(0));
-    let schema_dir = Arc::new(cli.schema_dir.clone());
+    let schema_dir = Arc::new(schema_dir_path);
     let verbose_btides = cli.verbose_btides;
     let validate = !cli.no_validate;
     let verbose = cli.verbose;
     let to_sql = cli.to_sql;
-    let keep_btides_after_sql = cli.keep_btides_after_sql;
-    let deadlock_retries = cli.deadlock_retries;
+
+    // SQL import is serialized through a single writer thread. Each conversion
+    // worker hands its finished .btides path off through this mpsc channel and
+    // immediately picks up the next conversion job — workers never block on
+    // MySQL. The writer pops paths FIFO and runs sql_import_one one transaction
+    // at a time, so two in-process imports can never deadlock against each
+    // other (each .btides is already a single transaction; see flush_all in
+    // BTIDES-to-SQL/src/lib.rs). The library's deadlock-retry budget stays in
+    // place but only fires now against *external* processes touching the same
+    // tables. Conversion finishes in completion order, so smaller files
+    // naturally reach the SQL queue first; large PCAPs land at the tail.
+    let (sql_tx, sql_writer) = if let Some(pool) = sql_pool.clone() {
+        let (tx, rx) = mpsc::channel::<PathBuf>();
+        let sql_ok = sql_ok.clone();
+        let sql_err = sql_err.clone();
+        let keep_btides_after_sql = cli.keep_btides_after_sql;
+        let deadlock_retries = cli.deadlock_retries;
+        let handle = thread::spawn(move || {
+            for output in rx {
+                let t_sql = Instant::now();
+                match sql_import_one(&pool, &output, deadlock_retries, verbose) {
+                    Ok(stats) => {
+                        sql_ok.fetch_add(1, Ordering::SeqCst);
+                        if verbose {
+                            eprintln!(
+                                "  [SQL] {} -> +{} new rows, {} dup ({:.2}s)",
+                                output.display(),
+                                stats.inserted,
+                                stats.attempted.saturating_sub(stats.inserted),
+                                t_sql.elapsed().as_secs_f64()
+                            );
+                        }
+                        if !keep_btides_after_sql {
+                            // Mark as processed so a re-run of
+                            // import-all-BTIDES skips it (see `collect_jobs`
+                            // above which already looks for
+                            // `.btides.processed`).
+                            let mut processed = output.clone();
+                            let new_name = format!(
+                                "{}.processed",
+                                output.file_name().and_then(|s| s.to_str()).unwrap_or("out.btides")
+                            );
+                            processed.set_file_name(new_name);
+                            if let Err(re) = std::fs::rename(&output, &processed) {
+                                eprintln!(
+                                    "  [SQL] WARN: rename {} -> {} failed: {re}",
+                                    output.display(),
+                                    processed.display()
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        sql_err.fetch_add(1, Ordering::SeqCst);
+                        eprintln!(
+                            "  [SQL] ERROR importing {}: {e}  (leaving .btides in place for retry)",
+                            output.display()
+                        );
+                    }
+                }
+            }
+        });
+        (Some(tx), Some(handle))
+    } else {
+        (None, None)
+    };
 
     let mut handles = Vec::new();
     for _ in 0..n_workers {
@@ -375,10 +537,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let next_idx = next_idx.clone();
         let ok = ok.clone();
         let err = err.clone();
-        let sql_ok = sql_ok.clone();
-        let sql_err = sql_err.clone();
         let schema_dir = schema_dir.clone();
-        let sql_pool = sql_pool.clone();
+        let sql_tx = sql_tx.clone();
         let handle = thread::spawn(move || loop {
             let i = next_idx.fetch_add(1, Ordering::SeqCst);
             let job = {
@@ -408,6 +568,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     verbose_btides,
                     validate,
                 ),
+                // No conversion — the .btides already exists on disk. Fall
+                // through to the SQL handoff below so the writer still
+                // imports it.
+                Kind::ReadExisting => Ok(()),
             };
             let conv_elapsed = t_conv.elapsed();
             match res {
@@ -422,63 +586,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             conv_elapsed.as_secs_f64()
                         );
                     }
-                    // Per-file SQL import. We only attempt this after a
-                    // successful conversion — a half-converted BTIDES file
-                    // would otherwise be partially-imported. The library
-                    // guarantees its own per-file atomicity (transaction +
-                    // deadlock retry); any error here is logged and the
-                    // .btides is left in place for manual retry.
-                    if to_sql {
-                        if let Some(pool) = sql_pool.as_deref() {
-                            let t_sql = Instant::now();
-                            match sql_import_one(
-                                pool,
-                                &job.output,
-                                deadlock_retries,
-                                verbose,
-                            ) {
-                                Ok(stats) => {
-                                    sql_ok.fetch_add(1, Ordering::SeqCst);
-                                    if verbose {
-                                        eprintln!(
-                                            "  [SQL] {} -> +{} new rows, {} dup ({:.2}s)",
-                                            job.output.display(),
-                                            stats.inserted,
-                                            stats.attempted.saturating_sub(stats.inserted),
-                                            t_sql.elapsed().as_secs_f64()
-                                        );
-                                    }
-                                    if !keep_btides_after_sql {
-                                        // Mark as processed so a re-run of
-                                        // import-all-BTIDES skips it (see
-                                        // `collect_jobs` above which already
-                                        // looks for `.btides.processed`).
-                                        let mut processed = job.output.clone();
-                                        let new_name = format!(
-                                            "{}.processed",
-                                            job.output.file_name().and_then(|s| s.to_str()).unwrap_or("out.btides")
-                                        );
-                                        processed.set_file_name(new_name);
-                                        if let Err(re) =
-                                            std::fs::rename(&job.output, &processed)
-                                        {
-                                            eprintln!(
-                                                "  [SQL] WARN: rename {} -> {} failed: {re}",
-                                                job.output.display(),
-                                                processed.display()
-                                            );
-                                        }
-                                    }
-                                }
-                                Err(e) => {
-                                    sql_err.fetch_add(1, Ordering::SeqCst);
-                                    eprintln!(
-                                        "  [SQL] ERROR importing {}: {e}  (leaving .btides in place for retry)",
-                                        job.output.display()
-                                    );
-                                }
-                            }
-                        }
+                    if let Some(tx) = sql_tx.as_ref() {
+                        // Send only fails if the writer panicked; the worker
+                        // has no useful recovery, so drop the result and keep
+                        // draining the queue.
+                        let _ = tx.send(job.output.clone());
                     }
                 }
                 Err(e) => {
@@ -491,6 +603,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     for h in handles {
         let _ = h.join();
+    }
+    // All conversions done. Drop main's Sender so the channel closes once
+    // every per-worker clone has also been dropped (which has already
+    // happened above, since each worker's clone falls out of scope when its
+    // thread exits and `h.join()` waits for that). The writer then drains
+    // any remaining queued imports and exits its `for output in rx` loop.
+    drop(sql_tx);
+    if let Some(handle) = sql_writer {
+        let _ = handle.join();
     }
     let elapsed = t0.elapsed();
     if to_sql {
@@ -511,4 +632,216 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     Ok(())
+}
+
+// ============================================================================
+// Unit tests
+// ============================================================================
+// detect_kind() is the pure file-format classifier — it sniffs the first 8
+// bytes to route a capture to the pcap or btsnoop (HCI) converter. The
+// converters themselves (convert_pcap / convert_hci) depend on the
+// BTIDES_Schema submodule parsers and are exercised by running the binary on
+// real captures, not here.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    // Write `bytes` to a uniquely-named temp file and return its path. The
+    // caller is responsible for the file living long enough for detect_kind
+    // to open it (it does, within each test).
+    fn temp_with(bytes: &[u8], tag: &str) -> PathBuf {
+        let mut p = std::env::temp_dir();
+        let uniq = format!(
+            "import_all_btides_test_{}_{}_{}",
+            std::process::id(),
+            tag,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        p.push(uniq);
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(bytes).unwrap();
+        f.flush().unwrap();
+        p
+    }
+
+    #[test]
+    fn detect_kind_recognizes_btsnoop_hci() {
+        // btsnoop files start with the 8-byte ASCII magic "btsnoop\0".
+        let p = temp_with(b"btsnoop\0extra_payload_bytes", "hci");
+        assert_eq!(detect_kind(&p), Some(Kind::Hci));
+        let _ = std::fs::remove_file(&p);
+    }
+
+    #[test]
+    fn detect_kind_recognizes_all_pcap_magics() {
+        // Classic pcap LE + BE, nanosecond LE + BE, and pcapng — the five
+        // magics the matcher accepts. Pad to 8 bytes so the read succeeds.
+        let magics: &[(&str, [u8; 4])] = &[
+            ("classic_be", [0xa1, 0xb2, 0xc3, 0xd4]),
+            ("classic_le", [0xd4, 0xc3, 0xb2, 0xa1]),
+            ("nsec_be",    [0xa1, 0xb2, 0x3c, 0x4d]),
+            ("nsec_le",    [0x4d, 0x3c, 0xb2, 0xa1]),
+            ("pcapng",     [0x0a, 0x0d, 0x0d, 0x0a]),
+        ];
+        for (tag, m) in magics {
+            let mut bytes = m.to_vec();
+            bytes.extend_from_slice(&[0u8; 4]); // pad to 8
+            let p = temp_with(&bytes, tag);
+            assert_eq!(detect_kind(&p), Some(Kind::Pcap), "magic {tag} should be Pcap");
+            let _ = std::fs::remove_file(&p);
+        }
+    }
+
+    #[test]
+    fn detect_kind_returns_none_for_unknown_and_short_files() {
+        let p = temp_with(b"not a capture file", "unknown");
+        assert_eq!(detect_kind(&p), None);
+        let _ = std::fs::remove_file(&p);
+
+        // Fewer than 4 bytes — neither branch can match.
+        let p2 = temp_with(b"ab", "short");
+        assert_eq!(detect_kind(&p2), None);
+        let _ = std::fs::remove_file(&p2);
+    }
+
+    #[test]
+    fn detect_kind_returns_none_for_missing_file() {
+        let mut p = std::env::temp_dir();
+        p.push(format!("definitely_absent_{}", std::process::id()));
+        assert_eq!(detect_kind(&p), None);
+    }
+}
+
+// ============================================================================
+// CLI argument-parsing tests
+// ============================================================================
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+    use clap::Parser;
+
+    fn parse(args: &[&str]) -> Result<Cli, clap::Error> {
+        let mut v = vec!["import-all-BTIDES"];
+        v.extend_from_slice(args);
+        Cli::try_parse_from(v)
+    }
+
+    #[test]
+    fn parses_with_no_args_folder_is_optional() {
+        // --folder has no `required`, so an empty invocation parses; the
+        // empty folder list is handled at runtime, not by clap.
+        let c = parse(&[]).unwrap();
+        assert!(c.folder.is_empty());
+    }
+
+    #[test]
+    fn defaults_match_documented_values() {
+        let c = parse(&[]).unwrap();
+        assert_eq!(c.schema_dir, None);
+        assert!(!c.no_validate);
+        assert!(!c.overwrite_existing);
+        assert!(!c.read_existing_btides);
+        assert_eq!(c.workers, None);
+        assert!(!c.verbose_btides);
+        assert!(!c.verbose);
+        assert!(!c.to_sql);
+        assert!(!c.use_test_db);
+        assert_eq!(c.db_host, "127.0.0.1");
+        assert_eq!(c.db_user, "user");
+        assert_eq!(c.db_password, "a");
+        assert_eq!(c.deadlock_retries, 8);
+        assert!(!c.keep_btides_after_sql);
+    }
+
+    #[test]
+    fn folder_is_appendable() {
+        let c = parse(&["--folder", "/a", "--folder", "/b", "--folder", "/c"]).unwrap();
+        assert_eq!(
+            c.folder,
+            vec![PathBuf::from("/a"), PathBuf::from("/b"), PathBuf::from("/c")]
+        );
+    }
+
+    #[test]
+    fn overwrite_and_read_existing_are_mutually_exclusive() {
+        // conflicts_with = "read_existing_btides" → passing both is an error.
+        assert!(parse(&["--overwrite-existing", "--read-existing-BTIDES"]).is_err());
+        // Either one alone is fine.
+        assert!(parse(&["--overwrite-existing"]).unwrap().overwrite_existing);
+        assert!(parse(&["--read-existing-BTIDES"]).unwrap().read_existing_btides);
+    }
+
+    #[test]
+    fn capitalized_and_hyphenated_long_flags_parse() {
+        let c = parse(&[
+            "--read-existing-BTIDES",
+            "--verbose-BTIDES",
+            "--to-SQL",
+        ])
+        .unwrap();
+        assert!(c.read_existing_btides);
+        assert!(c.verbose_btides);
+        assert!(c.to_sql);
+    }
+
+    #[test]
+    fn to_sql_with_db_overrides_parse() {
+        let c = parse(&[
+            "--to-SQL",
+            "--use-test-db",
+            "--db-host", "192.168.10.128",
+            "--db-user", "tester",
+            "--db-password", "secret",
+            "--deadlock-retries", "16",
+            "--keep-btides-after-sql",
+        ])
+        .unwrap();
+        assert!(c.to_sql);
+        assert!(c.use_test_db);
+        assert_eq!(c.db_host, "192.168.10.128");
+        assert_eq!(c.db_user, "tester");
+        assert_eq!(c.db_password, "secret");
+        assert_eq!(c.deadlock_retries, 16);
+        assert!(c.keep_btides_after_sql);
+    }
+
+    #[test]
+    fn workers_and_schema_dir_parse() {
+        let c = parse(&["--workers", "6", "--schema-dir", "/opt/schema"]).unwrap();
+        assert_eq!(c.workers, Some(6));
+        assert_eq!(c.schema_dir, Some(PathBuf::from("/opt/schema")));
+    }
+
+    #[test]
+    fn non_numeric_workers_is_rejected() {
+        assert!(parse(&["--workers", "many"]).is_err());
+    }
+
+    #[test]
+    fn unknown_flag_is_rejected() {
+        assert!(parse(&["--folder", "/a", "--nope"]).is_err());
+    }
+
+    #[test]
+    fn version_and_help_short_circuit() {
+        assert_eq!(
+            parse(&["--version"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayVersion
+        );
+        assert_eq!(
+            parse(&["--help"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayHelp
+        );
+    }
+
+    // The vestigial --auto-detect flag was removed (detection is unconditional);
+    // it must no longer be accepted.
+    #[test]
+    fn removed_auto_detect_flag_is_rejected() {
+        assert!(parse(&["--auto-detect"]).is_err());
+    }
 }

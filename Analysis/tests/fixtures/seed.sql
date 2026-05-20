@@ -53,22 +53,32 @@ INSERT INTO bdaddr_to_GPS (bdaddr, bdaddr_random, time, time_type, rssi, lat, lo
 VALUES ('aa:bb:cc:11:22:02', 1, 1714000000, 0, -55, 38.9072, -77.0369);
 
 -- Vendor-specific UUID128 advertised in an LE adv packet. The UUID
--- 1deca38d-dc21-484e-83f2-e90866ac40b1 is in BLEScope's dataset as a
--- Service (uuid_type=1, packages include com.eBestIoT.main, com.wdtl.scs.*,
--- com.sw1848.pepsilealtad), so it triggers the "BLEScope Analysis:"
+-- 2aaceb00-c5a5-44fd-0000-3fd42d703a4f is in BLEScope's dataset as a
+-- Service (uuid_type=1, 23 distinct Android packages spanning multiple
+-- vendor domains — app.com.tandemaccess, com.openlife.checkme,
+-- zeddigital.zig.zig, etc.), so it triggers the "BLEScope Analysis:"
 -- output unless --hide-android-data is set. Stored without dashes per
 -- the column convention.
 --
--- Originally be15beef-6186-407e-8381-0bd89c4d8df4 (Anki Drive), but the
--- CLUES_Schema reorg added an LLM-derived web-search entry for that
--- UUID — CLUES now short-circuits the BLEScope fallback and silently
--- broke this test. The replacement is BLEScope-only (no CLUES match in
--- any of the three tiers) AND uuid_type=1 (Service), which matters
--- because the seed declares list_type=7 (Complete UUID128 Service list)
--- and TME's BLEScope lookup filters by uuid_type matching the list
--- context.
+-- Fixture history:
+--   * be15beef-6186-407e-8381-0bd89c4d8df4 (Anki Drive) — got claimed
+--     by CLUES_data_LLM_web_search.json during the CLUES_Schema reorg.
+--   * 1deca38d-dc21-484e-83f2-e90866ac40b1 — got claimed by
+--     CLUES_data_LLM_Android_APK_search_1.json during the hex-split
+--     CLUES expansion (entry attributes it to a third-party SDK in
+--     com.wdtl.scs.scscommunicationsdk).
+--   * 2aaceb00-c5a5-44fd-0000-3fd42d703a4f — current. Picked by
+--     anti-joining bt2.BLEScope_UUID128s (uuid_type=1, non-SIG-base)
+--     against the union of all CLUES files including the 16 hex shards
+--     of CLUES_data_LLM_Android_APK_search_[0-f].json. Its package list
+--     spans 14+ unrelated vendor domains, which makes it less likely
+--     than the earlier single-vendor fixtures to be auto-claimed by a
+--     future LLM scrape of any one app family. uuid_type=1 (Service)
+--     matters because the seed declares list_type=7 (Complete UUID128
+--     Service list) and TME's BLEScope lookup filters by uuid_type
+--     matching the list context.
 INSERT INTO LE_bdaddr_to_UUID128s_list (bdaddr, bdaddr_random, le_evt_type, list_type, str_UUID128s)
-VALUES ('aa:bb:cc:11:22:02', 1, 0, 7, '1deca38ddc21484e83f2e90866ac40b1');
+VALUES ('aa:bb:cc:11:22:02', 1, 0, 7, '2aaceb00c5a544fd00003fd42d703a4f');
 
 -- Device 3: AA:BB:CC:11:22:03 — BT Classic, EIR name + CoD + SDP records
 -- Coverage: --require-SDP, EIR table queries

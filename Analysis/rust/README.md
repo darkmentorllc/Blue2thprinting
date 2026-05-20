@@ -53,9 +53,9 @@ Each binary takes a `--schema-dir` pointing at the BTIDES schema directory:
 
 ```sh
 # Bulk: walk a directory tree of mixed pcap/btsnoop files
+# (file type is auto-detected from each file's leading magic bytes)
 ./target/release/import-all-BTIDES \
     --folder      /path/to/captures \
-    --auto-detect \
     --schema-dir  ../BTIDES_Schema
 
 # WiGLE Android backup SQLite, with MySQL bdaddr_random lookup (default)

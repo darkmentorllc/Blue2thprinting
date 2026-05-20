@@ -11,11 +11,12 @@ directly to avoid per-file process spawn).
 ## Build
 
 ```bash
-cd Analysis/rust/BTIDES-to-SQL
+cd Analysis/rust
 cargo build --release
 ```
 
-Binary lands at `target/release/BTIDES-to-SQL`.
+Binary lands at `Analysis/rust/target/release/BTIDES-to-SQL` (alongside the
+other workspace binaries `import-all-BTIDES` and `wigle-to-BTIDES`).
 
 ## Usage
 
@@ -40,7 +41,7 @@ BTIDES-to-SQL --input <file.btides> [--input <other.btides> ...]
   ```bash
   find logs/ -name '*.btides*' -print0 \
     | xargs -0 -n 1 -P 8 -I {} \
-        Analysis/rust/BTIDES-to-SQL/target/release/BTIDES-to-SQL \
+        Analysis/rust/target/release/BTIDES-to-SQL \
         --input {} --use-test-db
   ```
 

@@ -2882,3 +2882,295 @@ fn flush_all(conn: &mut mysql::PooledConn, b: &Buffers, verbose: bool) -> mysql:
     Ok((total_rows, total_affected))
 }
 
+
+// ============================================================================
+// Unit tests
+// ============================================================================
+// These cover the pure JSON→row transformation logic — the part most likely
+// to drift from the Python importer (BTIDES_to_SQL.py) it ports. They need
+// neither MySQL nor a sniffer: the parse_*_array functions accumulate
+// mysql::Value rows into a Buffers, and we assert on those in-memory rows.
+// The DB-coupled layer (build_pool / bulk_insert / flush_* / apply_gps_batch)
+// is exercised end-to-end by Analysis/tests/test_btides_import.py against the
+// seeded bttest database instead.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // Borrow a json! object as the &Map the parse_* fns expect.
+    fn obj(v: &J) -> &serde_json::Map<String, J> {
+        v.as_object().expect("test JSON must be an object")
+    }
+
+    // ----------------------------- pure helpers -----------------------------
+
+    #[test]
+    fn le_evt_type_maps_btides_pdu_types() {
+        // Mirrors BTIDES_types_to_le_evt_type in BTIDES_to_SQL.py.
+        assert_eq!(btides_to_le_evt_type(B_ADV_IND), ADV_IND);
+        assert_eq!(btides_to_le_evt_type(B_ADV_DIRECT_IND), ADV_DIRECT_IND);
+        assert_eq!(btides_to_le_evt_type(B_ADV_NONCONN_IND), ADV_NONCONN_IND);
+        assert_eq!(btides_to_le_evt_type(B_ADV_SCAN_IND), ADV_SCAN_IND);
+        assert_eq!(btides_to_le_evt_type(B_AUX_ADV_IND), AUX_ADV_IND);
+        assert_eq!(btides_to_le_evt_type(B_SCAN_RSP), SCAN_RSP);
+        // B_AUX_SCAN_RSP deliberately collapses to SCAN_RSP (Python parity).
+        assert_eq!(btides_to_le_evt_type(B_AUX_SCAN_RSP), SCAN_RSP);
+        // EIR sentinel (50) passes through unchanged.
+        assert_eq!(btides_to_le_evt_type(B_EIR), B_EIR);
+        // Anything unrecognized is passed through verbatim.
+        assert_eq!(btides_to_le_evt_type(999), 999);
+    }
+
+    #[test]
+    fn hex_str_to_bytes_decodes_even_hex_and_defaults_on_garbage() {
+        assert_eq!(hex_str_to_bytes("deadbeef"), vec![0xde, 0xad, 0xbe, 0xef]);
+        assert_eq!(hex_str_to_bytes(""), Vec::<u8>::new());
+        // Non-hex and odd-length both fall back to an empty Vec (hex::decode errs).
+        assert_eq!(hex_str_to_bytes("nothex!!"), Vec::<u8>::new());
+        assert_eq!(hex_str_to_bytes("abc"), Vec::<u8>::new());
+    }
+
+    #[test]
+    fn parse_hex_int_u64_handles_prefix_and_errors() {
+        assert_eq!(parse_hex_int_u64("ff"), 255);
+        assert_eq!(parse_hex_int_u64("0xff"), 255);
+        assert_eq!(parse_hex_int_u64("1337"), 0x1337);
+        assert_eq!(parse_hex_int_u64("0000000000000001"), 1);
+        // Empty / invalid → 0 (matches the unwrap_or(0)).
+        assert_eq!(parse_hex_int_u64(""), 0);
+        assert_eq!(parse_hex_int_u64("nothex"), 0);
+    }
+
+    #[test]
+    fn normalize_uuid_promotes_bt_base_uuid_to_uuid16() {
+        // 0x180F = Battery Service expressed as the full BT-base 128-bit UUID
+        // collapses back to the 4-hex UUID16, with or without dashes.
+        assert_eq!(normalize_uuid("0000180f00001000800000805f9b34fb"), "180f");
+        assert_eq!(normalize_uuid("0000180F-0000-1000-8000-00805F9B34FB"), "180f");
+    }
+
+    #[test]
+    fn normalize_uuid_short_passthrough_and_nonbase_lowercased() {
+        // < 32 chars → returned verbatim (no case change, the Python parity).
+        assert_eq!(normalize_uuid("180f"), "180f");
+        assert_eq!(normalize_uuid("ABCD"), "ABCD");
+        // 128-bit non-base UUID → dashes stripped + lowercased, NOT shortened.
+        assert_eq!(
+            normalize_uuid("444D0001-4865-6D6C-6F63-6B21F09FA4AA"),
+            "444d000148656d6c6f636b21f09fa4aa"
+        );
+    }
+
+    #[test]
+    fn strip_uuid_dashes_only_removes_dashes() {
+        assert_eq!(
+            strip_uuid_dashes("0000180f-0000-1000-8000-00805f9b34fb"),
+            "0000180f00001000800000805f9b34fb"
+        );
+        // No case change, unlike normalize_uuid.
+        assert_eq!(strip_uuid_dashes("ABCD-EF"), "ABCDEF");
+    }
+
+    #[test]
+    fn as_i64_accepts_signed_and_unsigned_numbers() {
+        assert_eq!(as_i64(&json!(42)), Some(42));
+        assert_eq!(as_i64(&json!(-7)), Some(-7));
+        // A u64 too large for i64 still resolves (wraps via `as i64`), per impl.
+        assert_eq!(as_i64(&json!(u64::MAX)), Some(-1));
+        // Non-numbers → None.
+        assert_eq!(as_i64(&json!("not a number")), None);
+        assert_eq!(as_i64(&json!(null)), None);
+    }
+
+    #[test]
+    fn obj_i64_and_obj_str_extract_typed_fields() {
+        let v = json!({"n": 5, "s": "hello", "missing_other": true});
+        let o = obj(&v);
+        assert_eq!(obj_i64(o, "n"), Some(5));
+        assert_eq!(obj_i64(o, "absent"), None);
+        assert_eq!(obj_str(o, "s"), Some("hello"));
+        assert_eq!(obj_str(o, "n"), None); // wrong type
+    }
+
+    // ------------------------ bdaddr resolution -----------------------------
+
+    #[test]
+    fn get_bdaddr_peripheral_prefers_connect_ind_and_lowercases() {
+        let v = json!({
+            "CONNECT_IND": {
+                "peripheral_bdaddr": "AA:BB:CC:DD:EE:FF",
+                "peripheral_bdaddr_rand": 1
+            }
+        });
+        assert_eq!(
+            get_bdaddr_peripheral(obj(&v)),
+            ("aa:bb:cc:dd:ee:ff".to_string(), 1)
+        );
+    }
+
+    #[test]
+    fn get_bdaddr_peripheral_falls_back_to_entry_bdaddr() {
+        let v = json!({"bdaddr": "11:22:33:44:55:66", "bdaddr_rand": 0});
+        assert_eq!(
+            get_bdaddr_peripheral(obj(&v)),
+            ("11:22:33:44:55:66".to_string(), 0)
+        );
+    }
+
+    #[test]
+    fn get_bdaddr_central_prefers_connect_ind() {
+        let v = json!({
+            "CONNECT_IND": {
+                "central_bdaddr": "C0:FF:EE:00:00:01",
+                "central_bdaddr_rand": 1
+            }
+        });
+        assert_eq!(
+            get_bdaddr_central(obj(&v)),
+            ("c0:ff:ee:00:00:01".to_string(), 1)
+        );
+    }
+
+    // --------------------------- parse_smp_array ----------------------------
+
+    #[test]
+    fn parse_smp_array_routes_req_to_central_and_rsp_to_peripheral() {
+        // direction 0 (C2P) → central bdaddr; direction 1 (P2C) → peripheral.
+        let v = json!({
+            "CONNECT_IND": {
+                "peripheral_bdaddr": "aa:bb:cc:dd:ee:ff", "peripheral_bdaddr_rand": 1,
+                "central_bdaddr": "11:22:33:44:55:66", "central_bdaddr_rand": 1
+            },
+            "SMPArray": [
+                {"direction": 0, "opcode": 1, "io_cap": 3, "oob_data": 0,
+                 "auth_req": 0, "max_key_size": 16, "initiator_key_dist": 0,
+                 "responder_key_dist": 0},
+                {"direction": 1, "opcode": 2, "io_cap": 4, "oob_data": 0,
+                 "auth_req": 5, "max_key_size": 16, "initiator_key_dist": 0,
+                 "responder_key_dist": 0}
+            ]
+        });
+        let mut b = Buffers::default();
+        parse_smp_array(obj(&v), &mut b);
+        assert_eq!(b.smp_pairing.len(), 2);
+        // Pairing Request (C2P) carries the central bdaddr.
+        assert_eq!(
+            b.smp_pairing[0],
+            vec![
+                Value::from("11:22:33:44:55:66"), Value::from(1i64),
+                Value::from(1i64), Value::from(3i64), Value::from(0i64),
+                Value::from(0i64), Value::from(16i64), Value::from(0i64),
+                Value::from(0i64),
+            ]
+        );
+        // Pairing Response (P2C) carries the peripheral bdaddr + opcode 2.
+        assert_eq!(b.smp_pairing[1][0], Value::from("aa:bb:cc:dd:ee:ff"));
+        assert_eq!(b.smp_pairing[1][2], Value::from(2i64));
+        assert_eq!(b.smp_pairing[1][5], Value::from(5i64)); // auth_req
+    }
+
+    #[test]
+    fn parse_smp_array_skips_non_pairing_opcodes() {
+        // opcode 3 = Pairing Confirm — not a Req(1)/Rsp(2), so dropped.
+        let v = json!({
+            "bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 1,
+            "SMPArray": [{"direction": 1, "opcode": 3}]
+        });
+        let mut b = Buffers::default();
+        parse_smp_array(obj(&v), &mut b);
+        assert!(b.smp_pairing.is_empty());
+    }
+
+    #[test]
+    fn parse_smp_array_skips_all_zero_bdaddr() {
+        let v = json!({
+            "bdaddr": "00:00:00:00:00:00", "bdaddr_rand": 0,
+            "SMPArray": [{"direction": 1, "opcode": 1}]
+        });
+        let mut b = Buffers::default();
+        parse_smp_array(obj(&v), &mut b);
+        assert!(b.smp_pairing.is_empty());
+    }
+
+    // --------------------------- parse_ll_array -----------------------------
+
+    #[test]
+    fn parse_ll_array_version_ind_row() {
+        let v = json!({
+            "bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 1,
+            "LLArray": [{"direction": 1, "opcode": 12, "version": 13,
+                         "company_id": 70, "subversion": 0}]
+        });
+        let mut b = Buffers::default();
+        parse_ll_array(obj(&v), &mut b);
+        assert_eq!(b.ll_version_ind.len(), 1);
+        assert_eq!(
+            b.ll_version_ind[0],
+            vec![
+                Value::from("aa:bb:cc:dd:ee:ff"), Value::from(1i64),
+                Value::from(13i64), Value::from(70i64), Value::from(0i64),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_ll_array_features_decode_hex_to_uint() {
+        let v = json!({
+            "bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 0,
+            "LLArray": [{"direction": 1, "opcode": 9,
+                         "le_features_hex_str": "0000000000000001"}]
+        });
+        let mut b = Buffers::default();
+        parse_ll_array(obj(&v), &mut b);
+        assert_eq!(b.ll_features.len(), 1);
+        // feat is parsed as u64 → Value::UInt(1).
+        assert_eq!(
+            b.ll_features[0],
+            vec![
+                Value::from("aa:bb:cc:dd:ee:ff"), Value::from(0i64),
+                Value::from(9i64), Value::from(1u64),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_ll_array_phy_skips_central_initiated() {
+        // C2P (direction 0) PHY_REQ is dropped — only P2C PHY rows are kept.
+        let v = json!({
+            "bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 1,
+            "LLArray": [{"direction": 0, "opcode": 22, "TX_PHYS": 2, "RX_PHYS": 2}]
+        });
+        let mut b = Buffers::default();
+        parse_ll_array(obj(&v), &mut b);
+        assert!(b.ll_phys.is_empty());
+    }
+
+    #[test]
+    fn parse_ll_array_phy_keeps_peripheral_initiated() {
+        let v = json!({
+            "bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 1,
+            "LLArray": [{"direction": 1, "opcode": 23, "TX_PHYS": 2, "RX_PHYS": 2}]
+        });
+        let mut b = Buffers::default();
+        parse_ll_array(obj(&v), &mut b);
+        assert_eq!(b.ll_phys.len(), 1);
+        assert_eq!(
+            b.ll_phys[0],
+            vec![
+                Value::from("aa:bb:cc:dd:ee:ff"), Value::from(1i64),
+                Value::from(23i64), Value::from(1i64), Value::from(2i64),
+                Value::from(2i64),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_ll_array_ignores_entry_without_ll_array() {
+        let v = json!({"bdaddr": "aa:bb:cc:dd:ee:ff", "bdaddr_rand": 1});
+        let mut b = Buffers::default();
+        parse_ll_array(obj(&v), &mut b);
+        assert!(b.ll_version_ind.is_empty());
+        assert!(b.ll_features.is_empty());
+    }
+}

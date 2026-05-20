@@ -20,6 +20,7 @@
 # Python workers spawned by central_app_launcher.py
 pkill -f 'Scripts/central_app_launcher\.py'           2>/dev/null
 pkill -f 'Sniffle/python_cli/sniff_receiver\.py'      2>/dev/null
+pkill -f 'Sniffle/sniffle_receiver_rust'              2>/dev/null  # Rust drop-in replacement
 pkill -f 'Scripts/BG/Better_Getter\.py'               2>/dev/null
 pkill -f 'Scripts/btc_sdp_gatt\.py'                   2>/dev/null
 

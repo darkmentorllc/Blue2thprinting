@@ -1,0 +1,6 @@
+# Cargo build artifacts
+target/
+
+# Cargo.lock for a binary crate is conventionally committed, but this
+# project has zero external deps so the lock is empty/trivial. Commit
+# or not — either way works.
