@@ -7,7 +7,7 @@ license.workspace = true
 description = "BTIDALPOOL client: `btidalpool` CLI binary with upload/query subcommands."
 
 [[bin]]
-name = "btidalpool"
+name = "btidalpool-client"
 path = "src/main.rs"
 
 [lib]

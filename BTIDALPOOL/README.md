@@ -14,7 +14,7 @@ ready.
 | Query client             | `Analysis/BTIDALPOOL_to_BTIDES.py`                       | `crates/btidalpool-client`        |
 | Google OAuth token issue | `Scripts/google-SSO-redirect-and-token-print-server.py`  | _unchanged — shared by both_      |
 
-The two Rust client tools are merged into a single `btidalpool` binary with
+The two Rust client tools are merged into a single `btidalpool-client` binary with
 `upload`, `query`, and `check-hash` subcommands; per the task brief it is
 fine that the merged Rust client CLI differs from the original two Python
 CLIs. `Analysis/Tell_Me_Everything.py` continues to import the original
@@ -67,7 +67,7 @@ BTIDALPOOL/
 │   │       ├── wire.rs                 # Envelope / Payload / Response / ErrorKind / QueryParams
 │   │       └── lib.rs
 │   ├── btidalpool-server/              # `btidalpool-server` binary
-│   └── btidalpool-client/              # `btidalpool` binary (upload + query subcommands)
+│   └── btidalpool-client/              # `btidalpool-client` binary (upload + query subcommands)
 └── python/                             # (added in a follow-up commit) Python shims that
                                         # subprocess the Rust client so Tell_Me_Everything's
                                         # `from BTIDALPOOL_to_BTIDES import ...` keeps working.

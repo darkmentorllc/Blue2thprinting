@@ -35,28 +35,28 @@ def _candidate_binary_paths() -> Sequence[Path]:
     # `.parent.parent` is BTIDALPOOL/.
     pool_root = Path(__file__).resolve().parent.parent
     return (
-        pool_root / "target" / "release" / "btidalpool",
-        pool_root / "target" / "debug" / "btidalpool",
+        pool_root / "target" / "release" / "btidalpool-client",
+        pool_root / "target" / "debug" / "btidalpool-client",
         # Allow an explicit override via the environment for ops use
         # (e.g. systemd installing the binary into /usr/local/bin).
         Path(os.environ["BTIDALPOOL_BINARY"]) if "BTIDALPOOL_BINARY" in os.environ
-        else pool_root / "target" / "release" / "btidalpool",
+        else pool_root / "target" / "release" / "btidalpool-client",
     )
 
 
 def find_btidalpool_binary() -> str:
-    """Return the path to the `btidalpool` Rust binary, or raise."""
+    """Return the path to the `btidalpool-client` Rust binary, or raise."""
     for path in _candidate_binary_paths():
         if path.is_file() and os.access(path, os.X_OK):
             return str(path)
     # As a last resort, look on PATH (someone may have installed it system-wide).
-    on_path = shutil.which("btidalpool")
+    on_path = shutil.which("btidalpool-client")
     if on_path:
         return on_path
     raise RuntimeError(
-        "btidalpool binary not found. Build it with:\n"
+        "btidalpool-client binary not found. Build it with:\n"
         "    cd BTIDALPOOL && cargo build --release\n"
-        "or set BTIDALPOOL_BINARY=/path/to/btidalpool in your environment."
+        "or set BTIDALPOOL_BINARY=/path/to/btidalpool-client in your environment."
     )
 
 

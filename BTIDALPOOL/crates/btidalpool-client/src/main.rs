@@ -25,7 +25,7 @@ use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "btidalpool",
+    name = "btidalpool-client",
     about = "BTIDALPOOL CLI (Rust reimplementation of the Python BTIDES_to_BTIDALPOOL / BTIDALPOOL_to_BTIDES tools)"
 )]
 struct Cli {

@@ -34,7 +34,7 @@ import BTIDALPOOL_to_BTIDES as download_shim # noqa: E402
 
 REPO_ROOT = THIS_DIR.parent.parent
 SERVER_BIN = THIS_DIR.parent / "target" / "release" / "btidalpool-server"
-CLIENT_BIN = THIS_DIR.parent / "target" / "release" / "btidalpool"
+CLIENT_BIN = THIS_DIR.parent / "target" / "release" / "btidalpool-client"
 
 
 def _generate_self_signed_pem(dst_dir: Path) -> tuple[Path, Path]:
