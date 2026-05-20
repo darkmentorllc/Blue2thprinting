@@ -4,15 +4,21 @@
 //! the client's control flow is one-shot per invocation — the binary either
 //! runs an upload or a query, then exits. No event loop justified.
 //!
-//! Server certificate trust:
-//!   * If the caller passes `--ca <path>`, we load that PEM file as the
-//!     *only* trusted root for the request. Matches the Python client's
-//!     `verify='./btidalpool.ddns.net.crt'` pinning.
-//!   * If the caller passes `--insecure`, all certs are accepted. For
-//!     local end-to-end tests only.
-//!   * Otherwise the system roots are used (the AWS server has a real
-//!     LetsEncrypt cert on its OAuth port, but the BTIDALPOOL endpoint
-//!     historically uses a self-signed cert pinned by file).
+//! Server certificate trust (default mirrors the old Python client):
+//!   * Default ([`CertTrust::BundledPin`]) pins to the BTIDALPOOL server's
+//!     self-signed certificate, which is compiled into this binary via
+//!     `include_bytes!`. This reproduces the Python client's
+//!     `verify='./btidalpool.ddns.net.crt'` behavior so `btidalpool-client`
+//!     talks to the production server out of the box with no flags — but
+//!     without depending on the current working directory the way the
+//!     relative-path Python version did.
+//!   * `--ca <path>` ([`CertTrust::Pinned`]) pins to a caller-supplied PEM
+//!     instead (e.g. after a cert rotation, before this binary is rebuilt).
+//!   * `--system-roots` ([`CertTrust::System`]) uses the OS trust store,
+//!     for the day the server moves to a publicly-trusted (e.g. LetsEncrypt)
+//!     certificate.
+//!   * `--insecure` ([`CertTrust::Insecure`]) accepts any cert. Local
+//!     end-to-end testing only.
 
 use std::io::Read;
 use std::sync::Arc;
@@ -22,6 +28,16 @@ use anyhow::{Context, Result};
 use btidalpool_proto::{codec, Envelope, Response, CONTENT_TYPE};
 use rustls::{ClientConfig, RootCertStore};
 
+/// The BTIDALPOOL production server's self-signed TLS certificate, compiled
+/// into the binary. This is the same `Analysis/btidalpool.ddns.net.crt` the
+/// Python client pinned against; it is a *public* certificate (no private
+/// key), so embedding it is safe. Pinned by default — see [`CertTrust`].
+///
+/// Path is relative to this source file:
+/// `BTIDALPOOL/crates/btidalpool-client/src/` → up four → repo root →
+/// `Analysis/btidalpool.ddns.net.crt`.
+const BUNDLED_CA_PEM: &[u8] = include_bytes!("../../../../Analysis/btidalpool.ddns.net.crt");
+
 pub struct Transport {
     agent: ureq::Agent,
     url: String,
@@ -29,12 +45,16 @@ pub struct Transport {
 
 /// How the client should trust the server's TLS certificate.
 pub enum CertTrust {
-    /// Default: use the system trust roots.
+    /// Default: pin to the BTIDALPOOL server cert compiled into this binary
+    /// ([`BUNDLED_CA_PEM`]). Mirrors the Python client's default of
+    /// `verify=./btidalpool.ddns.net.crt`.
+    BundledPin,
+    /// Use the OS trust roots (for a server with a publicly-trusted cert).
     System,
-    /// Pin a single PEM-encoded certificate (or chain). Matches the Python
-    /// client's behavior when given `verify=./btidalpool.ddns.net.crt`.
+    /// Pin a single PEM-encoded certificate (or chain) from a file. Matches
+    /// the Python client's behavior when given an explicit `verify=` path.
     Pinned { ca_pem_path: std::path::PathBuf },
-    /// Accept any cert. Local tests only — refuses to be the default.
+    /// Accept any cert. Local tests only — never the default.
     Insecure,
 }
 
@@ -46,21 +66,20 @@ impl Transport {
             .timeout_connect(Duration::from_secs(10))
             .timeout(Duration::from_secs(120));
         let builder = match trust {
+            CertTrust::BundledPin => {
+                let roots = roots_from_pem(BUNDLED_CA_PEM)
+                    .context("loading the bundled BTIDALPOOL server certificate")?;
+                let cfg = ClientConfig::builder()
+                    .with_root_certificates(roots)
+                    .with_no_client_auth();
+                builder.tls_config(Arc::new(cfg))
+            }
             CertTrust::System => builder,
             CertTrust::Pinned { ca_pem_path } => {
-                let mut roots = RootCertStore::empty();
                 let bytes = std::fs::read(&ca_pem_path)
                     .with_context(|| format!("reading CA pem {ca_pem_path:?}"))?;
-                let mut cursor = std::io::Cursor::new(bytes);
-                for cert in rustls_pemfile::certs(&mut cursor) {
-                    let cert = cert.with_context(|| "parsing pinned CA certificate")?;
-                    roots
-                        .add(cert)
-                        .with_context(|| "registering pinned CA certificate")?;
-                }
-                if roots.is_empty() {
-                    anyhow::bail!("--ca file contained no certificates");
-                }
+                let roots = roots_from_pem(&bytes)
+                    .with_context(|| format!("parsing CA pem {ca_pem_path:?}"))?;
                 let cfg = ClientConfig::builder()
                     .with_root_certificates(roots)
                     .with_no_client_auth();
@@ -118,6 +137,22 @@ impl Transport {
             );
         }
     }
+}
+
+/// Build a [`RootCertStore`] from a PEM blob (one or more certificates).
+/// Used for both the bundled cert and `--ca`-supplied files so the two
+/// paths can't drift apart. Errors if the PEM parses to zero certs.
+fn roots_from_pem(pem: &[u8]) -> Result<RootCertStore> {
+    let mut roots = RootCertStore::empty();
+    let mut cursor = std::io::Cursor::new(pem);
+    for cert in rustls_pemfile::certs(&mut cursor) {
+        let cert = cert.context("parsing CA certificate")?;
+        roots.add(cert).context("registering CA certificate")?;
+    }
+    if roots.is_empty() {
+        anyhow::bail!("PEM contained no certificates");
+    }
+    Ok(roots)
 }
 
 /// Idempotently install rustls's default `ring` crypto provider. Safe to
@@ -186,3 +221,76 @@ fn insecure_client_config() -> ClientConfig {
         .with_custom_certificate_verifier(Arc::new(AcceptAll))
         .with_no_client_auth()
     }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rustls::client::danger::ServerCertVerifier;
+    use rustls::client::WebPkiServerVerifier;
+    use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
+
+    fn bundled_end_entity() -> CertificateDer<'static> {
+        let mut cursor = std::io::Cursor::new(BUNDLED_CA_PEM);
+        let certs: Vec<CertificateDer<'static>> = rustls_pemfile::certs(&mut cursor)
+            .collect::<std::result::Result<_, _>>()
+            .expect("parse bundled cert");
+        assert_eq!(certs.len(), 1, "bundled file should hold exactly one cert");
+        certs.into_iter().next().unwrap()
+    }
+
+    /// The bundled cert must parse into a non-empty RootCertStore. Cheap
+    /// guard that catches an accidentally-truncated or wrong-format file
+    /// getting embedded.
+    #[test]
+    fn bundled_cert_loads_into_root_store() {
+        let roots = roots_from_pem(BUNDLED_CA_PEM).expect("bundled cert should load");
+        assert_eq!(roots.len(), 1);
+    }
+
+    /// The marquee test: run the bundled cert through rustls's *real*
+    /// WebPki server-cert verifier, pinned to itself, for the hostname the
+    /// default server URL uses. If this passes we know that pointing the
+    /// client at https://btidalpool.ddns.net:3567 with the default
+    /// `BundledPin` trust will complete the TLS handshake — without needing
+    /// a live server in the test. Exercises the same trust-anchor + SAN +
+    /// validity-window checks the real handshake performs.
+    #[test]
+    fn bundled_cert_validates_as_its_own_server_cert() {
+        ensure_crypto_provider_installed();
+        let roots = roots_from_pem(BUNDLED_CA_PEM).unwrap();
+        let verifier = WebPkiServerVerifier::builder(Arc::new(roots))
+            .build()
+            .expect("build verifier");
+        let ee = bundled_end_entity();
+        let name = ServerName::try_from("btidalpool.ddns.net").unwrap();
+        let res = verifier.verify_server_cert(&ee, &[], &name, &[], UnixTime::now());
+        assert!(
+            res.is_ok(),
+            "bundled cert must validate as its own server cert for \
+             btidalpool.ddns.net (else the default --BundledPin trust would \
+             fail the real handshake): {res:?}"
+        );
+    }
+
+    /// Pinning is hostname-scoped: the bundled cert must be *rejected* for a
+    /// hostname it isn't issued for. Confirms we didn't accidentally end up
+    /// with name-checking disabled.
+    #[test]
+    fn bundled_cert_rejected_for_wrong_hostname() {
+        ensure_crypto_provider_installed();
+        let roots = roots_from_pem(BUNDLED_CA_PEM).unwrap();
+        let verifier = WebPkiServerVerifier::builder(Arc::new(roots))
+            .build()
+            .unwrap();
+        let ee = bundled_end_entity();
+        let name = ServerName::try_from("example.com").unwrap();
+        let res = verifier.verify_server_cert(&ee, &[], &name, &[], UnixTime::now());
+        assert!(res.is_err(), "wrong hostname must be rejected");
+    }
+
+    #[test]
+    fn empty_pem_is_rejected() {
+        let err = roots_from_pem(b"not a cert").unwrap_err();
+        assert!(err.to_string().contains("no certificates"));
+    }
+}
