@@ -41,6 +41,7 @@ Sniffle_thread_enabled = True
 
 lmp2thprint_enabled = True # When True, the BTC worker runs DarkFirmware_VSC_LMP (BlueZ Realtek-VSC) against discovered BR/EDR devices to capture LMP PDUs. The legacy ESP32 Braktooth + FTDI path has been removed.
 better_getter_enabled = True
+better_getter_skip_apple = True # When True, every Better_Getter.py launch gets -A (skip-apple), so BG early-exits (rc 0x0A) the moment it confirms an Apple device via Advertisement Company ID, LL_VERSION_IND, or the GATT Manufacturer Name. Belt-and-suspenders with the discovery-time APPLE_COMPANY_ID deprioritization below: a deprioritized Apple device that still reaches a BG launch via the fallback path won't waste a full ~20s enumeration timeout. Flip to False to fully enumerate Apple devices.
 sdptool_enabled = False    # Legacy SDP path via the custom bluez-5.66 sdptool binary. Kept as a toggleable fallback for diagnostics; superseded by btc_sdp_gatt_enabled below.
 btc_sdp_gatt_enabled = True # When True, runs Scripts/btc_sdp_gatt.py for SDP enumeration plus GATT-over-BR/EDR enumeration via BlueZ kernel L2CAP sockets. Enable this OR sdptool_enabled, not both — they probe the same target on the same hci adapter and would race.
 
@@ -1458,6 +1459,9 @@ def ble_thread_function():
                                 gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
                             else:
                                 gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
+                            # Skip-apple: BG will early-exit (rc 0x0A) on confirmed Apple devices.
+                            if(better_getter_skip_apple):
+                                gatt_cmd.append("-A")
                             try:
                                 if(sniffle_stdout_logging):
                                     sniffle_append_stdout = open(f"{BG_output_pcap_path}/Sniffle_stdout.log", "a")

@@ -47,9 +47,11 @@ struct Cli {
     /// Input folder; can be passed multiple times.
     #[arg(long, action = clap::ArgAction::Append)]
     folder: Vec<PathBuf>,
-    /// Auto-detect file type by leading magic bytes (recommended).
-    #[arg(long, default_value_t = true)]
-    auto_detect: bool,
+    // NOTE: file-type detection is unconditional — collect_jobs() always sniffs
+    // each file's leading magic bytes via detect_kind(), and there is no
+    // alternative (e.g. extension-based) detection path. The former
+    // `--auto-detect` flag (a default-true bool that could never be turned off
+    // and was never read) was removed as dead/misleading CLI surface.
     /// Path to BTIDES_Schema directory (used for output JSON-schema validation
     /// unless `--no-validate` is set). If omitted, defaults to
     /// `<binary_dir>/../../../BTIDES_Schema` — i.e. the schema submodule that
@@ -630,4 +632,216 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     Ok(())
+}
+
+// ============================================================================
+// Unit tests
+// ============================================================================
+// detect_kind() is the pure file-format classifier — it sniffs the first 8
+// bytes to route a capture to the pcap or btsnoop (HCI) converter. The
+// converters themselves (convert_pcap / convert_hci) depend on the
+// BTIDES_Schema submodule parsers and are exercised by running the binary on
+// real captures, not here.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    // Write `bytes` to a uniquely-named temp file and return its path. The
+    // caller is responsible for the file living long enough for detect_kind
+    // to open it (it does, within each test).
+    fn temp_with(bytes: &[u8], tag: &str) -> PathBuf {
+        let mut p = std::env::temp_dir();
+        let uniq = format!(
+            "import_all_btides_test_{}_{}_{}",
+            std::process::id(),
+            tag,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        p.push(uniq);
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(bytes).unwrap();
+        f.flush().unwrap();
+        p
+    }
+
+    #[test]
+    fn detect_kind_recognizes_btsnoop_hci() {
+        // btsnoop files start with the 8-byte ASCII magic "btsnoop\0".
+        let p = temp_with(b"btsnoop\0extra_payload_bytes", "hci");
+        assert_eq!(detect_kind(&p), Some(Kind::Hci));
+        let _ = std::fs::remove_file(&p);
+    }
+
+    #[test]
+    fn detect_kind_recognizes_all_pcap_magics() {
+        // Classic pcap LE + BE, nanosecond LE + BE, and pcapng — the five
+        // magics the matcher accepts. Pad to 8 bytes so the read succeeds.
+        let magics: &[(&str, [u8; 4])] = &[
+            ("classic_be", [0xa1, 0xb2, 0xc3, 0xd4]),
+            ("classic_le", [0xd4, 0xc3, 0xb2, 0xa1]),
+            ("nsec_be",    [0xa1, 0xb2, 0x3c, 0x4d]),
+            ("nsec_le",    [0x4d, 0x3c, 0xb2, 0xa1]),
+            ("pcapng",     [0x0a, 0x0d, 0x0d, 0x0a]),
+        ];
+        for (tag, m) in magics {
+            let mut bytes = m.to_vec();
+            bytes.extend_from_slice(&[0u8; 4]); // pad to 8
+            let p = temp_with(&bytes, tag);
+            assert_eq!(detect_kind(&p), Some(Kind::Pcap), "magic {tag} should be Pcap");
+            let _ = std::fs::remove_file(&p);
+        }
+    }
+
+    #[test]
+    fn detect_kind_returns_none_for_unknown_and_short_files() {
+        let p = temp_with(b"not a capture file", "unknown");
+        assert_eq!(detect_kind(&p), None);
+        let _ = std::fs::remove_file(&p);
+
+        // Fewer than 4 bytes — neither branch can match.
+        let p2 = temp_with(b"ab", "short");
+        assert_eq!(detect_kind(&p2), None);
+        let _ = std::fs::remove_file(&p2);
+    }
+
+    #[test]
+    fn detect_kind_returns_none_for_missing_file() {
+        let mut p = std::env::temp_dir();
+        p.push(format!("definitely_absent_{}", std::process::id()));
+        assert_eq!(detect_kind(&p), None);
+    }
+}
+
+// ============================================================================
+// CLI argument-parsing tests
+// ============================================================================
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+    use clap::Parser;
+
+    fn parse(args: &[&str]) -> Result<Cli, clap::Error> {
+        let mut v = vec!["import-all-BTIDES"];
+        v.extend_from_slice(args);
+        Cli::try_parse_from(v)
+    }
+
+    #[test]
+    fn parses_with_no_args_folder_is_optional() {
+        // --folder has no `required`, so an empty invocation parses; the
+        // empty folder list is handled at runtime, not by clap.
+        let c = parse(&[]).unwrap();
+        assert!(c.folder.is_empty());
+    }
+
+    #[test]
+    fn defaults_match_documented_values() {
+        let c = parse(&[]).unwrap();
+        assert_eq!(c.schema_dir, None);
+        assert!(!c.no_validate);
+        assert!(!c.overwrite_existing);
+        assert!(!c.read_existing_btides);
+        assert_eq!(c.workers, None);
+        assert!(!c.verbose_btides);
+        assert!(!c.verbose);
+        assert!(!c.to_sql);
+        assert!(!c.use_test_db);
+        assert_eq!(c.db_host, "127.0.0.1");
+        assert_eq!(c.db_user, "user");
+        assert_eq!(c.db_password, "a");
+        assert_eq!(c.deadlock_retries, 8);
+        assert!(!c.keep_btides_after_sql);
+    }
+
+    #[test]
+    fn folder_is_appendable() {
+        let c = parse(&["--folder", "/a", "--folder", "/b", "--folder", "/c"]).unwrap();
+        assert_eq!(
+            c.folder,
+            vec![PathBuf::from("/a"), PathBuf::from("/b"), PathBuf::from("/c")]
+        );
+    }
+
+    #[test]
+    fn overwrite_and_read_existing_are_mutually_exclusive() {
+        // conflicts_with = "read_existing_btides" → passing both is an error.
+        assert!(parse(&["--overwrite-existing", "--read-existing-BTIDES"]).is_err());
+        // Either one alone is fine.
+        assert!(parse(&["--overwrite-existing"]).unwrap().overwrite_existing);
+        assert!(parse(&["--read-existing-BTIDES"]).unwrap().read_existing_btides);
+    }
+
+    #[test]
+    fn capitalized_and_hyphenated_long_flags_parse() {
+        let c = parse(&[
+            "--read-existing-BTIDES",
+            "--verbose-BTIDES",
+            "--to-SQL",
+        ])
+        .unwrap();
+        assert!(c.read_existing_btides);
+        assert!(c.verbose_btides);
+        assert!(c.to_sql);
+    }
+
+    #[test]
+    fn to_sql_with_db_overrides_parse() {
+        let c = parse(&[
+            "--to-SQL",
+            "--use-test-db",
+            "--db-host", "192.168.10.128",
+            "--db-user", "tester",
+            "--db-password", "secret",
+            "--deadlock-retries", "16",
+            "--keep-btides-after-sql",
+        ])
+        .unwrap();
+        assert!(c.to_sql);
+        assert!(c.use_test_db);
+        assert_eq!(c.db_host, "192.168.10.128");
+        assert_eq!(c.db_user, "tester");
+        assert_eq!(c.db_password, "secret");
+        assert_eq!(c.deadlock_retries, 16);
+        assert!(c.keep_btides_after_sql);
+    }
+
+    #[test]
+    fn workers_and_schema_dir_parse() {
+        let c = parse(&["--workers", "6", "--schema-dir", "/opt/schema"]).unwrap();
+        assert_eq!(c.workers, Some(6));
+        assert_eq!(c.schema_dir, Some(PathBuf::from("/opt/schema")));
+    }
+
+    #[test]
+    fn non_numeric_workers_is_rejected() {
+        assert!(parse(&["--workers", "many"]).is_err());
+    }
+
+    #[test]
+    fn unknown_flag_is_rejected() {
+        assert!(parse(&["--folder", "/a", "--nope"]).is_err());
+    }
+
+    #[test]
+    fn version_and_help_short_circuit() {
+        assert_eq!(
+            parse(&["--version"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayVersion
+        );
+        assert_eq!(
+            parse(&["--help"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayHelp
+        );
+    }
+
+    // The vestigial --auto-detect flag was removed (detection is unconditional);
+    // it must no longer be accepted.
+    #[test]
+    fn removed_auto_detect_flag_is_rejected() {
+        assert!(parse(&["--auto-detect"]).is_err());
+    }
 }

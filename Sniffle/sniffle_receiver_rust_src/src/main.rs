@@ -1619,6 +1619,7 @@ struct Counters {
     max_inq: i32,
 }
 
+#[derive(Debug)]
 struct Args {
     serport: String,
     output: Option<String>,
@@ -1726,6 +1727,12 @@ fn print_usage() {
 }
 
 fn parse_args() -> Result<Args, String> {
+    // Thin wrapper around parse_args_from so the actual parsing/validation can
+    // be unit-tested with synthetic argv slices (env::args() isn't injectable).
+    parse_args_from(env::args().skip(1))
+}
+
+fn parse_args_from<I: Iterator<Item = String>>(arg_iter: I) -> Result<Args, String> {
     let mut args = Args {
         serport: String::new(),
         output: None,
@@ -1751,7 +1758,7 @@ fn parse_args() -> Result<Args, String> {
     };
     let mut adv_chan_was_default = true;
     let mut explicit_hop = false;
-    let mut iter = env::args().skip(1).peekable();
+    let mut iter = arg_iter.peekable();
     while let Some(a) = iter.next() {
         let (k, val_inline) = if let Some(eq) = a.find('=') {
             (a[..eq].to_string(), Some(a[eq + 1..].to_string()))
@@ -2176,4 +2183,224 @@ fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
         out.push(byte);
     }
     Some(out)
+}
+
+// ============================================================================
+// CLI argument-parsing + helper tests
+// ============================================================================
+// sniffle_receiver_rust hand-rolls its arg parsing (no clap, to keep the build
+// dependency-free for the Pi Zero W). parse_args_from() takes an arbitrary
+// String iterator so the parsing + cross-flag validation + Python-mirroring
+// hop3 derivation can be unit-tested without env::args(). The --help branch
+// calls process::exit, so it's intentionally never passed here.
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+
+    fn parse(args: &[&str]) -> Result<Args, String> {
+        parse_args_from(args.iter().map(|s| s.to_string()))
+    }
+
+    // -------------------------- value helpers -------------------------------
+
+    #[test]
+    fn parse_mac_reverses_to_little_endian() {
+        // sniff_receiver.py parses reversed(mac.split(':')) → LE byte order.
+        assert_eq!(
+            parse_mac("CA:FE:13:37:00:01").unwrap(),
+            [0x01, 0x00, 0x37, 0x13, 0xFE, 0xCA]
+        );
+    }
+
+    #[test]
+    fn parse_mac_rejects_bad_shapes() {
+        assert!(parse_mac("CA:FE:13:37:00").is_err());       // 5 bytes
+        assert!(parse_mac("CA:FE:13:37:00:01:02").is_err()); // 7 bytes
+        assert!(parse_mac("ZZ:FE:13:37:00:01").is_err());    // non-hex
+    }
+
+    #[test]
+    fn parse_irk_requires_32_hex_chars() {
+        let irk = parse_irk("000102030405060708090a0b0c0d0e0f").unwrap();
+        assert_eq!(irk[0], 0x00);
+        assert_eq!(irk[15], 0x0f);
+        assert!(parse_irk("00112233").is_err());     // too short
+        assert!(parse_irk(&"z".repeat(32)).is_err()); // right len, bad hex
+    }
+
+    #[test]
+    fn parse_preload_parses_interval_delta_pairs() {
+        assert_eq!(parse_preload("6:0,10:5").unwrap(), vec![(6u16, 0u16), (10, 5)]);
+        assert_eq!(parse_preload("").unwrap(), Vec::<(u16, u16)>::new());
+        assert!(parse_preload("6").is_err());     // missing delta
+        assert!(parse_preload("x:0").is_err());   // non-numeric
+    }
+
+    #[test]
+    fn parse_string_escape_handles_common_escapes() {
+        assert_eq!(parse_string_escape(r"AB\x43"), vec![0x41, 0x42, 0x43]); // \x43 = 'C'
+        assert_eq!(parse_string_escape(r"\r\n\t"), vec![0x0d, 0x0a, 0x09]);
+        assert_eq!(parse_string_escape("plain"), b"plain".to_vec());
+        assert_eq!(parse_string_escape(r"a\\b"), vec![b'a', b'\\', b'b']);
+    }
+
+    // ------------------------- defaults & required --------------------------
+
+    #[test]
+    fn defaults_match_sniff_receiver_py() {
+        let a = parse(&["-s", "/dev/ttyUSB0"]).unwrap();
+        assert_eq!(a.serport, "/dev/ttyUSB0");
+        assert_eq!(a.output, None);
+        assert_eq!(a.mode, SnifferMode::ConnFollow);
+        assert_eq!(a.chan, 37);
+        assert_eq!(a.targ_mac, None);
+        assert_eq!(a.targ_irk, None);
+        assert_eq!(a.targ_string, None);
+        assert!(!a.ext_adv);
+        assert!(!a.longrange);
+        assert!(!a.hop3);
+        assert_eq!(a.rssi_min, -128);
+        assert!(a.preload.is_empty());
+        assert_eq!(a.phy_preload, Some(PhyMode::Phy2m as u8));
+        assert!(!a.pause_done);
+        assert!(!a.capture_crc_err);
+        assert!(!a.quiet);
+        assert_eq!(a.duration_s, None);
+        assert_eq!(a.baud, 2_000_000);
+        assert!(!a.print_stdout);
+        assert!(!a.decode_ad);
+        // label defaults to the serport basename.
+        assert_eq!(a.label, "ttyUSB0");
+    }
+
+    #[test]
+    fn serport_is_required() {
+        assert_eq!(parse(&[]).unwrap_err(), "missing -s");
+    }
+
+    #[test]
+    fn inline_equals_and_space_forms_are_equivalent() {
+        let space = parse(&["-s", "/dev/ttyUSB0", "-o", "cap.pcap"]).unwrap();
+        let inline = parse(&["-s=/dev/ttyUSB0", "-o=cap.pcap"]).unwrap();
+        assert_eq!(space.serport, inline.serport);
+        assert_eq!(space.output, inline.output);
+        assert_eq!(inline.output.as_deref(), Some("cap.pcap"));
+        // long-form aliases too
+        let long = parse(&["--serport", "/dev/ttyUSB0", "--output", "cap.pcap"]).unwrap();
+        assert_eq!(long.serport, "/dev/ttyUSB0");
+        assert_eq!(long.output.as_deref(), Some("cap.pcap"));
+    }
+
+    // ----------------------------- options ----------------------------------
+
+    #[test]
+    fn advchan_parses_and_rejects_garbage() {
+        assert_eq!(parse(&["-s", "x", "-c", "39"]).unwrap().chan, 39);
+        assert!(parse(&["-s", "x", "-c", "notanum"]).is_err());
+    }
+
+    #[test]
+    fn scan_modes_parse() {
+        assert_eq!(parse(&["-s", "x", "-A"]).unwrap().mode, SnifferMode::ActiveScan);
+        assert_eq!(parse(&["-s", "x", "--scan"]).unwrap().mode, SnifferMode::ActiveScan);
+        assert_eq!(parse(&["-s", "x", "-a"]).unwrap().mode, SnifferMode::PassiveScan);
+        assert_eq!(parse(&["-s", "x", "--advonly"]).unwrap().mode, SnifferMode::PassiveScan);
+    }
+
+    #[test]
+    fn boolean_flags_set() {
+        let a = parse(&["-s", "x", "-e", "-l", "-q", "-C", "-p", "-d", "--print"]).unwrap();
+        assert!(a.ext_adv);
+        assert!(a.longrange);
+        assert!(a.quiet);
+        assert!(a.capture_crc_err);
+        assert!(a.pause_done);
+        assert!(a.decode_ad);
+        assert!(a.print_stdout);
+    }
+
+    #[test]
+    fn nophychange_clears_phy_preload() {
+        assert_eq!(parse(&["-s", "x", "-n"]).unwrap().phy_preload, None);
+        assert_eq!(parse(&["-s", "x", "--nophychange"]).unwrap().phy_preload, None);
+    }
+
+    #[test]
+    fn mac_filter_parses_reversed() {
+        let a = parse(&["-s", "x", "-m", "CA:FE:13:37:00:01"]).unwrap();
+        assert_eq!(a.targ_mac, Some([0x01, 0x00, 0x37, 0x13, 0xFE, 0xCA]));
+    }
+
+    #[test]
+    fn rssi_is_clamped_to_i8_range() {
+        // take_val() grabs the next token unconditionally, so a leading-dash
+        // value works here (unlike clap).
+        assert_eq!(parse(&["-s", "x", "-r", "-200"]).unwrap().rssi_min, -128);
+        assert_eq!(parse(&["-s", "x", "-r", "200"]).unwrap().rssi_min, 127);
+        assert_eq!(parse(&["-s", "x", "-r", "-60"]).unwrap().rssi_min, -60);
+    }
+
+    #[test]
+    fn preload_baud_duration_label_parse() {
+        let a = parse(&[
+            "-s", "x",
+            "-Q", "6:0,10:5",
+            "-b", "921600",
+            "--duration", "30",
+            "--label", "ch37",
+        ])
+        .unwrap();
+        assert_eq!(a.preload, vec![(6, 0), (10, 5)]);
+        assert_eq!(a.baud, 921_600);
+        assert_eq!(a.duration_s, Some(30));
+        assert_eq!(a.label, "ch37"); // explicit label overrides serport basename
+    }
+
+    #[test]
+    fn unknown_flag_is_rejected() {
+        let err = parse(&["-s", "x", "--bogus"]).unwrap_err();
+        assert!(err.contains("unknown arg"), "got: {err}");
+    }
+
+    // ------------------- cross-flag validation + hop3 -----------------------
+
+    #[test]
+    fn mac_irk_string_filters_are_mutually_exclusive() {
+        let err = parse(&[
+            "-s", "x",
+            "-m", "CA:FE:13:37:00:01",
+            "-i", "000102030405060708090a0b0c0d0e0f",
+        ])
+        .unwrap_err();
+        assert!(err.contains("mutually exclusive"), "got: {err}");
+    }
+
+    #[test]
+    fn hop_requires_a_target_filter() {
+        let err = parse(&["-s", "x", "-H"]).unwrap_err();
+        assert!(err.contains("hop requires a target"), "got: {err}");
+    }
+
+    #[test]
+    fn hop_conflicts_with_longrange_and_explicit_channel() {
+        // -m supplies a target so we get past the "hop requires target" check.
+        assert!(parse(&["-s", "x", "-m", "CA:FE:13:37:00:01", "-l", "-H"])
+            .unwrap_err()
+            .contains("long range"));
+        assert!(parse(&["-s", "x", "-m", "CA:FE:13:37:00:01", "-c", "38", "-H"])
+            .unwrap_err()
+            .contains("don't specify -c with -H"));
+    }
+
+    #[test]
+    fn hop3_derivation_mirrors_python() {
+        // Target + default channel + legacy adv → hop3 on.
+        assert!(parse(&["-s", "x", "-m", "CA:FE:13:37:00:01"]).unwrap().hop3);
+        // Explicit -c kills hop3.
+        assert!(!parse(&["-s", "x", "-m", "CA:FE:13:37:00:01", "-c", "38"]).unwrap().hop3);
+        // -e (extended adv) without explicit -H kills hop3.
+        assert!(!parse(&["-s", "x", "-m", "CA:FE:13:37:00:01", "-e"]).unwrap().hop3);
+        // No target → hop3 stays off.
+        assert!(!parse(&["-s", "x"]).unwrap().hop3);
+    }
 }

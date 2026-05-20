@@ -43,9 +43,11 @@ struct Args {
     #[arg(long, default_value = "a")]
     db_password: String,
 
-    /// Disable per-statement autocommit and commit once at the end.
-    #[arg(long, default_value_t = true)]
-    one_transaction: bool,
+    /// Commit once at the end instead of per-statement autocommit. Committing
+    /// once is the default (far faster for bulk imports); pass
+    /// --no-one-transaction to fall back to per-statement autocommit.
+    #[arg(long = "no-one-transaction", default_value_t = false)]
+    no_one_transaction: bool,
 
     /// Use N parallel writer connections (each handles a disjoint set of
     /// destination tables). Default 1 = serial. GPS always runs serially at
@@ -83,7 +85,7 @@ fn main() {
         writer_threads: args.writer_threads,
         reader_threads: args.reader_threads,
         deadlock_retries: args.deadlock_retries,
-        one_transaction: args.one_transaction,
+        one_transaction: !args.no_one_transaction,
         verbose: true, // CLI always prints the per-phase summary
     };
 
@@ -109,4 +111,120 @@ fn main() {
         total_inserted,
         total_attempted.saturating_sub(total_inserted)
     );
+}
+
+// ============================================================================
+// CLI argument-parsing tests
+// ============================================================================
+// Parser-only: Args::try_parse_from() exercises clap without touching MySQL
+// or the importer. Covers every flag, its default, required-arg enforcement,
+// the Append (multi --input) action, numeric validation, and --help.
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+    use clap::Parser;
+
+    fn parse(args: &[&str]) -> Result<Args, clap::Error> {
+        // try_parse_from wants argv[0] = program name.
+        let mut v = vec!["BTIDES-to-SQL"];
+        v.extend_from_slice(args);
+        Args::try_parse_from(v)
+    }
+
+    #[test]
+    fn requires_at_least_one_input() {
+        // --input is required=true → parsing with none is an error.
+        assert!(parse(&[]).is_err());
+    }
+
+    #[test]
+    fn defaults_match_documented_values() {
+        let a = parse(&["--input", "a.btides"]).unwrap();
+        assert_eq!(a.input, vec!["a.btides".to_string()]);
+        assert!(!a.use_test_db);
+        assert!(!a.verbose);
+        assert_eq!(a.db_host, "127.0.0.1");
+        assert_eq!(a.db_user, "user");
+        assert_eq!(a.db_password, "a");
+        assert!(!a.no_one_transaction); // default: single-transaction mode on
+        assert_eq!(a.writer_threads, 1);
+        assert_eq!(a.reader_threads, 1);
+        assert_eq!(a.deadlock_retries, 8);
+    }
+
+    #[test]
+    fn input_is_appendable() {
+        let a = parse(&["--input", "a.btides", "--input", "b.btides"]).unwrap();
+        assert_eq!(a.input, vec!["a.btides".to_string(), "b.btides".to_string()]);
+    }
+
+    #[test]
+    fn use_test_db_and_verbose_are_flags() {
+        let a = parse(&["--input", "a", "--use-test-db", "--verbose"]).unwrap();
+        assert!(a.use_test_db);
+        assert!(a.verbose);
+    }
+
+    #[test]
+    fn verbose_print_alias_works() {
+        let a = parse(&["--input", "a", "--verbose-print"]).unwrap();
+        assert!(a.verbose);
+    }
+
+    #[test]
+    fn db_connection_overrides_parse() {
+        let a = parse(&[
+            "--input", "a",
+            "--db-host", "192.168.10.128",
+            "--db-user", "tester",
+            "--db-password", "secret",
+        ])
+        .unwrap();
+        assert_eq!(a.db_host, "192.168.10.128");
+        assert_eq!(a.db_user, "tester");
+        assert_eq!(a.db_password, "secret");
+    }
+
+    #[test]
+    fn numeric_thread_and_retry_overrides_parse() {
+        let a = parse(&[
+            "--input", "a",
+            "--writer-threads", "4",
+            "--reader-threads", "3",
+            "--deadlock-retries", "16",
+        ])
+        .unwrap();
+        assert_eq!(a.writer_threads, 4);
+        assert_eq!(a.reader_threads, 3);
+        assert_eq!(a.deadlock_retries, 16);
+    }
+
+    #[test]
+    fn non_numeric_thread_value_is_rejected() {
+        assert!(parse(&["--input", "a", "--writer-threads", "lots"]).is_err());
+    }
+
+    #[test]
+    fn unknown_flag_is_rejected() {
+        assert!(parse(&["--input", "a", "--bogus"]).is_err());
+    }
+
+    #[test]
+    fn help_short_circuits_with_displayhelp() {
+        let err = parse(&["--help"]).unwrap_err();
+        assert_eq!(err.kind(), clap::error::ErrorKind::DisplayHelp);
+    }
+
+    // Single-transaction mode is the default; --no-one-transaction is the
+    // off-switch that flips it to per-statement autocommit. (The effective
+    // ImportOpts.one_transaction in main() is `!no_one_transaction`.)
+    #[test]
+    fn no_one_transaction_flag_disables_single_transaction_mode() {
+        // Default: flag absent → single-transaction mode is on.
+        assert!(!parse(&["--input", "a"]).unwrap().no_one_transaction);
+        // Off-switch present → single-transaction mode is off.
+        assert!(parse(&["--input", "a", "--no-one-transaction"]).unwrap().no_one_transaction);
+        // The old positive flag name is no longer accepted.
+        assert!(parse(&["--input", "a", "--one-transaction"]).is_err());
+    }
 }

@@ -3,16 +3,16 @@
 	"Tesla Model 3 or Y": {
 		"comment": "This is close to the maximum data we would like to have about a device. But if new fields are determined later that we'd like to add, they can be added too.",
 		"2thprint_Chip": "TI CC2640",
-		"2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
+		"2thprint_Chip_Datasheet": "https://web.archive.org/web/20250428180448/https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
 		"2thprint_Chip_Maker": "Texas Instruments",
 		"2thprint_Device_Model": "Tesla Model 3 or Y",
 		"2thprint_NamePrint": "^S[0-9a-f]{16}C$",
 		"NamePrint_UniqueID": "True",
 		"short_description": "An electric car, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car.",
-		"company_website": "https://tesla.com",
+		"company_website": "https://web.archive.org/web/20260518233118/https://www.tesla.com/",
 		"security_research_urls": {
-			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
-			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://darkmentor.com/bt.html#Project%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://web.archive.org/web/20251210192316/https://darkmentor.com/bt.html",
+			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://web.archive.org/web/20251210192316/https://darkmentor.com/bt.html's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
 		},
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
@@ -33,15 +33,15 @@
 	},
 	"Tesla Keyfob": {
 		"2thprint_Chip": "TI CC2640",
-		"2thprint_Chip_Datasheet": "https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
+		"2thprint_Chip_Datasheet": "https://web.archive.org/web/20250428180448/https://www.ti.com/lit/ds/symlink/cc2640r2f.pdf",
 		"2thprint_Chip_Maker": "Texas Instruments",
 		"2thprint_Device_Model": "Tesla Keyfob",
 		"2thprint_NamePrint": "^Tesla Keyfob$",
 		"short_description": "Keyfob for Tesla electric cars, which uses Bluetooth proximity to a smartphone or dongle key for unlocking and starting the car. For use by those who can't, or don't want to, use their phone as a proximity key.",
-		"company_website": "https://tesla.com",
+		"company_website": "https://web.archive.org/web/20260518233118/https://www.tesla.com/",
 		"security_research_urls": {
-			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://darkmentor.com/bt.html#BLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks:%5B%5BBLE%20Proximity%20Authentication%20Vulnerable%20to%20Relay%20Attacks%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
-			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://darkmentor.com/bt.html#Project%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://web.archive.org/web/20251210192316/https://darkmentor.com/bt.html",
+			"Project TEMPA - Demystifying Tesla's Bluetooth Passive Entry system": "https://web.archive.org/web/20251210192316/https://darkmentor.com/bt.html's%20Bluetooth%20Passive%20Entry%20system:%5B%5BProject%20TEMPA%20-%20Demystifying%20Tesla's%20Bluetooth%20Passive%20Entry%20system%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
 		},
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
@@ -57,7 +57,7 @@
 	"Atmel GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Atmel Corporation (acquired by Microchip Technology Inc.)",
-		"company_website": "https://microchip.com",
+		"company_website": "https://web.archive.org/web/20260505234411/https://www.microchip.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-01-19",
 		"evidence_URL": {
@@ -75,7 +75,7 @@
 	},
 	"Barrot": {
 		"2thprint_Chip_Maker": "Barrot Technology Co.,Ltd.",
-		"company_website": "http://en.barrot.com.cn/",
+		"company_website": "https://web.archive.org/web/20260317120019/https://en.barrot.com.cn/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-04-22",
 		"evidence_URL": {
@@ -93,7 +93,7 @@
 	},
 	"Broadcom": {
 		"2thprint_Chip_Maker": "Broadcom Corporation",
-		"company_website": "http://en.barrot.com.cn/",
+		"company_website": "https://web.archive.org/web/20260317120019/https://en.barrot.com.cn/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-04-22",
 		"evidence_URL": {
@@ -112,7 +112,7 @@
 	"Cambridge Silicon Radio (CSR) GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Cambridge Silicon Radio (CSR) (acquired by Qualcomm)",
-		"company_website": "https://www.qualcomm.com/",
+		"company_website": "https://web.archive.org/web/20260515055554/https://www.qualcomm.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
@@ -172,7 +172,7 @@
 	},
 	"Dialog Semiconductor GmbH": {
 		"2thprint_Chip_Maker": "Dialog Semiconductor GmbH (acquired by Renesas)",
-		"company_website": "http://en.barrot.com.cn/",
+		"company_website": "https://web.archive.org/web/20260317120019/https://en.barrot.com.cn/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-04-22",
 		"evidence_URL": {
@@ -192,12 +192,12 @@
 	"Espressif GATTPrints": {
 		"comment": "I don't think this is official, but rather just something someone decided to come up with for themselves. But if it is official then it's not on the open web and might be in private SDKs.",
 		"2thprint_Chip_Maker": "Espressif",
-		"company_website": "https://www.espressif.com/",
+		"company_website": "https://web.archive.org/web/20260506225317/https://www.espressif.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
 			"Michael Angerer's BLE OTA for ESP32 1": "https://github.com/michael-angerer/esp32_ble_ota/blob/main/esp/main/gatt_svr.h",
-			"Michael Angerer's BLE OTA for ESP32 2": "https://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html"
+			"Michael Angerer's BLE OTA for ESP32 2": "https://web.archive.org/web/20251211232606/http://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -213,7 +213,7 @@
 	"Intel": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Intel Corporation",
-		"company_website": "https://intel.com",
+		"company_website": "https://web.archive.org/web/20260514041348/https://www.intel.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-04-22",
 		"evidence_URL": {
@@ -234,7 +234,7 @@
 	"ISSC GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "ISSC Technologies Corp. (acquired by Microchip Technology Inc.)",
-		"company_website": "https://microchip.com",
+		"company_website": "https://web.archive.org/web/20260505234411/https://www.microchip.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-04-22",
 		"evidence_URL": {
@@ -252,7 +252,7 @@
 	"LAPIS": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "LAPIS Technology Co., Ltd.",
-		"company_website": "https://www.rohm.com/lapis-tech",
+		"company_website": "https://web.archive.org/web/20260129141526/https://www.rohm.com/lapis-tech",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-04-22",
 		"evidence_URL": {
@@ -270,7 +270,7 @@
 	"Microchip GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Microchip Technology Inc.",
-		"company_website": "https://microchip.com",
+		"company_website": "https://web.archive.org/web/20260505234411/https://www.microchip.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-01-19",
 		"evidence_URL": {
@@ -295,13 +295,13 @@
 	"Nordic GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "Nordic Semiconductor",
-		"company_website": "https://www.nordicsemi.com/",
+		"company_website": "https://web.archive.org/web/20260503174510/https://www.nordicsemi.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
 			"Nordic UART": "https://web.archive.org/web/20240303153909/https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html",
 			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
-			"Nordic insecure DFU 2": "https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
+			"Nordic insecure DFU 2": "https://web.archive.org/web/20250109022624/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
 			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
 			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf"
 		},
@@ -332,11 +332,11 @@
 	"NXP GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
 		"2thprint_Chip_Maker": "(Quintic->)NXP",
-		"company_website": "https://www.nxp.com/",
+		"company_website": "https://web.archive.org/web/20260515171111/https://www.nxp.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-02",
 		"evidence_URL": {
-			"QN902x OTA Profile Guide": "https://web.archive.org/web/20230405132905/https://www.nxp.com/docs/en/user-guide/UM10993.pdf"
+			"QN902x OTA Profile Guide": "https://web.archive.org/web/20230405132905/https://web.archive.org/web/20260515171111/https://www.nxp.com/docs/en/user-guide/UM10993.pdf"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-09-02",
@@ -353,7 +353,7 @@
 	},
 	"Realtek": {
 		"2thprint_Chip_Maker": "Realtek Semiconductor Corp.",
-		"company_website": "https://www.realtek.com/",
+		"company_website": "https://web.archive.org/web/20260518150247/https://www.realtek.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-04-22",
 		"evidence_URL": {
@@ -387,7 +387,7 @@
 		"security_research_urls": {
 			"Finding New Bluetooth Low Energy Exploits via Reverse Engineering Multiple Vendors' Firmwares": "https://web.archive.org/web/20240618170612/https://darkmentor.com/publication/2020-08-blackhat/",
 			"Breaking Secure Boot on the Silicon Labs Gecko platform": "https://darkmentor.com/bt.html#Breaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform:%5B%5BBreaking%20Secure%20Boot%20on%20the%20Silicon%20Labs%20Gecko%20platform%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager",
-			"Clashing EV Chargers in The Pentesting Arena": "https://darkmentor.com/bt.html#Clashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena:%5B%5BClashing%20EV%20Chargers%20in%20The%20Pentesting%20Arena%5D%5D%20%5B%5BBluetooth%20Security%20Timeline%5D%5D%20%24%3A%2FTagManager"
+			"Clashing EV Chargers in The Pentesting Arena": "https://web.archive.org/web/20251210192316/https://darkmentor.com/bt.html"
 		},
 		"evidence_URL": {
 			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
@@ -412,7 +412,7 @@
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
                 "2thprint_Chip": "ST BlueNRG (version unknown)",
 		"2thprint_Chip_Maker": "STMicro",
-		"company_website": "https://www.st.com/",
+		"company_website": "https://web.archive.org/web/20221004055508/https://www2.st.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-02",
 		"evidence_URL": {
@@ -439,7 +439,7 @@
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
                 "2thprint_Chip": "ST STM32WBA (version unknown)",
 		"2thprint_Chip_Maker": "STMicro",
-		"company_website": "https://www.st.com/",
+		"company_website": "https://web.archive.org/web/20221004055508/https://www2.st.com/",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-02",
 		"evidence_URL": {
@@ -470,7 +470,7 @@
 			"0000fe82-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer RX (Write without response)",
 			"0000fe83-8e22-4541-9d4c-21edae82ed19": "Characteristic: STM32WBA throughput: Data Transfer TX RX INFO (Notify)"
 		},
-		"TODO: Add stuff from here": "https://www.st.com/resource/en/user_manual/dm00550659-getting-started-with-the-bluest-protocol-and-sdk-stmicroelectronics.pdf"
+		"TODO: Add stuff from here": "https://web.archive.org/web/20240620192541/https://www.st.com/resource/en/user_manual/dm00550659-getting-started-with-the-bluest-protocol-and-sdk-stmicroelectronics.pdf"
 	},
 	"TeLink GATTPrints": {
 		"comment": "This is information about GATT services which are uniquely associated with this ChipMaker",
@@ -532,7 +532,7 @@
 		"2thprint_Device_Maker": "Jabra",
 		"2thprint_NamePrint": "^Jabra Elite 3$",
 		"short_description": "Wireless headphones",
-		"company_website": "https://www.jabra.com/bluetooth-headsets/jabra-elite-3",
+		"company_website": "https://web.archive.org/web/20250204115005/https://www.jabra.com/bluetooth-headsets/jabra-elite-3",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"evidence_URL": "Look at GATT data. 'Manufacturer Name String' (2a29) == 'Qualcomm'. Model Number String (0x2a24) == 'QCC3040'. 'Device Name' (0x2a00) == 'Jabra Elite 3'",
@@ -541,7 +541,7 @@
 		"confirmation_method": "GATT data",
 		"confirmation_confidence": "10/10",
 		"misc_other_URLs": {
-			"QCC30XX documentation" : "https://www.qualcomm.com/products/internet-of-things/consumer/audio/qcc30xx-series/qcc3040#Documentation"
+			"QCC30XX documentation" : "https://web.archive.org/web/20260515055554/https://www.qualcomm.com/products/internet-of-things/consumer/audio/qcc30xx-series/qcc3040#Documentation"
 		}
 	},
 	"Jabra Elite 7 Pro":{
@@ -626,7 +626,7 @@
 		"NamePrint_UniqueID": "True",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-08-31",
-		"evidence_URL": "The packet types are these: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
+		"evidence_URL": "The packet types are these: https://web.archive.org/web/20240621171934/https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-08-31",
 		"confirmation_method": "Observed Microsoft MSD values",
@@ -639,7 +639,7 @@
 		"NamePrint_UniqueID": "True",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-08-31",
-		"evidence_URL": "The packet types are these: https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
+		"evidence_URL": "The packet types are these: https://web.archive.org/web/20240621171934/https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cdp/77b446d0-8cea-4821-ad21-fabdf4d9a569, however the presence of the name seems to be out of spec, and only when NearShareAuthPolicyPermissive bit is set (based on observed data).",
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-08-31",
 		"confirmation_method": "Observed Microsoft MSD values",
@@ -648,7 +648,7 @@
 	"Eddystone GATT UUIDs": {
 		"short_description": "Eddystone GATT UUIDs",
 		"comment": "I just wanted to capture this evidence URL which has nearby GATT UUIDs in it that I stumbled across.",
-		"evidence_URL": "https://github.com/google/eddystone/blob/master/configuration-service/README.md",
+		"evidence_URL": "https://web.archive.org/web/20250805075049/https://github.com/google/eddystone/blob/master/configuration-service/README.md",
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-04",
 		"confirmed_by": "Xeno Kovah",
@@ -686,10 +686,10 @@
 		"2thprint_Chip_Maker": "Microchip Technology Inc.",
 		"comment": "When I actually went and 2thprinted a Polara device, it returned Nordic in its LL_VERSION_IND packet. So it is probably overly broad to assign Microchip to all Polara devices, and this probably needs to be broken up on a per-model basis.",
 		"short_description": "Electronic crosswalk buttons with audio recording and Bluetooth update capabilities",
-		"company_website": "https://polara.com/",
+		"company_website": "https://web.archive.org/web/20260416183704/https://polara.com/",
 		"security_research_urls": {
-			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://www.youtube.com/watch?v=mvvVSTlbqEI",
-			"iN/iNS/iDS 3-Wire Polara FS Android Application Manual": "https://web.archive.org/web/20240806224520/https://polara.com/wp-content/uploads/2023/02/Polara-iN3-Android-Application-Manual.pdf"
+			"BLE Proximity Authentication Vulnerable to Relay Attacks": "https://web.archive.org/web/20251024043057/https://www.youtube.com/watch?v=mvvVSTlbqEI",
+			"iN/iNS/iDS 3-Wire Polara FS Android Application Manual": "https://web.archive.org/web/20240806224520/https://web.archive.org/web/20260416183704/https://polara.com/wp-content/uploads/2023/02/Polara-iN3-Android-Application-Manual.pdf"
 		},
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-04-21",

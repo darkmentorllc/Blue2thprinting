@@ -528,3 +528,221 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     Ok(())
 }
+
+// ============================================================================
+// Unit tests
+// ============================================================================
+// Pure parsing/formatting helpers only — the WiGLE SQLite read path and the
+// bt2/bttest bdaddr_random lookups need a real database and are covered by
+// running the binary against a sample WiGLE export, not here.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_latlon_accepts_parens_and_whitespace() {
+        assert_eq!(parse_latlon("(40.7128,-74.0060)").unwrap(), (40.7128, -74.0060));
+        assert_eq!(parse_latlon("40.7128,-74.0060").unwrap(), (40.7128, -74.0060));
+        assert_eq!(parse_latlon("  ( 1.5 , 2.5 ) ").unwrap(), (1.5, 2.5));
+    }
+
+    #[test]
+    fn parse_latlon_rejects_wrong_shape() {
+        assert!(parse_latlon("40.7128").is_err());          // only one component
+        assert!(parse_latlon("1,2,3").is_err());            // three components
+        assert!(parse_latlon("(north,west)").is_err());     // non-numeric
+    }
+
+    #[test]
+    fn build_bbox_orders_corners_regardless_of_input_order() {
+        // Upper-left and lower-right given in either order must yield the
+        // same lower/upper min-max envelope.
+        let bb = build_bbox("(40.8,-74.1)", "(40.7,-73.9)").unwrap();
+        assert_eq!(bb.lower_lat, 40.7);
+        assert_eq!(bb.upper_lat, 40.8);
+        assert_eq!(bb.lower_lon, -74.1);
+        assert_eq!(bb.upper_lon, -73.9);
+
+        let swapped = build_bbox("(40.7,-73.9)", "(40.8,-74.1)").unwrap();
+        assert_eq!(swapped.lower_lat, bb.lower_lat);
+        assert_eq!(swapped.upper_lat, bb.upper_lat);
+        assert_eq!(swapped.lower_lon, bb.lower_lon);
+        assert_eq!(swapped.upper_lon, bb.upper_lon);
+    }
+
+    #[test]
+    fn str_to_hex_matches_python_encode_hex() {
+        // "UVP01" — the same Device-Name encoding the BG GATTPRINT path uses.
+        assert_eq!(str_to_hex("UVP01"), "5556503031");
+        assert_eq!(str_to_hex(""), "");
+        // Non-ASCII byte expansion (é = 0xC3 0xA9 in UTF-8).
+        assert_eq!(str_to_hex("é"), "c3a9");
+    }
+
+    #[test]
+    fn printable_utf8_strips_control_chars() {
+        assert_eq!(printable_utf8("hel\u{0}lo\n"), "hello");
+        assert_eq!(printable_utf8("plain"), "plain");
+        // Tab and carriage return are control chars too.
+        assert_eq!(printable_utf8("a\tb\rc"), "abc");
+    }
+}
+
+// ============================================================================
+// CLI argument-parsing tests
+// ============================================================================
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+    use clap::Parser;
+
+    fn parse(args: &[&str]) -> Result<Cli, clap::Error> {
+        let mut v = vec!["wigle-to-BTIDES"];
+        v.extend_from_slice(args);
+        Cli::try_parse_from(v)
+    }
+
+    // The three PathBuf args have no defaults, so all three are required.
+    fn min_args() -> Vec<&'static str> {
+        vec![
+            "--input", "/tmp/in.sqlite",
+            "--output", "/tmp/out.btides",
+            "--schema-dir", "/tmp/schema",
+        ]
+    }
+
+    #[test]
+    fn requires_input_output_and_schema_dir() {
+        assert!(parse(&[]).is_err());
+        assert!(parse(&["--input", "/tmp/in.sqlite"]).is_err());
+        assert!(parse(&["--input", "/tmp/in.sqlite", "--output", "/tmp/o"]).is_err());
+        assert!(parse(&min_args()).is_ok());
+    }
+
+    #[test]
+    fn defaults_match_documented_values() {
+        let c = parse(&min_args()).unwrap();
+        assert_eq!(c.input, PathBuf::from("/tmp/in.sqlite"));
+        assert_eq!(c.output, PathBuf::from("/tmp/out.btides"));
+        assert_eq!(c.schema_dir, PathBuf::from("/tmp/schema"));
+        assert!(!c.verbose_btides);
+        assert!(!c.get_all_gps);
+        assert_eq!(c.gps_exclude_upper_left, None);
+        assert_eq!(c.gps_exclude_lower_right, None);
+        assert_eq!(c.offset, 0);
+        assert_eq!(c.limit, None);
+        assert!(!c.no_validate);
+        assert!(!c.quiet);
+        assert!(!c.no_mysql_lookup);
+        assert!(!c.use_test_db);
+        assert_eq!(c.mysql_host, "localhost");
+        assert_eq!(c.mysql_port, 3306);
+        assert_eq!(c.mysql_user, "user");
+        assert_eq!(c.mysql_password, "a");
+        assert_eq!(c.mysql_chunk_size, 1000);
+    }
+
+    #[test]
+    fn capitalized_long_flags_parse() {
+        // These deliberately keep capital letters in the long name.
+        let mut args = min_args();
+        args.extend_from_slice(&[
+            "--verbose-BTIDES",
+            "--get-all-GPS",
+            "--GPS-exclude-upper-left", "(40.8,-74.1)",
+            "--GPS-exclude-lower-right", "(40.7,-73.9)",
+        ]);
+        let c = parse(&args).unwrap();
+        assert!(c.verbose_btides);
+        assert!(c.get_all_gps);
+        assert_eq!(c.gps_exclude_upper_left.as_deref(), Some("(40.8,-74.1)"));
+        assert_eq!(c.gps_exclude_lower_right.as_deref(), Some("(40.7,-73.9)"));
+    }
+
+    #[test]
+    fn boolean_flags_set_true() {
+        let mut args = min_args();
+        args.extend_from_slice(&["--no-validate", "--quiet", "--no-mysql-lookup", "--use-test-db"]);
+        let c = parse(&args).unwrap();
+        assert!(c.no_validate);
+        assert!(c.quiet);
+        assert!(c.no_mysql_lookup);
+        assert!(c.use_test_db);
+    }
+
+    #[test]
+    fn offset_and_limit_parse_as_integers() {
+        let mut args = min_args();
+        args.extend_from_slice(&["--offset", "100", "--limit", "50"]);
+        let c = parse(&args).unwrap();
+        assert_eq!(c.offset, 100);
+        assert_eq!(c.limit, Some(50));
+    }
+
+    #[test]
+    fn mysql_overrides_parse_including_port_type() {
+        let mut args = min_args();
+        args.extend_from_slice(&[
+            "--mysql-host", "192.168.10.128",
+            "--mysql-port", "13306",
+            "--mysql-user", "tester",
+            "--mysql-password", "secret",
+            "--mysql-chunk-size", "500",
+        ]);
+        let c = parse(&args).unwrap();
+        assert_eq!(c.mysql_host, "192.168.10.128");
+        assert_eq!(c.mysql_port, 13306);
+        assert_eq!(c.mysql_user, "tester");
+        assert_eq!(c.mysql_password, "secret");
+        assert_eq!(c.mysql_chunk_size, 500);
+    }
+
+    #[test]
+    fn port_above_u16_max_is_rejected() {
+        // mysql_port is u16; 70000 overflows → parse error.
+        let mut args = min_args();
+        args.extend_from_slice(&["--mysql-port", "70000"]);
+        assert!(parse(&args).is_err());
+    }
+
+    #[test]
+    fn negative_offset_parses_but_negative_chunk_size_rejected() {
+        // A value starting with '-' is read by clap as a possible flag, so
+        // the space-separated form (`--offset -5`) is rejected as an unknown
+        // argument; the `--flag=value` form is required for negatives.
+        let mut space_form = min_args();
+        space_form.extend_from_slice(&["--offset", "-5"]);
+        assert!(parse(&space_form).is_err());
+
+        // offset is i64 (signed) → -5 is accepted via the `=` form.
+        let mut a1 = min_args();
+        a1.push("--offset=-5");
+        assert_eq!(parse(&a1).unwrap().offset, -5);
+
+        // mysql_chunk_size is usize, so a negative value is a type error even
+        // via the `=` form.
+        let mut a2 = min_args();
+        a2.push("--mysql-chunk-size=-5");
+        assert!(parse(&a2).is_err());
+    }
+
+    #[test]
+    fn unknown_flag_is_rejected() {
+        let mut args = min_args();
+        args.push("--definitely-not-a-flag");
+        assert!(parse(&args).is_err());
+    }
+
+    #[test]
+    fn version_and_help_short_circuit() {
+        // #[command(version, ...)] is set, so --version is available.
+        assert_eq!(
+            parse(&["--version"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayVersion
+        );
+        assert_eq!(
+            parse(&["--help"]).unwrap_err().kind(),
+            clap::error::ErrorKind::DisplayHelp
+        );
+    }
+}
