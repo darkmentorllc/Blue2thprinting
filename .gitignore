@@ -10,3 +10,6 @@
 google_oauth_client_secret.json
 private
 btidalpool.ddns.net.key
+# Google OAuth token file (access + refresh token) used by the BTIDALPOOL
+# clients/tests as --token-file. Developer-local secret; never commit it.
+Analysis/tf
