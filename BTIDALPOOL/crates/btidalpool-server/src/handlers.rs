@@ -107,11 +107,10 @@ fn handle_upload(
         );
     }
 
-    // 5) Hand to the ingest backend. Skipped on the test build (NoopIngestSink).
-    let _ = use_test_db; // The backend already knows which DB; the flag is
-                         // present in the envelope so callers can override
-                         // per-request when a future backend supports it.
-    if let Err(e) = deps.ingest.ingest_file(&out_path) {
+    // 5) Hand to the ingest backend, routing to bt2 or bttest per the
+    //    request's use_test_db (matches the Python server's
+    //    run_btides_to_sql(use_test_db=...)). NoopIngestSink ignores it.
+    if let Err(e) = deps.ingest.ingest_file(&out_path, use_test_db) {
         // Per Python server: a SQL ingest failure does NOT roll back the
         // pool_files write — the file is preserved so we can re-run ingest
         // later. We still report Internal so the client knows the row didn't

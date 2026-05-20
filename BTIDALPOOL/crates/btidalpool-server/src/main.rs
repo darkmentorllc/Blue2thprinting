@@ -141,9 +141,10 @@ fn main() -> Result<()> {
 #[cfg(feature = "sql-ingest")]
 fn build_ingest() -> Result<Arc<dyn IngestSink>> {
     use btidalpool_server::ingest::MysqlIngestSink;
-    // Defaults match Analysis/TME_helpers.py.
+    // Defaults match Analysis/TME_helpers.py. The sink holds pools for both
+    // bt2 and bttest and picks per request based on use_test_db.
     let opts = BTIDES_to_SQL::ImportOpts::default();
-    let sink = MysqlIngestSink::connect("localhost", "user", "a", false, opts)?;
+    let sink = MysqlIngestSink::connect("localhost", "user", "a", opts)?;
     Ok(Arc::new(sink))
 }
 
