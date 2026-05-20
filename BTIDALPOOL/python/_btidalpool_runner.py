@@ -26,7 +26,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 
 def _candidate_binary_paths() -> Sequence[Path]:
@@ -85,31 +85,13 @@ def server_url_from_env(default: str = "https://btidalpool.ddns.net:3567") -> st
     return os.environ.get("BTIDALPOOL_SERVER_URL", default)
 
 
-def ca_path_from_env(default: Optional[str] = None) -> Optional[str]:
-    """
-    Returns the path to the CA cert file to pin against the server's TLS
-    cert (matches the Python client's `verify=./btidalpool.ddns.net.crt`
-    behavior).
-
-    `BTIDALPOOL_CA` overrides; otherwise we look for `./btidalpool.ddns.net.crt`
-    next to the caller's CWD (which is where the Python tools have always
-    looked for it).
-    """
-    if "BTIDALPOOL_CA" in os.environ:
-        return os.environ["BTIDALPOOL_CA"]
-    fallback = Path("./btidalpool.ddns.net.crt")
-    if fallback.is_file():
-        return str(fallback)
-    return default
-
-
 def insecure_from_env() -> bool:
     """If `BTIDALPOOL_INSECURE=1`, skip TLS cert verification entirely.
 
-    Useful for local end-to-end tests against a `--no-tls`-launched server,
-    where the client is talking plain HTTP. Has no effect on the binary
-    when the URL scheme is http://, but documenting + exposing it here
-    keeps shell-out callers from having to spell it out.
+    For local end-to-end tests against a self-signed / `--no-tls` server.
+    In production this stays unset and the binary pins to the server cert
+    that is compiled into it (no CA file needed — the Rust client bundles
+    `btidalpool.ddns.net.crt` and trusts it by default).
     """
     return os.environ.get("BTIDALPOOL_INSECURE", "").strip() in ("1", "true", "yes")
 
@@ -141,10 +123,7 @@ def run_binary(
             argv.append("--use-test-db")
         if insecure_from_env():
             argv.append("--insecure")
-        else:
-            ca = ca_path_from_env()
-            if ca:
-                argv.extend(["--ca", ca])
+        # else: rely on the cert bundled into the binary (the default).
         argv.append(subcmd)
         argv.extend(subcmd_args)
         return subprocess.call(argv)

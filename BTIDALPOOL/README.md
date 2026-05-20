@@ -161,8 +161,7 @@ The shims read these environment variables when spawning the Rust binary:
 | Var | Purpose | Default |
 | --- | ------- | ------- |
 | `BTIDALPOOL_SERVER_URL` | URL of the BTIDALPOOL HTTPS endpoint. | `https://btidalpool.ddns.net:3567` |
-| `BTIDALPOOL_CA`        | PEM file to pin against the server's TLS cert (passed as `--ca`). | unset → binary uses its bundled cert |
-| `BTIDALPOOL_INSECURE`  | If `1`, skip cert verification (loopback testing only). | unset |
+| `BTIDALPOOL_INSECURE`  | If `1`, skip cert verification (`--insecure`; loopback testing only). | unset |
 | `BTIDALPOOL_BINARY`    | Override the binary lookup; useful for ops installs. | (auto-search) |
 
 ### TLS trust defaults
@@ -171,16 +170,18 @@ The `btidalpool-client` binary **bundles the BTIDALPOOL server's self-signed
 certificate** (`Analysis/btidalpool.ddns.net.crt`, compiled in via
 `include_bytes!`) and pins to it by default — so it talks to the production
 server with no TLS flags, reproducing the old Python client's
-`verify=./btidalpool.ddns.net.crt` behavior. Override the trust policy with:
+`verify=./btidalpool.ddns.net.crt` behavior. There is no `--ca` flag (the
+bundled cert covers production; on a cert rotation, rebuild the binary).
+Two override flags exist:
 
-* `--ca <pem>` — pin to a different cert (e.g. after a rotation, before the
-  binary is rebuilt). The Python shims set this from `BTIDALPOOL_CA`, and
-  also auto-pass `./btidalpool.ddns.net.crt` if it's in the CWD, so a
-  rotated on-disk cert is picked up without a rebuild.
 * `--system-roots` — verify against the OS trust store (for the day the
-  server gets a publicly-trusted cert).
+  server gets a publicly-trusted, e.g. LetsEncrypt, cert).
 * `--insecure` — accept any cert (local testing only; the shims set this
   from `BTIDALPOOL_INSECURE=1`).
+
+The loopback QA test pins a per-run self-signed cert through the internal
+`CertTrust::Pinned` Rust API (no CLI flag), which is why that variant is
+retained even though it isn't exposed on the command line.
 
 ## Status
 
@@ -196,7 +197,7 @@ server with no TLS flags, reproducing the old Python client's
 | Server: typed request dispatch (upload / check_hash / query)    | done |
 | Server: BTIDES-to-SQL ingest via the existing crate             | done (gated on `sql-ingest` feature) |
 | Server: Tell_Me_Everything subprocess query                     | done |
-| Client: ureq + rustls; bundled-cert pin by default, `--ca` / `--system-roots` / `--insecure` overrides | done, pin verified by test |
+| Client: ureq + rustls; bundled-cert pin by default, `--system-roots` / `--insecure` overrides | done, pin verified by test |
 | Client: `upload` / `query` / `check-hash` subcommands           | done |
 | Python shims (preserve `Tell_Me_Everything.py` imports)         | done |
 | End-to-end loopback test (Rust: TLS + codec + handlers)         | 8 tests, all green |

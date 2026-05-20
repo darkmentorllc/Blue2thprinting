@@ -140,11 +140,12 @@ class ShimLoopbackTest(unittest.TestCase):
             raise unittest.SkipTest(f"server did not start; stderr: {stderr}")
 
         # 3) Point the shims at this server. The shim picks these up from
-        #    the environment at call time.
+        #    the environment at call time. This loopback server presents a
+        #    localhost cert (not the bundled btidalpool.ddns.net cert the
+        #    client pins by default), so we run the shim in insecure mode —
+        #    the same escape hatch used for any local self-signed server.
         os.environ["BTIDALPOOL_SERVER_URL"] = f"https://127.0.0.1:{cls._port}"
-        os.environ["BTIDALPOOL_CA"] = str(cert)
-        # Ensure no override leaks from a previous test run.
-        os.environ.pop("BTIDALPOOL_INSECURE", None)
+        os.environ["BTIDALPOOL_INSECURE"] = "1"
 
     @classmethod
     def tearDownClass(cls):
@@ -156,7 +157,7 @@ class ShimLoopbackTest(unittest.TestCase):
                 cls._proc.kill()
         cls._tmp.cleanup()
         os.environ.pop("BTIDALPOOL_SERVER_URL", None)
-        os.environ.pop("BTIDALPOOL_CA", None)
+        os.environ.pop("BTIDALPOOL_INSECURE", None)
 
     def test_upload_then_idempotent_upload(self):
         """A second upload of the same JSON must be reported as a duplicate."""

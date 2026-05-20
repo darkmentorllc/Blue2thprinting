@@ -12,13 +12,16 @@
 //!     talks to the production server out of the box with no flags — but
 //!     without depending on the current working directory the way the
 //!     relative-path Python version did.
-//!   * `--ca <path>` ([`CertTrust::Pinned`]) pins to a caller-supplied PEM
-//!     instead (e.g. after a cert rotation, before this binary is rebuilt).
 //!   * `--system-roots` ([`CertTrust::System`]) uses the OS trust store,
 //!     for the day the server moves to a publicly-trusted (e.g. LetsEncrypt)
 //!     certificate.
 //!   * `--insecure` ([`CertTrust::Insecure`]) accepts any cert. Local
 //!     end-to-end testing only.
+//!   * [`CertTrust::Pinned`] pins a caller-supplied PEM file. There is no
+//!     CLI flag for it (the bundled default covers production); it exists
+//!     only as a Rust API for the loopback QA test, which needs to pin the
+//!     self-signed cert it mints per-run — analogous to `--insecure` being
+//!     retained for QA.
 
 use std::io::Read;
 use std::sync::Arc;
@@ -51,8 +54,9 @@ pub enum CertTrust {
     BundledPin,
     /// Use the OS trust roots (for a server with a publicly-trusted cert).
     System,
-    /// Pin a single PEM-encoded certificate (or chain) from a file. Matches
-    /// the Python client's behavior when given an explicit `verify=` path.
+    /// Pin a single PEM-encoded certificate (or chain) from a file. No CLI
+    /// flag exposes this — it is a Rust API for the loopback QA test, which
+    /// pins the self-signed cert it generates per run.
     Pinned { ca_pem_path: std::path::PathBuf },
     /// Accept any cert. Local tests only — never the default.
     Insecure,
@@ -140,8 +144,8 @@ impl Transport {
 }
 
 /// Build a [`RootCertStore`] from a PEM blob (one or more certificates).
-/// Used for both the bundled cert and `--ca`-supplied files so the two
-/// paths can't drift apart. Errors if the PEM parses to zero certs.
+/// Shared by the bundled-cert path and the QA-only `Pinned` path so the
+/// two can't drift apart. Errors if the PEM parses to zero certs.
 fn roots_from_pem(pem: &[u8]) -> Result<RootCertStore> {
     let mut roots = RootCertStore::empty();
     let mut cursor = std::io::Cursor::new(pem);

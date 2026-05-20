@@ -63,7 +63,7 @@ def _main_cli() -> int:
 
     Kept so existing operator muscle memory still works. The CLI surface is
     minimal — most options are passed via env vars that `run_binary` reads
-    (BTIDALPOOL_SERVER_URL, BTIDALPOOL_CA, BTIDALPOOL_INSECURE).
+    (BTIDALPOOL_SERVER_URL, BTIDALPOOL_INSECURE, BTIDALPOOL_BINARY).
     """
     parser = argparse.ArgumentParser(
         description="Send BTIDES data to BTIDALPOOL server (Rust shim)."

@@ -43,19 +43,13 @@ struct Cli {
     /// Tell the server to use the `bttest` database instead of `bt2`.
     #[arg(long)]
     use_test_db: bool,
-    /// Pin to this PEM-encoded CA certificate when verifying the server's
-    /// TLS cert, instead of the certificate bundled into this binary. Use
-    /// after a server cert rotation, before this binary is rebuilt.
-    #[arg(long)]
-    ca: Option<PathBuf>,
     /// Verify the server cert against the OS trust store instead of the
     /// bundled self-signed cert. Use once the server moves to a
     /// publicly-trusted (e.g. LetsEncrypt) certificate.
     #[arg(long)]
     system_roots: bool,
     /// Accept any TLS certificate. For local end-to-end tests only —
-    /// production callers should rely on the bundled cert (the default)
-    /// or pass `--ca`.
+    /// production callers rely on the bundled cert (the default).
     #[arg(long)]
     insecure: bool,
     #[command(subcommand)]
@@ -107,14 +101,12 @@ fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
 
     let auth = load_auth(&cli.token_file, cli.use_test_db)?;
-    // Trust precedence: --insecure > --ca > --system-roots > bundled cert.
+    // Trust precedence: --insecure > --system-roots > bundled cert.
     // The bundled-cert default reproduces the Python client's
     // `verify=./btidalpool.ddns.net.crt` behavior so the common case
     // (talking to the production server) needs no TLS flags at all.
     let trust = if cli.insecure {
         CertTrust::Insecure
-    } else if let Some(ca) = cli.ca.clone() {
-        CertTrust::Pinned { ca_pem_path: ca }
     } else if cli.system_roots {
         CertTrust::System
     } else {
