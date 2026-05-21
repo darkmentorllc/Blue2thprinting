@@ -336,9 +336,7 @@ mod sys {
     extern "C" {
         pub fn open(pathname: *const c_char, flags: c_int) -> c_int;
         pub fn close(fd: c_int) -> c_int;
-        pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;
-        pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
-        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+        pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
         pub fn tcgetattr(fd: c_int, termios_p: *mut Termios) -> c_int;
         pub fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
         pub fn cfsetispeed(termios_p: *mut Termios, speed: SpeedT) -> c_int;
@@ -473,9 +471,7 @@ mod sys {
     extern "C" {
         pub fn open(pathname: *const c_char, flags: c_int) -> c_int;
         pub fn close(fd: c_int) -> c_int;
-        pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;
-        pub fn read(fd: c_int, buf: *mut c_void, count: usize) -> isize;
-        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+        pub fn fcntl(fd: c_int, cmd: c_int, arg: c_int) -> c_int;        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
         pub fn tcgetattr(fd: c_int, termios_p: *mut Termios) -> c_int;
         pub fn tcsetattr(fd: c_int, optional_actions: c_int, termios_p: *const Termios) -> c_int;
         pub fn tcflush(fd: c_int, queue_selector: c_int) -> c_int;
@@ -666,14 +662,13 @@ impl AdvDataInfo {
     }
 }
 
-struct AuxPtr { chan: u8, phy: u8, offset_us: u32 }
+struct AuxPtr { chan: u8, offset_us: u32 }
 impl AuxPtr {
     fn parse(b: &[u8]) -> Self {
         let chan = b[0] & 0x3F;
-        let phy = b[2] >> 5;
         let offset_mult: u32 = if b[0] & 0x80 != 0 { 300 } else { 30 };
         let aux_offset: u32 = (b[1] as u32) | (((b[2] & 0x1F) as u32) << 8);
-        Self { chan, phy, offset_us: aux_offset * offset_mult }
+        Self { chan, offset_us: aux_offset * offset_mult }
     }
 }
 
@@ -786,7 +781,6 @@ impl PduClass {
 
 /// Parsed view of a PacketMessage body — owns no buffers, just slice indices.
 struct ParsedPacket<'a> {
-    ts_raw: u32,
     rssi: i8,
     chan: u8,           // BLE channel (0..39)
     phy: u8,
@@ -849,7 +843,6 @@ fn parse_packet_message<'a>(
     let ts_epoch_us = (dstate.first_epoch_us as i64 + (ts_rel_s * 1_000_000.0) as i64) as u64;
 
     Some(ParsedPacket {
-        ts_raw,
         rssi,
         chan,
         phy,
@@ -1436,10 +1429,6 @@ fn str_mac2(mac: &[u8], is_random: bool) -> String {
 }
 
 const PHY_NAMES: [&str; 4] = ["1M", "2M", "Coded (S=8)", "Coded (S=2)"];
-const PDU_NAMES: [&str; 8] = [
-    "ADV_IND", "ADV_DIRECT_IND", "ADV_NONCONN_IND", "SCAN_REQ", "SCAN_RSP",
-    "CONNECT_IND", "ADV_SCAN_IND", "ADV_EXT_IND",
-];
 const LL_CONTROL_NAMES: [&str; 26] = [
     "LL_CONNECTION_UPDATE_IND", "LL_CHANNEL_MAP_IND", "LL_TERMINATE_IND",
     "LL_ENC_REQ", "LL_ENC_RSP", "LL_START_ENC_REQ", "LL_START_ENC_RSP",
