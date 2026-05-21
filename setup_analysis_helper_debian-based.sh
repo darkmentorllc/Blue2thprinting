@@ -42,20 +42,46 @@ echo ""
 echo "====================================================================="
 echo "Installing Rust toolchain (needed to build Analysis/BTIDES_Schema/rust/ workspace)."
 echo "====================================================================="
-# The Rust workspace uses jsonschema 0.30 which needs rustc >= 1.79;
-# Debian/Ubuntu's apt-shipped rustc can be too old, so use rustup to
-# install the current stable toolchain into the invoking user's home.
+# The Rust workspaces need jsonschema 0.30 (rustc >= 1.79) and can only read
+# v4 Cargo.lock files (cargo >= 1.78). Debian/Ubuntu's apt-shipped cargo is
+# frequently older — e.g. Ubuntu 24.04 ships 1.75, which can't even parse the
+# lock files ("lock file version 4 requires -Znext-lockfile-bump"). So we
+# require cargo >= 1.79 and install the current stable toolchain via rustup
+# when the system cargo is missing OR too old (not merely missing).
 # build-essential / curl / pkg-config are needed for native crate compiles.
 sudo apt-get install -y build-essential curl ca-certificates pkg-config
-if ! sudo -u "$USERNAME" bash -lc 'command -v cargo' >/dev/null 2>&1; then
+
+# Returns 0 only if a cargo >= 1.79 is already available to $USERNAME.
+cargo_is_recent_enough() {
+    local ver major minor
+    ver="$(sudo -u "$USERNAME" bash -lc 'command -v cargo >/dev/null 2>&1 && cargo --version' 2>/dev/null | awk '{print $2}')"
+    [[ -z "$ver" ]] && return 1
+    major="${ver%%.*}"
+    minor="${ver#*.}"; minor="${minor%%.*}"
+    [[ "${major:-0}" -gt 1 ]] && return 0
+    [[ "${major:-0}" -eq 1 && "${minor:-0}" -ge 79 ]] && return 0
+    return 1
+}
+
+if ! cargo_is_recent_enough; then
+    echo "No cargo >= 1.79 found for $USERNAME (the apt-shipped cargo is often too old); installing the current stable toolchain via rustup."
     sudo -u "$USERNAME" sh -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal"
 fi
-CARGO_BIN="$(sudo -u "$USERNAME" bash -lc 'command -v cargo' 2>/dev/null)"
+
+# Prefer the rustup cargo (~/.cargo/bin) over any older /usr/bin/cargo, and use
+# this explicit path for the builds below so they can't silently fall back to
+# a too-old system cargo regardless of PATH ordering.
+USER_HOME="$(eval echo ~"$USERNAME")"
+if [[ -x "$USER_HOME/.cargo/bin/cargo" ]]; then
+    CARGO_BIN="$USER_HOME/.cargo/bin/cargo"
+else
+    CARGO_BIN="$(sudo -u "$USERNAME" bash -lc 'command -v cargo' 2>/dev/null)"
+fi
 if [[ -z "$CARGO_BIN" ]]; then
-    echo "Rust toolchain install failed — 'cargo' is not on \$PATH for $USERNAME."
+    echo "Rust toolchain install failed — no usable cargo found for $USERNAME."
     exit -1
 fi
-echo "Using cargo: $CARGO_BIN"
+echo "Using cargo: $CARGO_BIN ($(sudo -u "$USERNAME" "$CARGO_BIN" --version 2>/dev/null))"
 
 python3 -m venv ./venv
 source ./venv/bin/activate
@@ -141,12 +167,12 @@ echo "  * BTIDALPOOL/ — Rust BTIDALPOOL server + client"
 echo "      (btidalpool-server [with sql-ingest], btidalpool-client)"
 echo "Release builds, may take a minute or two."
 echo "================================================================================="
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && cargo build --release"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && \"$CARGO_BIN\" build --release"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/BTIDES_Schema/rust. Check the output above."
     exit -1
 fi
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/rust' && cargo build --release"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/rust' && \"$CARGO_BIN\" build --release"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/rust. Check the output above."
     exit -1
@@ -156,12 +182,12 @@ fi
 # server does (the underlying BTIDES-to-SQL crate is pure-Rust MySQL, so no
 # system MySQL dev libraries are needed). The client is the merged
 # upload/query CLI that the Python shims under BTIDALPOOL/python/ exec.
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && cargo build --release -p btidalpool-server --features sql-ingest"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && \"$CARGO_BIN\" build --release -p btidalpool-server --features sql-ingest"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in BTIDALPOOL (btidalpool-server). Check the output above."
     exit -1
 fi
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && cargo build --release -p btidalpool-client"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/BTIDALPOOL' && \"$CARGO_BIN\" build --release -p btidalpool-client"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in BTIDALPOOL (btidalpool-client). Check the output above."
     exit -1
