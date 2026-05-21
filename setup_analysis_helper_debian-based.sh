@@ -167,12 +167,21 @@ echo "  * BTIDALPOOL/ — Rust BTIDALPOOL server + client"
 echo "      (btidalpool-server [with sql-ingest], btidalpool-client)"
 echo "Release builds, may take a minute or two."
 echo "================================================================================="
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && \"$CARGO_BIN\" build --release"
+# The BTIDES_Schema/rust and Analysis/rust workspaces set lto="fat" +
+# codegen-units=1 in their Cargo.toml. Fat LTO is a single-threaded
+# whole-program optimize+link run once per binary, so on a many-core machine
+# most cores sit idle through it. Override to thin LTO (parallelizable, keeps
+# ~most of fat LTO's runtime benefit) + many codegen units for these two
+# builds. Done as Cargo env overrides so it also covers the BTIDES_Schema git
+# submodule's profile without editing its Cargo.toml. (The BTIDALPOOL builds
+# below intentionally skip this — that workspace already uses no fat LTO.)
+CARGO_FAST_LTO="CARGO_PROFILE_RELEASE_LTO=thin CARGO_PROFILE_RELEASE_CODEGEN_UNITS=256"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && $CARGO_FAST_LTO \"$CARGO_BIN\" build --release"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/BTIDES_Schema/rust. Check the output above."
     exit -1
 fi
-sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/rust' && \"$CARGO_BIN\" build --release"
+sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/rust' && $CARGO_FAST_LTO \"$CARGO_BIN\" build --release"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/rust. Check the output above."
     exit -1
