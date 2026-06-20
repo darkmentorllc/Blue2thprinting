@@ -13,7 +13,7 @@ class AuthClient:
         self.token_file = None
 
         # BTIDALPOOL server's Google OAuth2 client ID
-        self.client_id = '934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com'
+        self.client_id = '6849068466-1sone95u0ihio99646tn60s234d88hge.apps.googleusercontent.com'
 
     # This is just a common flow that was seen repeatedly by the client users, where they had to
     # use an existing token, and possibly refresh it, or maybe just show the SSO login prompt.

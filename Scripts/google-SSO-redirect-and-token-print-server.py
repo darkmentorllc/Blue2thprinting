@@ -21,7 +21,7 @@ def load_oauth_secrets():
     try:
         with open(secrets_path) as f:
             secrets = json.load(f)
-        return secrets['client_secret'], '934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com'
+        return secrets['client_secret'], '6849068466-1sone95u0ihio99646tn60s234d88hge.apps.googleusercontent.com'
     except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
         raise RuntimeError(f"Failed to load OAuth secrets: {e}")
 

@@ -25,7 +25,7 @@ The first time you use an argument like `--query-BTIDALPOOL` or `--to-BTIDALPOOL
 
 ```
 Please visit this URL to authenticate:
-https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbtidalpool.ddns.net%3A7653%2Foauth2callback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=k8nDQob2xEqPngwj3GrpZPWLMU5Xzu&prompt=consent&access_type=offline
+https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=6849068466-1sone95u0ihio99646tn60s234d88hge.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbtidalpool.ddns.net%3A7653%2Foauth2callback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=k8nDQob2xEqPngwj3GrpZPWLMU5Xzu&prompt=consent&access_type=offline
 
 After authentication, copy the entire JSON token from the browser:
 Token:
