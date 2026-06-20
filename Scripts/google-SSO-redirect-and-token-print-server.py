@@ -4,6 +4,7 @@ import socket
 import ssl
 import socketserver
 import urllib.parse
+import urllib.request
 from pathlib import Path
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -140,6 +141,66 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                     'token': credentials.token,
                     'refresh_token': credentials.refresh_token
                 }
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(token_data).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(str(e).encode())
+
+        # PHONE-APP INTERFACE (distinct from the CLI copy-paste GET /oauth2callback above).
+        # The DM BT Android app does a fully-native Google sign-in (Google Identity Services
+        # AuthorizationClient.requestOfflineAccess) and obtains a one-time *serverAuthCode* for
+        # this web client. It POSTs {"auth_code": "..."} here; we exchange that code for the
+        # access + refresh tokens (we hold the client secret) and hand them straight back over
+        # TLS — no token ever transits a browser URL or a copy-paste step.
+        elif self.path == '/exchange_app':
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = json.loads(self.rfile.read(content_length))
+                auth_code = post_data.get('auth_code')
+                if not auth_code:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write(b'Missing auth_code')
+                    return
+
+                # Exchange the Android serverAuthCode. Per Google's "Enabling Server-Side Access"
+                # guidance the redirect_uri for a native serverAuthCode exchange is the empty
+                # string. (If Google ever returns redirect_uri_mismatch here, drop the field.)
+                exchange_body = urllib.parse.urlencode({
+                    'code': auth_code,
+                    'client_id': CLIENT_ID,
+                    'client_secret': CLIENT_SECRET,
+                    'redirect_uri': '',
+                    'grant_type': 'authorization_code',
+                }).encode('utf-8')
+                req = urllib.request.Request(
+                    'https://oauth2.googleapis.com/token',
+                    data=exchange_body,
+                    headers={'Content-Type': 'application/x-www-form-urlencoded'},
+                    method='POST',
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    google_tokens = json.loads(resp.read().decode('utf-8'))
+
+                token_data = {
+                    'token': google_tokens.get('access_token'),
+                    'refresh_token': google_tokens.get('refresh_token'),
+                }
+                # A missing refresh_token usually means consent wasn't forced — the app must
+                # request offline access with forceCodeForRefreshToken=true.
+                if not token_data['token'] or not token_data['refresh_token']:
+                    self.send_response(502)
+                    self.send_header('Content-Type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write(b'Token endpoint did not return both token and refresh_token')
+                    return
 
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
