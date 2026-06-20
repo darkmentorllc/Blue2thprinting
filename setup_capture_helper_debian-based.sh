@@ -70,6 +70,10 @@ install_prerequs(){
     #### So I'm just not bothering with telling folks to do that, and just doing it here
     cd "$BASE_PATH"
     git submodule update --init --recursive
+    #### Keep these submodules in sync on future `git pull`s so a pull never leaves you with
+    #### code referencing newer submodule content than your checkout has. Scoped to this repo
+    #### (--local), not --global, so it doesn't change behavior for the user's other repos.
+    git config --local submodule.recurse true
     echo "  Done"
 }
 

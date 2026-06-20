@@ -34,6 +34,10 @@ echo "==========================================================================
 echo "Recursive pull of the submodules (which gets the latest Bluetooth assigned IDs, CLUES data, etc)."
 echo "====================================================================================================================================="
 git submodule update --init --recursive
+# Make future `git pull`s keep these submodules in sync automatically, so you don't end up
+# with code that references newer submodule content than your checkout has. Scoped to this
+# repo (--local), not --global, so it never changes behavior for your other repositories.
+git config --local submodule.recurse true
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
 sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server

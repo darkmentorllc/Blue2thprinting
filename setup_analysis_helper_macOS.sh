@@ -77,6 +77,10 @@ echo "==========================================================================
 echo "Fixing this repository if you didn't clone it with a recursive pull of the submodules (which gets the latest Bluetooth assigned IDs)."
 echo "====================================================================================================================================="
 git submodule update --init --recursive
+# Make future `git pull`s keep these submodules in sync automatically, so you don't end up
+# with code that references newer submodule content than your checkout has. Scoped to this
+# repo (--local), not --global, so it never changes behavior for your other repositories.
+git config --local submodule.recurse true
 
 # Next commands assume they run from the Analysis folder
 cd ./Analysis/one_time_initialization
