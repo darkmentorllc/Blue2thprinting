@@ -21,7 +21,7 @@ use anyhow::{Context, Result};
 /// BTIDALPOOL's Google OAuth2 client ID — identical to the value in
 /// `oauth_helper.py` and the SSO redirect server.
 pub const CLIENT_ID: &str =
-    "934838710114-hrn5hafisthr3eqh7gnr1jka5c5hmjli.apps.googleusercontent.com";
+    "6849068466-1sone95u0ihio99646tn60s234d88hge.apps.googleusercontent.com";
 
 /// The BTIDALPOOL OAuth helper server's refresh endpoint.
 pub const DEFAULT_REFRESH_URL: &str = "https://btidalpool.ddns.net:7653/refresh";
