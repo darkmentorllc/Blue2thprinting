@@ -5,6 +5,7 @@ import ssl
 import socketserver
 import urllib.parse
 import urllib.request
+import urllib.error
 from pathlib import Path
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -68,7 +69,7 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
             """.encode())
             return
 
-        elif self.path == '/oauth2callback':
+        elif self.path.startswith('/oauth2callback'):
             query_components = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
 
             if 'code' in query_components:
@@ -105,6 +106,8 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                         </body></html>
                     """.encode())
                 except Exception as e:
+                    import traceback
+                    traceback.print_exc()
                     self.send_response(500)
                     self.send_header('Content-type', 'text/plain')
                     self.end_headers()
@@ -206,6 +209,15 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps(token_data).encode())
+            except urllib.error.HTTPError as e:
+                # Surface Google's actual error body (invalid_grant / invalid_client /
+                # redirect_uri_mismatch / unauthorized_client) so a failed exchange is diagnosable
+                # rather than a bare "HTTP Error 400: Bad Request".
+                detail = e.read().decode('utf-8', 'replace')
+                self.send_response(502)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f"Google token endpoint {e.code}: {detail}".encode())
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-Type', 'text/plain')
