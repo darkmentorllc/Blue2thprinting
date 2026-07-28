@@ -11,6 +11,8 @@ pub mod ingest;
 pub mod oauth;
 pub mod query;
 pub mod rate_limit;
+pub mod resumable;
+pub mod session;
 pub mod state;
 
 use btidalpool_proto::{ErrorKind, Response};

@@ -19,6 +19,7 @@
 //! Important: we don't share state across tests. Each test spins up its own
 //! server, so tests can run in parallel without contention.
 
+use std::io::Read;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -28,7 +29,8 @@ use std::time::Duration;
 use btidalpool_client::transport::{CertTrust, Transport};
 use btidalpool_client::{build_check_hash, build_query, build_upload};
 use btidalpool_proto::{
-    canonical_sha1, AuthFields, ErrorKind, Payload, QueryParams, Response,
+    canonical_sha1, exact_sha256, AuthFields, ErrorKind, Payload, QueryParams, Response, V2Auth,
+    V2Envelope, V2Payload, V2Response, CONTENT_TYPE,
 };
 use btidalpool_server::handlers::Deps;
 use btidalpool_server::http::{self, Config as ServerConfig, TlsConfig};
@@ -36,6 +38,8 @@ use btidalpool_server::ingest::NoopIngestSink;
 use btidalpool_server::oauth::{MockOAuthValidator, OAuthValidator};
 use btidalpool_server::query::{QueryEngine, StubQueryEngine};
 use btidalpool_server::rate_limit::{Limiter, Limits};
+use btidalpool_server::resumable::ResumableStore;
+use btidalpool_server::session::SessionTokens;
 use btidalpool_server::state::ServerState;
 
 /// Self-contained test harness: temp dirs, generated TLS cert/key, picked
@@ -87,9 +91,9 @@ impl Harness {
             good_token: good_token.into(),
             email: email.into(),
         });
-        let limiter = Limiter::new(Limits::default());
         let deps = Deps {
             state,
+            resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query,
         };
@@ -99,8 +103,14 @@ impl Harness {
                 cert_pem_path: cert_path.clone(),
                 key_pem_path: key_path.clone(),
             }),
-            limiter,
+            ip_limiter: Limiter::new(Limits {
+                max_simultaneous: 50,
+                max_per_day: 1000,
+                ..Limits::default()
+            }),
+            identity_limiter: Limiter::new(Limits::default()),
             validator,
+            sessions: SessionTokens::from_key(vec![0x42; 32], Duration::from_secs(900)).unwrap(),
             deps,
         };
 
@@ -245,6 +255,133 @@ fn upload_then_check_hash_round_trip() {
 }
 
 #[test]
+fn v2_session_resume_out_of_order_and_finalize_replay_through_full_stack() {
+    let h = Harness::boot(
+        Arc::new(StubQueryEngine::ok(b"[]".to_vec(), 0)),
+        "good-tok",
+        "tester@example.com",
+    );
+    let session = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Google {
+                access_token: "good-tok".into(),
+            },
+            payload: V2Payload::CreateSession,
+        },
+    );
+    let session_token = match session {
+        V2Response::Session { token, .. } => token,
+        other => panic!("expected session, got {other:?}"),
+    };
+
+    let parts = [
+        b"[{\"bdaddr\":\"AA:".to_vec(),
+        b"BB:CC:DD:EE:FF\"}]".to_vec(),
+    ];
+    let all = parts.concat();
+    let manifest = V2Payload::Manifest {
+        content_sha256: exact_sha256(&all),
+        total_size: all.len() as u64,
+        chunk_sha256: parts.iter().map(|part| exact_sha256(part)).collect(),
+        use_test_db: false,
+    };
+    let first = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Session {
+                token: session_token.clone(),
+            },
+            payload: manifest.clone(),
+        },
+    );
+    let upload_id = match first {
+        V2Response::Manifest {
+            upload_id,
+            missing_chunks,
+            receipt,
+        } => {
+            assert_eq!(missing_chunks, vec![0, 1]);
+            assert!(receipt.is_none());
+            upload_id
+        }
+        other => panic!("expected manifest response, got {other:?}"),
+    };
+
+    // Arrival order is irrelevant.
+    for index in [1usize, 0] {
+        let response = v2_round_trip(
+            &h,
+            &V2Envelope {
+                auth: V2Auth::Session {
+                    token: session_token.clone(),
+                },
+                payload: V2Payload::PutChunk {
+                    upload_id: upload_id.clone(),
+                    index: index as u32,
+                    data: parts[index].clone(),
+                },
+            },
+        );
+        assert!(matches!(
+            response,
+            V2Response::Chunk {
+                already_present: false,
+                ..
+            }
+        ));
+    }
+
+    // A replay is acknowledged without rewriting.
+    let replay_chunk = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Session {
+                token: session_token.clone(),
+            },
+            payload: V2Payload::PutChunk {
+                upload_id: upload_id.clone(),
+                index: 0,
+                data: parts[0].clone(),
+            },
+        },
+    );
+    assert!(matches!(
+        replay_chunk,
+        V2Response::Chunk {
+            already_present: true,
+            ..
+        }
+    ));
+
+    let finalized = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Session {
+                token: session_token.clone(),
+            },
+            payload: V2Payload::Finalize {
+                upload_id: upload_id.clone(),
+            },
+        },
+    );
+    let receipt = match finalized {
+        V2Response::Finalized { receipt } => receipt,
+        other => panic!("expected receipt, got {other:?}"),
+    };
+    let replay = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Session {
+                token: session_token,
+            },
+            payload: V2Payload::Finalize { upload_id },
+        },
+    );
+    assert_eq!(replay, V2Response::Finalized { receipt });
+}
+
+#[test]
 fn query_returns_canned_bytes_through_full_stack() {
     let h = Harness::boot(
         Arc::new(StubQueryEngine::ok(b"[1,2,3]".to_vec(), 3)),
@@ -317,7 +454,12 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
             cert_pem_path: cert_path.clone(),
             key_pem_path: key_path,
         }),
-        limiter: Limiter::new(Limits {
+        ip_limiter: Limiter::new(Limits {
+            max_simultaneous: 50,
+            max_per_day: 1000,
+            window: Duration::from_secs(3600),
+        }),
+        identity_limiter: Limiter::new(Limits {
             max_simultaneous: 10,
             max_per_day: 1,
             window: Duration::from_secs(3600),
@@ -326,8 +468,10 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
             good_token: "good".into(),
             email: "u@e.com".into(),
         }),
+        sessions: SessionTokens::from_key(vec![0x42; 32], Duration::from_secs(900)).unwrap(),
         deps: Deps {
             state,
+            resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[]".to_vec(), 0)),
         },
@@ -356,7 +500,7 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
     };
 
     let t = Transport::new(
-        url,
+        url.clone(),
         CertTrust::Pinned {
             ca_pem_path: cert_path,
         },
@@ -367,17 +511,33 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
     let _ = t
         .round_trip(&build_check_hash(auth.clone(), "abc".into()))
         .unwrap();
-    // Second call hits the rate limiter, which short-circuits to plain
-    // text — round_trip() should report a transport-layer error containing
-    // "Too Many Requests" rather than returning a typed Response.
-    let err = t
-        .round_trip(&build_check_hash(auth, "abc".into()))
-        .unwrap_err();
-    let s = format!("{err:#}");
-    assert!(
-        s.contains("Too Many Requests") || s.contains("text/plain"),
-        "expected rate-limited error, got {s}"
-    );
+    // Second call is throttled by authenticated identity, while the broader
+    // public-IP budget still has ample room.
+    let response = t
+        .round_trip(&build_check_hash(auth.clone(), "abc".into()))
+        .unwrap();
+    assert!(matches!(
+        response,
+        Response::Err {
+            kind: ErrorKind::RateLimited,
+            ..
+        }
+    ));
+
+    let body = btidalpool_proto::codec::encode(&build_check_hash(auth, "abc".into())).unwrap();
+    let raw = build_insecure_agent()
+        .post(&url)
+        .set("Content-Type", CONTENT_TYPE)
+        .send_bytes(&body);
+    let response = match raw {
+        Err(ureq::Error::Status(429, response)) => response,
+        Ok(response) => panic!("expected 429, got {}", response.status()),
+        Err(error) => panic!("expected HTTP 429, got {error}"),
+    };
+    let retry_after = response
+        .header("Retry-After")
+        .expect("429 must include Retry-After");
+    assert!(retry_after.parse::<u64>().unwrap() >= 1);
 }
 
 #[test]
@@ -422,6 +582,25 @@ fn wrong_http_method_is_rejected() {
     }
 }
 
+fn v2_round_trip(harness: &Harness, envelope: &V2Envelope) -> V2Response {
+    let body = btidalpool_proto::codec::encode_v2(envelope).unwrap();
+    let url = format!("{}/v2", harness.server_url);
+    let response = build_insecure_agent()
+        .post(&url)
+        .set("Content-Type", &format!("{CONTENT_TYPE}; version=2"))
+        .send_bytes(&body);
+    let response = match response {
+        Ok(response) => response,
+        Err(ureq::Error::Status(_, response)) => response,
+        Err(error) => panic!("v2 transport error: {error}"),
+    };
+    let content_type = response.header("Content-Type").unwrap_or("").to_string();
+    assert!(content_type.contains(CONTENT_TYPE));
+    let mut bytes = Vec::new();
+    response.into_reader().read_to_end(&mut bytes).unwrap();
+    btidalpool_proto::codec::decode_v2(&bytes).unwrap()
+}
+
 /// Install rustls's `ring` provider once per process so the integration
 /// tests' direct calls to `ClientConfig::builder()` (in `build_insecure_agent`)
 /// don't panic. Matches the same once-per-process install the production
@@ -439,9 +618,7 @@ fn ensure_crypto_provider_installed() {
 /// `--insecure` works end-to-end through rustls.
 fn build_insecure_agent() -> ureq::Agent {
     ensure_crypto_provider_installed();
-    use rustls::client::danger::{
-        HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier,
-    };
+    use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
     use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
     use rustls::{ClientConfig, DigitallySignedStruct, SignatureScheme};
     #[derive(Debug)]

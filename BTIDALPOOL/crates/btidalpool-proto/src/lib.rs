@@ -28,9 +28,14 @@ pub mod codec;
 pub mod hash;
 pub mod wire;
 
-pub use codec::{decode, decode_with_caps, encode, encode_with_caps, CodecError};
-pub use hash::canonical_sha1;
-pub use wire::{AuthFields, Envelope, ErrorKind, Payload, QueryParams, Response};
+pub use codec::{
+    decode, decode_v2, decode_with_caps, encode, encode_v2, encode_with_caps, CodecError,
+};
+pub use hash::{canonical_sha1, exact_sha256};
+pub use wire::{
+    AuthFields, Envelope, ErrorKind, Payload, QueryParams, Response, UploadReceipt, V2Auth,
+    V2Envelope, V2ErrorKind, V2Payload, V2Response,
+};
 
 /// HTTP Content-Type used for all BTIDALPOOL request and response bodies.
 /// Servers and clients check this so a stray `application/json` POST to the

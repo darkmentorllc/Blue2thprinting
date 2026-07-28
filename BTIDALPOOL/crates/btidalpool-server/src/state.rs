@@ -18,6 +18,12 @@ use std::sync::Arc;
 
 use parking_lot::Mutex;
 
+#[derive(Debug)]
+pub enum PublishOutcome {
+    Published(PathBuf),
+    AlreadyExists,
+}
+
 /// Directory layout + per-process locks. Cloneable (Arc-wrapped) so handler
 /// threads can share it.
 #[derive(Clone)]
@@ -87,6 +93,42 @@ impl ServerState {
     /// Mark `sha1` as accepted. Idempotent.
     pub fn record_hash(&self, sha1: &str) {
         self.inner.unique_hashes.lock().insert(sha1.to_string());
+    }
+
+    /// Atomically publish an already-validated staged upload into the legacy
+    /// pool layout. The final filename is never visible with partial bytes.
+    /// Holding the hash-index lock across check/copy/rename also makes
+    /// concurrent v1/v2 finalization idempotent within the server process.
+    pub fn publish_staged_upload(
+        &self,
+        staged_path: &Path,
+        sha1: &str,
+        email: &str,
+        timestamp: &str,
+    ) -> std::io::Result<PublishOutcome> {
+        let mut hashes = self.inner.unique_hashes.lock();
+        if hashes.contains(sha1) {
+            return Ok(PublishOutcome::AlreadyExists);
+        }
+
+        let final_path = self.build_upload_path(sha1, email, timestamp);
+        let temp_path = self
+            .inner
+            .pool_dir
+            .join(format!(".btidalpool-{sha1}-{}.tmp", std::process::id()));
+        let mut src = File::open(staged_path)?;
+        let mut temp = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(&temp_path)?;
+        std::io::copy(&mut src, &mut temp)?;
+        temp.sync_all()?;
+        drop(temp);
+        fs::rename(&temp_path, &final_path)?;
+        sync_directory(&self.inner.pool_dir)?;
+        hashes.insert(sha1.to_string());
+        Ok(PublishOutcome::Published(final_path))
     }
 
     /// Where to write a fresh upload from `email` with a given sha1.
@@ -165,6 +207,10 @@ pub fn sanitize_email_for_filename(email: &str) -> String {
     email.replace('@', "_at_").replace('.', "_dot_")
 }
 
+fn sync_directory(path: &Path) -> std::io::Result<()> {
+    File::open(path)?.sync_all()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,10 +246,14 @@ mod tests {
         let h1 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         let h2 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
         fs::write(pool.join(format!("{h1}-a@b.c-2026-01-01.json")), b"[]").unwrap();
-        fs::write(pool.join(format!("{h2}-x@y.z-2026-01-02.json.processed")), b"").unwrap();
+        fs::write(
+            pool.join(format!("{h2}-x@y.z-2026-01-02.json.processed")),
+            b"",
+        )
+        .unwrap();
         fs::write(pool.join("notes.txt"), b"junk").unwrap();
-        let st = ServerState::initialize(&pool, td.path().join("ul"), td.path().join("ac"))
-            .unwrap();
+        let st =
+            ServerState::initialize(&pool, td.path().join("ul"), td.path().join("ac")).unwrap();
         assert!(st.has_hash(h1));
         assert!(st.has_hash(h2));
         assert!(!st.has_hash("ffffffffffffffffffffffffffffffffffffffff"));
@@ -233,11 +283,10 @@ mod tests {
             td.path().join("ac"),
         )
         .unwrap();
-        st.append_user_log("alice@example.com", "hello world").unwrap();
-        let read = fs::read_to_string(
-            td.path().join("ul").join("alice_at_example_dot_com.log"),
-        )
-        .unwrap();
+        st.append_user_log("alice@example.com", "hello world")
+            .unwrap();
+        let read =
+            fs::read_to_string(td.path().join("ul").join("alice_at_example_dot_com.log")).unwrap();
         assert!(read.contains("hello world"));
     }
 
@@ -254,5 +303,37 @@ mod tests {
         st.append_access_log("line two").unwrap();
         let read = fs::read_to_string(td.path().join("ac")).unwrap();
         assert_eq!(read.lines().count(), 2);
+    }
+
+    #[test]
+    fn publish_is_atomic_and_idempotent() {
+        let td = tempdir().unwrap();
+        let st = ServerState::initialize(
+            td.path().join("pool"),
+            td.path().join("ul"),
+            td.path().join("ac"),
+        )
+        .unwrap();
+        let staged = td.path().join("staged");
+        fs::write(&staged, b"[]").unwrap();
+        let hash = canonical_test_hash();
+        let first = st
+            .publish_staged_upload(&staged, &hash, "u@example.com", "2026-01-01")
+            .unwrap();
+        let final_path = match first {
+            PublishOutcome::Published(path) => path,
+            PublishOutcome::AlreadyExists => panic!("first publish must create"),
+        };
+        assert_eq!(fs::read(final_path).unwrap(), b"[]");
+        assert!(matches!(
+            st.publish_staged_upload(&staged, &hash, "u@example.com", "2026-01-02")
+                .unwrap(),
+            PublishOutcome::AlreadyExists
+        ));
+        assert_eq!(fs::read_dir(st.pool_dir()).unwrap().count(), 1);
+    }
+
+    fn canonical_test_hash() -> String {
+        "97d170e1550eee4afc0af065b78cda302a97674c".into()
     }
 }

@@ -12,9 +12,13 @@ use btidalpool_server::http::{self, Config, TlsConfig};
 use btidalpool_server::ingest::IngestSink;
 #[cfg(not(feature = "sql-ingest"))]
 use btidalpool_server::ingest::NoopIngestSink;
-use btidalpool_server::oauth::{GoogleOAuthValidator, MockOAuthValidator, OAuthValidator};
+use btidalpool_server::oauth::{
+    CachingOAuthValidator, GoogleOAuthValidator, MockOAuthValidator, OAuthValidator,
+};
 use btidalpool_server::query::{QueryEngine, SubprocessQueryEngine};
 use btidalpool_server::rate_limit::{Limiter, Limits};
+use btidalpool_server::resumable::ResumableStore;
+use btidalpool_server::session::SessionTokens;
 use btidalpool_server::state::ServerState;
 
 #[derive(Debug, Parser)]
@@ -47,12 +51,32 @@ struct Cli {
     /// Combined access log path.
     #[arg(long, default_value = "./user_access.log")]
     access_log: PathBuf,
-    /// Per-IP simultaneous-request cap.
+    /// Per-authenticated-identity simultaneous-request cap.
     #[arg(long, default_value_t = 10)]
     max_concurrent: u32,
-    /// Per-IP per-day request budget.
+    /// Per-authenticated-identity rolling-day request budget.
     #[arg(long, default_value_t = 100)]
     max_per_day: u32,
+    /// Broader simultaneous-request abuse cap per public IP.
+    #[arg(long, default_value_t = 50)]
+    max_ip_concurrent: u32,
+    /// Broader rolling-day abuse budget per public IP.
+    #[arg(long, default_value_t = 1000)]
+    max_ip_per_day: u32,
+    /// Positive Google-validation cache TTL. Cache keys are token SHA-256
+    /// digests; plaintext OAuth credentials are never stored.
+    #[arg(long, default_value_t = 300)]
+    oauth_cache_ttl_seconds: u64,
+    /// Lifetime of signed BTPL v2 session tokens.
+    #[arg(long, default_value_t = 900)]
+    session_ttl_seconds: u64,
+    /// Optional >=32-byte HMAC key file. If omitted, an in-memory random key
+    /// is generated and outstanding sessions expire on server restart.
+    #[arg(long)]
+    session_key_file: Option<PathBuf>,
+    /// Durable manifests, chunks, and receipts for resumable v2 uploads.
+    #[arg(long, default_value = "./btidalpool_v2_state")]
+    v2_state_dir: PathBuf,
     /// Use a mock OAuth validator that accepts any token whose value
     /// equals `--mock-auth-token` and reports back `--mock-auth-email`.
     /// For local end-to-end testing only.
@@ -99,7 +123,7 @@ fn main() -> Result<()> {
         cwd,
     });
 
-    let validator: Arc<dyn OAuthValidator> = if cli.mock_auth {
+    let base_validator: Arc<dyn OAuthValidator> = if cli.mock_auth {
         Arc::new(MockOAuthValidator {
             good_token: cli.mock_auth_token.clone(),
             email: cli.mock_auth_email.clone(),
@@ -107,15 +131,42 @@ fn main() -> Result<()> {
     } else {
         Arc::new(GoogleOAuthValidator::new())
     };
+    let validator: Arc<dyn OAuthValidator> = Arc::new(CachingOAuthValidator::new(
+        base_validator,
+        std::time::Duration::from_secs(cli.oauth_cache_ttl_seconds.max(1)),
+    ));
 
-    let limiter = Limiter::new(Limits {
+    let identity_limiter = Limiter::new(Limits {
         max_simultaneous: cli.max_concurrent,
         max_per_day: cli.max_per_day,
         ..Default::default()
     });
+    let ip_limiter = Limiter::new(Limits {
+        max_simultaneous: cli.max_ip_concurrent,
+        max_per_day: cli.max_ip_per_day,
+        ..Default::default()
+    });
+
+    let sessions = match &cli.session_key_file {
+        Some(path) => SessionTokens::from_key(
+            std::fs::read(path)?,
+            std::time::Duration::from_secs(cli.session_ttl_seconds.max(1)),
+        )
+        .map_err(|error| anyhow::anyhow!("invalid session signing key: {error}"))?,
+        None => {
+            log::warn!(
+                "no --session-key-file configured; generated an in-memory signing key \
+                 (safe, but v2 sessions will expire on restart)"
+            );
+            SessionTokens::random(std::time::Duration::from_secs(
+                cli.session_ttl_seconds.max(1),
+            ))
+        }
+    };
 
     let deps = Deps {
         state,
+        resumable: ResumableStore::initialize(&cli.v2_state_dir)?,
         ingest,
         query,
     };
@@ -132,8 +183,10 @@ fn main() -> Result<()> {
     http::run(Config {
         bind: cli.bind,
         tls,
-        limiter,
+        ip_limiter,
+        identity_limiter,
         validator,
+        sessions,
         deps,
     })
 }

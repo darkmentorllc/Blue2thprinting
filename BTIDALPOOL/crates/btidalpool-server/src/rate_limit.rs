@@ -1,4 +1,5 @@
-//! Per-IP rate limiter, mirroring the Python server's two-track scheme:
+//! Keyed rate limiter used for both authenticated identities and an
+//! independent public-IP abuse gate.
 //!
 //!   * No more than [`Limits::max_simultaneous`] requests in flight from a
 //!     single IP at the same time (Python default: 10).
@@ -10,20 +11,17 @@
 //! if a handler panics. The 24h budget uses a `VecDeque<Instant>` per IP and
 //! cleans up old entries lazily on each acquire.
 //!
-//! State is held behind a single `parking_lot::Mutex`. With the Python
-//! limits (10 concurrent, 100/day per IP) contention is negligible, and a
-//! single lock is much easier to reason about than per-IP sharding.
+//! State is held behind a single `parking_lot::Mutex`. With the production
+//! limits (10 concurrent, 100/day per identity) contention is negligible.
 
 use std::collections::{HashMap, VecDeque};
-use std::net::IpAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use parking_lot::Mutex;
 
-/// Caps applied per IP address. Defaults match the values hardcoded in the
-/// Python server (`g_max_simultaneous_connections = 10`,
-/// `g_max_connections_per_day = 100`).
+/// Caps applied per caller-supplied key. The primary server key is an
+/// authenticated identity; a second limiter uses the public IP.
 #[derive(Clone, Copy, Debug)]
 pub struct Limits {
     pub max_simultaneous: u32,
@@ -42,8 +40,8 @@ impl Default for Limits {
 }
 
 #[derive(Default)]
-struct PerIp {
-    /// Currently-in-flight count for this IP.
+struct PerKey {
+    /// Currently-in-flight count for this identity or IP.
     in_flight: u32,
     /// Wall-clock timestamps of requests within the rolling window. Older
     /// entries are pruned on each acquire so the deque does not grow without
@@ -53,7 +51,7 @@ struct PerIp {
 
 pub struct Limiter {
     limits: Limits,
-    state: Arc<Mutex<HashMap<IpAddr, PerIp>>>,
+    state: Arc<Mutex<HashMap<String, PerKey>>>,
 }
 
 impl Limiter {
@@ -64,21 +62,22 @@ impl Limiter {
         }
     }
 
-    /// Try to reserve a slot for one request from `ip`. On success returns a
+    /// Try to reserve a slot for one request from `key`. On success returns a
     /// [`Guard`] that must be held for the duration of the request — when it
     /// drops, the in-flight count is decremented. On failure returns the
     /// reason (which the caller maps to either a [`Decision::TooManyDaily`]
     /// or [`Decision::TooManyConcurrent`] response).
-    pub fn try_acquire(&self, ip: IpAddr) -> Decision {
-        self.try_acquire_at(ip, Instant::now())
+    pub fn try_acquire(&self, key: impl ToString) -> Decision {
+        self.try_acquire_at(key, Instant::now())
     }
 
     /// Same as [`try_acquire`] but lets the test suite inject the "now"
     /// timestamp deterministically — otherwise the 24h-window test would
     /// have to actually sleep for hours.
-    pub fn try_acquire_at(&self, ip: IpAddr, now: Instant) -> Decision {
+    pub fn try_acquire_at(&self, key: impl ToString, now: Instant) -> Decision {
+        let key = key.to_string();
         let mut guard = self.state.lock();
-        let per = guard.entry(ip).or_default();
+        let per = guard.entry(key.clone()).or_default();
 
         // Prune entries that fall outside the window. Cheap because the deque
         // is in chronological order and we only ever pop the front.
@@ -91,17 +90,28 @@ impl Limiter {
         }
 
         if per.timestamps.len() as u32 >= self.limits.max_per_day {
-            return Decision::TooManyDaily;
+            let retry_after = per
+                .timestamps
+                .front()
+                .map(|oldest| {
+                    self.limits
+                        .window
+                        .saturating_sub(now.saturating_duration_since(*oldest))
+                })
+                .unwrap_or(self.limits.window);
+            return Decision::TooManyDaily { retry_after };
         }
         if per.in_flight >= self.limits.max_simultaneous {
-            return Decision::TooManyConcurrent;
+            return Decision::TooManyConcurrent {
+                retry_after: Duration::from_secs(1),
+            };
         }
 
         per.timestamps.push_back(now);
         per.in_flight += 1;
 
         Decision::Allowed(Guard {
-            ip,
+            key,
             state: self.state.clone(),
             armed: true,
         })
@@ -114,14 +124,14 @@ pub enum Decision {
     /// request — dropping it returns the slot to the pool.
     Allowed(Guard),
     /// The IP has already used its 24h budget. Maps to HTTP 429.
-    TooManyDaily,
+    TooManyDaily { retry_after: Duration },
     /// The IP is at its simultaneous-request cap. Maps to HTTP 429.
-    TooManyConcurrent,
+    TooManyConcurrent { retry_after: Duration },
 }
 
 pub struct Guard {
-    ip: IpAddr,
-    state: Arc<Mutex<HashMap<IpAddr, PerIp>>>,
+    key: String,
+    state: Arc<Mutex<HashMap<String, PerKey>>>,
     /// Set to false by tests that want to forget the guard intentionally.
     /// Not exposed publicly.
     armed: bool,
@@ -133,7 +143,7 @@ impl Drop for Guard {
             return;
         }
         let mut guard = self.state.lock();
-        if let Some(per) = guard.get_mut(&self.ip) {
+        if let Some(per) = guard.get_mut(&self.key) {
             per.in_flight = per.in_flight.saturating_sub(1);
         }
     }
@@ -142,7 +152,7 @@ impl Drop for Guard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::net::Ipv4Addr;
+    use std::net::{IpAddr, Ipv4Addr};
 
     fn ip() -> IpAddr {
         IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
@@ -177,7 +187,10 @@ mod tests {
             Decision::Allowed(g) => g,
             _ => panic!("first acquire should succeed"),
         };
-        assert!(matches!(lim.try_acquire(ip()), Decision::TooManyConcurrent));
+        assert!(matches!(
+            lim.try_acquire(ip()),
+            Decision::TooManyConcurrent { .. }
+        ));
     }
 
     #[test]
@@ -213,7 +226,10 @@ mod tests {
         };
         drop((g1, g2));
         // Both timestamps still inside the window; daily budget exhausted.
-        assert!(matches!(lim.try_acquire(ip()), Decision::TooManyDaily));
+        assert!(matches!(
+            lim.try_acquire(ip()),
+            Decision::TooManyDaily { .. }
+        ));
     }
 
     #[test]
@@ -236,12 +252,53 @@ mod tests {
         // Cap hit at t0+30s (both prior timestamps still in the 60s window).
         assert!(matches!(
             lim.try_acquire_at(ip(), t0 + Duration::from_secs(30)),
-            Decision::TooManyDaily
+            Decision::TooManyDaily { .. }
         ));
         // At t0+120s, both prior timestamps are outside the window and pruned.
         assert!(matches!(
             lim.try_acquire_at(ip(), t0 + Duration::from_secs(120)),
             Decision::Allowed(_)
         ));
+    }
+
+    #[test]
+    fn identities_are_independent_even_on_one_ip() {
+        let lim = Limiter::new(Limits {
+            max_simultaneous: 10,
+            max_per_day: 1,
+            window: Duration::from_secs(60),
+        });
+        drop(match lim.try_acquire("identity:alice@example.com") {
+            Decision::Allowed(guard) => guard,
+            _ => panic!("alice first call should pass"),
+        });
+        assert!(matches!(
+            lim.try_acquire("identity:alice@example.com"),
+            Decision::TooManyDaily { .. }
+        ));
+        assert!(matches!(
+            lim.try_acquire("identity:bob@example.com"),
+            Decision::Allowed(_)
+        ));
+    }
+
+    #[test]
+    fn daily_decision_reports_retry_after() {
+        let lim = Limiter::new(Limits {
+            max_simultaneous: 10,
+            max_per_day: 1,
+            window: Duration::from_secs(60),
+        });
+        let start = Instant::now();
+        drop(match lim.try_acquire_at("user", start) {
+            Decision::Allowed(guard) => guard,
+            _ => panic!(),
+        });
+        match lim.try_acquire_at("user", start + Duration::from_secs(15)) {
+            Decision::TooManyDaily { retry_after } => {
+                assert_eq!(retry_after, Duration::from_secs(45));
+            }
+            _ => panic!("expected daily throttle"),
+        }
     }
 }

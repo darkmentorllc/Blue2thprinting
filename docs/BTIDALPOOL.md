@@ -5,6 +5,8 @@ The BTIDALPOOL is the server is where we *pool* our [BTIDES](https://github.com/
 The current address is:
  - `https://btidalpool.ddns.net:7653` - For Google OAuth
  - `https://btidalpool.ddns.net:3567` - For [BTIDES](https://github.com/darkmentorllc/BTIDES_Schema) upload/download.
+ - `https://btidalpool.ddns.net:3568/` - Rust BTPL v1 upload/download.
+ - `https://btidalpool.ddns.net:3568/v2` - Rust BTPL v2 resumable upload.
 
 ## [Terms of Service](https://btidalpool.ddns.net:7653/tos)
 
@@ -39,10 +41,15 @@ BTIDALPOOL can be used from Blue2thprinting tools by adding CLI arguments such a
 ## Rate limits
 
 The following limits are currently in effect:
- * Maximum number of connections per account per day: 100
- * Maximum simultaneous connections per account: 10
+ * Maximum number of requests per authenticated identity per rolling day: 100
+ * Maximum simultaneous requests per authenticated identity: 10
+ * A broader public-IP abuse limit also applies.
  * Maximum number of records returned per query: 100
  * Maximum BTIDES file upload size: 10MB
+
+Throttled requests return HTTP 429 with a `Retry-After` header. V2 clients
+should follow the complete contract in
+[`BTIDALPOOL/V2_PROTOCOL.md`](../BTIDALPOOL/V2_PROTOCOL.md).
 
 If you'd like to bypass these limits, you can email btidalpool at gmail to request Trusted Contributor status. This status is granted to researchers who provide a significant contribution of data to the BTIDALPOOL server.
 

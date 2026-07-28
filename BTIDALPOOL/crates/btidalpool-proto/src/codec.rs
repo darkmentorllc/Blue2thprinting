@@ -30,9 +30,12 @@ use thiserror::Error;
 /// 4-byte magic identifying a BTIDALPOOL wire frame.
 pub const MAGIC: &[u8; 4] = b"BTPL";
 
-/// Current wire format version. Bump on incompatible changes; the decoder
-/// rejects frames with any other version so we never silently mis-parse.
+/// Original whole-request wire format, retained indefinitely for deployed
+/// Android and Rust clients.
 pub const WIRE_VERSION: u8 = 1;
+
+/// Resumable-upload wire format served at `POST /v2`.
+pub const V2_WIRE_VERSION: u8 = 2;
 
 /// Fixed header size in bytes (magic + version + declared length).
 pub const HEADER_LEN: usize = 4 + 1 + 4;
@@ -79,7 +82,17 @@ pub enum CodecError {
 
 /// Encode `value` to a zstd-compressed CBOR frame using the default caps.
 pub fn encode<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
-    encode_with_caps(value, DEFAULT_MAX_UNCOMPRESSED)
+    encode_version(value, WIRE_VERSION)
+}
+
+/// Encode a BTPL v2 frame.
+pub fn encode_v2<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
+    encode_version(value, V2_WIRE_VERSION)
+}
+
+/// Encode a frame with an explicit protocol version.
+pub fn encode_version<T: Serialize>(value: &T, version: u8) -> Result<Vec<u8>, CodecError> {
+    encode_with_version_caps(value, version, DEFAULT_MAX_UNCOMPRESSED)
 }
 
 /// Encode with an explicit cap on uncompressed payload size. Useful for tests
@@ -89,9 +102,17 @@ pub fn encode_with_caps<T: Serialize>(
     value: &T,
     max_uncompressed: usize,
 ) -> Result<Vec<u8>, CodecError> {
+    encode_with_version_caps(value, WIRE_VERSION, max_uncompressed)
+}
+
+/// Encode with an explicit wire version and uncompressed-size cap.
+pub fn encode_with_version_caps<T: Serialize>(
+    value: &T,
+    version: u8,
+    max_uncompressed: usize,
+) -> Result<Vec<u8>, CodecError> {
     let mut cbor = Vec::with_capacity(1024);
-    ciborium::into_writer(value, &mut cbor)
-        .map_err(|e| CodecError::CborEncode(e.to_string()))?;
+    ciborium::into_writer(value, &mut cbor).map_err(|e| CodecError::CborEncode(e.to_string()))?;
     if cbor.len() > max_uncompressed {
         return Err(CodecError::EncodeOversize {
             got: cbor.len(),
@@ -101,7 +122,7 @@ pub fn encode_with_caps<T: Serialize>(
     let compressed = zstd::encode_all(cbor.as_slice(), ZSTD_LEVEL)?;
     let mut out = Vec::with_capacity(HEADER_LEN + compressed.len());
     out.extend_from_slice(MAGIC);
-    out.push(WIRE_VERSION);
+    out.push(version);
     // The cast to u32 is safe: cbor.len() <= max_uncompressed and we only
     // accept max_uncompressed <= u32::MAX (the default cap is 200 MiB).
     out.extend_from_slice(&(cbor.len() as u32).to_be_bytes());
@@ -111,7 +132,25 @@ pub fn encode_with_caps<T: Serialize>(
 
 /// Decode a frame using the default caps.
 pub fn decode<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
-    decode_with_caps(frame, DEFAULT_MAX_COMPRESSED, DEFAULT_MAX_UNCOMPRESSED)
+    decode_version(frame, WIRE_VERSION)
+}
+
+/// Decode a BTPL v2 frame.
+pub fn decode_v2<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
+    decode_version(frame, V2_WIRE_VERSION)
+}
+
+/// Decode a frame while requiring an explicit protocol version.
+pub fn decode_version<T: DeserializeOwned>(
+    frame: &[u8],
+    expected_version: u8,
+) -> Result<T, CodecError> {
+    decode_with_version_caps(
+        frame,
+        expected_version,
+        DEFAULT_MAX_COMPRESSED,
+        DEFAULT_MAX_UNCOMPRESSED,
+    )
 }
 
 /// Decode a frame with explicit caps. Both caps are enforced *before* any
@@ -121,6 +160,16 @@ pub fn decode<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
 /// the cap. This is what makes the codec safe to point at untrusted input.
 pub fn decode_with_caps<T: DeserializeOwned>(
     frame: &[u8],
+    max_compressed: usize,
+    max_uncompressed: usize,
+) -> Result<T, CodecError> {
+    decode_with_version_caps(frame, WIRE_VERSION, max_compressed, max_uncompressed)
+}
+
+/// Decode with explicit wire version and size caps.
+pub fn decode_with_version_caps<T: DeserializeOwned>(
+    frame: &[u8],
+    expected_version: u8,
     max_compressed: usize,
     max_uncompressed: usize,
 ) -> Result<T, CodecError> {
@@ -137,7 +186,7 @@ pub fn decode_with_caps<T: DeserializeOwned>(
         return Err(CodecError::BadMagic);
     }
     let version = frame[4];
-    if version != WIRE_VERSION {
+    if version != expected_version {
         return Err(CodecError::UnsupportedVersion { got: version });
     }
     let declared = u32::from_be_bytes([frame[5], frame[6], frame[7], frame[8]]) as usize;
@@ -159,8 +208,7 @@ pub fn decode_with_caps<T: DeserializeOwned>(
             actual: cbor.len(),
         });
     }
-    let value: T = ciborium::from_reader(&cbor[..])
-        .map_err(|e| CodecError::Cbor(e.to_string()))?;
+    let value: T = ciborium::from_reader(&cbor[..]).map_err(|e| CodecError::Cbor(e.to_string()))?;
     Ok(value)
 }
 
@@ -169,10 +217,7 @@ pub fn decode_with_caps<T: DeserializeOwned>(
 /// are appended — so a frame whose decompressed form is 1 GiB is rejected
 /// after producing at most one chunk past the cap, not after allocating the
 /// full gigabyte.
-fn decompress_with_limit(
-    compressed: &[u8],
-    max_output: usize,
-) -> Result<Vec<u8>, CodecError> {
+fn decompress_with_limit(compressed: &[u8], max_output: usize) -> Result<Vec<u8>, CodecError> {
     let mut decoder = zstd::Decoder::new(compressed)?;
     let mut out: Vec<u8> = Vec::new();
     let mut buf = [0u8; 64 * 1024];
@@ -221,6 +266,20 @@ mod tests {
         let frame = encode(&sample()).expect("encode");
         assert_eq!(&frame[..4], MAGIC);
         assert_eq!(frame[4], WIRE_VERSION);
+    }
+
+    #[test]
+    fn v2_round_trip_uses_distinct_version() {
+        let frame = encode_v2(&sample()).expect("encode v2");
+        assert_eq!(frame[4], V2_WIRE_VERSION);
+        let back: Sample = decode_v2(&frame).expect("decode v2");
+        assert_eq!(back, sample());
+        assert!(matches!(
+            decode::<Sample>(&frame),
+            Err(CodecError::UnsupportedVersion {
+                got: V2_WIRE_VERSION
+            })
+        ));
     }
 
     #[test]
@@ -288,8 +347,8 @@ mod tests {
     fn zip_bomb_is_rejected_during_streaming_decode() {
         // 5 MiB of a single repeated byte compresses to a few KB with zstd.
         let bomb_uncompressed: Vec<u8> = vec![0u8; 5 * 1024 * 1024];
-        let bomb_compressed = zstd::encode_all(bomb_uncompressed.as_slice(), ZSTD_LEVEL)
-            .expect("encode bomb");
+        let bomb_compressed =
+            zstd::encode_all(bomb_uncompressed.as_slice(), ZSTD_LEVEL).expect("encode bomb");
         assert!(
             bomb_compressed.len() < 64 * 1024,
             "expected the bomb's compressed form to be tiny, got {} bytes",
@@ -309,8 +368,8 @@ mod tests {
 
         // Cap output at 64 KiB. The streaming decoder must abort and return
         // DecompressedOversize before producing all 5 MiB.
-        let err = decode_with_caps::<Sample>(&frame, DEFAULT_MAX_COMPRESSED, 64 * 1024)
-            .unwrap_err();
+        let err =
+            decode_with_caps::<Sample>(&frame, DEFAULT_MAX_COMPRESSED, 64 * 1024).unwrap_err();
         assert!(
             matches!(err, CodecError::DecompressedOversize { .. }),
             "expected DecompressedOversize, got: {err:?}"

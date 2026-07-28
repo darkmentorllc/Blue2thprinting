@@ -78,7 +78,14 @@ defines the on-the-wire encoding.** Both the server and the client depend
 on it, so a protocol change happens exactly once and the type checker forces
 the other side to be updated.
 
-## Wire protocol (v1)
+## Wire protocols
+
+The production Rust listener preserves whole-file BTPL v1 at `POST /`.
+Resumable BTPL v2 is additive at `POST /v2`; see
+[`V2_PROTOCOL.md`](V2_PROTOCOL.md) for the exact Android/client contract and
+[`OPERATIONS.md`](OPERATIONS.md) for deployment and rollback.
+
+### V1
 
 Every request and every response is a single CBOR-encoded value wrapped in
 the framing format defined in [`crates/btidalpool-proto/src/codec.rs`](crates/btidalpool-proto/src/codec.rs):
@@ -119,6 +126,7 @@ This workspace is independent of the other two Rust workspaces in the repo
 cd BTIDALPOOL
 cargo build --release       # release binaries needed for the Python shim test
 cargo test                  # all Rust unit + integration tests
+cargo test --workspace --features sql-ingest
 python3 -m unittest python/test_shim_loopback.py    # Python shim end-to-end test
 ```
 
@@ -192,7 +200,9 @@ retained even though it isn't exposed on the command line.
 | Codec zip-bomb guards (compressed cap + streaming output cap)   | done, tested |
 | Server: TLS via tiny_http + ssl-rustls                          | done |
 | Server: OAuth trait + Google userinfo impl + mock for tests     | done |
-| Server: per-IP rate limiter (simultaneous + per-day, with guard) | done |
+| Server: identity-first limiter + separate IP abuse gate + Retry-After | done |
+| Server: hashed Google-validation cache + signed short-lived sessions | done |
+| Server: durable resumable manifests/chunks/atomic finalize/receipts | done |
 | Server: dedup hash index + per-user logs + access log           | done |
 | Server: typed request dispatch (upload / check_hash / query)    | done |
 | Server: BTIDES-to-SQL ingest via the existing crate             | done (gated on `sql-ingest` feature) |

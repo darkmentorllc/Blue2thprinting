@@ -44,7 +44,11 @@ ciborium = "0.2"
 zstd = { version = "0.13", default-features = false }
 thiserror = "2"
 sha1 = "0.10"
+sha2 = "0.10"
 hex = "0.4"
+base64 = "0.22"
+hmac = "0.12"
+rand = "0.8"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 # HTTP server: synchronous, thread-per-request. Matches the Python server's

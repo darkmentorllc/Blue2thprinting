@@ -9,10 +9,13 @@
 use std::sync::Arc;
 use std::time::SystemTime;
 
-use btidalpool_proto::{canonical_sha1, ErrorKind, Payload, QueryParams, Response};
+use btidalpool_proto::{
+    canonical_sha1, ErrorKind, Payload, QueryParams, Response, V2ErrorKind, V2Payload, V2Response,
+};
 
 use crate::ingest::IngestSink;
 use crate::query::{QueryEngine, QueryError};
+use crate::resumable::ResumableStore;
 use crate::state::ServerState;
 
 /// Maximum BTIDES upload size in bytes. Matches the Python server's
@@ -30,19 +33,83 @@ pub const MAX_RECORDS_PER_QUERY: u32 = 100;
 #[derive(Clone)]
 pub struct Deps {
     pub state: ServerState,
+    pub resumable: ResumableStore,
     pub ingest: Arc<dyn IngestSink>,
     pub query: Arc<dyn QueryEngine>,
+}
+
+/// Dispatch an authenticated v2 operation. Session issuance is handled at
+/// the HTTP/auth layer; all durable upload operations live here.
+pub fn dispatch_v2(email: &str, payload: V2Payload, deps: &Deps) -> V2Response {
+    let result = match payload {
+        V2Payload::CreateSession => {
+            return v2_err(
+                V2ErrorKind::BadRequest,
+                "create_session must use Google authentication",
+                Vec::new(),
+            )
+        }
+        V2Payload::Manifest {
+            content_sha256,
+            total_size,
+            chunk_sha256,
+            use_test_db,
+        } => deps
+            .resumable
+            .submit_manifest(email, content_sha256, total_size, chunk_sha256, use_test_db)
+            .map(|status| V2Response::Manifest {
+                upload_id: status.upload_id,
+                missing_chunks: status.missing_chunks,
+                receipt: status.receipt,
+            }),
+        V2Payload::PutChunk {
+            upload_id,
+            index,
+            data,
+        } => deps
+            .resumable
+            .put_chunk(email, &upload_id, index, &data)
+            .map(|result| V2Response::Chunk {
+                upload_id: result.upload_id,
+                index: result.index,
+                already_present: result.already_present,
+            }),
+        V2Payload::Status { upload_id } => {
+            deps.resumable
+                .status(email, &upload_id)
+                .map(|status| V2Response::Status {
+                    upload_id: status.upload_id,
+                    missing_chunks: status.missing_chunks,
+                    receipt: status.receipt,
+                })
+        }
+        V2Payload::Finalize { upload_id } => deps
+            .resumable
+            .finalize(email, &upload_id, &deps.state, deps.ingest.as_ref())
+            .map(|receipt| V2Response::Finalized { receipt }),
+    };
+
+    match result {
+        Ok(response) => response,
+        Err(error) => {
+            log_user(deps, email, &format!("v2 operation failed: {error}"));
+            v2_err(error.kind(), error.to_string(), error.missing_chunks())
+        }
+    }
+}
+
+fn v2_err(kind: V2ErrorKind, message: impl Into<String>, missing_chunks: Vec<u32>) -> V2Response {
+    V2Response::Err {
+        kind,
+        message: message.into(),
+        missing_chunks,
+    }
 }
 
 /// Dispatch a successfully-decoded envelope payload to the right handler.
 /// `email` is the result of OAuth validation — by the time we get here we
 /// know the caller is a real authenticated user.
-pub fn dispatch(
-    email: &str,
-    use_test_db: bool,
-    payload: Payload,
-    deps: &Deps,
-) -> Response {
+pub fn dispatch(email: &str, use_test_db: bool, payload: Payload, deps: &Deps) -> Response {
     match payload {
         Payload::Upload { btides_json } => handle_upload(email, use_test_db, btides_json, deps),
         Payload::CheckHash { hash } => handle_check_hash(email, hash, deps),
@@ -55,7 +122,9 @@ fn handle_check_hash(email: &str, hash: String, deps: &Deps) -> Response {
     if deps.state.has_hash(&hash) {
         Response::Err {
             kind: ErrorKind::DuplicateUpload,
-            message: "A file with this exact content already exists on the server. No need to upload.".into(),
+            message:
+                "A file with this exact content already exists on the server. No need to upload."
+                    .into(),
         }
     } else {
         Response::Ok {
@@ -64,12 +133,7 @@ fn handle_check_hash(email: &str, hash: String, deps: &Deps) -> Response {
     }
 }
 
-fn handle_upload(
-    email: &str,
-    use_test_db: bool,
-    btides_json: Vec<u8>,
-    deps: &Deps,
-) -> Response {
+fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &Deps) -> Response {
     // 1) Body size cap (matches Python g_max_file_size).
     if btides_json.len() > MAX_UPLOAD_BYTES {
         return err(ErrorKind::BadRequest, "File size too big.");
@@ -133,12 +197,7 @@ fn handle_upload(
     }
 }
 
-fn handle_query(
-    email: &str,
-    use_test_db: bool,
-    params: QueryParams,
-    deps: &Deps,
-) -> Response {
+fn handle_query(email: &str, use_test_db: bool, params: QueryParams, deps: &Deps) -> Response {
     log_user(deps, email, &format!("Query: {params:?}"));
     match deps.query.run(&params, MAX_RECORDS_PER_QUERY, use_test_db) {
         Ok(r) => {
@@ -235,6 +294,7 @@ mod tests {
         .unwrap();
         let deps = Deps {
             state,
+            resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[1,2,3]".to_vec(), 3)),
         };
@@ -349,6 +409,7 @@ mod tests {
         .unwrap();
         let deps = Deps {
             state,
+            resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::empty()),
         };

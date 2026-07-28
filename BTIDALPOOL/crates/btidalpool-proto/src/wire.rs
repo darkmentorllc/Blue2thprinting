@@ -114,10 +114,7 @@ pub enum Response {
     /// Plain-text error, mirrors the old `4xx text/plain` responses.
     /// Status code semantics are unchanged — see [`ErrorKind`] for the
     /// mapping used by the server.
-    Err {
-        kind: ErrorKind,
-        message: String,
-    },
+    Err { kind: ErrorKind, message: String },
     /// Result of a `Query` command — the matching BTIDES JSON as raw bytes,
     /// plus a record count for client-side display.
     QueryResult {
@@ -166,6 +163,126 @@ impl ErrorKind {
             ErrorKind::Internal => 500,
         }
     }
+}
+
+/// V2 authentication is deliberately separate from [`AuthFields`]. Google
+/// credentials are sent only to `create_session`; subsequent manifest,
+/// chunk, status, and finalize operations carry a short-lived server token.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "scheme", rename_all = "snake_case")]
+pub enum V2Auth {
+    Google { access_token: String },
+    Session { token: String },
+}
+
+/// Top-level request for BTPL v2 (`POST /v2`, frame version 2).
+#[derive(Clone, Serialize, Deserialize)]
+pub struct V2Envelope {
+    pub auth: V2Auth,
+    pub payload: V2Payload,
+}
+
+/// Resumable upload operations. Chunk order is defined by the manifest, not
+/// by arrival order; `put_chunk` is safe to parallelize and replay.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "cmd", rename_all = "snake_case")]
+pub enum V2Payload {
+    CreateSession,
+    Manifest {
+        content_sha256: String,
+        total_size: u64,
+        chunk_sha256: Vec<String>,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+    PutChunk {
+        upload_id: String,
+        index: u32,
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+    Status {
+        upload_id: String,
+    },
+    Finalize {
+        upload_id: String,
+    },
+}
+
+/// Persisted proof that a v2 upload reached the final pool atomically.
+/// Replayed finalize and manifest requests return the exact same receipt.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct UploadReceipt {
+    pub receipt_id: String,
+    pub upload_id: String,
+    pub content_sha256: String,
+    pub canonical_sha1: String,
+    pub total_size: u64,
+    pub completed_at_unix: u64,
+    pub use_test_db: bool,
+    pub deduplicated: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum V2ErrorKind {
+    BadRequest,
+    Unauthorized,
+    SessionExpired,
+    NotFound,
+    Conflict,
+    PayloadTooLarge,
+    HashMismatch,
+    RateLimited,
+    Internal,
+}
+
+impl V2ErrorKind {
+    pub fn http_status(self) -> u16 {
+        match self {
+            Self::BadRequest => 400,
+            Self::Unauthorized | Self::SessionExpired => 401,
+            Self::NotFound => 404,
+            Self::Conflict => 409,
+            Self::PayloadTooLarge => 413,
+            Self::HashMismatch => 422,
+            Self::RateLimited => 429,
+            Self::Internal => 500,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "result", rename_all = "snake_case")]
+pub enum V2Response {
+    Session {
+        token: String,
+        expires_at_unix: u64,
+    },
+    Manifest {
+        upload_id: String,
+        missing_chunks: Vec<u32>,
+        receipt: Option<UploadReceipt>,
+    },
+    Chunk {
+        upload_id: String,
+        index: u32,
+        already_present: bool,
+    },
+    Status {
+        upload_id: String,
+        missing_chunks: Vec<u32>,
+        receipt: Option<UploadReceipt>,
+    },
+    Finalized {
+        receipt: UploadReceipt,
+    },
+    Err {
+        kind: V2ErrorKind,
+        message: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        missing_chunks: Vec<u32>,
+    },
 }
 
 /// Helper: serialize an [`Envelope`] using a `ByteBuf` instead of a raw
@@ -249,5 +366,24 @@ mod tests {
         assert_eq!(ErrorKind::Unauthorized.http_status(), 401);
         assert_eq!(ErrorKind::RateLimited.http_status(), 429);
         assert_eq!(ErrorKind::Internal.http_status(), 500);
+    }
+
+    #[test]
+    fn v2_envelope_and_receipt_round_trip() {
+        let env = V2Envelope {
+            auth: V2Auth::Session { token: "s".into() },
+            payload: V2Payload::Manifest {
+                content_sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    .into(),
+                total_size: 2,
+                chunk_sha256: vec![
+                    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".into(),
+                ],
+                use_test_db: false,
+            },
+        };
+        let frame = codec::encode_v2(&env).unwrap();
+        let decoded: V2Envelope = codec::decode_v2(&frame).unwrap();
+        assert!(matches!(decoded.payload, V2Payload::Manifest { .. }));
     }
 }

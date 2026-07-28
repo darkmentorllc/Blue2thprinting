@@ -107,7 +107,11 @@ mod tests {
     #[test]
     fn noop_sink_always_succeeds() {
         let sink = NoopIngestSink;
-        assert!(sink.ingest_file(Path::new("/does/not/matter"), false).is_ok());
-        assert!(sink.ingest_file(Path::new("/does/not/matter"), true).is_ok());
+        assert!(sink
+            .ingest_file(Path::new("/does/not/matter"), false)
+            .is_ok());
+        assert!(sink
+            .ingest_file(Path::new("/does/not/matter"), true)
+            .is_ok());
     }
 }

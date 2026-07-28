@@ -8,38 +8,45 @@
 //!   2. Content-Type check — POSTs that don't carry our wire mime type
 //!      are rejected with HTTP 415 and a plain-text body so an old Python
 //!      client trying to POST raw JSON sees a clear error.
-//!   3. Rate-limit check (per-client-IP).
+//!   3. Broad pre-authentication abuse check (per-client-IP).
 //!   4. Read body (capped at the wire codec's max compressed size — extra
 //!      bytes are discarded and the request is rejected).
 //!   5. Decode the codec frame into an [`Envelope`].
-//!   6. OAuth-validate the embedded token; on failure return Unauthorized.
-//!   7. Dispatch to the typed handler.
-//!   8. Encode the [`Response`], set the matching HTTP status, write back.
+//!   6. Authenticate Google credentials (v1/session exchange) or validate a
+//!      short-lived v2 session.
+//!   7. Apply the primary authenticated-identity rate limit.
+//!   8. Dispatch to the typed handler and encode the matching response.
 //!
 //! Per-request threading: we accept connections on the main loop and spawn
 //! a short-lived `std::thread` per request. The rate limiter bounds the
-//! number of in-flight requests per IP, so the worker-thread count is
-//! self-limiting in steady state.
+//! number of in-flight requests per identity and per IP, so the worker-thread
+//! count is self-limiting in steady state.
 
 use std::io::{self, Read, Write};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use btidalpool_proto::{codec, AuthFields, Envelope, ErrorKind, Payload, Response, CONTENT_TYPE};
+use btidalpool_proto::{
+    codec, AuthFields, Envelope, ErrorKind, Payload, Response, V2Auth, V2Envelope, V2ErrorKind,
+    V2Payload, V2Response, CONTENT_TYPE,
+};
 use tiny_http::{Header, Method, Request, Response as TinyResp, Server, StatusCode};
 
-use crate::handlers::{dispatch, Deps};
+use crate::handlers::{dispatch, dispatch_v2, Deps};
 use crate::oauth::{AuthError, OAuthValidator};
-use crate::rate_limit::{Decision, Limiter};
+use crate::rate_limit::{Decision, Guard, Limiter};
+use crate::session::{SessionError, SessionTokens};
 
 /// Server configuration. Built by `main.rs` from CLI flags and handed to
 /// [`run`].
 pub struct Config {
     pub bind: SocketAddr,
     pub tls: Option<TlsConfig>,
-    pub limiter: Limiter,
+    pub ip_limiter: Limiter,
+    pub identity_limiter: Limiter,
     pub validator: Arc<dyn OAuthValidator>,
+    pub sessions: SessionTokens,
     pub deps: Deps,
 }
 
@@ -56,8 +63,10 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
     log::info!("Listening on {}", cfg.bind);
 
     let cfg = Arc::new(SharedCfg {
-        limiter: cfg.limiter,
+        ip_limiter: cfg.ip_limiter,
+        identity_limiter: cfg.identity_limiter,
         validator: cfg.validator,
+        sessions: cfg.sessions,
         deps: cfg.deps,
     });
 
@@ -81,8 +90,7 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
 /// Build a `tiny_http::Server` with or without TLS depending on `cfg.tls`.
 fn build_server(cfg: &Config) -> anyhow::Result<Server> {
     match &cfg.tls {
-        None => Server::http(cfg.bind)
-            .map_err(|e| anyhow::anyhow!("tiny_http::http: {e}")),
+        None => Server::http(cfg.bind).map_err(|e| anyhow::anyhow!("tiny_http::http: {e}")),
         Some(tls) => {
             let certificate = std::fs::read(&tls.cert_pem_path)?;
             let private_key = std::fs::read(&tls.key_pem_path)?;
@@ -96,8 +104,10 @@ fn build_server(cfg: &Config) -> anyhow::Result<Server> {
 }
 
 struct SharedCfg {
-    limiter: Limiter,
+    ip_limiter: Limiter,
+    identity_limiter: Limiter,
     validator: Arc<dyn OAuthValidator>,
+    sessions: SessionTokens,
     deps: Deps,
 }
 
@@ -108,10 +118,17 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         std::net::IpAddr::from([127, 0, 0, 1])
     });
 
-    // Method gate — the old Python server rejected everything except POST
-    // with HTTP 405. Keep parity.
+    let path = request.url().split('?').next().unwrap_or("/").to_string();
+    if request.method() == &Method::Get && path == "/healthz" {
+        return reply_plain(request, 200, "ok");
+    }
+
+    // Method gate — v1 retains the old Python server's POST-only behavior.
     if request.method() != &Method::Post {
         return reply_plain(request, 405, "Method Not Allowed");
+    }
+    if path != "/" && path != "/v2" {
+        return reply_plain(request, 404, "Not Found");
     }
 
     // Content-Type gate.
@@ -132,13 +149,12 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         );
     }
 
-    // Rate-limit gate. The Guard returned here lives across the rest of
-    // the function, so the simultaneous-count for `client_ip` is held
-    // until the response goes out.
-    let _guard = match cfg.limiter.try_acquire(client_ip) {
+    // Broad pre-authentication IP gate. Authenticated identity limits below
+    // are the primary quota; this only bounds abusive unauthenticated traffic.
+    let _ip_guard = match cfg.ip_limiter.try_acquire(format!("ip:{client_ip}")) {
         Decision::Allowed(g) => g,
-        Decision::TooManyDaily | Decision::TooManyConcurrent => {
-            return reply_plain(request, 429, "Too Many Requests");
+        Decision::TooManyDaily { retry_after } | Decision::TooManyConcurrent { retry_after } => {
+            return reply_plain_retry(request, "Too Many Requests", retry_after);
         }
     };
 
@@ -157,10 +173,27 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
     // The reader is bounded by Content-Length on the tiny_http side, but we
     // still hard-cap to defend against chunked-encoding shenanigans (which
     // tiny_http handles but might surface as a >Content-Length stream).
-    let mut take = request.as_reader().take(codec::DEFAULT_MAX_COMPRESSED as u64);
+    let mut take = request
+        .as_reader()
+        .take(codec::DEFAULT_MAX_COMPRESSED as u64 + 1);
     take.read_to_end(&mut body)?;
+    if body.len() > codec::DEFAULT_MAX_COMPRESSED {
+        return reply_plain(request, 413, "Payload Too Large");
+    }
 
-    // Decode the frame.
+    if path == "/v2" {
+        handle_v2(request, body, client_ip, cfg)
+    } else {
+        handle_v1(request, body, client_ip, cfg)
+    }
+}
+
+fn handle_v1(
+    request: Request,
+    body: Vec<u8>,
+    client_ip: std::net::IpAddr,
+    cfg: &SharedCfg,
+) -> io::Result<()> {
     let env: Envelope = match codec::decode(&body) {
         Ok(e) => e,
         Err(e) => {
@@ -168,10 +201,10 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         }
     };
 
-    // OAuth-validate. We collapse all auth failures into 401 even though
-    // some sub-cases (transport / parse) would technically be 5xx, because
-    // exposing internal Google status codes to the client is undesirable.
-    let email = match cfg.validator.validate(&env.auth.token, &env.auth.refresh_token) {
+    let email = match cfg
+        .validator
+        .validate(&env.auth.token, &env.auth.refresh_token)
+    {
         Ok(e) => e,
         Err(AuthError::InvalidToken(_)) => {
             return reply_codec(
@@ -193,6 +226,20 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         }
     };
 
+    let _identity_guard = match acquire_identity(cfg, &email) {
+        Ok(guard) => guard,
+        Err(retry_after) => {
+            return reply_codec_retry(
+                request,
+                Response::Err {
+                    kind: ErrorKind::RateLimited,
+                    message: "Authenticated identity rate limit exceeded.".into(),
+                },
+                retry_after,
+            )
+        }
+    };
+
     // Combined access log line — same shape as the Python server's
     // `log_user_access` (minus the JSON body which we never put into the
     // log to avoid leaking BTIDES content into a flat file).
@@ -208,12 +255,155 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
     reply_codec(request, resp)
 }
 
+fn handle_v2(
+    request: Request,
+    body: Vec<u8>,
+    client_ip: std::net::IpAddr,
+    cfg: &SharedCfg,
+) -> io::Result<()> {
+    let env: V2Envelope = match codec::decode_v2(&body) {
+        Ok(envelope) => envelope,
+        Err(error) => {
+            return reply_plain(request, 400, &format!("Bad v2 request body: {error}"));
+        }
+    };
+
+    if matches!(env.payload, V2Payload::CreateSession) {
+        let access_token = match env.auth {
+            V2Auth::Google { access_token } => access_token,
+            V2Auth::Session { .. } => {
+                return reply_v2(
+                    request,
+                    v2_error(
+                        V2ErrorKind::Unauthorized,
+                        "create_session requires a Google access token",
+                    ),
+                )
+            }
+        };
+        let email = match cfg.validator.validate(&access_token, "") {
+            Ok(email) => email,
+            Err(AuthError::InvalidToken(_)) => {
+                return reply_v2(
+                    request,
+                    v2_error(V2ErrorKind::Unauthorized, "Invalid Google access token."),
+                )
+            }
+            Err(error) => {
+                log::error!("Google validation failed during v2 session exchange: {error}");
+                return reply_v2(
+                    request,
+                    v2_error(
+                        V2ErrorKind::Internal,
+                        "Authentication service temporarily unavailable.",
+                    ),
+                );
+            }
+        };
+        let _identity_guard = match acquire_identity(cfg, &email) {
+            Ok(guard) => guard,
+            Err(retry_after) => {
+                return reply_v2_retry(
+                    request,
+                    v2_error(
+                        V2ErrorKind::RateLimited,
+                        "Authenticated identity rate limit exceeded.",
+                    ),
+                    retry_after,
+                )
+            }
+        };
+        let issued = cfg.sessions.issue(&email);
+        let _ = cfg.deps.state.append_access_log(format!(
+            "{ts} - {email},{client_ip},v2 create_session",
+            ts = chrono_ish_now(),
+        ));
+        return reply_v2(
+            request,
+            V2Response::Session {
+                token: issued.token,
+                expires_at_unix: issued.expires_at_unix,
+            },
+        );
+    }
+
+    let session_token = match env.auth {
+        V2Auth::Session { token } => token,
+        V2Auth::Google { .. } => {
+            return reply_v2(
+                request,
+                v2_error(
+                    V2ErrorKind::Unauthorized,
+                    "v2 upload operations require a BTIDALPOOL session token",
+                ),
+            )
+        }
+    };
+    let identity = match cfg.sessions.verify(&session_token) {
+        Ok(identity) => identity,
+        Err(SessionError::Expired) => {
+            return reply_v2(
+                request,
+                v2_error(V2ErrorKind::SessionExpired, "BTIDALPOOL session expired."),
+            )
+        }
+        Err(_) => {
+            return reply_v2(
+                request,
+                v2_error(V2ErrorKind::Unauthorized, "Invalid BTIDALPOOL session."),
+            )
+        }
+    };
+    let _identity_guard = match acquire_identity(cfg, &identity.email) {
+        Ok(guard) => guard,
+        Err(retry_after) => {
+            return reply_v2_retry(
+                request,
+                v2_error(
+                    V2ErrorKind::RateLimited,
+                    "Authenticated identity rate limit exceeded.",
+                ),
+                retry_after,
+            )
+        }
+    };
+
+    let summary = summarize_v2_payload(&env.payload);
+    let _ = cfg.deps.state.append_access_log(format!(
+        "{ts} - {email},{client_ip},{summary}",
+        ts = chrono_ish_now(),
+        email = identity.email,
+    ));
+    let response = dispatch_v2(&identity.email, env.payload, &cfg.deps);
+    reply_v2(request, response)
+}
+
+fn acquire_identity(cfg: &SharedCfg, email: &str) -> Result<Guard, std::time::Duration> {
+    match cfg
+        .identity_limiter
+        .try_acquire(format!("identity:{}", email.to_ascii_lowercase()))
+    {
+        Decision::Allowed(guard) => Ok(guard),
+        Decision::TooManyDaily { retry_after } | Decision::TooManyConcurrent { retry_after } => {
+            Err(retry_after)
+        }
+    }
+}
+
+fn v2_error(kind: V2ErrorKind, message: impl Into<String>) -> V2Response {
+    V2Response::Err {
+        kind,
+        message: message.into(),
+        missing_chunks: Vec::new(),
+    }
+}
+
 /// Send a tiny plain-text response. Used for HTTP-level errors (bad
 /// content type, method not allowed, rate limited, etc.) where we don't
 /// even have a codec envelope to encode into.
 fn reply_plain(req: Request, status: u16, msg: &str) -> io::Result<()> {
     let resp = TinyResp::from_string(msg.to_string())
-        .with_status_code(StatusCode(status as u16))
+        .with_status_code(StatusCode(status))
         .with_header(
             "Content-Type: text/plain; charset=utf-8"
                 .parse::<Header>()
@@ -222,9 +412,37 @@ fn reply_plain(req: Request, status: u16, msg: &str) -> io::Result<()> {
     req.respond(resp)
 }
 
+fn reply_plain_retry(req: Request, msg: &str, retry_after: std::time::Duration) -> io::Result<()> {
+    let resp = TinyResp::from_string(msg.to_string())
+        .with_status_code(StatusCode(429))
+        .with_header(
+            "Content-Type: text/plain; charset=utf-8"
+                .parse::<Header>()
+                .unwrap(),
+        )
+        .with_header(retry_after_header(retry_after));
+    req.respond(resp)
+}
+
 /// Send a typed [`Response`] back through the codec, with the matching HTTP
 /// status. Errors that occur during encoding fall back to plain text.
 fn reply_codec(req: Request, resp: Response) -> io::Result<()> {
+    reply_codec_inner(req, resp, None)
+}
+
+fn reply_codec_retry(
+    req: Request,
+    resp: Response,
+    retry_after: std::time::Duration,
+) -> io::Result<()> {
+    reply_codec_inner(req, resp, Some(retry_after))
+}
+
+fn reply_codec_inner(
+    req: Request,
+    resp: Response,
+    retry_after: Option<std::time::Duration>,
+) -> io::Result<()> {
     let status = match &resp {
         Response::Ok { .. } | Response::QueryResult { .. } => 200,
         Response::Err { kind, .. } => kind.http_status(),
@@ -236,14 +454,66 @@ fn reply_codec(req: Request, resp: Response) -> io::Result<()> {
             return reply_plain(req, 500, "internal encode error");
         }
     };
-    let tr = TinyResp::from_data(bytes)
+    let mut tr = TinyResp::from_data(bytes)
         .with_status_code(StatusCode(status))
         .with_header(
             format!("Content-Type: {CONTENT_TYPE}")
                 .parse::<Header>()
                 .unwrap(),
         );
+    if let Some(duration) = retry_after {
+        tr.add_header(retry_after_header(duration));
+    }
     req.respond(tr)
+}
+
+fn reply_v2(req: Request, resp: V2Response) -> io::Result<()> {
+    reply_v2_inner(req, resp, None)
+}
+
+fn reply_v2_retry(
+    req: Request,
+    resp: V2Response,
+    retry_after: std::time::Duration,
+) -> io::Result<()> {
+    reply_v2_inner(req, resp, Some(retry_after))
+}
+
+fn reply_v2_inner(
+    req: Request,
+    resp: V2Response,
+    retry_after: Option<std::time::Duration>,
+) -> io::Result<()> {
+    let status = match &resp {
+        V2Response::Err { kind, .. } => kind.http_status(),
+        _ => 200,
+    };
+    let bytes = match codec::encode_v2(&resp) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            log::error!("v2 response encode error: {error}");
+            return reply_plain(req, 500, "internal encode error");
+        }
+    };
+    let mut response = TinyResp::from_data(bytes)
+        .with_status_code(StatusCode(status))
+        .with_header(
+            format!("Content-Type: {CONTENT_TYPE}; version=2")
+                .parse::<Header>()
+                .unwrap(),
+        );
+    if let Some(duration) = retry_after {
+        response.add_header(retry_after_header(duration));
+    }
+    req.respond(response)
+}
+
+fn retry_after_header(duration: std::time::Duration) -> Header {
+    let seconds = duration
+        .as_secs()
+        .saturating_add(u64::from(duration.subsec_nanos() > 0))
+        .max(1);
+    format!("Retry-After: {seconds}").parse::<Header>().unwrap()
 }
 
 /// Two-line summary of an inbound payload for the access log. Deliberately
@@ -254,6 +524,35 @@ fn summarize_payload(p: &Payload) -> String {
         Payload::Upload { btides_json } => format!("upload ({} bytes)", btides_json.len()),
         Payload::CheckHash { hash } => format!("check_hash ({hash})"),
         Payload::Query { params } => format!("query ({params:?})"),
+    }
+}
+
+fn summarize_v2_payload(payload: &V2Payload) -> String {
+    match payload {
+        V2Payload::CreateSession => "v2 create_session".into(),
+        V2Payload::Manifest {
+            content_sha256,
+            total_size,
+            chunk_sha256,
+            use_test_db,
+        } => format!(
+            "v2 manifest (hash={content_sha256}, size={total_size}, chunks={}, test_db={use_test_db})",
+            chunk_sha256.len()
+        ),
+        V2Payload::PutChunk {
+            upload_id,
+            index,
+            data,
+        } => format!(
+            "v2 put_chunk (upload_id={upload_id}, index={index}, bytes={})",
+            data.len()
+        ),
+        V2Payload::Status { upload_id } => {
+            format!("v2 status (upload_id={upload_id})")
+        }
+        V2Payload::Finalize { upload_id } => {
+            format!("v2 finalize (upload_id={upload_id})")
+        }
     }
 }
 

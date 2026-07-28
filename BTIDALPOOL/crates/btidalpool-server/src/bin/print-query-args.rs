@@ -36,8 +36,8 @@ struct Cli {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let params: QueryParams = serde_json::from_str(&cli.query_json)
-        .map_err(|e| format!("parsing --query-json: {e}"))?;
+    let params: QueryParams =
+        serde_json::from_str(&cli.query_json).map_err(|e| format!("parsing --query-json: {e}"))?;
     let args = tme_query_args(&params);
     // Compact JSON array of strings, one line, no trailing newline issues
     // (println adds exactly one \n which the Python test strips).

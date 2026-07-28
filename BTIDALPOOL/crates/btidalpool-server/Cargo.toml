@@ -31,6 +31,11 @@ ureq.workspace = true
 rustls.workspace = true
 rustls-pemfile.workspace = true
 parking_lot.workspace = true
+sha2.workspace = true
+base64.workspace = true
+hmac.workspace = true
+rand.workspace = true
+hex.workspace = true
 log.workspace = true
 env_logger.workspace = true
 

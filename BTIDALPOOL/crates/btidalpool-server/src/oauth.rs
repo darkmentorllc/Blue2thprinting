@@ -9,8 +9,11 @@
 //! never touches the network. This keeps the test suite from needing a
 //! real Google account or internet access.
 
-use std::time::Duration;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
+use parking_lot::Mutex;
 use serde::Deserialize;
 use thiserror::Error;
 
@@ -69,6 +72,9 @@ struct UserInfo {
 
 impl OAuthValidator for GoogleOAuthValidator {
     fn validate(&self, token: &str, _refresh_token: &str) -> Result<String, AuthError> {
+        if token.is_empty() {
+            return Err(AuthError::InvalidToken(401));
+        }
         let resp = self
             .agent
             .get(USERINFO_URL)
@@ -97,6 +103,61 @@ impl OAuthValidator for GoogleOAuthValidator {
     }
 }
 
+/// Positive-result cache for Google validation. Keys are SHA-256 digests of
+/// access tokens, so plaintext OAuth credentials never enter server state.
+/// Entries have a short TTL and invalid results are never cached.
+pub struct CachingOAuthValidator {
+    inner: Arc<dyn OAuthValidator>,
+    ttl: Duration,
+    cache: Mutex<HashMap<String, CachedIdentity>>,
+}
+
+struct CachedIdentity {
+    email: String,
+    expires_at: Instant,
+}
+
+impl CachingOAuthValidator {
+    pub fn new(inner: Arc<dyn OAuthValidator>, ttl: Duration) -> Self {
+        Self {
+            inner,
+            ttl,
+            cache: Mutex::new(HashMap::new()),
+        }
+    }
+
+    fn token_key(token: &str) -> String {
+        btidalpool_proto::exact_sha256(token.as_bytes())
+    }
+}
+
+impl OAuthValidator for CachingOAuthValidator {
+    fn validate(&self, token: &str, refresh_token: &str) -> Result<String, AuthError> {
+        if token.is_empty() {
+            return Err(AuthError::InvalidToken(401));
+        }
+        let key = Self::token_key(token);
+        let now = Instant::now();
+        {
+            let mut cache = self.cache.lock();
+            cache.retain(|_, value| value.expires_at > now);
+            if let Some(value) = cache.get(&key) {
+                return Ok(value.email.clone());
+            }
+        }
+
+        let email = self.inner.validate(token, refresh_token)?;
+        self.cache.lock().insert(
+            key,
+            CachedIdentity {
+                email: email.clone(),
+                expires_at: now + self.ttl,
+            },
+        );
+        Ok(email)
+    }
+}
+
 /// Test-only validator that returns a preconfigured email if the token
 /// matches the preconfigured "good" token, and an `InvalidToken` otherwise.
 /// Lets unit and integration tests cover both happy-path and 401 branches
@@ -119,6 +180,7 @@ impl OAuthValidator for MockOAuthValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[test]
     fn mock_validator_returns_email_for_good_token() {
@@ -137,5 +199,40 @@ mod tests {
         };
         let err = v.validate("nope", "rt").unwrap_err();
         assert!(matches!(err, AuthError::InvalidToken(401)));
+    }
+
+    struct CountingValidator {
+        calls: AtomicUsize,
+    }
+
+    impl OAuthValidator for CountingValidator {
+        fn validate(&self, _token: &str, _refresh_token: &str) -> Result<String, AuthError> {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            Ok("cached@example.com".into())
+        }
+    }
+
+    #[test]
+    fn cache_uses_only_digest_key_and_expires() {
+        let inner = Arc::new(CountingValidator {
+            calls: AtomicUsize::new(0),
+        });
+        let validator = CachingOAuthValidator::new(inner.clone(), Duration::from_millis(5));
+        assert_eq!(
+            validator.validate("secret-token", "").unwrap(),
+            "cached@example.com"
+        );
+        assert_eq!(
+            validator.validate("secret-token", "").unwrap(),
+            "cached@example.com"
+        );
+        assert_eq!(inner.calls.load(Ordering::SeqCst), 1);
+        let keys: Vec<String> = validator.cache.lock().keys().cloned().collect();
+        assert_eq!(keys.len(), 1);
+        assert_ne!(keys[0], "secret-token");
+
+        std::thread::sleep(Duration::from_millis(10));
+        validator.validate("secret-token", "").unwrap();
+        assert_eq!(inner.calls.load(Ordering::SeqCst), 2);
     }
 }

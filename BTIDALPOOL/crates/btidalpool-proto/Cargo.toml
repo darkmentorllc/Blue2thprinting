@@ -14,4 +14,5 @@ ciborium.workspace = true
 zstd.workspace = true
 thiserror.workspace = true
 sha1.workspace = true
+sha2.workspace = true
 hex.workspace = true

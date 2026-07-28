@@ -12,6 +12,7 @@
 //! crate feature.
 
 use sha1::{Digest, Sha1};
+use sha2::Sha256;
 
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -27,6 +28,15 @@ pub fn canonical_sha1(json_bytes: &[u8]) -> Result<String, serde_json::Error> {
     let mut hasher = Sha1::new();
     hasher.update(&bytes);
     Ok(hex::encode(hasher.finalize()))
+}
+
+/// SHA-256 of the exact byte stream. V2 manifests and chunks use this hash:
+/// unlike the legacy canonical SHA-1, it detects changes in ordering and
+/// whitespace and can validate an assembled upload byte-for-byte.
+pub fn exact_sha256(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    hex::encode(hasher.finalize())
 }
 
 /// Recursively rebuild a `Value` with all object keys in lexicographic
@@ -83,5 +93,13 @@ mod tests {
         let a = canonical_sha1(br#"{"a":1,"b":[2,3]}"#).expect("hash a");
         let b = canonical_sha1(b"{\n  \"a\" : 1 ,\n  \"b\" : [ 2 , 3 ]\n}").expect("hash b");
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn exact_sha256_matches_known_vector() {
+        assert_eq!(
+            exact_sha256(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
     }
 }

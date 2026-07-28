@@ -1,0 +1,18 @@
+[Unit]
+Description=BTIDALPOOL Server (Rust BTPL v1 + resumable v2, :3568)
+After=network.target
+
+[Service]
+ExecStart=/home/ubuntu/BTIDALPOOL/Blue2thprinting/BTIDALPOOL/target/release/btidalpool-server --bind 0.0.0.0:3568 --cert /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/btidalpool.ddns.net.crt --key /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/btidalpool.ddns.net.key --pool-dir /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/pool_files_rust --user-logs-dir /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/user_logs_rust --access-log /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/user_access_rust.log --v2-state-dir /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/btidalpool_v2_state --session-key-file /home/ubuntu/BTIDALPOOL/session_hmac.key --max-concurrent 10 --max-per-day 100 --max-ip-concurrent 50 --max-ip-per-day 1000 --oauth-cache-ttl-seconds 300 --session-ttl-seconds 900 --tme-script /home/ubuntu/BTIDALPOOL/Blue2thprinting/Analysis/Tell_Me_Everything.py
+WorkingDirectory=/home/ubuntu/BTIDALPOOL/Blue2thprinting/BTIDALPOOL/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+RestartSec=2
+User=ubuntu
+UMask=0027
+Environment=PYTHONUNBUFFERED=1
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target

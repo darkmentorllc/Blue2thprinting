@@ -289,7 +289,11 @@ fn append_query_flags(args: &mut Vec<String>, p: &QueryParams) {
 /// depth 1 (i.e. just inside the outer `[`) as a separator.
 fn count_top_level_array(bytes: &[u8]) -> usize {
     let mut iter = bytes.iter().copied().peekable();
-    while iter.peek().map(|b| b.is_ascii_whitespace()).unwrap_or(false) {
+    while iter
+        .peek()
+        .map(|b| b.is_ascii_whitespace())
+        .unwrap_or(false)
+    {
         iter.next();
     }
     if iter.peek() != Some(&b'[') {
@@ -397,9 +401,7 @@ impl QueryEngine for StubQueryEngine {
             return Err(match e {
                 QueryError::Empty => QueryError::Empty,
                 QueryError::Backend(s) => QueryError::Backend(s.clone()),
-                QueryError::Io(_) => {
-                    QueryError::Backend("test stub io error".into())
-                }
+                QueryError::Io(_) => QueryError::Backend("test stub io error".into()),
             });
         }
         Ok(QueryResult {
@@ -446,10 +448,7 @@ mod tests {
         // Object with internal commas should still count as one.
         assert_eq!(count_top_level_array(b"[{\"a\":1,\"b\":2}]"), 1);
         // Two objects.
-        assert_eq!(
-            count_top_level_array(b"[{\"a\":1,\"b\":2},{\"c\":3}]"),
-            2
-        );
+        assert_eq!(count_top_level_array(b"[{\"a\":1,\"b\":2},{\"c\":3}]"), 2);
         // String with internal comma should still count as one.
         assert_eq!(count_top_level_array(b"[\"a,b,c\"]"), 1);
         // String with escaped quote.
@@ -568,8 +567,7 @@ mod tests {
                 }
             }
         }
-        let expected: BTreeSet<String> =
-            ALL_QUERY_FIELDS.iter().map(|s| s.to_string()).collect();
+        let expected: BTreeSet<String> = ALL_QUERY_FIELDS.iter().map(|s| s.to_string()).collect();
         assert_eq!(
             seen, expected,
             "fixture coverage drift: every allow-listed query field must be \
