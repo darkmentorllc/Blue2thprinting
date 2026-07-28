@@ -35,7 +35,7 @@ use tiny_http::{Header, Method, Request, Response as TinyResp, Server, StatusCod
 
 use crate::handlers::{dispatch, dispatch_v2, Deps};
 use crate::oauth::{AuthError, OAuthValidator};
-use crate::rate_limit::{Decision, Guard, Limiter};
+use crate::rate_limit::{ConcurrencyGuard, ConcurrencyLimiter, Decision, Guard, Limiter};
 use crate::session::{SessionError, SessionTokens};
 
 /// Server configuration. Built by `main.rs` from CLI flags and handed to
@@ -45,9 +45,39 @@ pub struct Config {
     pub tls: Option<TlsConfig>,
     pub ip_limiter: Limiter,
     pub identity_limiter: Limiter,
+    pub overload: OverloadConfig,
     pub validator: Arc<dyn OAuthValidator>,
     pub sessions: SessionTokens,
     pub deps: Deps,
+}
+
+/// Process-wide admission control for memory/CPU-heavy work. Identity and IP
+/// limiters answer "is this caller within quota?"; these limits answer "does
+/// this small host have capacity right now?".
+#[derive(Clone)]
+pub struct OverloadConfig {
+    /// Shared weighted budget. Queries reserve two units; whole-file uploads
+    /// and finalizes reserve one, preventing a max-result query from
+    /// overlapping either on the one-CPU production host.
+    pub expensive_work: ConcurrencyLimiter,
+    pub v1_uploads: ConcurrencyLimiter,
+    pub queries: ConcurrencyLimiter,
+    pub chunk_puts: ConcurrencyLimiter,
+    pub finalizes: ConcurrencyLimiter,
+    pub retry_after: std::time::Duration,
+}
+
+impl Default for OverloadConfig {
+    fn default() -> Self {
+        Self {
+            expensive_work: ConcurrencyLimiter::new(2),
+            v1_uploads: ConcurrencyLimiter::new(2),
+            queries: ConcurrencyLimiter::new(1),
+            chunk_puts: ConcurrencyLimiter::new(4),
+            finalizes: ConcurrencyLimiter::new(2),
+            retry_after: std::time::Duration::from_secs(2),
+        }
+    }
 }
 
 pub struct TlsConfig {
@@ -65,6 +95,7 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
     let cfg = Arc::new(SharedCfg {
         ip_limiter: cfg.ip_limiter,
         identity_limiter: cfg.identity_limiter,
+        overload: cfg.overload,
         validator: cfg.validator,
         sessions: cfg.sessions,
         deps: cfg.deps,
@@ -106,6 +137,7 @@ fn build_server(cfg: &Config) -> anyhow::Result<Server> {
 struct SharedCfg {
     ip_limiter: Limiter,
     identity_limiter: Limiter,
+    overload: OverloadConfig,
     validator: Arc<dyn OAuthValidator>,
     sessions: SessionTokens,
     deps: Deps,
@@ -240,6 +272,24 @@ fn handle_v1(
         }
     };
 
+    let _capacity_guards = match acquire_v1_capacity(cfg, &env.payload) {
+        Ok(guards) => guards,
+        Err(()) => {
+            return reply_codec_retry_status(
+                request,
+                Response::Err {
+                    // Keep the existing v1 enum tag so deployed v1 clients
+                    // can decode the body; HTTP 503 distinguishes capacity
+                    // overload from the caller-quota HTTP 429.
+                    kind: ErrorKind::RateLimited,
+                    message: "Server capacity is temporarily exhausted; retry later.".into(),
+                },
+                cfg.overload.retry_after,
+                503,
+            );
+        }
+    };
+
     // Combined access log line — same shape as the Python server's
     // `log_user_access` (minus the JSON body which we never put into the
     // log to avoid leaking BTIDES content into a flat file).
@@ -368,6 +418,20 @@ fn handle_v2(
         }
     };
 
+    let _capacity_guards = match acquire_v2_capacity(cfg, &env.payload) {
+        Ok(guards) => guards,
+        Err(()) => {
+            return reply_v2_retry(
+                request,
+                v2_error(
+                    V2ErrorKind::ServerBusy,
+                    "Server capacity is temporarily exhausted; retry later.",
+                ),
+                cfg.overload.retry_after,
+            )
+        }
+    };
+
     let summary = summarize_v2_payload(&env.payload);
     let _ = cfg.deps.state.append_access_log(format!(
         "{ts} - {email},{client_ip},{summary}",
@@ -388,6 +452,44 @@ fn acquire_identity(cfg: &SharedCfg, email: &str) -> Result<Guard, std::time::Du
             Err(retry_after)
         }
     }
+}
+
+type CapacityGuards = Option<(Option<ConcurrencyGuard>, ConcurrencyGuard)>;
+
+fn acquire_v1_capacity(cfg: &SharedCfg, payload: &Payload) -> Result<CapacityGuards, ()> {
+    let (operation_limiter, expensive_permits) = match payload {
+        Payload::Upload { .. } => (&cfg.overload.v1_uploads, 1),
+        Payload::Query { .. } => (&cfg.overload.queries, 2),
+        Payload::CheckHash { .. } => return Ok(None),
+    };
+    acquire_capacity(cfg, operation_limiter, expensive_permits)
+}
+
+fn acquire_v2_capacity(cfg: &SharedCfg, payload: &V2Payload) -> Result<CapacityGuards, ()> {
+    match payload {
+        V2Payload::PutChunk { .. } => {
+            let operation = cfg.overload.chunk_puts.try_acquire(1).ok_or(())?;
+            Ok(Some((None, operation)))
+        }
+        V2Payload::Finalize { .. } => acquire_capacity(cfg, &cfg.overload.finalizes, 1),
+        V2Payload::CreateSession | V2Payload::Manifest { .. } | V2Payload::Status { .. } => {
+            Ok(None)
+        }
+    }
+}
+
+fn acquire_capacity(
+    cfg: &SharedCfg,
+    operation_limiter: &ConcurrencyLimiter,
+    expensive_permits: u32,
+) -> Result<CapacityGuards, ()> {
+    let operation = operation_limiter.try_acquire(1).ok_or(())?;
+    let expensive = cfg
+        .overload
+        .expensive_work
+        .try_acquire(expensive_permits)
+        .ok_or(())?;
+    Ok(Some((Some(expensive), operation)))
 }
 
 fn v2_error(kind: V2ErrorKind, message: impl Into<String>) -> V2Response {
@@ -427,7 +529,7 @@ fn reply_plain_retry(req: Request, msg: &str, retry_after: std::time::Duration) 
 /// Send a typed [`Response`] back through the codec, with the matching HTTP
 /// status. Errors that occur during encoding fall back to plain text.
 fn reply_codec(req: Request, resp: Response) -> io::Result<()> {
-    reply_codec_inner(req, resp, None)
+    reply_codec_inner(req, resp, None, None)
 }
 
 fn reply_codec_retry(
@@ -435,18 +537,28 @@ fn reply_codec_retry(
     resp: Response,
     retry_after: std::time::Duration,
 ) -> io::Result<()> {
-    reply_codec_inner(req, resp, Some(retry_after))
+    reply_codec_inner(req, resp, Some(retry_after), None)
+}
+
+fn reply_codec_retry_status(
+    req: Request,
+    resp: Response,
+    retry_after: std::time::Duration,
+    status: u16,
+) -> io::Result<()> {
+    reply_codec_inner(req, resp, Some(retry_after), Some(status))
 }
 
 fn reply_codec_inner(
     req: Request,
     resp: Response,
     retry_after: Option<std::time::Duration>,
+    status_override: Option<u16>,
 ) -> io::Result<()> {
-    let status = match &resp {
+    let status = status_override.unwrap_or_else(|| match &resp {
         Response::Ok { .. } | Response::QueryResult { .. } => 200,
         Response::Err { kind, .. } => kind.http_status(),
-    };
+    });
     let bytes = match codec::encode(&resp) {
         Ok(b) => b,
         Err(e) => {

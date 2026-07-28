@@ -15,6 +15,7 @@
 //! limits (10 concurrent, 100/day per identity) contention is negligible.
 
 use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -146,6 +147,73 @@ impl Drop for Guard {
         if let Some(per) = guard.get_mut(&self.key) {
             per.in_flight = per.in_flight.saturating_sub(1);
         }
+    }
+}
+
+/// Process-wide concurrency budget for expensive operations.
+///
+/// Unlike [`Limiter`], this limiter is intentionally not keyed and has no
+/// rolling request budget. It is a small weighted semaphore used to shed
+/// load before the host enters memory-pressure thrashing. The returned guard
+/// releases its permits on every exit path, including panics.
+#[derive(Clone)]
+pub struct ConcurrencyLimiter {
+    capacity: u32,
+    in_flight: Arc<AtomicU32>,
+}
+
+impl ConcurrencyLimiter {
+    pub fn new(capacity: u32) -> Self {
+        Self {
+            capacity,
+            in_flight: Arc::new(AtomicU32::new(0)),
+        }
+    }
+
+    /// Try to reserve `permits` units without waiting. Returning `None`
+    /// lets the HTTP layer respond with 503 + Retry-After immediately.
+    pub fn try_acquire(&self, permits: u32) -> Option<ConcurrencyGuard> {
+        if permits == 0 {
+            return Some(ConcurrencyGuard {
+                permits: 0,
+                in_flight: self.in_flight.clone(),
+            });
+        }
+        if permits > self.capacity {
+            return None;
+        }
+
+        let mut current = self.in_flight.load(Ordering::Acquire);
+        loop {
+            if current > self.capacity.saturating_sub(permits) {
+                return None;
+            }
+            match self.in_flight.compare_exchange_weak(
+                current,
+                current + permits,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(_) => {
+                    return Some(ConcurrencyGuard {
+                        permits,
+                        in_flight: self.in_flight.clone(),
+                    })
+                }
+                Err(observed) => current = observed,
+            }
+        }
+    }
+}
+
+pub struct ConcurrencyGuard {
+    permits: u32,
+    in_flight: Arc<AtomicU32>,
+}
+
+impl Drop for ConcurrencyGuard {
+    fn drop(&mut self) {
+        self.in_flight.fetch_sub(self.permits, Ordering::AcqRel);
     }
 }
 
@@ -300,5 +368,27 @@ mod tests {
             }
             _ => panic!("expected daily throttle"),
         }
+    }
+
+    #[test]
+    fn global_capacity_is_weighted_and_returns_on_drop() {
+        let limiter = ConcurrencyLimiter::new(2);
+        let first = limiter.try_acquire(1).expect("first unit");
+        let second = limiter.try_acquire(1).expect("second unit");
+        assert!(limiter.try_acquire(1).is_none());
+        assert!(limiter.try_acquire(2).is_none());
+
+        drop((first, second));
+        let all = limiter.try_acquire(2).expect("all units after release");
+        assert!(limiter.try_acquire(1).is_none());
+        drop(all);
+        assert!(limiter.try_acquire(1).is_some());
+    }
+
+    #[test]
+    fn zero_capacity_always_sheds_positive_work() {
+        let limiter = ConcurrencyLimiter::new(0);
+        assert!(limiter.try_acquire(1).is_none());
+        assert!(limiter.try_acquire(0).is_some());
     }
 }

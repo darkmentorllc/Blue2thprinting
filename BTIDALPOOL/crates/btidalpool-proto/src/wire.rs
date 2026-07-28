@@ -234,6 +234,7 @@ pub enum V2ErrorKind {
     PayloadTooLarge,
     HashMismatch,
     RateLimited,
+    ServerBusy,
     Internal,
 }
 
@@ -247,6 +248,7 @@ impl V2ErrorKind {
             Self::PayloadTooLarge => 413,
             Self::HashMismatch => 422,
             Self::RateLimited => 429,
+            Self::ServerBusy => 503,
             Self::Internal => 500,
         }
     }

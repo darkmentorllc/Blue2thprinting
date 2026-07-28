@@ -33,7 +33,7 @@ use btidalpool_proto::{
     V2Envelope, V2Payload, V2Response, CONTENT_TYPE,
 };
 use btidalpool_server::handlers::Deps;
-use btidalpool_server::http::{self, Config as ServerConfig, TlsConfig};
+use btidalpool_server::http::{self, Config as ServerConfig, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::NoopIngestSink;
 use btidalpool_server::oauth::{MockOAuthValidator, OAuthValidator};
 use btidalpool_server::query::{QueryEngine, StubQueryEngine};
@@ -53,6 +53,15 @@ struct Harness {
 
 impl Harness {
     fn boot(query: Arc<dyn QueryEngine>, good_token: &str, email: &str) -> Self {
+        Self::boot_with_overload(query, good_token, email, OverloadConfig::default())
+    }
+
+    fn boot_with_overload(
+        query: Arc<dyn QueryEngine>,
+        good_token: &str,
+        email: &str,
+        overload: OverloadConfig,
+    ) -> Self {
         let td = tempfile::tempdir().unwrap();
 
         // 1) Cert + key for `localhost`. rcgen produces a self-signed cert
@@ -96,6 +105,7 @@ impl Harness {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query,
+            max_query_records: 100,
         };
         let cfg = ServerConfig {
             bind,
@@ -109,6 +119,7 @@ impl Harness {
                 ..Limits::default()
             }),
             identity_limiter: Limiter::new(Limits::default()),
+            overload,
             validator,
             sessions: SessionTokens::from_key(vec![0x42; 32], Duration::from_secs(900)).unwrap(),
             deps,
@@ -422,6 +433,101 @@ fn query_empty_returns_empty_result_kind() {
 }
 
 #[test]
+fn overloaded_query_returns_typed_503_with_retry_after() {
+    let overload = OverloadConfig {
+        queries: btidalpool_server::rate_limit::ConcurrencyLimiter::new(0),
+        retry_after: Duration::from_secs(7),
+        ..OverloadConfig::default()
+    };
+    let h = Harness::boot_with_overload(
+        Arc::new(StubQueryEngine::ok(b"[1]".to_vec(), 1)),
+        "good-tok",
+        "tester@example.com",
+        overload,
+    );
+    let body =
+        btidalpool_proto::codec::encode(&build_query(h.auth.clone(), QueryParams::default()))
+            .unwrap();
+    let raw = build_insecure_agent()
+        .post(&h.server_url)
+        .set("Content-Type", CONTENT_TYPE)
+        .send_bytes(&body);
+    let response = match raw {
+        Err(ureq::Error::Status(503, response)) => response,
+        Ok(response) => panic!("expected 503, got {}", response.status()),
+        Err(error) => panic!("expected HTTP 503, got {error}"),
+    };
+    assert_eq!(response.header("Retry-After"), Some("7"));
+    let mut encoded = Vec::new();
+    response.into_reader().read_to_end(&mut encoded).unwrap();
+    let decoded: Response = btidalpool_proto::codec::decode(&encoded).unwrap();
+    assert!(matches!(
+        decoded,
+        Response::Err {
+            kind: ErrorKind::RateLimited,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn overloaded_v2_chunk_returns_server_busy_503_with_retry_after() {
+    let overload = OverloadConfig {
+        chunk_puts: btidalpool_server::rate_limit::ConcurrencyLimiter::new(0),
+        retry_after: Duration::from_secs(5),
+        ..OverloadConfig::default()
+    };
+    let h = Harness::boot_with_overload(
+        Arc::new(StubQueryEngine::ok(b"[]".to_vec(), 0)),
+        "good-tok",
+        "tester@example.com",
+        overload,
+    );
+    let session = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Google {
+                access_token: "good-tok".into(),
+            },
+            payload: V2Payload::CreateSession,
+        },
+    );
+    let token = match session {
+        V2Response::Session { token, .. } => token,
+        other => panic!("expected session, got {other:?}"),
+    };
+    let envelope = V2Envelope {
+        auth: V2Auth::Session { token },
+        payload: V2Payload::PutChunk {
+            upload_id: "not-reached-because-capacity-is-zero".into(),
+            index: 0,
+            data: b"x".to_vec(),
+        },
+    };
+    let body = btidalpool_proto::codec::encode_v2(&envelope).unwrap();
+    let raw = build_insecure_agent()
+        .post(&format!("{}/v2", h.server_url))
+        .set("Content-Type", &format!("{CONTENT_TYPE}; version=2"))
+        .send_bytes(&body);
+    let response = match raw {
+        Err(ureq::Error::Status(503, response)) => response,
+        Ok(response) => panic!("expected 503, got {}", response.status()),
+        Err(error) => panic!("expected HTTP 503, got {error}"),
+    };
+    assert_eq!(response.header("Retry-After"), Some("5"));
+    let mut encoded = Vec::new();
+    response.into_reader().read_to_end(&mut encoded).unwrap();
+    let decoded = btidalpool_proto::codec::decode_v2(&encoded).unwrap();
+    assert!(matches!(
+        decoded,
+        V2Response::Err {
+            kind: btidalpool_proto::V2ErrorKind::ServerBusy,
+            ..
+        }
+    ));
+}
+
+#[test]
 fn rate_limit_returns_429_when_daily_budget_exhausted() {
     // Boot a server with a per-day budget of 1, then make two calls. The
     // second should come back as a 429 even though the response body itself
@@ -464,6 +570,7 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
             max_per_day: 1,
             window: Duration::from_secs(3600),
         }),
+        overload: OverloadConfig::default(),
         validator: Arc::new(MockOAuthValidator {
             good_token: "good".into(),
             email: "u@e.com".into(),
@@ -474,6 +581,7 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[]".to_vec(), 0)),
+            max_query_records: 100,
         },
     };
     std::thread::spawn(move || {

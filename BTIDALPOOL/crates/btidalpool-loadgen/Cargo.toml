@@ -1,0 +1,17 @@
+[package]
+name = "btidalpool-loadgen"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+btidalpool-proto = { path = "../btidalpool-proto" }
+clap.workspace = true
+rustls.workspace = true
+rustls-pemfile.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+ureq.workspace = true

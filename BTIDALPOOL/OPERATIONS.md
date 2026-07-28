@@ -53,6 +53,13 @@ generates an in-memory key; existing sessions then expire on restart.
 | `--max-per-day` | 100 | Rolling-day requests per authenticated identity |
 | `--max-ip-concurrent` | 50 | Simultaneous pre-auth abuse cap per IP |
 | `--max-ip-per-day` | 1000 | Rolling-day pre-auth abuse budget per IP |
+| `--max-expensive-work-units` | 2 | Shared weighted budget: query=2, v1 upload/finalize=1 |
+| `--max-global-v1-uploads` | 2 | Process-wide v1 whole-file upload cap |
+| `--max-global-queries` | 1 | Process-wide query cap |
+| `--max-global-chunk-puts` | 4 | Process-wide v2 chunk-write cap |
+| `--max-global-finalizes` | 2 | Process-wide v2 finalize cap |
+| `--overload-retry-after-seconds` | 2 | `Retry-After` returned with overload 503 |
+| `--max-query-records` | 100 | Maximum records in one query response |
 | `--oauth-cache-ttl-seconds` | 300 | Positive Google validation cache TTL |
 | `--session-ttl-seconds` | 900 | Signed v2 session lifetime |
 | `--session-key-file` | none | Optional persistent HMAC key |
@@ -60,6 +67,50 @@ generates an in-memory key; existing sessions then expire on restart.
 
 The OAuth cache stores only SHA-256 token digests and validated identity
 results. It never stores plaintext OAuth tokens or refresh tokens.
+
+Identity/IP quota rejection and host-capacity rejection are deliberately
+different:
+
+- HTTP 429 / `rate_limited`: the caller exceeded its own quota.
+- HTTP 503: global CPU/RAM capacity is currently occupied. V2 uses the typed
+  `server_busy` kind; v1 retains its existing `rate_limited` body kind so
+  already-deployed v1 decoders remain compatible.
+
+Both include a positive integer `Retry-After` delta-seconds header. Clients
+should add jitter, preserve v2 resume state, and replay the same idempotent
+operation after the delay.
+
+The production unit also applies `MemoryHigh=350M`, `MemoryMax=450M`, and
+`TasksMax=128`. The query subprocess runs inside that cgroup. These are a last
+line of defense; admission control should normally reject work before the hard
+limit is approached.
+
+## 1 GiB host capacity measurements
+
+Measurements on the production one-vCPU, approximately 1 GiB host used a
+real 100-record Samsung query against `bt2` and exact 10 MiB uploads:
+
+| Workload | Safe cap | Measured behavior |
+| --- | ---: | --- |
+| Max-result query | 1 | 100 records in 12.1–13.5 s; about 217 MiB Python RSS / 250 MiB service cgroup |
+| Two max-result queries | unsafe | both exceeded 30 s; about 372 MiB cgroup, severe memory pressure |
+| v1 exact 10 MiB upload | 2 | about 245 MiB cgroup at concurrency 2; concurrency 4 stalled |
+| v2 exact 10 MiB finalize | 2 | about 303 MiB cgroup at concurrency 2; concurrency 3 entered memory pressure |
+| v2 status | 32 tested | about 1,162 requests/s, p99 121 ms, zero errors |
+
+The direct query-engine cap comparison returned:
+
+| Max records | Wall time | Peak RSS | Encoded JSON |
+| ---: | ---: | ---: | ---: |
+| 25 | 9.57 s | 217,072 KiB | 33,446 bytes |
+| 50 | 10.32 s | 217,120 KiB | 56,744 bytes |
+| 100 | 12.13 s | 217,260 KiB | 105,404 bytes |
+
+Reducing the record cap barely changes peak memory because database
+scan/materialization dominates. Keep 100 records for compatibility and
+use the global one-query admission cap. A lower cap can improve individual
+latency and response size, but it does not make two concurrent queries safe
+on this host.
 
 ## Safe deployment
 

@@ -193,11 +193,14 @@ Kinds and HTTP status:
 | `payload_too_large` | 413 | Re-chunk or reduce the logical upload. |
 | `hash_mismatch` | 422 | Re-read/re-hash local bytes; replay the affected chunk/manifest. |
 | `rate_limited` | 429 | Wait for the HTTP `Retry-After` delta-seconds value. |
+| `server_busy` | 503 | Preserve resume state, wait for `Retry-After` with jitter, replay the same operation. |
 | `internal` | 500 | Back off and safely replay the same idempotent operation. |
 
-Every 429 response includes a standards-compatible `Retry-After` header. The
-primary quota is keyed by authenticated Google identity. A broader public-IP
-gate remains for unauthenticated abuse protection.
+Every 429 and 503 response includes a standards-compatible `Retry-After`
+header. A 429 is a caller-specific identity/IP quota; a 503 means the small
+host's global capacity is occupied. The primary quota is keyed by
+authenticated Google identity. A broader public-IP gate remains for
+unauthenticated abuse protection.
 
 ## Client persistence
 

@@ -141,6 +141,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "btidalpool-loadgen"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "btidalpool-proto",
+ "clap",
+ "rustls 0.23.40",
+ "rustls-pemfile 2.2.0",
+ "serde",
+ "serde_json",
+ "sha2",
+ "ureq",
+]
+
+[[package]]
 name = "btidalpool-proto"
 version = "0.1.0"
 dependencies = [

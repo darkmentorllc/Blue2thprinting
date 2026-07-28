@@ -8,7 +8,7 @@ use anyhow::Result;
 use clap::Parser;
 
 use btidalpool_server::handlers::Deps;
-use btidalpool_server::http::{self, Config, TlsConfig};
+use btidalpool_server::http::{self, Config, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::IngestSink;
 #[cfg(not(feature = "sql-ingest"))]
 use btidalpool_server::ingest::NoopIngestSink;
@@ -16,7 +16,7 @@ use btidalpool_server::oauth::{
     CachingOAuthValidator, GoogleOAuthValidator, MockOAuthValidator, OAuthValidator,
 };
 use btidalpool_server::query::{QueryEngine, SubprocessQueryEngine};
-use btidalpool_server::rate_limit::{Limiter, Limits};
+use btidalpool_server::rate_limit::{ConcurrencyLimiter, Limiter, Limits};
 use btidalpool_server::resumable::ResumableStore;
 use btidalpool_server::session::SessionTokens;
 use btidalpool_server::state::ServerState;
@@ -63,6 +63,28 @@ struct Cli {
     /// Broader rolling-day abuse budget per public IP.
     #[arg(long, default_value_t = 1000)]
     max_ip_per_day: u32,
+    /// Weighted process-wide budget for expensive work. Queries consume two
+    /// units; v1 uploads and v2 finalizes consume one.
+    #[arg(long, default_value_t = 2)]
+    max_expensive_work_units: u32,
+    /// Process-wide simultaneous v1 whole-file upload cap.
+    #[arg(long, default_value_t = 2)]
+    max_global_v1_uploads: u32,
+    /// Process-wide simultaneous query cap.
+    #[arg(long, default_value_t = 1)]
+    max_global_queries: u32,
+    /// Process-wide simultaneous v2 chunk-write cap.
+    #[arg(long, default_value_t = 4)]
+    max_global_chunk_puts: u32,
+    /// Process-wide simultaneous v2 finalize cap.
+    #[arg(long, default_value_t = 2)]
+    max_global_finalizes: u32,
+    /// Retry-After delta seconds returned with capacity-overload HTTP 503.
+    #[arg(long, default_value_t = 2)]
+    overload_retry_after_seconds: u64,
+    /// Maximum BTIDES records returned by one query.
+    #[arg(long, default_value_t = 100)]
+    max_query_records: u32,
     /// Positive Google-validation cache TTL. Cache keys are token SHA-256
     /// digests; plaintext OAuth credentials are never stored.
     #[arg(long, default_value_t = 300)]
@@ -146,6 +168,14 @@ fn main() -> Result<()> {
         max_per_day: cli.max_ip_per_day,
         ..Default::default()
     });
+    let overload = OverloadConfig {
+        expensive_work: ConcurrencyLimiter::new(cli.max_expensive_work_units.max(1)),
+        v1_uploads: ConcurrencyLimiter::new(cli.max_global_v1_uploads.max(1)),
+        queries: ConcurrencyLimiter::new(cli.max_global_queries.max(1)),
+        chunk_puts: ConcurrencyLimiter::new(cli.max_global_chunk_puts.max(1)),
+        finalizes: ConcurrencyLimiter::new(cli.max_global_finalizes.max(1)),
+        retry_after: std::time::Duration::from_secs(cli.overload_retry_after_seconds.max(1)),
+    };
 
     let sessions = match &cli.session_key_file {
         Some(path) => SessionTokens::from_key(
@@ -169,6 +199,7 @@ fn main() -> Result<()> {
         resumable: ResumableStore::initialize(&cli.v2_state_dir)?,
         ingest,
         query,
+        max_query_records: cli.max_query_records.max(1),
     };
 
     let tls = if cli.no_tls {
@@ -185,6 +216,7 @@ fn main() -> Result<()> {
         tls,
         ip_limiter,
         identity_limiter,
+        overload,
         validator,
         sessions,
         deps,

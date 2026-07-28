@@ -24,10 +24,6 @@ use crate::state::ServerState;
 /// caps the latter independently).
 pub const MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
 
-/// Maximum records returned per query. Matches the Python server's
-/// `g_max_returned_records_per_query`.
-pub const MAX_RECORDS_PER_QUERY: u32 = 100;
-
 /// Dependencies passed to every handler. Constructed once at server start
 /// and cloned into the handler for each request.
 #[derive(Clone)]
@@ -36,6 +32,7 @@ pub struct Deps {
     pub resumable: ResumableStore,
     pub ingest: Arc<dyn IngestSink>,
     pub query: Arc<dyn QueryEngine>,
+    pub max_query_records: u32,
 }
 
 /// Dispatch an authenticated v2 operation. Session issuance is handled at
@@ -199,7 +196,7 @@ fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &De
 
 fn handle_query(email: &str, use_test_db: bool, params: QueryParams, deps: &Deps) -> Response {
     log_user(deps, email, &format!("Query: {params:?}"));
-    match deps.query.run(&params, MAX_RECORDS_PER_QUERY, use_test_db) {
+    match deps.query.run(&params, deps.max_query_records, use_test_db) {
         Ok(r) => {
             log_user(deps, email, &format!("{} records returned.", r.records));
             Response::QueryResult {
@@ -281,7 +278,8 @@ pub(crate) fn ymd_hms_from_unix(ts: i64) -> (i32, u32, u32, u32, u32, u32) {
 mod tests {
     use super::*;
     use crate::ingest::NoopIngestSink;
-    use crate::query::StubQueryEngine;
+    use crate::query::{QueryResult, StubQueryEngine};
+    use std::sync::atomic::{AtomicU32, Ordering};
     use tempfile::tempdir;
 
     fn make_deps() -> (Deps, tempfile::TempDir) {
@@ -297,6 +295,7 @@ mod tests {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[1,2,3]".to_vec(), 3)),
+            max_query_records: 100,
         };
         (deps, td)
     }
@@ -399,6 +398,33 @@ mod tests {
     }
 
     #[test]
+    fn query_uses_configured_record_cap() {
+        struct RecordingQuery(Arc<AtomicU32>);
+        impl QueryEngine for RecordingQuery {
+            fn run(
+                &self,
+                _params: &QueryParams,
+                max_records: u32,
+                _use_test_db: bool,
+            ) -> Result<QueryResult, QueryError> {
+                self.0.store(max_records, Ordering::SeqCst);
+                Ok(QueryResult {
+                    btides_json: b"[1]".to_vec(),
+                    records: 1,
+                })
+            }
+        }
+
+        let (mut deps, _td) = make_deps();
+        let observed = Arc::new(AtomicU32::new(0));
+        deps.query = Arc::new(RecordingQuery(observed.clone()));
+        deps.max_query_records = 37;
+        let response = handle_query("u@e.com", false, QueryParams::default(), &deps);
+        assert!(matches!(response, Response::QueryResult { .. }));
+        assert_eq!(observed.load(Ordering::SeqCst), 37);
+    }
+
+    #[test]
     fn query_empty_returns_empty_error_kind() {
         let td = tempdir().unwrap();
         let state = ServerState::initialize(
@@ -412,6 +438,7 @@ mod tests {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::empty()),
+            max_query_records: 100,
         };
         let resp = handle_query("u@e.com", false, QueryParams::default(), &deps);
         match resp {
