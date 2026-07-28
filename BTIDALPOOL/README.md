@@ -83,7 +83,9 @@ the other side to be updated.
 The production Rust listener preserves whole-file BTPL v1 at `POST /`.
 Resumable BTPL v2 is additive at `POST /v2`; see
 [`V2_PROTOCOL.md`](V2_PROTOCOL.md) for the exact Android/client contract and
-[`OPERATIONS.md`](OPERATIONS.md) for deployment and rollback.
+native Rust queries are additive at `POST /v3`; see
+[`V3_PROTOCOL.md`](V3_PROTOCOL.md). Deployment, limits, and rollback are in
+[`OPERATIONS.md`](OPERATIONS.md).
 
 ### V1
 
@@ -206,10 +208,11 @@ retained even though it isn't exposed on the command line.
 | Server: dedup hash index + per-user logs + access log           | done |
 | Server: typed request dispatch (upload / check_hash / query)    | done |
 | Server: BTIDES-to-SQL ingest via the existing crate             | done (gated on `sql-ingest` feature) |
-| Server: Tell_Me_Everything subprocess query                     | done |
+| Server: legacy Tell_Me_Everything subprocess query (v1 compatibility) | done |
+| Server: batched native Rust/MySQL normalized query (v3)         | done |
 | Client: ureq + rustls; bundled-cert pin by default, `--system-roots` / `--insecure` overrides | done, pin verified by test |
 | Client: `upload` / `query` / `check-hash` subcommands           | done |
 | Python shims (preserve `Tell_Me_Everything.py` imports)         | done |
-| End-to-end loopback test (Rust: TLS + codec + handlers)         | 8 tests, all green |
+| End-to-end loopback test (Rust: TLS + codec + handlers)         | 13 tests, all green |
 | End-to-end loopback test (Python shim → Rust binary → server)   | 2 tests, all green |
-| Wire-protocol unit tests (codec, types, hash)                   | 18 tests, all green |
+| Wire-protocol unit tests (codec, types, hash)                   | 22 tests, all green |

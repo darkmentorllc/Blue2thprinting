@@ -20,6 +20,8 @@ btidalpool-proto = { path = "../btidalpool-proto" }
 # the task brief). Gated behind the `sql-ingest` feature so `cargo test` in
 # this workspace doesn't require the MySQL client headers.
 BTIDES-to-SQL = { path = "../../../Analysis/rust/BTIDES-to-SQL", optional = true }
+mysql = { version = "28", default-features = false, features = ["minimal", "buffer-pool"], optional = true }
+regex = { version = "1", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 serde_bytes = { workspace = true }
@@ -48,4 +50,4 @@ tempfile = "3"
 default = []
 # Enable the BTIDES-to-SQL link. The production server build sets this; the
 # default unit-test build does not, so `cargo test` works without MySQL.
-sql-ingest = ["dep:BTIDES-to-SQL"]
+sql-ingest = ["dep:BTIDES-to-SQL", "dep:mysql", "dep:regex"]

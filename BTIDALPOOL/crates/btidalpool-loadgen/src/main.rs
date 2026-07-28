@@ -1,4 +1,4 @@
-//! Protocol-aware load generator for the BTIDALPOOL v1/v2 server.
+//! Protocol-aware load generator for the BTIDALPOOL v1/v2/v3 server.
 //!
 //! This is deliberately a standalone client. Run it from a machine other
 //! than the server so client-side TLS, compression, and response validation
@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 use anyhow::{bail, Context, Result};
 use btidalpool_proto::{
     codec, exact_sha256, AuthFields, Envelope, ErrorKind, Payload, QueryParams, Response, V2Auth,
-    V2Envelope, V2Payload, V2Response, CONTENT_TYPE,
+    V2Envelope, V2Payload, V2Response, V3Envelope, V3Payload, V3Response, CONTENT_TYPE,
 };
 use clap::{Parser, ValueEnum};
 use rustls::{ClientConfig, RootCertStore};
@@ -25,7 +25,7 @@ const CHUNK_BYTES: usize = 1024 * 1024;
 #[derive(Debug, Parser)]
 #[command(
     name = "btidalpool-loadgen",
-    about = "Protocol-aware BTIDALPOOL v1/v2 load generator"
+    about = "Protocol-aware BTIDALPOOL v1/v2/v3 load generator"
 )]
 struct Cli {
     #[arg(long, default_value = "https://btidalpool.ddns.net:3568")]
@@ -36,6 +36,15 @@ struct Cli {
     /// Mock OAuth token configured on the isolated benchmark server.
     #[arg(long, default_value = "btidalpool-load-test")]
     mock_token: String,
+    /// Existing signed session token. Useful for read-only production v3
+    /// benchmarks where no Google credential should be supplied to loadgen.
+    #[arg(long)]
+    session_token: Option<String>,
+    /// Read an existing signed session token from a protected file. Prefer
+    /// this over --session-token for production probes so the token never
+    /// appears in the process list or shell history.
+    #[arg(long, conflicts_with = "session_token")]
+    session_token_file: Option<PathBuf>,
     #[arg(long, value_enum)]
     workload: Workload,
     #[arg(long, default_value_t = 1)]
@@ -81,6 +90,7 @@ enum Workload {
     Health,
     V1Check,
     V1Query,
+    V3Query,
     V1UploadReplay,
     V2Manifest,
     V2Status,
@@ -107,6 +117,10 @@ enum RequestSpec {
         body: Arc<Vec<u8>>,
         expected: ExpectedV2,
     },
+    V3 {
+        body: Arc<Vec<u8>>,
+        expected: ExpectedV3,
+    },
 }
 
 #[derive(Clone, Copy)]
@@ -122,6 +136,11 @@ enum ExpectedV2 {
     Status,
     Chunk,
     Finalize,
+}
+
+#[derive(Clone, Copy)]
+enum ExpectedV3 {
+    Query { minimum_devices: u64 },
 }
 
 struct Sample {
@@ -217,6 +236,7 @@ impl Client {
             RequestSpec::Health => self.health(),
             RequestSpec::V1 { body, expected } => self.v1(body, *expected),
             RequestSpec::V2 { body, expected } => self.v2(body, *expected),
+            RequestSpec::V3 { body, expected } => self.v3(body, *expected),
         };
         let micros = started.elapsed().as_micros().min(u64::MAX as u128) as u64;
         match result {
@@ -320,6 +340,26 @@ impl Client {
         }
     }
 
+    fn v3(&self, body: &[u8], expected: ExpectedV3) -> std::result::Result<u16, (u16, String)> {
+        let url = format!("{}/v3", self.base_url);
+        let (status, bytes) = self.post(&url, &format!("{CONTENT_TYPE}; version=3"), body)?;
+        let response: V3Response =
+            codec::decode_v3(&bytes).map_err(|_| (status, "v3_decode".to_owned()))?;
+        match (expected, response) {
+            (ExpectedV3::Query { minimum_devices }, V3Response::QueryResult { query })
+                if query.devices.len() as u64 >= minimum_devices =>
+            {
+                Ok(status)
+            }
+            (ExpectedV3::Query { .. }, V3Response::QueryResult { .. }) => {
+                Err((status, "v3_query_too_few_devices".to_owned()))
+            }
+            (_, V3Response::Err { kind, .. }) => {
+                Err((status, format!("v3_{kind:?}").to_ascii_lowercase()))
+            }
+        }
+    }
+
     fn post(
         &self,
         url: &str,
@@ -353,8 +393,9 @@ fn transport_kind(error: &ureq::Error) -> String {
 }
 
 fn prepare_request(cli: &Cli, client: &Client, input: Option<&[u8]>) -> Result<RequestSpec> {
-    if cli.query_use_production_db && !matches!(cli.workload, Workload::V1Query) {
-        bail!("--query-use-production-db is valid only with --workload v1-query");
+    if cli.query_use_production_db && !matches!(cli.workload, Workload::V1Query | Workload::V3Query)
+    {
+        bail!("--query-use-production-db is valid only with a query workload");
     }
     let auth = AuthFields {
         token: cli.mock_token.clone(),
@@ -391,6 +432,31 @@ fn prepare_request(cli: &Cli, client: &Client, input: Option<&[u8]>) -> Result<R
                 },
             )?)
         }
+        Workload::V3Query => {
+            let session = existing_session(cli)?
+                .map(Ok)
+                .unwrap_or_else(|| create_session(client, &cli.mock_token))?;
+            let mut params = QueryParams::default();
+            if let Some(regex) = &cli.query_bdaddr_regex {
+                params.bdaddr_regex = Some(vec![regex.clone()]);
+            }
+            if let Some(regex) = &cli.query_name_regex {
+                params.name_regex = Some(vec![regex.clone()]);
+            }
+            let envelope = V3Envelope {
+                auth: V2Auth::Session { token: session },
+                payload: V3Payload::Query {
+                    params,
+                    use_test_db: !cli.query_use_production_db,
+                },
+            };
+            Ok(RequestSpec::V3 {
+                body: Arc::new(codec::encode_v3(&envelope)?),
+                expected: ExpectedV3::Query {
+                    minimum_devices: cli.expected_query_records,
+                },
+            })
+        }
         Workload::V1UploadReplay => {
             let input = input.context("--input is required for v1-upload-replay")?;
             let envelope = Envelope {
@@ -420,6 +486,23 @@ fn prepare_request(cli: &Cli, client: &Client, input: Option<&[u8]>) -> Result<R
         | Workload::V2FinalizeReplay => prepare_v2(cli, client, input),
         Workload::V2FinalizeBurst => unreachable!(),
     }
+}
+
+fn existing_session(cli: &Cli) -> Result<Option<String>> {
+    if let Some(token) = &cli.session_token {
+        return Ok(Some(token.clone()));
+    }
+    if let Some(path) = &cli.session_token_file {
+        let token = std::fs::read_to_string(path)
+            .with_context(|| format!("reading signed session token {path:?}"))?
+            .trim()
+            .to_owned();
+        if token.is_empty() {
+            bail!("session token file is empty");
+        }
+        return Ok(Some(token));
+    }
+    Ok(None)
 }
 
 fn v1_spec(envelope: Envelope, expected: ExpectedV1) -> Result<RequestSpec> {

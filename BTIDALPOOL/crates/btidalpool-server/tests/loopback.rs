@@ -29,12 +29,14 @@ use std::time::Duration;
 use btidalpool_client::transport::{CertTrust, Transport};
 use btidalpool_client::{build_check_hash, build_query, build_upload};
 use btidalpool_proto::{
-    canonical_sha1, exact_sha256, AuthFields, ErrorKind, Payload, QueryParams, Response, V2Auth,
-    V2Envelope, V2Payload, V2Response, CONTENT_TYPE,
+    canonical_sha1, exact_sha256, AuthFields, ErrorKind, NativeDevice, NativeQueryResult, Payload,
+    QueryParams, Response, V2Auth, V2Envelope, V2Payload, V2Response, V3Envelope, V3Payload,
+    V3Response, CONTENT_TYPE,
 };
 use btidalpool_server::handlers::Deps;
 use btidalpool_server::http::{self, Config as ServerConfig, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::NoopIngestSink;
+use btidalpool_server::native_query::{NativeQueryEngine, StubNativeQueryEngine};
 use btidalpool_server::oauth::{MockOAuthValidator, OAuthValidator};
 use btidalpool_server::query::{QueryEngine, StubQueryEngine};
 use btidalpool_server::rate_limit::{Limiter, Limits};
@@ -58,6 +60,37 @@ impl Harness {
 
     fn boot_with_overload(
         query: Arc<dyn QueryEngine>,
+        good_token: &str,
+        email: &str,
+        overload: OverloadConfig,
+    ) -> Self {
+        Self::boot_full(
+            query,
+            Arc::new(StubNativeQueryEngine::empty()),
+            good_token,
+            email,
+            overload,
+        )
+    }
+
+    fn boot_with_native(
+        native_query: Arc<dyn NativeQueryEngine>,
+        good_token: &str,
+        email: &str,
+        overload: OverloadConfig,
+    ) -> Self {
+        Self::boot_full(
+            Arc::new(StubQueryEngine::empty()),
+            native_query,
+            good_token,
+            email,
+            overload,
+        )
+    }
+
+    fn boot_full(
+        query: Arc<dyn QueryEngine>,
+        native_query: Arc<dyn NativeQueryEngine>,
         good_token: &str,
         email: &str,
         overload: OverloadConfig,
@@ -105,7 +138,9 @@ impl Harness {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query,
+            native_query,
             max_query_records: 100,
+            max_native_rows: 1_000,
         };
         let cfg = ServerConfig {
             bind,
@@ -528,6 +563,113 @@ fn overloaded_v2_chunk_returns_server_busy_503_with_retry_after() {
 }
 
 #[test]
+fn v3_native_query_uses_signed_session_and_round_trips() {
+    let expected = NativeQueryResult {
+        devices: vec![NativeDevice {
+            bdaddr: "aa:bb:cc:dd:ee:ff".into(),
+            tables: std::collections::BTreeMap::new(),
+        }],
+        total_rows: 1,
+        row_limit: 1_000,
+        truncated: false,
+    };
+    let h = Harness::boot_with_native(
+        Arc::new(StubNativeQueryEngine::ok(expected)),
+        "good-tok",
+        "tester@example.com",
+        OverloadConfig::default(),
+    );
+    let session = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Google {
+                access_token: "good-tok".into(),
+            },
+            payload: V2Payload::CreateSession,
+        },
+    );
+    let token = match session {
+        V2Response::Session { token, .. } => token,
+        other => panic!("expected session, got {other:?}"),
+    };
+    let response = v3_round_trip(
+        &h,
+        &V3Envelope {
+            auth: V2Auth::Session { token },
+            payload: V3Payload::Query {
+                params: QueryParams {
+                    name_regex: Some(vec!["Samsung".into()]),
+                    ..QueryParams::default()
+                },
+                use_test_db: false,
+            },
+        },
+    );
+    match response {
+        V3Response::QueryResult { query } => {
+            assert_eq!(query.devices[0].bdaddr, "aa:bb:cc:dd:ee:ff");
+        }
+        other => panic!("expected v3 result, got {other:?}"),
+    }
+}
+
+#[test]
+fn overloaded_v3_query_returns_server_busy_503_with_retry_after() {
+    let overload = OverloadConfig {
+        native_queries: btidalpool_server::rate_limit::ConcurrencyLimiter::new(0),
+        retry_after: Duration::from_secs(6),
+        ..OverloadConfig::default()
+    };
+    let h = Harness::boot_with_native(
+        Arc::new(StubNativeQueryEngine::empty()),
+        "good-tok",
+        "tester@example.com",
+        overload,
+    );
+    let session = v2_round_trip(
+        &h,
+        &V2Envelope {
+            auth: V2Auth::Google {
+                access_token: "good-tok".into(),
+            },
+            payload: V2Payload::CreateSession,
+        },
+    );
+    let token = match session {
+        V2Response::Session { token, .. } => token,
+        other => panic!("expected session, got {other:?}"),
+    };
+    let envelope = V3Envelope {
+        auth: V2Auth::Session { token },
+        payload: V3Payload::Query {
+            params: QueryParams::default(),
+            use_test_db: false,
+        },
+    };
+    let body = btidalpool_proto::codec::encode_v3(&envelope).unwrap();
+    let raw = build_insecure_agent()
+        .post(&format!("{}/v3", h.server_url))
+        .set("Content-Type", &format!("{CONTENT_TYPE}; version=3"))
+        .send_bytes(&body);
+    let response = match raw {
+        Err(ureq::Error::Status(503, response)) => response,
+        Ok(response) => panic!("expected 503, got {}", response.status()),
+        Err(error) => panic!("expected HTTP 503, got {error}"),
+    };
+    assert_eq!(response.header("Retry-After"), Some("6"));
+    let mut encoded = Vec::new();
+    response.into_reader().read_to_end(&mut encoded).unwrap();
+    let decoded: V3Response = btidalpool_proto::codec::decode_v3(&encoded).unwrap();
+    assert!(matches!(
+        decoded,
+        V3Response::Err {
+            kind: btidalpool_proto::V2ErrorKind::ServerBusy,
+            ..
+        }
+    ));
+}
+
+#[test]
 fn rate_limit_returns_429_when_daily_budget_exhausted() {
     // Boot a server with a per-day budget of 1, then make two calls. The
     // second should come back as a 429 even though the response body itself
@@ -581,7 +723,9 @@ fn rate_limit_returns_429_when_daily_budget_exhausted() {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[]".to_vec(), 0)),
+            native_query: Arc::new(StubNativeQueryEngine::empty()),
             max_query_records: 100,
+            max_native_rows: 1_000,
         },
     };
     std::thread::spawn(move || {
@@ -707,6 +851,21 @@ fn v2_round_trip(harness: &Harness, envelope: &V2Envelope) -> V2Response {
     let mut bytes = Vec::new();
     response.into_reader().read_to_end(&mut bytes).unwrap();
     btidalpool_proto::codec::decode_v2(&bytes).unwrap()
+}
+
+fn v3_round_trip(harness: &Harness, envelope: &V3Envelope) -> V3Response {
+    let body = btidalpool_proto::codec::encode_v3(envelope).unwrap();
+    let response = build_insecure_agent()
+        .post(&format!("{}/v3", harness.server_url))
+        .set("Content-Type", &format!("{CONTENT_TYPE}; version=3"))
+        .send_bytes(&body)
+        .unwrap();
+    assert_eq!(response.status(), 200);
+    let content_type = response.header("Content-Type").unwrap_or_default();
+    assert!(content_type.contains(CONTENT_TYPE));
+    let mut bytes = Vec::new();
+    response.into_reader().read_to_end(&mut bytes).unwrap();
+    btidalpool_proto::codec::decode_v3(&bytes).unwrap()
 }
 
 /// Install rustls's `ring` provider once per process so the integration

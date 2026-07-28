@@ -11,9 +11,11 @@ use std::time::SystemTime;
 
 use btidalpool_proto::{
     canonical_sha1, ErrorKind, Payload, QueryParams, Response, V2ErrorKind, V2Payload, V2Response,
+    V3Payload, V3Response,
 };
 
 use crate::ingest::IngestSink;
+use crate::native_query::{NativeQueryEngine, NativeQueryError};
 use crate::query::{QueryEngine, QueryError};
 use crate::resumable::ResumableStore;
 use crate::state::ServerState;
@@ -32,7 +34,38 @@ pub struct Deps {
     pub resumable: ResumableStore,
     pub ingest: Arc<dyn IngestSink>,
     pub query: Arc<dyn QueryEngine>,
+    pub native_query: Arc<dyn NativeQueryEngine>,
     pub max_query_records: u32,
+    pub max_native_rows: u64,
+}
+
+pub fn dispatch_v3(payload: V3Payload, deps: &Deps) -> V3Response {
+    let result = match payload {
+        V3Payload::Query {
+            params,
+            use_test_db,
+        } => deps.native_query.run(
+            &params,
+            deps.max_query_records,
+            deps.max_native_rows,
+            use_test_db,
+        ),
+    };
+    match result {
+        Ok(query) => V3Response::QueryResult { query },
+        Err(error) => {
+            let kind = match error {
+                NativeQueryError::Empty
+                | NativeQueryError::Unsupported(_)
+                | NativeQueryError::BadRequest(_) => V2ErrorKind::BadRequest,
+                NativeQueryError::Backend(_) => V2ErrorKind::Internal,
+            };
+            V3Response::Err {
+                kind,
+                message: error.to_string(),
+            }
+        }
+    }
 }
 
 /// Dispatch an authenticated v2 operation. Session issuance is handled at
@@ -278,6 +311,7 @@ pub(crate) fn ymd_hms_from_unix(ts: i64) -> (i32, u32, u32, u32, u32, u32) {
 mod tests {
     use super::*;
     use crate::ingest::NoopIngestSink;
+    use crate::native_query::StubNativeQueryEngine;
     use crate::query::{QueryResult, StubQueryEngine};
     use std::sync::atomic::{AtomicU32, Ordering};
     use tempfile::tempdir;
@@ -295,7 +329,9 @@ mod tests {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::ok(b"[1,2,3]".to_vec(), 3)),
+            native_query: Arc::new(StubNativeQueryEngine::empty()),
             max_query_records: 100,
+            max_native_rows: 1_000,
         };
         (deps, td)
     }
@@ -438,7 +474,9 @@ mod tests {
             resumable: ResumableStore::initialize(td.path().join("v2")).unwrap(),
             ingest: Arc::new(NoopIngestSink),
             query: Arc::new(StubQueryEngine::empty()),
+            native_query: Arc::new(StubNativeQueryEngine::empty()),
             max_query_records: 100,
+            max_native_rows: 1_000,
         };
         let resp = handle_query("u@e.com", false, QueryParams::default(), &deps);
         match resp {

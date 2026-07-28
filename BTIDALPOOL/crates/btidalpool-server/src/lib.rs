@@ -8,6 +8,7 @@
 pub mod handlers;
 pub mod http;
 pub mod ingest;
+pub mod native_query;
 pub mod oauth;
 pub mod query;
 pub mod rate_limit;

@@ -9,6 +9,7 @@ The current host uses:
 - listener: TLS on `0.0.0.0:3568`
 - v1 endpoint: `POST /`
 - v2 endpoint: `POST /v2`
+- v3 endpoint: `POST /v3`
 - health endpoint: `GET /healthz`
 - legacy pool: `Analysis/pool_files_rust`
 - per-user logs: `Analysis/user_logs_rust`
@@ -53,13 +54,15 @@ generates an in-memory key; existing sessions then expire on restart.
 | `--max-per-day` | 100 | Rolling-day requests per authenticated identity |
 | `--max-ip-concurrent` | 50 | Simultaneous pre-auth abuse cap per IP |
 | `--max-ip-per-day` | 1000 | Rolling-day pre-auth abuse budget per IP |
-| `--max-expensive-work-units` | 2 | Shared weighted budget: query=2, v1 upload/finalize=1 |
+| `--max-expensive-work-units` | 4 | Shared weighted budget: legacy query=4, upload/finalize=2, native query=1 |
 | `--max-global-v1-uploads` | 2 | Process-wide v1 whole-file upload cap |
 | `--max-global-queries` | 1 | Process-wide query cap |
+| `--max-global-native-queries` | 4 | Process-wide native v3 query cap |
 | `--max-global-chunk-puts` | 4 | Process-wide v2 chunk-write cap |
 | `--max-global-finalizes` | 2 | Process-wide v2 finalize cap |
 | `--overload-retry-after-seconds` | 2 | `Retry-After` returned with overload 503 |
 | `--max-query-records` | 100 | Maximum records in one query response |
+| `--max-native-query-rows` | 50,000 | Maximum normalized rows in one v3 response |
 | `--oauth-cache-ttl-seconds` | 300 | Positive Google validation cache TTL |
 | `--session-ttl-seconds` | 900 | Signed v2 session lifetime |
 | `--session-key-file` | none | Optional persistent HMAC key |
@@ -73,7 +76,7 @@ different:
 
 - HTTP 429 / `rate_limited`: the caller exceeded its own quota.
 - HTTP 503: global CPU/RAM capacity is currently occupied. V2 uses the typed
-  `server_busy` kind; v1 retains its existing `rate_limited` body kind so
+  `server_busy` kind, as does v3; v1 retains its existing `rate_limited` body kind so
   already-deployed v1 decoders remain compatible.
 
 Both include a positive integer `Retry-After` delta-seconds header. Clients
@@ -112,6 +115,35 @@ use the global one-query admission cap. A lower cap can improve individual
 latency and response size, but it does not make two concurrent queries safe
 on this host.
 
+### Native v3 query measurements
+
+The v3 query engine keeps the database schema unchanged, but batches address
+selection and fetches selected rows once per table. Against the same live
+`bt2` data, a Samsung name query returned the full 100-device cap and 944
+normalized rows without truncation:
+
+| Parallel v3 queries | Throughput | p99 | Peak isolated server RSS |
+| ---: | ---: | ---: | ---: |
+| 1 | 4.41 req/s | 227 ms | 23.8 MiB |
+| 2 | 5.05 req/s | 396 ms | 38.7 MiB |
+| 4 | 5.11 req/s | 782 ms | 70.9 MiB |
+| 8 | 5.20 req/s | 1.53 s | 86.9 MiB |
+| 16 | 5.12 req/s | 3.12 s | 124.1 MiB |
+| 32 | 4.89 req/s | 6.53 s | 170.2 MiB |
+
+The one-vCPU host is already saturated at concurrency 2; throughput plateaus
+near 5.2 requests/s while latency and retained allocator memory continue to
+grow. The production cap is therefore 4, not 8 or 32. Four admits a short
+burst with about 71 MiB peak server RSS; additional clients receive typed 503
+plus `Retry-After` and should retry with jitter.
+
+A broad `.*` BDADDR query returned 100 devices / 437 rows in 403 ms, and a
+`^00:` query returned 100 devices / 264 rows in 1.27 s cold (about 0.27 s
+warm). Neither hit the 50,000-row cap. Keep the 100-device maximum: the
+native path makes it safe, and lowering it is unnecessary for the expected
+class of 20 students plus one instructor. The admission cap, not a lower
+record cap, is the correct overload control.
+
 ## Safe deployment
 
 1. Record the current unit, binary path/hash, process identity, listening
@@ -128,7 +160,7 @@ on this host.
 8. Run `systemctl daemon-reload` and restart `BTIDALPOOL-rust.service`.
 9. Verify service status, PID/executable identity, port 3568, health, one
    authenticated v1 request, a non-destructive v2 manifest/status flow, and
-   recent logs.
+   recent logs. Verify `/v3` with a signed test session and a read-only query.
 
 Rollback restores the backed-up binary and unit atomically, reloads systemd,
 and restarts the same service. Do not remove the v2 state directory during

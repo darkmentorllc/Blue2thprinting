@@ -12,6 +12,11 @@ use btidalpool_server::http::{self, Config, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::IngestSink;
 #[cfg(not(feature = "sql-ingest"))]
 use btidalpool_server::ingest::NoopIngestSink;
+#[cfg(feature = "sql-ingest")]
+use btidalpool_server::native_query::MysqlNativeQueryEngine;
+use btidalpool_server::native_query::NativeQueryEngine;
+#[cfg(not(feature = "sql-ingest"))]
+use btidalpool_server::native_query::UnavailableNativeQueryEngine;
 use btidalpool_server::oauth::{
     CachingOAuthValidator, GoogleOAuthValidator, MockOAuthValidator, OAuthValidator,
 };
@@ -63,9 +68,9 @@ struct Cli {
     /// Broader rolling-day abuse budget per public IP.
     #[arg(long, default_value_t = 1000)]
     max_ip_per_day: u32,
-    /// Weighted process-wide budget for expensive work. Queries consume two
-    /// units; v1 uploads and v2 finalizes consume one.
-    #[arg(long, default_value_t = 2)]
+    /// Weighted process-wide budget for expensive work. Legacy queries use
+    /// four units, uploads/finalizes two, and native v3 queries one.
+    #[arg(long, default_value_t = 4)]
     max_expensive_work_units: u32,
     /// Process-wide simultaneous v1 whole-file upload cap.
     #[arg(long, default_value_t = 2)]
@@ -73,6 +78,9 @@ struct Cli {
     /// Process-wide simultaneous query cap.
     #[arg(long, default_value_t = 1)]
     max_global_queries: u32,
+    /// Process-wide simultaneous native v3 query cap.
+    #[arg(long, default_value_t = 4)]
+    max_global_native_queries: u32,
     /// Process-wide simultaneous v2 chunk-write cap.
     #[arg(long, default_value_t = 4)]
     max_global_chunk_puts: u32,
@@ -85,6 +93,9 @@ struct Cli {
     /// Maximum BTIDES records returned by one query.
     #[arg(long, default_value_t = 100)]
     max_query_records: u32,
+    /// Maximum normalized MySQL rows returned by one native v3 query.
+    #[arg(long, default_value_t = 50_000)]
+    max_native_query_rows: u64,
     /// Positive Google-validation cache TTL. Cache keys are token SHA-256
     /// digests; plaintext OAuth credentials are never stored.
     #[arg(long, default_value_t = 300)]
@@ -133,6 +144,7 @@ fn main() -> Result<()> {
     // ingest run (e.g. via the standalone `BTIDES-to-SQL` CLI) can pick
     // them up.
     let ingest: Arc<dyn IngestSink> = build_ingest()?;
+    let native_query: Arc<dyn NativeQueryEngine> = build_native_query()?;
 
     let cwd = cli
         .tme_cwd
@@ -172,6 +184,7 @@ fn main() -> Result<()> {
         expensive_work: ConcurrencyLimiter::new(cli.max_expensive_work_units.max(1)),
         v1_uploads: ConcurrencyLimiter::new(cli.max_global_v1_uploads.max(1)),
         queries: ConcurrencyLimiter::new(cli.max_global_queries.max(1)),
+        native_queries: ConcurrencyLimiter::new(cli.max_global_native_queries.max(1)),
         chunk_puts: ConcurrencyLimiter::new(cli.max_global_chunk_puts.max(1)),
         finalizes: ConcurrencyLimiter::new(cli.max_global_finalizes.max(1)),
         retry_after: std::time::Duration::from_secs(cli.overload_retry_after_seconds.max(1)),
@@ -199,7 +212,9 @@ fn main() -> Result<()> {
         resumable: ResumableStore::initialize(&cli.v2_state_dir)?,
         ingest,
         query,
+        native_query,
         max_query_records: cli.max_query_records.max(1),
+        max_native_rows: cli.max_native_query_rows.max(1),
     };
 
     let tls = if cli.no_tls {
@@ -233,6 +248,15 @@ fn build_ingest() -> Result<Arc<dyn IngestSink>> {
     Ok(Arc::new(sink))
 }
 
+#[cfg(feature = "sql-ingest")]
+fn build_native_query() -> Result<Arc<dyn NativeQueryEngine>> {
+    Ok(Arc::new(MysqlNativeQueryEngine::connect(
+        "localhost",
+        "user",
+        "a",
+    )?))
+}
+
 #[cfg(not(feature = "sql-ingest"))]
 fn build_ingest() -> Result<Arc<dyn IngestSink>> {
     log::warn!(
@@ -241,4 +265,9 @@ fn build_ingest() -> Result<Arc<dyn IngestSink>> {
          pass to ingest them, or rebuild with --features sql-ingest."
     );
     Ok(Arc::new(NoopIngestSink))
+}
+
+#[cfg(not(feature = "sql-ingest"))]
+fn build_native_query() -> Result<Arc<dyn NativeQueryEngine>> {
+    Ok(Arc::new(UnavailableNativeQueryEngine))
 }

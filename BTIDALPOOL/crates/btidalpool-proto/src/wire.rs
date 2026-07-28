@@ -14,6 +14,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
+use std::collections::BTreeMap;
 
 /// Per-request authentication fields. Embedded in every [`Envelope`]; the
 /// server treats requests without valid OAuth as anonymous and rejects them.
@@ -287,6 +288,87 @@ pub enum V2Response {
     },
 }
 
+/// Top-level request for the native Rust query protocol (`POST /v3`, frame
+/// version 3). Authentication deliberately reuses the short-lived signed
+/// session issued by v2; Google credentials never need to accompany a query.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct V3Envelope {
+    pub auth: V2Auth,
+    pub payload: V3Payload,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "cmd", rename_all = "snake_case")]
+pub enum V3Payload {
+    Query {
+        params: QueryParams,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+}
+
+/// Lossless representation of a MySQL cell. Byte strings stay bytes instead
+/// of being coerced through UTF-8, which is necessary for several Bluetooth
+/// payload columns and makes this protocol a faithful view of the unchanged
+/// production schema.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "value", rename_all = "snake_case")]
+pub enum DbValue {
+    Null,
+    Bytes(#[serde(with = "serde_bytes")] Vec<u8>),
+    Signed(i64),
+    Unsigned(u64),
+    Float(f64),
+    Date {
+        year: u16,
+        month: u8,
+        day: u8,
+        hour: u8,
+        minute: u8,
+        second: u8,
+        micros: u32,
+    },
+    Time {
+        negative: bool,
+        days: u32,
+        hours: u8,
+        minutes: u8,
+        seconds: u8,
+        micros: u32,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct NativeTable {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<DbValue>>,
+    /// True when the server's global row budget cut this table short.
+    #[serde(default)]
+    pub truncated: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct NativeDevice {
+    pub bdaddr: String,
+    /// Keyed by the exact existing MySQL table name.
+    pub tables: BTreeMap<String, NativeTable>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct NativeQueryResult {
+    pub devices: Vec<NativeDevice>,
+    pub total_rows: u64,
+    pub row_limit: u64,
+    pub truncated: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "result", rename_all = "snake_case")]
+pub enum V3Response {
+    QueryResult { query: NativeQueryResult },
+    Err { kind: V2ErrorKind, message: String },
+}
+
 /// Helper: serialize an [`Envelope`] using a `ByteBuf` instead of a raw
 /// `Vec<u8>` for the BTIDES payload, when the caller already has a
 /// `ByteBuf`. Avoids an unnecessary clone in the upload hot path.
@@ -387,5 +469,30 @@ mod tests {
         let frame = codec::encode_v2(&env).unwrap();
         let decoded: V2Envelope = codec::decode_v2(&frame).unwrap();
         assert!(matches!(decoded.payload, V2Payload::Manifest { .. }));
+    }
+
+    #[test]
+    fn v3_native_query_round_trip_preserves_binary_cells() {
+        let response = V3Response::QueryResult {
+            query: NativeQueryResult {
+                devices: vec![NativeDevice {
+                    bdaddr: "aa:bb:cc:dd:ee:ff".into(),
+                    tables: BTreeMap::from([(
+                        "LE_bdaddr_to_MSD".into(),
+                        NativeTable {
+                            columns: vec!["manufacturer_specific_data".into()],
+                            rows: vec![vec![DbValue::Bytes(vec![0, 0xff, 1])]],
+                            truncated: false,
+                        },
+                    )]),
+                }],
+                total_rows: 1,
+                row_limit: 100,
+                truncated: false,
+            },
+        };
+        let frame = codec::encode_v3(&response).unwrap();
+        let decoded: V3Response = codec::decode_v3(&frame).unwrap();
+        assert_eq!(decoded, response);
     }
 }

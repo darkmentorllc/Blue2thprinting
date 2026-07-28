@@ -33,8 +33,9 @@ pub use codec::{
 };
 pub use hash::{canonical_sha1, exact_sha256};
 pub use wire::{
-    AuthFields, Envelope, ErrorKind, Payload, QueryParams, Response, UploadReceipt, V2Auth,
-    V2Envelope, V2ErrorKind, V2Payload, V2Response,
+    AuthFields, DbValue, Envelope, ErrorKind, NativeDevice, NativeQueryResult, NativeTable,
+    Payload, QueryParams, Response, UploadReceipt, V2Auth, V2Envelope, V2ErrorKind, V2Payload,
+    V2Response, V3Envelope, V3Payload, V3Response,
 };
 
 /// HTTP Content-Type used for all BTIDALPOOL request and response bodies.

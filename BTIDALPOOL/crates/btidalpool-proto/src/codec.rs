@@ -37,6 +37,9 @@ pub const WIRE_VERSION: u8 = 1;
 /// Resumable-upload wire format served at `POST /v2`.
 pub const V2_WIRE_VERSION: u8 = 2;
 
+/// Native normalized-query wire format served at `POST /v3`.
+pub const V3_WIRE_VERSION: u8 = 3;
+
 /// Fixed header size in bytes (magic + version + declared length).
 pub const HEADER_LEN: usize = 4 + 1 + 4;
 
@@ -90,6 +93,11 @@ pub fn encode_v2<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
     encode_version(value, V2_WIRE_VERSION)
 }
 
+/// Encode a BTPL v3 frame.
+pub fn encode_v3<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
+    encode_version(value, V3_WIRE_VERSION)
+}
+
 /// Encode a frame with an explicit protocol version.
 pub fn encode_version<T: Serialize>(value: &T, version: u8) -> Result<Vec<u8>, CodecError> {
     encode_with_version_caps(value, version, DEFAULT_MAX_UNCOMPRESSED)
@@ -138,6 +146,11 @@ pub fn decode<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
 /// Decode a BTPL v2 frame.
 pub fn decode_v2<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
     decode_version(frame, V2_WIRE_VERSION)
+}
+
+/// Decode a BTPL v3 frame.
+pub fn decode_v3<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
+    decode_version(frame, V3_WIRE_VERSION)
 }
 
 /// Decode a frame while requiring an explicit protocol version.

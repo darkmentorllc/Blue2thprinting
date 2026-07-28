@@ -29,11 +29,11 @@ use std::sync::Arc;
 
 use btidalpool_proto::{
     codec, AuthFields, Envelope, ErrorKind, Payload, Response, V2Auth, V2Envelope, V2ErrorKind,
-    V2Payload, V2Response, CONTENT_TYPE,
+    V2Payload, V2Response, V3Envelope, V3Payload, V3Response, CONTENT_TYPE,
 };
 use tiny_http::{Header, Method, Request, Response as TinyResp, Server, StatusCode};
 
-use crate::handlers::{dispatch, dispatch_v2, Deps};
+use crate::handlers::{dispatch, dispatch_v2, dispatch_v3, Deps};
 use crate::oauth::{AuthError, OAuthValidator};
 use crate::rate_limit::{ConcurrencyGuard, ConcurrencyLimiter, Decision, Guard, Limiter};
 use crate::session::{SessionError, SessionTokens};
@@ -56,12 +56,14 @@ pub struct Config {
 /// this small host have capacity right now?".
 #[derive(Clone)]
 pub struct OverloadConfig {
-    /// Shared weighted budget. Queries reserve two units; whole-file uploads
-    /// and finalizes reserve one, preventing a max-result query from
-    /// overlapping either on the one-CPU production host.
+    /// Shared weighted budget. Legacy queries reserve all four default
+    /// units; whole-file uploads/finalizes reserve two; native queries
+    /// reserve one. This preserves isolation for the memory-heavy Python
+    /// path while allowing four lightweight native queries in parallel.
     pub expensive_work: ConcurrencyLimiter,
     pub v1_uploads: ConcurrencyLimiter,
     pub queries: ConcurrencyLimiter,
+    pub native_queries: ConcurrencyLimiter,
     pub chunk_puts: ConcurrencyLimiter,
     pub finalizes: ConcurrencyLimiter,
     pub retry_after: std::time::Duration,
@@ -70,9 +72,10 @@ pub struct OverloadConfig {
 impl Default for OverloadConfig {
     fn default() -> Self {
         Self {
-            expensive_work: ConcurrencyLimiter::new(2),
+            expensive_work: ConcurrencyLimiter::new(4),
             v1_uploads: ConcurrencyLimiter::new(2),
             queries: ConcurrencyLimiter::new(1),
+            native_queries: ConcurrencyLimiter::new(4),
             chunk_puts: ConcurrencyLimiter::new(4),
             finalizes: ConcurrencyLimiter::new(2),
             retry_after: std::time::Duration::from_secs(2),
@@ -159,7 +162,7 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
     if request.method() != &Method::Post {
         return reply_plain(request, 405, "Method Not Allowed");
     }
-    if path != "/" && path != "/v2" {
+    if path != "/" && path != "/v2" && path != "/v3" {
         return reply_plain(request, 404, "Not Found");
     }
 
@@ -213,10 +216,10 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         return reply_plain(request, 413, "Payload Too Large");
     }
 
-    if path == "/v2" {
-        handle_v2(request, body, client_ip, cfg)
-    } else {
-        handle_v1(request, body, client_ip, cfg)
+    match path.as_str() {
+        "/v2" => handle_v2(request, body, client_ip, cfg),
+        "/v3" => handle_v3(request, body, client_ip, cfg),
+        _ => handle_v1(request, body, client_ip, cfg),
     }
 }
 
@@ -442,6 +445,91 @@ fn handle_v2(
     reply_v2(request, response)
 }
 
+fn handle_v3(
+    request: Request,
+    body: Vec<u8>,
+    client_ip: std::net::IpAddr,
+    cfg: &SharedCfg,
+) -> io::Result<()> {
+    let env: V3Envelope = match codec::decode_v3(&body) {
+        Ok(envelope) => envelope,
+        Err(error) => {
+            return reply_plain(request, 400, &format!("Bad v3 request body: {error}"));
+        }
+    };
+    let session_token = match env.auth {
+        V2Auth::Session { token } => token,
+        V2Auth::Google { .. } => {
+            return reply_v3(
+                request,
+                v3_error(
+                    V2ErrorKind::Unauthorized,
+                    "v3 queries require a BTIDALPOOL session token",
+                ),
+            )
+        }
+    };
+    let identity = match cfg.sessions.verify(&session_token) {
+        Ok(identity) => identity,
+        Err(SessionError::Expired) => {
+            return reply_v3(
+                request,
+                v3_error(V2ErrorKind::SessionExpired, "BTIDALPOOL session expired."),
+            )
+        }
+        Err(_) => {
+            return reply_v3(
+                request,
+                v3_error(V2ErrorKind::Unauthorized, "Invalid BTIDALPOOL session."),
+            )
+        }
+    };
+    let _identity_guard = match acquire_identity(cfg, &identity.email) {
+        Ok(guard) => guard,
+        Err(retry_after) => {
+            return reply_v3_retry(
+                request,
+                v3_error(
+                    V2ErrorKind::RateLimited,
+                    "Authenticated identity rate limit exceeded.",
+                ),
+                retry_after,
+            )
+        }
+    };
+    let _capacity_guards = match acquire_v3_capacity(cfg, &env.payload) {
+        Ok(guards) => guards,
+        Err(()) => {
+            return reply_v3_retry(
+                request,
+                v3_error(
+                    V2ErrorKind::ServerBusy,
+                    "Server capacity is temporarily exhausted; retry later.",
+                ),
+                cfg.overload.retry_after,
+            )
+        }
+    };
+    let summary = summarize_v3_payload(&env.payload);
+    let response = dispatch_v3(env.payload, &cfg.deps);
+    let outcome = match &response {
+        V3Response::QueryResult { query } => format!(
+            "devices={}, rows={}, truncated={}",
+            query.devices.len(),
+            query.total_rows,
+            query.truncated
+        ),
+        V3Response::Err { kind, .. } => format!("error={kind:?}"),
+    };
+    let _ = cfg.deps.state.append_access_log(format!(
+        "{ts} - {email},{client_ip},{summary}, {outcome}",
+        ts = chrono_ish_now(),
+        email = identity.email,
+    ));
+    log::info!("v3 query completed for {}: {outcome}", identity.email);
+    reply_v3(request, response)
+}
+
 fn acquire_identity(cfg: &SharedCfg, email: &str) -> Result<Guard, std::time::Duration> {
     match cfg
         .identity_limiter
@@ -458,8 +546,8 @@ type CapacityGuards = Option<(Option<ConcurrencyGuard>, ConcurrencyGuard)>;
 
 fn acquire_v1_capacity(cfg: &SharedCfg, payload: &Payload) -> Result<CapacityGuards, ()> {
     let (operation_limiter, expensive_permits) = match payload {
-        Payload::Upload { .. } => (&cfg.overload.v1_uploads, 1),
-        Payload::Query { .. } => (&cfg.overload.queries, 2),
+        Payload::Upload { .. } => (&cfg.overload.v1_uploads, 2),
+        Payload::Query { .. } => (&cfg.overload.queries, 4),
         Payload::CheckHash { .. } => return Ok(None),
     };
     acquire_capacity(cfg, operation_limiter, expensive_permits)
@@ -471,10 +559,16 @@ fn acquire_v2_capacity(cfg: &SharedCfg, payload: &V2Payload) -> Result<CapacityG
             let operation = cfg.overload.chunk_puts.try_acquire(1).ok_or(())?;
             Ok(Some((None, operation)))
         }
-        V2Payload::Finalize { .. } => acquire_capacity(cfg, &cfg.overload.finalizes, 1),
+        V2Payload::Finalize { .. } => acquire_capacity(cfg, &cfg.overload.finalizes, 2),
         V2Payload::CreateSession | V2Payload::Manifest { .. } | V2Payload::Status { .. } => {
             Ok(None)
         }
+    }
+}
+
+fn acquire_v3_capacity(cfg: &SharedCfg, payload: &V3Payload) -> Result<CapacityGuards, ()> {
+    match payload {
+        V3Payload::Query { .. } => acquire_capacity(cfg, &cfg.overload.native_queries, 1),
     }
 }
 
@@ -497,6 +591,13 @@ fn v2_error(kind: V2ErrorKind, message: impl Into<String>) -> V2Response {
         kind,
         message: message.into(),
         missing_chunks: Vec::new(),
+    }
+}
+
+fn v3_error(kind: V2ErrorKind, message: impl Into<String>) -> V3Response {
+    V3Response::Err {
+        kind,
+        message: message.into(),
     }
 }
 
@@ -620,6 +721,47 @@ fn reply_v2_inner(
     req.respond(response)
 }
 
+fn reply_v3(req: Request, resp: V3Response) -> io::Result<()> {
+    reply_v3_inner(req, resp, None)
+}
+
+fn reply_v3_retry(
+    req: Request,
+    resp: V3Response,
+    retry_after: std::time::Duration,
+) -> io::Result<()> {
+    reply_v3_inner(req, resp, Some(retry_after))
+}
+
+fn reply_v3_inner(
+    req: Request,
+    resp: V3Response,
+    retry_after: Option<std::time::Duration>,
+) -> io::Result<()> {
+    let status = match &resp {
+        V3Response::Err { kind, .. } => kind.http_status(),
+        V3Response::QueryResult { .. } => 200,
+    };
+    let bytes = match codec::encode_v3(&resp) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            log::error!("v3 response encode error: {error}");
+            return reply_plain(req, 500, "internal encode error");
+        }
+    };
+    let mut response = TinyResp::from_data(bytes)
+        .with_status_code(StatusCode(status))
+        .with_header(
+            format!("Content-Type: {CONTENT_TYPE}; version=3")
+                .parse::<Header>()
+                .unwrap(),
+        );
+    if let Some(duration) = retry_after {
+        response.add_header(retry_after_header(duration));
+    }
+    req.respond(response)
+}
+
 fn retry_after_header(duration: std::time::Duration) -> Header {
     let seconds = duration
         .as_secs()
@@ -665,6 +807,15 @@ fn summarize_v2_payload(payload: &V2Payload) -> String {
         V2Payload::Finalize { upload_id } => {
             format!("v2 finalize (upload_id={upload_id})")
         }
+    }
+}
+
+fn summarize_v3_payload(payload: &V3Payload) -> String {
+    match payload {
+        V3Payload::Query {
+            params,
+            use_test_db,
+        } => format!("v3 native query ({params:?}, test_db={use_test_db})"),
     }
 }
 
