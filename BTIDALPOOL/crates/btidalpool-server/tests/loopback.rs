@@ -53,6 +53,26 @@ impl Harness {
         overload: OverloadConfig,
         identity_limits: Limits,
     ) -> Self {
+        Self::boot_configured(
+            query,
+            native_query,
+            good_token,
+            email,
+            overload,
+            identity_limits,
+            false,
+        )
+    }
+
+    fn boot_configured(
+        query: Arc<dyn QueryEngine>,
+        native_query: Arc<dyn NativeQueryEngine>,
+        good_token: &str,
+        email: &str,
+        overload: OverloadConfig,
+        identity_limits: Limits,
+        enable_healthz: bool,
+    ) -> Self {
         let td = tempfile::tempdir().unwrap();
         let mut params = rcgen::CertificateParams::new(vec!["localhost".to_string()]).unwrap();
         params
@@ -86,6 +106,7 @@ impl Harness {
                 cert_pem_path: cert_path,
                 key_pem_path: key_path,
             }),
+            enable_healthz,
             ip_limiter: Limiter::new(Limits {
                 max_simultaneous: 50,
                 max_per_day: 1_000,
@@ -490,12 +511,39 @@ fn v4_requires_explicit_version_four_content_type() {
 }
 
 #[test]
-fn health_remains_available_and_other_methods_are_rejected() {
+fn health_is_hidden_by_default_and_other_methods_are_rejected() {
     let harness = Harness::boot(
         Arc::new(StubQueryEngine::empty()),
         Arc::new(StubNativeQueryEngine::empty()),
         "good-token",
         "tester@example.com",
+    );
+    match build_insecure_agent()
+        .get(&format!("{}/healthz", harness.server_url))
+        .call()
+    {
+        Err(ureq::Error::Status(404, _)) => {}
+        other => panic!("GET /healthz expected 404, got {other:?}"),
+    }
+    match build_insecure_agent()
+        .get(&format!("{}/v4", harness.server_url))
+        .call()
+    {
+        Err(ureq::Error::Status(405, _)) => {}
+        other => panic!("GET /v4 expected 405, got {other:?}"),
+    }
+}
+
+#[test]
+fn health_can_be_enabled_for_a_controlled_test_window() {
+    let harness = Harness::boot_configured(
+        Arc::new(StubQueryEngine::empty()),
+        Arc::new(StubNativeQueryEngine::empty()),
+        "good-token",
+        "tester@example.com",
+        OverloadConfig::default(),
+        Limits::default(),
+        true,
     );
     assert_eq!(
         build_insecure_agent()
@@ -505,13 +553,6 @@ fn health_remains_available_and_other_methods_are_rejected() {
             .status(),
         200
     );
-    match build_insecure_agent()
-        .get(&format!("{}/v4", harness.server_url))
-        .call()
-    {
-        Err(ureq::Error::Status(405, _)) => {}
-        other => panic!("GET /v4 expected 405, got {other:?}"),
-    }
 }
 
 fn create_session(harness: &Harness, google_token: &str) -> String {

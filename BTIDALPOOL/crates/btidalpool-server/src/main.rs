@@ -47,6 +47,10 @@ struct Cli {
     /// loopback testing without generating a self-signed cert.
     #[arg(long)]
     no_tls: bool,
+    /// Expose GET /healthz. Disabled by default; enable only while an
+    /// operator is actively running a controlled test or monitor.
+    #[arg(long)]
+    enable_healthz: bool,
     /// Directory to write accepted BTIDES uploads into.
     #[arg(long, default_value = "./pool_files")]
     pool_dir: PathBuf,
@@ -229,6 +233,7 @@ fn main() -> Result<()> {
     http::run(Config {
         bind: cli.bind,
         tls,
+        enable_healthz: cli.enable_healthz,
         ip_limiter,
         identity_limiter,
         overload,

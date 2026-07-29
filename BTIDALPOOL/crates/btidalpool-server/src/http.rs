@@ -39,6 +39,9 @@ use crate::session::{SessionError, SessionTokens};
 pub struct Config {
     pub bind: SocketAddr,
     pub tls: Option<TlsConfig>,
+    /// Whether the unauthenticated GET /healthz route is exposed. Production
+    /// defaults this off and enables it only for controlled test windows.
+    pub enable_healthz: bool,
     pub ip_limiter: Limiter,
     pub identity_limiter: Limiter,
     pub overload: OverloadConfig,
@@ -92,6 +95,7 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
     log::info!("Listening on {}", cfg.bind);
 
     let cfg = Arc::new(SharedCfg {
+        enable_healthz: cfg.enable_healthz,
         ip_limiter: cfg.ip_limiter,
         identity_limiter: cfg.identity_limiter,
         overload: cfg.overload,
@@ -134,6 +138,7 @@ fn build_server(cfg: &Config) -> anyhow::Result<Server> {
 }
 
 struct SharedCfg {
+    enable_healthz: bool,
     ip_limiter: Limiter,
     identity_limiter: Limiter,
     overload: OverloadConfig,
@@ -151,7 +156,11 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
 
     let path = request.url().split('?').next().unwrap_or("/").to_string();
     if request.method() == &Method::Get && path == "/healthz" {
-        return reply_plain(request, 200, "ok");
+        return if cfg.enable_healthz {
+            reply_plain(request, 200, "ok")
+        } else {
+            reply_plain(request, 404, "Not Found")
+        };
     }
 
     // The Rust service exposes one protocol route. The original non-Rust

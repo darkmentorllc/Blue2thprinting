@@ -8,7 +8,7 @@ The current host uses:
 - versioned unit source: `BTIDALPOOL/systemd/BTIDALPOOL-rust.service`
 - listener: TLS on `0.0.0.0:3568`
 - protocol endpoint: `POST /v4` (the only Rust wire endpoint)
-- health endpoint: `GET /healthz`
+- health endpoint: disabled by default; `GET /healthz` returns 404
 - legacy pool: `Analysis/pool_files_rust`
 - per-user logs: `Analysis/user_logs_rust`
 - access log: `Analysis/user_access_rust.log`
@@ -49,6 +49,7 @@ generates an in-memory key; existing sessions then expire on restart.
 
 | Option | Default | Purpose |
 | --- | ---: | --- |
+| `--enable-healthz` | false | Temporarily expose unauthenticated `GET /healthz` during a controlled test window |
 | `--max-concurrent` | 10 | Simultaneous requests per authenticated identity |
 | `--max-per-day` | 100 | Rolling-day requests per authenticated identity |
 | `--max-ip-concurrent` | 50 | Simultaneous pre-auth abuse cap per IP |
@@ -157,9 +158,10 @@ record cap, is the correct overload control.
    `systemd-analyze verify` before restarting.
 7. Rename the temporary binary over the live path atomically.
 8. Run `systemctl daemon-reload` and restart `BTIDALPOOL-rust.service`.
-9. Verify service status, PID/executable identity, port 3568, health, a v4
-   session, non-destructive manifest/status flow, read-only native query, and
-   recent logs. Verify `POST /`, `/v2`, and `/v3` all return 404.
+9. Verify service status, PID/executable identity, port 3568, disabled health
+   behavior, a v4 session, non-destructive manifest/status flow, read-only
+   native query, and recent logs. Verify `POST /`, `/v2`, and `/v3` all
+   return 404.
 
 Rollback restores the backed-up binary and unit atomically, reloads systemd,
 and restarts the same service. Do not remove the resumable state directory
@@ -172,9 +174,15 @@ systemctl is-active BTIDALPOOL-rust.service
 systemctl show BTIDALPOOL-rust.service -p MainPID -p ExecStart -p User
 ss -ltnp | grep ':3568'
 curl --cacert Analysis/btidalpool.ddns.net.crt \
-  https://btidalpool.ddns.net:3568/healthz
+  --write-out '%{http_code}\n' --output /dev/null \
+  https://btidalpool.ddns.net:3568/healthz  # expected: 404
 journalctl -u BTIDALPOOL-rust.service --since '-10 minutes' --no-pager
 ```
+
+For a controlled stress-test window, append `--enable-healthz` to the
+service's `ExecStart`, run `systemd-analyze verify`, reload systemd, and
+restart the service. Remove the flag and restart immediately after the test.
+The default remains disabled if the option is omitted.
 
 Do not place access tokens or session tokens on a shell command line during
 authenticated checks. Use an existing test client that reads credentials from
