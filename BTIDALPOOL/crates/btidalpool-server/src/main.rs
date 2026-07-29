@@ -69,22 +69,22 @@ struct Cli {
     #[arg(long, default_value_t = 1000)]
     max_ip_per_day: u32,
     /// Weighted process-wide budget for expensive work. Legacy queries use
-    /// four units, uploads/finalizes two, and native v3 queries one.
+    /// four units, uploads/finalizes two, and native queries one.
     #[arg(long, default_value_t = 4)]
     max_expensive_work_units: u32,
-    /// Process-wide simultaneous v1 whole-file upload cap.
+    /// Process-wide simultaneous v4 whole-file upload cap.
     #[arg(long, default_value_t = 2)]
-    max_global_v1_uploads: u32,
+    max_global_whole_uploads: u32,
     /// Process-wide simultaneous query cap.
     #[arg(long, default_value_t = 1)]
     max_global_queries: u32,
-    /// Process-wide simultaneous native v3 query cap.
+    /// Process-wide simultaneous native-query cap.
     #[arg(long, default_value_t = 4)]
     max_global_native_queries: u32,
-    /// Process-wide simultaneous v2 chunk-write cap.
+    /// Process-wide simultaneous resumable chunk-write cap.
     #[arg(long, default_value_t = 4)]
     max_global_chunk_puts: u32,
-    /// Process-wide simultaneous v2 finalize cap.
+    /// Process-wide simultaneous resumable finalize cap.
     #[arg(long, default_value_t = 2)]
     max_global_finalizes: u32,
     /// Retry-After delta seconds returned with capacity-overload HTTP 503.
@@ -93,23 +93,23 @@ struct Cli {
     /// Maximum BTIDES records returned by one query.
     #[arg(long, default_value_t = 100)]
     max_query_records: u32,
-    /// Maximum normalized MySQL rows returned by one native v3 query.
+    /// Maximum normalized MySQL rows returned by one native query.
     #[arg(long, default_value_t = 50_000)]
     max_native_query_rows: u64,
     /// Positive Google-validation cache TTL. Cache keys are token SHA-256
     /// digests; plaintext OAuth credentials are never stored.
     #[arg(long, default_value_t = 300)]
     oauth_cache_ttl_seconds: u64,
-    /// Lifetime of signed BTPL v2 session tokens.
+    /// Lifetime of signed BTPL session tokens.
     #[arg(long, default_value_t = 900)]
     session_ttl_seconds: u64,
     /// Optional >=32-byte HMAC key file. If omitted, an in-memory random key
     /// is generated and outstanding sessions expire on server restart.
     #[arg(long)]
     session_key_file: Option<PathBuf>,
-    /// Durable manifests, chunks, and receipts for resumable v2 uploads.
-    #[arg(long, default_value = "./btidalpool_v2_state")]
-    v2_state_dir: PathBuf,
+    /// Durable manifests, chunks, and receipts for resumable uploads.
+    #[arg(long, default_value = "./btidalpool_resumable_state")]
+    resumable_state_dir: PathBuf,
     /// Use a mock OAuth validator that accepts any token whose value
     /// equals `--mock-auth-token` and reports back `--mock-auth-email`.
     /// For local end-to-end testing only.
@@ -182,7 +182,7 @@ fn main() -> Result<()> {
     });
     let overload = OverloadConfig {
         expensive_work: ConcurrencyLimiter::new(cli.max_expensive_work_units.max(1)),
-        v1_uploads: ConcurrencyLimiter::new(cli.max_global_v1_uploads.max(1)),
+        whole_uploads: ConcurrencyLimiter::new(cli.max_global_whole_uploads.max(1)),
         queries: ConcurrencyLimiter::new(cli.max_global_queries.max(1)),
         native_queries: ConcurrencyLimiter::new(cli.max_global_native_queries.max(1)),
         chunk_puts: ConcurrencyLimiter::new(cli.max_global_chunk_puts.max(1)),
@@ -199,7 +199,7 @@ fn main() -> Result<()> {
         None => {
             log::warn!(
                 "no --session-key-file configured; generated an in-memory signing key \
-                 (safe, but v2 sessions will expire on restart)"
+                 (safe, but outstanding sessions will expire on restart)"
             );
             SessionTokens::random(std::time::Duration::from_secs(
                 cli.session_ttl_seconds.max(1),
@@ -209,7 +209,7 @@ fn main() -> Result<()> {
 
     let deps = Deps {
         state,
-        resumable: ResumableStore::initialize(&cli.v2_state_dir)?,
+        resumable: ResumableStore::initialize(&cli.resumable_state_dir)?,
         ingest,
         query,
         native_query,

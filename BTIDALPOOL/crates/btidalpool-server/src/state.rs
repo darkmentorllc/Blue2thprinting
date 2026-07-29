@@ -98,7 +98,7 @@ impl ServerState {
     /// Atomically publish an already-validated staged upload into the legacy
     /// pool layout. The final filename is never visible with partial bytes.
     /// Holding the hash-index lock across check/copy/rename also makes
-    /// concurrent v1/v2 finalization idempotent within the server process.
+    /// concurrent whole-file/resumable finalization idempotent within the server process.
     pub fn publish_staged_upload(
         &self,
         staged_path: &Path,

@@ -40,6 +40,9 @@ pub const V2_WIRE_VERSION: u8 = 2;
 /// Native normalized-query wire format served at `POST /v3`.
 pub const V3_WIRE_VERSION: u8 = 3;
 
+/// Unified v1/v2/v3 capability protocol served at `POST /v4`.
+pub const V4_WIRE_VERSION: u8 = 4;
+
 /// Fixed header size in bytes (magic + version + declared length).
 pub const HEADER_LEN: usize = 4 + 1 + 4;
 
@@ -98,6 +101,11 @@ pub fn encode_v3<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
     encode_version(value, V3_WIRE_VERSION)
 }
 
+/// Encode a unified BTPL v4 frame.
+pub fn encode_v4<T: Serialize>(value: &T) -> Result<Vec<u8>, CodecError> {
+    encode_version(value, V4_WIRE_VERSION)
+}
+
 /// Encode a frame with an explicit protocol version.
 pub fn encode_version<T: Serialize>(value: &T, version: u8) -> Result<Vec<u8>, CodecError> {
     encode_with_version_caps(value, version, DEFAULT_MAX_UNCOMPRESSED)
@@ -151,6 +159,11 @@ pub fn decode_v2<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
 /// Decode a BTPL v3 frame.
 pub fn decode_v3<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
     decode_version(frame, V3_WIRE_VERSION)
+}
+
+/// Decode a unified BTPL v4 frame.
+pub fn decode_v4<T: DeserializeOwned>(frame: &[u8]) -> Result<T, CodecError> {
+    decode_version(frame, V4_WIRE_VERSION)
 }
 
 /// Decode a frame while requiring an explicit protocol version.
@@ -291,6 +304,20 @@ mod tests {
             decode::<Sample>(&frame),
             Err(CodecError::UnsupportedVersion {
                 got: V2_WIRE_VERSION
+            })
+        ));
+    }
+
+    #[test]
+    fn v4_round_trip_uses_distinct_version() {
+        let frame = encode_v4(&sample()).expect("encode v4");
+        assert_eq!(frame[4], V4_WIRE_VERSION);
+        let back: Sample = decode_v4(&frame).expect("decode v4");
+        assert_eq!(back, sample());
+        assert!(matches!(
+            decode_v3::<Sample>(&frame),
+            Err(CodecError::UnsupportedVersion {
+                got: V4_WIRE_VERSION
             })
         ));
     }

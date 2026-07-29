@@ -35,7 +35,9 @@ pub use hash::{canonical_sha1, exact_sha256};
 pub use wire::{
     AuthFields, DbValue, Envelope, ErrorKind, NativeDevice, NativeQueryResult, NativeTable,
     Payload, QueryParams, Response, UploadReceipt, V2Auth, V2Envelope, V2ErrorKind, V2Payload,
-    V2Response, V3Envelope, V3Payload, V3Response,
+    V2Response, V3Envelope, V3Payload, V3Response, V4Auth, V4Date, V4DbValue, V4DbValueKind,
+    V4Envelope, V4ErrorKind, V4NativeDevice, V4NativeQueryResult, V4NativeTable, V4Payload,
+    V4Response, V4Time,
 };
 
 /// HTTP Content-Type used for all BTIDALPOOL request and response bodies.

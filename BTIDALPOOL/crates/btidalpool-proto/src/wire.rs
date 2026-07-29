@@ -369,6 +369,231 @@ pub enum V3Response {
     Err { kind: V2ErrorKind, message: String },
 }
 
+/// Authentication for the unified v4 interface. Google credentials are sent
+/// only to `create_session`; all other operations carry a short-lived server
+/// session token.
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "scheme", rename_all = "snake_case")]
+pub enum V4Auth {
+    Google { access_token: String },
+    Session { token: String },
+}
+
+/// Unified BTPL v4 request. V4 includes whole-file/check/query, resumable
+/// upload, and native-query capabilities behind the single `/v4` endpoint.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct V4Envelope {
+    pub auth: V4Auth,
+    pub payload: V4Payload,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(tag = "cmd", rename_all = "snake_case")]
+pub enum V4Payload {
+    CreateSession,
+    Upload {
+        #[serde(with = "serde_bytes")]
+        btides_json: Vec<u8>,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+    CheckHash {
+        hash: String,
+    },
+    LegacyQuery {
+        params: QueryParams,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+    Manifest {
+        content_sha256: String,
+        total_size: u64,
+        chunk_sha256: Vec<String>,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+    PutChunk {
+        upload_id: String,
+        index: u32,
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+    Status {
+        upload_id: String,
+    },
+    Finalize {
+        upload_id: String,
+    },
+    NativeQuery {
+        params: QueryParams,
+        #[serde(default)]
+        use_test_db: bool,
+    },
+}
+
+/// V4's error space is the union of the permanent/transient outcomes exposed
+/// by v1, v2, and v3.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum V4ErrorKind {
+    BadRequest,
+    Unauthorized,
+    SessionExpired,
+    NotFound,
+    Conflict,
+    PayloadTooLarge,
+    HashMismatch,
+    SchemaInvalid,
+    DuplicateUpload,
+    EmptyResult,
+    RateLimited,
+    ServerBusy,
+    Internal,
+}
+
+impl V4ErrorKind {
+    pub fn http_status(self) -> u16 {
+        match self {
+            Self::BadRequest | Self::SchemaInvalid | Self::DuplicateUpload | Self::EmptyResult => {
+                400
+            }
+            Self::Unauthorized | Self::SessionExpired => 401,
+            Self::NotFound => 404,
+            Self::Conflict => 409,
+            Self::PayloadTooLarge => 413,
+            Self::HashMismatch => 422,
+            Self::RateLimited => 429,
+            Self::ServerBusy => 503,
+            Self::Internal => 500,
+        }
+    }
+}
+
+/// Android-friendly, lossless v4 representation of a MySQL cell. Unlike
+/// v3's internally-tagged enum, every possible value has a stable field,
+/// which keeps CBOR decoding straightforward in clients without weakening
+/// the type information.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum V4DbValueKind {
+    Null,
+    Bytes,
+    Signed,
+    Unsigned,
+    Float,
+    Date,
+    Time,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct V4Date {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+    pub hour: u8,
+    pub minute: u8,
+    pub second: u8,
+    pub micros: u32,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct V4Time {
+    pub negative: bool,
+    pub days: u32,
+    pub hours: u8,
+    pub minutes: u8,
+    pub seconds: u8,
+    pub micros: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct V4DbValue {
+    pub kind: V4DbValueKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bytes: Option<ByteBuf>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signed: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// Decimal text preserves the full MySQL unsigned 64-bit range in
+    /// clients whose native integer type is signed (including Kotlin/JVM).
+    pub unsigned: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub float: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub date: Option<V4Date>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time: Option<V4Time>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct V4NativeTable {
+    pub columns: Vec<String>,
+    pub rows: Vec<Vec<V4DbValue>>,
+    #[serde(default)]
+    pub truncated: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct V4NativeDevice {
+    pub bdaddr: String,
+    pub tables: BTreeMap<String, V4NativeTable>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct V4NativeQueryResult {
+    pub devices: Vec<V4NativeDevice>,
+    pub total_rows: u64,
+    pub row_limit: u64,
+    pub truncated: bool,
+}
+
+/// One response type covers every v1/v2/v3 success shape. Native query data
+/// uses an equally lossless, field-stable representation for simple decoding
+/// in Android and other non-Rust clients.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "result", rename_all = "snake_case")]
+pub enum V4Response {
+    Session {
+        token: String,
+        expires_at_unix: u64,
+    },
+    Ok {
+        message: String,
+    },
+    Manifest {
+        upload_id: String,
+        missing_chunks: Vec<u32>,
+        receipt: Option<UploadReceipt>,
+    },
+    Chunk {
+        upload_id: String,
+        index: u32,
+        already_present: bool,
+    },
+    Status {
+        upload_id: String,
+        missing_chunks: Vec<u32>,
+        receipt: Option<UploadReceipt>,
+    },
+    Finalized {
+        receipt: UploadReceipt,
+    },
+    QueryResult {
+        records: u64,
+        #[serde(with = "serde_bytes")]
+        btides_json: Vec<u8>,
+    },
+    NativeQueryResult {
+        query: V4NativeQueryResult,
+    },
+    Err {
+        kind: V4ErrorKind,
+        message: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        missing_chunks: Vec<u32>,
+    },
+}
+
 /// Helper: serialize an [`Envelope`] using a `ByteBuf` instead of a raw
 /// `Vec<u8>` for the BTIDES payload, when the caller already has a
 /// `ByteBuf`. Avoids an unnecessary clone in the upload hot path.
@@ -493,6 +718,42 @@ mod tests {
         };
         let frame = codec::encode_v3(&response).unwrap();
         let decoded: V3Response = codec::decode_v3(&frame).unwrap();
+        assert_eq!(decoded, response);
+    }
+
+    #[test]
+    fn v4_unified_round_trip_preserves_resumable_and_native_shapes() {
+        let manifest = V4Envelope {
+            auth: V4Auth::Session { token: "s".into() },
+            payload: V4Payload::Manifest {
+                content_sha256: "ab".repeat(32),
+                total_size: 7,
+                chunk_sha256: vec!["cd".repeat(32)],
+                use_test_db: true,
+            },
+        };
+        let frame = codec::encode_v4(&manifest).unwrap();
+        assert_eq!(frame[4], codec::V4_WIRE_VERSION);
+        let decoded: V4Envelope = codec::decode_v4(&frame).unwrap();
+        assert!(matches!(
+            decoded.payload,
+            V4Payload::Manifest {
+                total_size: 7,
+                use_test_db: true,
+                ..
+            }
+        ));
+
+        let response = V4Response::NativeQueryResult {
+            query: V4NativeQueryResult {
+                devices: Vec::new(),
+                total_rows: 0,
+                row_limit: 100,
+                truncated: false,
+            },
+        };
+        let frame = codec::encode_v4(&response).unwrap();
+        let decoded: V4Response = codec::decode_v4(&frame).unwrap();
         assert_eq!(decoded, response);
     }
 }

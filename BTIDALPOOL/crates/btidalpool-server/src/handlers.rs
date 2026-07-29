@@ -1,17 +1,16 @@
-//! Pure request-handler logic.
+//! Pure v4 request-handler logic.
 //!
-//! Each `handle_*` function takes an authenticated user email, the typed
-//! [`Payload`] for that command, and the trait-erased dependencies, and
-//! returns a [`Response`]. There is no HTTP layer here — that lives in
-//! `http.rs`. The split lets the test suite drive every code path with
-//! plain Rust function calls.
+//! Each operation takes an authenticated user email and the trait-erased
+//! dependencies, then returns a [`V4Response`]. There is no HTTP layer here
+//! — that lives in `http.rs`. The split lets the test suite drive every
+//! code path with plain Rust function calls.
 
 use std::sync::Arc;
 use std::time::SystemTime;
 
 use btidalpool_proto::{
-    canonical_sha1, ErrorKind, Payload, QueryParams, Response, V2ErrorKind, V2Payload, V2Response,
-    V3Payload, V3Response,
+    canonical_sha1, DbValue, NativeQueryResult, QueryParams, V4Date, V4DbValue, V4DbValueKind,
+    V4ErrorKind, V4NativeDevice, V4NativeQueryResult, V4NativeTable, V4Payload, V4Response, V4Time,
 };
 
 use crate::ingest::IngestSink;
@@ -39,143 +38,258 @@ pub struct Deps {
     pub max_native_rows: u64,
 }
 
-pub fn dispatch_v3(payload: V3Payload, deps: &Deps) -> V3Response {
-    let result = match payload {
-        V3Payload::Query {
+/// Dispatch any authenticated operation exposed by the single v4 interface.
+pub fn dispatch_v4(email: &str, payload: V4Payload, deps: &Deps) -> V4Response {
+    match payload {
+        V4Payload::CreateSession => v4_err(
+            V4ErrorKind::BadRequest,
+            "create_session must use Google authentication",
+            Vec::new(),
+        ),
+        V4Payload::Upload {
+            btides_json,
+            use_test_db,
+        } => handle_upload(email, use_test_db, btides_json, deps),
+        V4Payload::CheckHash { hash } => handle_check_hash(hash, deps),
+        V4Payload::LegacyQuery {
             params,
             use_test_db,
-        } => deps.native_query.run(
-            &params,
-            deps.max_query_records,
-            deps.max_native_rows,
-            use_test_db,
-        ),
-    };
-    match result {
-        Ok(query) => V3Response::QueryResult { query },
-        Err(error) => {
-            let kind = match error {
-                NativeQueryError::Empty
-                | NativeQueryError::Unsupported(_)
-                | NativeQueryError::BadRequest(_) => V2ErrorKind::BadRequest,
-                NativeQueryError::Backend(_) => V2ErrorKind::Internal,
-            };
-            V3Response::Err {
-                kind,
-                message: error.to_string(),
-            }
-        }
-    }
-}
-
-/// Dispatch an authenticated v2 operation. Session issuance is handled at
-/// the HTTP/auth layer; all durable upload operations live here.
-pub fn dispatch_v2(email: &str, payload: V2Payload, deps: &Deps) -> V2Response {
-    let result = match payload {
-        V2Payload::CreateSession => {
-            return v2_err(
-                V2ErrorKind::BadRequest,
-                "create_session must use Google authentication",
-                Vec::new(),
-            )
-        }
-        V2Payload::Manifest {
+        } => handle_query(email, use_test_db, params, deps),
+        V4Payload::Manifest {
             content_sha256,
             total_size,
             chunk_sha256,
             use_test_db,
-        } => deps
-            .resumable
-            .submit_manifest(email, content_sha256, total_size, chunk_sha256, use_test_db)
-            .map(|status| V2Response::Manifest {
-                upload_id: status.upload_id,
-                missing_chunks: status.missing_chunks,
-                receipt: status.receipt,
-            }),
-        V2Payload::PutChunk {
-            upload_id,
-            index,
-            data,
-        } => deps
-            .resumable
-            .put_chunk(email, &upload_id, index, &data)
-            .map(|result| V2Response::Chunk {
-                upload_id: result.upload_id,
-                index: result.index,
-                already_present: result.already_present,
-            }),
-        V2Payload::Status { upload_id } => {
+        } => map_resumable(
+            email,
+            deps,
             deps.resumable
-                .status(email, &upload_id)
-                .map(|status| V2Response::Status {
+                .submit_manifest(email, content_sha256, total_size, chunk_sha256, use_test_db)
+                .map(|status| V4Response::Manifest {
                     upload_id: status.upload_id,
                     missing_chunks: status.missing_chunks,
                     receipt: status.receipt,
-                })
-        }
-        V2Payload::Finalize { upload_id } => deps
-            .resumable
-            .finalize(email, &upload_id, &deps.state, deps.ingest.as_ref())
-            .map(|receipt| V2Response::Finalized { receipt }),
-    };
+                }),
+        ),
+        V4Payload::PutChunk {
+            upload_id,
+            index,
+            data,
+        } => map_resumable(
+            email,
+            deps,
+            deps.resumable
+                .put_chunk(email, &upload_id, index, &data)
+                .map(|result| V4Response::Chunk {
+                    upload_id: result.upload_id,
+                    index: result.index,
+                    already_present: result.already_present,
+                }),
+        ),
+        V4Payload::Status { upload_id } => map_resumable(
+            email,
+            deps,
+            deps.resumable
+                .status(email, &upload_id)
+                .map(|status| V4Response::Status {
+                    upload_id: status.upload_id,
+                    missing_chunks: status.missing_chunks,
+                    receipt: status.receipt,
+                }),
+        ),
+        V4Payload::Finalize { upload_id } => map_resumable(
+            email,
+            deps,
+            deps.resumable
+                .finalize(email, &upload_id, &deps.state, deps.ingest.as_ref())
+                .map(|receipt| V4Response::Finalized { receipt }),
+        ),
+        V4Payload::NativeQuery {
+            params,
+            use_test_db,
+        } => handle_native_query(params, use_test_db, deps),
+    }
+}
 
+fn map_resumable(
+    email: &str,
+    deps: &Deps,
+    result: Result<V4Response, crate::resumable::ResumableError>,
+) -> V4Response {
     match result {
         Ok(response) => response,
         Err(error) => {
-            log_user(deps, email, &format!("v2 operation failed: {error}"));
-            v2_err(error.kind(), error.to_string(), error.missing_chunks())
+            log_user(deps, email, &format!("resumable operation failed: {error}"));
+            v4_err(error.kind(), error.to_string(), error.missing_chunks())
         }
     }
 }
 
-fn v2_err(kind: V2ErrorKind, message: impl Into<String>, missing_chunks: Vec<u32>) -> V2Response {
-    V2Response::Err {
+fn handle_native_query(params: QueryParams, use_test_db: bool, deps: &Deps) -> V4Response {
+    match deps.native_query.run(
+        &params,
+        deps.max_query_records,
+        deps.max_native_rows,
+        use_test_db,
+    ) {
+        Ok(query) => V4Response::NativeQueryResult {
+            query: map_native_query(query),
+        },
+        Err(error) => {
+            let kind = match error {
+                NativeQueryError::Empty
+                | NativeQueryError::Unsupported(_)
+                | NativeQueryError::BadRequest(_) => V4ErrorKind::BadRequest,
+                NativeQueryError::Backend(_) => V4ErrorKind::Internal,
+            };
+            v4_err(kind, error.to_string(), Vec::new())
+        }
+    }
+}
+
+fn map_native_query(query: NativeQueryResult) -> V4NativeQueryResult {
+    V4NativeQueryResult {
+        devices: query
+            .devices
+            .into_iter()
+            .map(|device| V4NativeDevice {
+                bdaddr: device.bdaddr,
+                tables: device
+                    .tables
+                    .into_iter()
+                    .map(|(name, table)| {
+                        (
+                            name,
+                            V4NativeTable {
+                                columns: table.columns,
+                                rows: table
+                                    .rows
+                                    .into_iter()
+                                    .map(|row| row.into_iter().map(map_db_value).collect())
+                                    .collect(),
+                                truncated: table.truncated,
+                            },
+                        )
+                    })
+                    .collect(),
+            })
+            .collect(),
+        total_rows: query.total_rows,
+        row_limit: query.row_limit,
+        truncated: query.truncated,
+    }
+}
+
+fn map_db_value(value: DbValue) -> V4DbValue {
+    let mut mapped = V4DbValue {
+        kind: V4DbValueKind::Null,
+        bytes: None,
+        signed: None,
+        unsigned: None,
+        float: None,
+        date: None,
+        time: None,
+    };
+    match value {
+        DbValue::Null => {}
+        DbValue::Bytes(value) => {
+            mapped.kind = V4DbValueKind::Bytes;
+            mapped.bytes = Some(value.into());
+        }
+        DbValue::Signed(value) => {
+            mapped.kind = V4DbValueKind::Signed;
+            mapped.signed = Some(value);
+        }
+        DbValue::Unsigned(value) => {
+            mapped.kind = V4DbValueKind::Unsigned;
+            mapped.unsigned = Some(value.to_string());
+        }
+        DbValue::Float(value) => {
+            mapped.kind = V4DbValueKind::Float;
+            mapped.float = Some(value);
+        }
+        DbValue::Date {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            micros,
+        } => {
+            mapped.kind = V4DbValueKind::Date;
+            mapped.date = Some(V4Date {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                micros,
+            });
+        }
+        DbValue::Time {
+            negative,
+            days,
+            hours,
+            minutes,
+            seconds,
+            micros,
+        } => {
+            mapped.kind = V4DbValueKind::Time;
+            mapped.time = Some(V4Time {
+                negative,
+                days,
+                hours,
+                minutes,
+                seconds,
+                micros,
+            });
+        }
+    }
+    mapped
+}
+
+fn v4_err(kind: V4ErrorKind, message: impl Into<String>, missing_chunks: Vec<u32>) -> V4Response {
+    V4Response::Err {
         kind,
         message: message.into(),
         missing_chunks,
     }
 }
 
-/// Dispatch a successfully-decoded envelope payload to the right handler.
-/// `email` is the result of OAuth validation — by the time we get here we
-/// know the caller is a real authenticated user.
-pub fn dispatch(email: &str, use_test_db: bool, payload: Payload, deps: &Deps) -> Response {
-    match payload {
-        Payload::Upload { btides_json } => handle_upload(email, use_test_db, btides_json, deps),
-        Payload::CheckHash { hash } => handle_check_hash(email, hash, deps),
-        Payload::Query { params } => handle_query(email, use_test_db, params, deps),
-    }
-}
-
-fn handle_check_hash(email: &str, hash: String, deps: &Deps) -> Response {
-    let _ = email; // logged at the HTTP layer
+fn handle_check_hash(hash: String, deps: &Deps) -> V4Response {
     if deps.state.has_hash(&hash) {
-        Response::Err {
-            kind: ErrorKind::DuplicateUpload,
-            message:
-                "A file with this exact content already exists on the server. No need to upload."
-                    .into(),
-        }
+        v4_err(
+            V4ErrorKind::DuplicateUpload,
+            "A file with this exact content already exists on the server. No need to upload.",
+            Vec::new(),
+        )
     } else {
-        Response::Ok {
+        V4Response::Ok {
             message: "File does not yet exist on server.".into(),
         }
     }
 }
 
-fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &Deps) -> Response {
+fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &Deps) -> V4Response {
     // 1) Body size cap (matches Python g_max_file_size).
     if btides_json.len() > MAX_UPLOAD_BYTES {
-        return err(ErrorKind::BadRequest, "File size too big.");
+        return v4_err(
+            V4ErrorKind::PayloadTooLarge,
+            "File size too big.",
+            Vec::new(),
+        );
     }
 
     // 2) Canonical SHA1 (matches Python's sort-keys hash).
     let sha1 = match canonical_sha1(&btides_json) {
         Ok(s) => s,
         Err(e) => {
-            return err(
-                ErrorKind::BadRequest,
+            return v4_err(
+                V4ErrorKind::BadRequest,
                 format!("Invalid JSON data could not be decoded: {e}"),
+                Vec::new(),
             )
         }
     };
@@ -183,9 +297,10 @@ fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &De
     // 3) Dedup against the on-disk pool index.
     if deps.state.has_hash(&sha1) {
         log_user(deps, email, &format!("{sha1}: duplicate upload, rejected"));
-        return err(
-            ErrorKind::DuplicateUpload,
+        return v4_err(
+            V4ErrorKind::DuplicateUpload,
             "A file with this exact content already exists on the server. No need to upload.",
+            Vec::new(),
         );
     }
 
@@ -195,9 +310,10 @@ fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &De
     let ts = current_timestamp();
     let out_path = deps.state.build_upload_path(&sha1, email, &ts);
     if let Err(e) = std::fs::write(&out_path, &btides_json) {
-        return err(
-            ErrorKind::Internal,
+        return v4_err(
+            V4ErrorKind::Internal,
             format!("Could not write upload to disk: {e}"),
+            Vec::new(),
         );
     }
 
@@ -210,9 +326,10 @@ fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &De
         // later. We still report Internal so the client knows the row didn't
         // hit the DB.
         log_user(deps, email, &format!("{sha1}: SQL ingest failed: {e}"));
-        return err(
-            ErrorKind::Internal,
+        return v4_err(
+            V4ErrorKind::Internal,
             format!("Saved upload but SQL ingest failed: {e}"),
+            Vec::new(),
         );
     }
 
@@ -222,31 +339,36 @@ fn handle_upload(email: &str, use_test_db: bool, btides_json: Vec<u8>, deps: &De
         email,
         &format!("{}: File saved successfully.", out_path.display()),
     );
-    Response::Ok {
+    V4Response::Ok {
         message: "File saved successfully.".into(),
     }
 }
 
-fn handle_query(email: &str, use_test_db: bool, params: QueryParams, deps: &Deps) -> Response {
+fn handle_query(email: &str, use_test_db: bool, params: QueryParams, deps: &Deps) -> V4Response {
     log_user(deps, email, &format!("Query: {params:?}"));
     match deps.query.run(&params, deps.max_query_records, use_test_db) {
         Ok(r) => {
             log_user(deps, email, &format!("{} records returned.", r.records));
-            Response::QueryResult {
+            V4Response::QueryResult {
                 records: r.records,
                 btides_json: r.btides_json,
             }
         }
-        Err(QueryError::Empty) => err(ErrorKind::EmptyResult, "Query yielded empty result."),
-        Err(QueryError::Backend(s)) => err(ErrorKind::Internal, format!("Query failed: {s}")),
-        Err(QueryError::Io(e)) => err(ErrorKind::Internal, format!("Query IO error: {e}")),
-    }
-}
-
-fn err(kind: ErrorKind, message: impl Into<String>) -> Response {
-    Response::Err {
-        kind,
-        message: message.into(),
+        Err(QueryError::Empty) => v4_err(
+            V4ErrorKind::EmptyResult,
+            "Query yielded empty result.",
+            Vec::new(),
+        ),
+        Err(QueryError::Backend(s)) => v4_err(
+            V4ErrorKind::Internal,
+            format!("Query failed: {s}"),
+            Vec::new(),
+        ),
+        Err(QueryError::Io(e)) => v4_err(
+            V4ErrorKind::Internal,
+            format!("Query IO error: {e}"),
+            Vec::new(),
+        ),
     }
 }
 
@@ -339,9 +461,9 @@ mod tests {
     #[test]
     fn check_hash_returns_ok_for_unknown_hash() {
         let (deps, _td) = make_deps();
-        let resp = handle_check_hash("u@e.com", "abc".into(), &deps);
+        let resp = handle_check_hash("abc".into(), &deps);
         match resp {
-            Response::Ok { message } => assert!(message.contains("does not yet exist")),
+            V4Response::Ok { message } => assert!(message.contains("does not yet exist")),
             _ => panic!("wrong variant"),
         }
     }
@@ -350,9 +472,9 @@ mod tests {
     fn check_hash_returns_duplicate_for_known_hash() {
         let (deps, _td) = make_deps();
         deps.state.record_hash("known-hash");
-        let resp = handle_check_hash("u@e.com", "known-hash".into(), &deps);
+        let resp = handle_check_hash("known-hash".into(), &deps);
         match resp {
-            Response::Err { kind, .. } => assert_eq!(kind, ErrorKind::DuplicateUpload),
+            V4Response::Err { kind, .. } => assert_eq!(kind, V4ErrorKind::DuplicateUpload),
             _ => panic!("wrong variant"),
         }
     }
@@ -363,7 +485,7 @@ mod tests {
         let payload = br#"[{"bdaddr":"AA:BB:CC:DD:EE:FF","bdaddr_rand":0}]"#.to_vec();
         let resp = handle_upload("alice@example.com", false, payload.clone(), &deps);
         match resp {
-            Response::Ok { message } => assert!(message.contains("saved successfully")),
+            V4Response::Ok { message } => assert!(message.contains("saved successfully")),
             other => panic!("wrong variant: {other:?}"),
         }
         let hash = canonical_sha1(&payload).unwrap();
@@ -385,8 +507,8 @@ mod tests {
         let huge = vec![b'a'; MAX_UPLOAD_BYTES + 1];
         let resp = handle_upload("alice@example.com", false, huge, &deps);
         match resp {
-            Response::Err { kind, message } => {
-                assert_eq!(kind, ErrorKind::BadRequest);
+            V4Response::Err { kind, message, .. } => {
+                assert_eq!(kind, V4ErrorKind::PayloadTooLarge);
                 assert!(message.contains("too big"));
             }
             _ => panic!("wrong variant"),
@@ -398,7 +520,7 @@ mod tests {
         let (deps, _td) = make_deps();
         let resp = handle_upload("alice@example.com", false, b"not json".to_vec(), &deps);
         match resp {
-            Response::Err { kind, .. } => assert_eq!(kind, ErrorKind::BadRequest),
+            V4Response::Err { kind, .. } => assert_eq!(kind, V4ErrorKind::BadRequest),
             _ => panic!("wrong variant"),
         }
     }
@@ -412,7 +534,7 @@ mod tests {
         // Second should be DuplicateUpload.
         let resp = handle_upload("u@e.com", false, payload, &deps);
         match resp {
-            Response::Err { kind, .. } => assert_eq!(kind, ErrorKind::DuplicateUpload),
+            V4Response::Err { kind, .. } => assert_eq!(kind, V4ErrorKind::DuplicateUpload),
             _ => panic!("wrong variant"),
         }
     }
@@ -422,7 +544,7 @@ mod tests {
         let (deps, _td) = make_deps();
         let resp = handle_query("u@e.com", false, QueryParams::default(), &deps);
         match resp {
-            Response::QueryResult {
+            V4Response::QueryResult {
                 records,
                 btides_json,
             } => {
@@ -456,7 +578,7 @@ mod tests {
         deps.query = Arc::new(RecordingQuery(observed.clone()));
         deps.max_query_records = 37;
         let response = handle_query("u@e.com", false, QueryParams::default(), &deps);
-        assert!(matches!(response, Response::QueryResult { .. }));
+        assert!(matches!(response, V4Response::QueryResult { .. }));
         assert_eq!(observed.load(Ordering::SeqCst), 37);
     }
 
@@ -480,7 +602,7 @@ mod tests {
         };
         let resp = handle_query("u@e.com", false, QueryParams::default(), &deps);
         match resp {
-            Response::Err { kind, .. } => assert_eq!(kind, ErrorKind::EmptyResult),
+            V4Response::Err { kind, .. } => assert_eq!(kind, V4ErrorKind::EmptyResult),
             _ => panic!("wrong variant"),
         }
     }

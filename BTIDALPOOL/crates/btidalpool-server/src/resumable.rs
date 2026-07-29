@@ -1,4 +1,4 @@
-//! Durable, idempotent storage for BTPL v2 resumable uploads.
+//! Durable, idempotent storage for BTPL v4 resumable uploads.
 
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use btidalpool_proto::{canonical_sha1, exact_sha256, UploadReceipt, V2ErrorKind};
+use btidalpool_proto::{canonical_sha1, exact_sha256, UploadReceipt, V4ErrorKind};
 use parking_lot::Mutex;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use thiserror::Error;
@@ -66,14 +66,14 @@ pub enum ResumableError {
 }
 
 impl ResumableError {
-    pub fn kind(&self) -> V2ErrorKind {
+    pub fn kind(&self) -> V4ErrorKind {
         match self {
-            Self::BadRequest(_) => V2ErrorKind::BadRequest,
-            Self::NotFound(_) => V2ErrorKind::NotFound,
-            Self::Conflict(_) | Self::MissingChunks(_) => V2ErrorKind::Conflict,
-            Self::PayloadTooLarge(_) => V2ErrorKind::PayloadTooLarge,
-            Self::HashMismatch(_) => V2ErrorKind::HashMismatch,
-            Self::Ingest(_) | Self::Io(_) | Self::State(_) => V2ErrorKind::Internal,
+            Self::BadRequest(_) => V4ErrorKind::BadRequest,
+            Self::NotFound(_) => V4ErrorKind::NotFound,
+            Self::Conflict(_) | Self::MissingChunks(_) => V4ErrorKind::Conflict,
+            Self::PayloadTooLarge(_) => V4ErrorKind::PayloadTooLarge,
+            Self::HashMismatch(_) => V4ErrorKind::HashMismatch,
+            Self::Ingest(_) | Self::Io(_) | Self::State(_) => V4ErrorKind::Internal,
         }
     }
 
@@ -146,7 +146,7 @@ impl ResumableStore {
             }
         } else {
             let manifest = StoredManifest {
-                protocol_version: 2,
+                protocol_version: 4,
                 owner_email,
                 content_sha256,
                 total_size,
@@ -373,7 +373,10 @@ impl ResumableStore {
             return Err(ResumableError::NotFound("upload manifest not found".into()));
         }
         let manifest: StoredManifest = read_json(&path)?;
-        if manifest.protocol_version != 2 {
+        // Version 2 manifests were written by the removed endpoint. Accept
+        // them as durable state so upgrading to the v4-only listener never
+        // strands an in-progress upload or its receipt.
+        if manifest.protocol_version != 2 && manifest.protocol_version != 4 {
             return Err(ResumableError::State(
                 "unsupported stored manifest version".into(),
             ));

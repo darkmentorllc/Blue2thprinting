@@ -1,4 +1,4 @@
-//! Short-lived, stateless BTIDALPOOL session tokens for v2.
+//! Short-lived, stateless BTIDALPOOL session tokens for v4.
 //!
 //! A Google access token is validated once, then exchanged for an HMAC-SHA256
 //! signed token containing only the authenticated email and expiry. OAuth

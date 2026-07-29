@@ -7,17 +7,16 @@ The current host uses:
 - service: `BTIDALPOOL-rust.service`
 - versioned unit source: `BTIDALPOOL/systemd/BTIDALPOOL-rust.service`
 - listener: TLS on `0.0.0.0:3568`
-- v1 endpoint: `POST /`
-- v2 endpoint: `POST /v2`
-- v3 endpoint: `POST /v3`
+- protocol endpoint: `POST /v4` (the only Rust wire endpoint)
 - health endpoint: `GET /healthz`
 - legacy pool: `Analysis/pool_files_rust`
 - per-user logs: `Analysis/user_logs_rust`
 - access log: `Analysis/user_access_rust.log`
-- recommended v2 state: `Analysis/btidalpool_v2_state`
+- resumable state: `Analysis/btidalpool_v2_state` (historical directory name retained in place)
 
-The v2 directory is additive. Never replace or empty the legacy pool, logs,
-database, or v2 state during deployment.
+Never replace or empty the pool, logs, database, or resumable state during
+deployment. The original Python server is separate and must not be modified
+as part of Rust listener deployment.
 
 ## Build and test
 
@@ -55,18 +54,18 @@ generates an in-memory key; existing sessions then expire on restart.
 | `--max-ip-concurrent` | 50 | Simultaneous pre-auth abuse cap per IP |
 | `--max-ip-per-day` | 1000 | Rolling-day pre-auth abuse budget per IP |
 | `--max-expensive-work-units` | 4 | Shared weighted budget: legacy query=4, upload/finalize=2, native query=1 |
-| `--max-global-v1-uploads` | 2 | Process-wide v1 whole-file upload cap |
+| `--max-global-whole-uploads` | 2 | Process-wide v4 whole-file upload cap |
 | `--max-global-queries` | 1 | Process-wide query cap |
-| `--max-global-native-queries` | 4 | Process-wide native v3 query cap |
-| `--max-global-chunk-puts` | 4 | Process-wide v2 chunk-write cap |
-| `--max-global-finalizes` | 2 | Process-wide v2 finalize cap |
+| `--max-global-native-queries` | 4 | Process-wide native-query cap |
+| `--max-global-chunk-puts` | 4 | Process-wide resumable chunk-write cap |
+| `--max-global-finalizes` | 2 | Process-wide resumable finalize cap |
 | `--overload-retry-after-seconds` | 2 | `Retry-After` returned with overload 503 |
 | `--max-query-records` | 100 | Maximum records in one query response |
-| `--max-native-query-rows` | 50,000 | Maximum normalized rows in one v3 response |
+| `--max-native-query-rows` | 50,000 | Maximum normalized rows in one native-query response |
 | `--oauth-cache-ttl-seconds` | 300 | Positive Google validation cache TTL |
-| `--session-ttl-seconds` | 900 | Signed v2 session lifetime |
+| `--session-ttl-seconds` | 900 | Signed v4 session lifetime |
 | `--session-key-file` | none | Optional persistent HMAC key |
-| `--v2-state-dir` | `./btidalpool_v2_state` | Durable manifests/chunks/receipts |
+| `--resumable-state-dir` | `./btidalpool_resumable_state` | Durable manifests/chunks/receipts |
 
 The OAuth cache stores only SHA-256 token digests and validated identity
 results. It never stores plaintext OAuth tokens or refresh tokens.
@@ -75,12 +74,10 @@ Identity/IP quota rejection and host-capacity rejection are deliberately
 different:
 
 - HTTP 429 / `rate_limited`: the caller exceeded its own quota.
-- HTTP 503: global CPU/RAM capacity is currently occupied. V2 uses the typed
-  `server_busy` kind, as does v3; v1 retains its existing `rate_limited` body kind so
-  already-deployed v1 decoders remain compatible.
+- HTTP 503 / `server_busy`: global CPU/RAM capacity is currently occupied.
 
 Both include a positive integer `Retry-After` delta-seconds header. Clients
-should add jitter, preserve v2 resume state, and replay the same idempotent
+should add jitter, preserve resumable state, and replay the same idempotent
 operation after the delay.
 
 The production unit also applies `MemoryHigh=350M`, `MemoryMax=450M`, and
@@ -97,9 +94,9 @@ real 100-record Samsung query against `bt2` and exact 10 MiB uploads:
 | --- | ---: | --- |
 | Max-result query | 1 | 100 records in 12.1–13.5 s; about 217 MiB Python RSS / 250 MiB service cgroup |
 | Two max-result queries | unsafe | both exceeded 30 s; about 372 MiB cgroup, severe memory pressure |
-| v1 exact 10 MiB upload | 2 | about 245 MiB cgroup at concurrency 2; concurrency 4 stalled |
-| v2 exact 10 MiB finalize | 2 | about 303 MiB cgroup at concurrency 2; concurrency 3 entered memory pressure |
-| v2 status | 32 tested | about 1,162 requests/s, p99 121 ms, zero errors |
+| v4 exact 10 MiB whole upload | 2 | about 245 MiB cgroup at concurrency 2; concurrency 4 stalled |
+| v4 exact 10 MiB finalize | 2 | about 303 MiB cgroup at concurrency 2; concurrency 3 entered memory pressure |
+| v4 status | 32 tested | about 1,162 requests/s, p99 121 ms, zero errors |
 
 The direct query-engine cap comparison returned:
 
@@ -115,14 +112,14 @@ use the global one-query admission cap. A lower cap can improve individual
 latency and response size, but it does not make two concurrent queries safe
 on this host.
 
-### Native v3 query measurements
+### Native-query measurements
 
-The v3 query engine keeps the database schema unchanged, but batches address
+The v4 native-query engine keeps the database schema unchanged, but batches address
 selection and fetches selected rows once per table. Against the same live
 `bt2` data, a Samsung name query returned the full 100-device cap and 944
 normalized rows without truncation:
 
-| Parallel v3 queries | Throughput | p99 | Peak isolated server RSS |
+| Parallel native queries | Throughput | p99 | Peak isolated server RSS |
 | ---: | ---: | ---: | ---: |
 | 1 | 4.41 req/s | 227 ms | 23.8 MiB |
 | 2 | 5.05 req/s | 396 ms | 38.7 MiB |
@@ -154,18 +151,19 @@ record cap, is the correct overload control.
 4. Build and test off-host or in a non-live build directory.
 5. Upload the new binary beside the live binary as a temporary file. Verify
    its SHA-256, ownership, mode, and `--help` output.
-6. Add `--v2-state-dir` and `--session-key-file` to the unit. Run
+6. Add `--resumable-state-dir` and `--session-key-file` to the unit. Keep the
+   existing state path even when it has the historical `btidalpool_v2_state`
+   name. Run
    `systemd-analyze verify` before restarting.
 7. Rename the temporary binary over the live path atomically.
 8. Run `systemctl daemon-reload` and restart `BTIDALPOOL-rust.service`.
-9. Verify service status, PID/executable identity, port 3568, health, one
-   authenticated v1 request, a non-destructive v2 manifest/status flow, and
-   recent logs. Verify `/v3` with a signed test session and a read-only query.
+9. Verify service status, PID/executable identity, port 3568, health, a v4
+   session, non-destructive manifest/status flow, read-only native query, and
+   recent logs. Verify `POST /`, `/v2`, and `/v3` all return 404.
 
 Rollback restores the backed-up binary and unit atomically, reloads systemd,
-and restarts the same service. Do not remove the v2 state directory during
-rollback; it is harmless to the v1 binary and is required to resume after a
-future redeploy.
+and restarts the same service. Do not remove the resumable state directory
+during rollback.
 
 ## Verification
 

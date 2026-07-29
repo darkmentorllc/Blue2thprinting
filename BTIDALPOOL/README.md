@@ -14,28 +14,18 @@ ready.
 | Query client             | `Analysis/BTIDALPOOL_to_BTIDES.py`                       | `crates/btidalpool-client`        |
 | Google OAuth token issue | `Scripts/google-SSO-redirect-and-token-print-server.py`  | _unchanged — shared by both_      |
 
-The two Rust client tools are merged into a single `btidalpool-client` binary with
-`upload`, `query`, and `check-hash` subcommands; per the task brief it is
-fine that the merged Rust client CLI differs from the original two Python
-CLIs. `Analysis/Tell_Me_Everything.py` continues to import the original
-Python clients via the original `Analysis/`-level imports — it is unchanged
-by this branch.
+The repository still contains the earlier Rust client/load-generator code for
+protocol archaeology, but neither is part of the deployed v4-only listener or
+the Android application. Those historical tools target the removed Rust
+v1/v2/v3 endpoints and must not be used against the production Rust listener.
+`Analysis/Tell_Me_Everything.py` continues to import the original Python
+clients via the original `Analysis/`-level imports — it is unchanged by this
+branch.
 
-The `python/` directory here contains a *separate* set of Python shims
-(`BTIDES_to_BTIDALPOOL.py` + `BTIDALPOOL_to_BTIDES.py`) that wrap the new
-Rust binary while preserving the same `send_btides_to_btidalpool()` /
-`retrieve_btides_from_btidalpool()` function signatures the old Python
-clients exposed. They are *not* on Python's import path by default; a
-caller that wants to route through Rust instead of the Python clients
-points `PYTHONPATH` at this folder (or imports them explicitly), e.g.
-
-```sh
-PYTHONPATH=$(realpath BTIDALPOOL/python):$PYTHONPATH \
-  python3 Analysis/Tell_Me_Everything.py --query-BTIDALPOOL …
-```
-
-That way the choice between "old Python path" and "new Rust path" is per
-caller, with the Python path remaining the default.
+The `python/` directory contains historical shims for the removed Rust v1
+endpoint. They are retained only as source history and must not be added to
+`PYTHONPATH` for the v4-only listener. The original Python clients under
+`Analysis/` remain the supported path for the original non-Rust server.
 
 ## Why a rewrite
 
@@ -78,16 +68,14 @@ defines the on-the-wire encoding.** Both the server and the client depend
 on it, so a protocol change happens exactly once and the type checker forces
 the other side to be updated.
 
-## Wire protocols
+## Wire protocol
 
-The production Rust listener preserves whole-file BTPL v1 at `POST /`.
-Resumable BTPL v2 is additive at `POST /v2`; see
-[`V2_PROTOCOL.md`](V2_PROTOCOL.md) for the exact Android/client contract and
-native Rust queries are additive at `POST /v3`; see
-[`V3_PROTOCOL.md`](V3_PROTOCOL.md). Deployment, limits, and rollback are in
-[`OPERATIONS.md`](OPERATIONS.md).
-
-### V1
+The production Rust listener exposes only unified BTPL v4 at `POST /v4`.
+Whole-file upload/check/reconstructed query, resumable upload, and native
+query are commands within that single interface; see
+[`V4_PROTOCOL.md`](V4_PROTOCOL.md). `POST /`, `POST /v2`, and `POST /v3`
+return 404. The separate original Python server and its clients remain
+unchanged.
 
 Every request and every response is a single CBOR-encoded value wrapped in
 the framing format defined in [`crates/btidalpool-proto/src/codec.rs`](crates/btidalpool-proto/src/codec.rs):
@@ -96,7 +84,7 @@ the framing format defined in [`crates/btidalpool-proto/src/codec.rs`](crates/bt
 off  size  field
 ---  ----  -------------------------------------------------------------
   0     4  MAGIC = b"BTPL"
-  4     1  VERSION (currently 1)
+  4     1  VERSION = 4
   5     4  declared_uncompressed_len (u32, big-endian)
   9     N  zstd-compressed CBOR bytes
 ```
@@ -114,10 +102,9 @@ The header's declared length is *not* trusted to size allocations —
 it's only used as a consistency check after streaming decode completes
 (a lying header is rejected with `HeaderMismatch`).
 
-The HTTP `Content-Type` for both directions is `application/x-btidalpool-cbor-zstd`
-(see `btidalpool_proto::CONTENT_TYPE`). The server rejects POSTs with any
-other content type, so an old Python client trying to POST raw JSON to the
-new endpoint gets a clean error instead of a mysterious parse failure.
+The HTTP `Content-Type` for both directions is
+`application/x-btidalpool-cbor-zstd; version=4`. The Rust listener rejects
+other protocol versions and content types.
 
 ## Building + testing
 
@@ -126,19 +113,17 @@ This workspace is independent of the other two Rust workspaces in the repo
 
 ```sh
 cd BTIDALPOOL
-cargo build --release       # release binaries needed for the Python shim test
+cargo build --release
 cargo test                  # all Rust unit + integration tests
 cargo test --workspace --features sql-ingest
-python3 -m unittest python/test_shim_loopback.py    # Python shim end-to-end test
 ```
 
 The protocol crate is network-free; the server unit tests use mocked
 ingest / OAuth; only the integration tests in
-`crates/btidalpool-server/tests/loopback.rs` and the Python shim test
-spin up an in-process TLS listener (with a self-signed cert generated at
-test time). None of the tests need MySQL, a Google account, or internet
-access — that's enforced by the trait-based dependency injection at every
-layer.
+`crates/btidalpool-server/tests/loopback.rs` spins up an in-process TLS
+listener (with a self-signed cert generated at test time). None of the tests
+need MySQL, a Google account, or internet access — that's enforced by the
+trait-based dependency injection at every layer.
 
 For production: build with the `sql-ingest` feature so the server links
 against the existing `Analysis/rust/BTIDES-to-SQL` library and ingests
@@ -161,22 +146,13 @@ from BTIDALPOOL_to_BTIDES import retrieve_btides_from_btidalpool
 continue to resolve to the original Python implementations at
 `Analysis/BTIDES_to_BTIDALPOOL.py` / `Analysis/BTIDALPOOL_to_BTIDES.py`
 (which are still present), and those still talk to the original Python
-server. To route a particular invocation through the new Rust client +
-server instead, set `PYTHONPATH` to put `BTIDALPOOL/python/` ahead of
-`Analysis/` (see the example one-liner above). The new shims expose the
-same function signatures, so the rest of TME is happy either way.
+server. The historical Rust shims must not be placed ahead of `Analysis/` on
+`PYTHONPATH`; they target the removed Rust v1 endpoint.
 
-The shims read these environment variables when spawning the Rust binary:
+### Historical Rust-client TLS trust defaults
 
-| Var | Purpose | Default |
-| --- | ------- | ------- |
-| `BTIDALPOOL_SERVER_URL` | URL of the BTIDALPOOL HTTPS endpoint. | `https://btidalpool.ddns.net:3567` |
-| `BTIDALPOOL_INSECURE`  | If `1`, skip cert verification (`--insecure`; loopback testing only). | unset |
-| `BTIDALPOOL_BINARY`    | Override the binary lookup; useful for ops installs. | (auto-search) |
-
-### TLS trust defaults
-
-The `btidalpool-client` binary **bundles the BTIDALPOOL server's self-signed
+The non-deployed historical `btidalpool-client` binary **bundles the
+BTIDALPOOL server's self-signed
 certificate** (`Analysis/btidalpool.ddns.net.crt`, compiled in via
 `include_bytes!`) and pins to it by default — so it talks to the production
 server with no TLS flags, reproducing the old Python client's
@@ -208,11 +184,10 @@ retained even though it isn't exposed on the command line.
 | Server: dedup hash index + per-user logs + access log           | done |
 | Server: typed request dispatch (upload / check_hash / query)    | done |
 | Server: BTIDES-to-SQL ingest via the existing crate             | done (gated on `sql-ingest` feature) |
-| Server: legacy Tell_Me_Everything subprocess query (v1 compatibility) | done |
-| Server: batched native Rust/MySQL normalized query (v3)         | done |
-| Client: ureq + rustls; bundled-cert pin by default, `--system-roots` / `--insecure` overrides | done, pin verified by test |
-| Client: `upload` / `query` / `check-hash` subcommands           | done |
-| Python shims (preserve `Tell_Me_Everything.py` imports)         | done |
-| End-to-end loopback test (Rust: TLS + codec + handlers)         | 13 tests, all green |
-| End-to-end loopback test (Python shim → Rust binary → server)   | 2 tests, all green |
-| Wire-protocol unit tests (codec, types, hash)                   | 22 tests, all green |
+| Server: reconstructed-BTIDES query command via Tell_Me_Everything | done |
+| Server: batched native Rust/MySQL normalized query command       | done |
+| Server: single unified BTPL v4 endpoint                          | done |
+| Historical Rust client/load generator                           | retained in source only; not deployed and not compatible with the v4-only listener |
+| Original Python clients and server                              | unchanged |
+| End-to-end loopback test (Rust: TLS + codec + handlers)         | 6 tests, all green |
+| Wire-protocol unit tests (codec, types, hash)                   | 24 tests, all green |

@@ -1,7 +1,7 @@
-//! Native Rust query engine for BTPL v3.
+//! Native Rust query engine for BTPL v4.
 //!
-//! V1 must return reconstructed BTIDES JSON and therefore keeps the legacy
-//! Tell_Me_Everything subprocess. V3 is deliberately a normalized, lossless
+//! The legacy-query operation returns reconstructed BTIDES JSON through the
+//! Tell_Me_Everything subprocess. The native-query operation is a normalized, lossless
 //! view of the existing MySQL schema: select candidate devices in a handful
 //! of batched queries, then fetch all rows for those devices once per table.
 //! This removes the legacy N-devices × N-tables round-trip explosion without
@@ -14,7 +14,7 @@ use thiserror::Error;
 pub enum NativeQueryError {
     #[error("query engine produced no records")]
     Empty,
-    #[error("unsupported v3 filter: {0}")]
+    #[error("unsupported native-query filter: {0}")]
     Unsupported(String),
     #[error("bad query: {0}")]
     BadRequest(String),
@@ -229,13 +229,13 @@ mod mysql_engine {
                 .is_some_and(|v| !v.is_empty())
         {
             return Err(NativeQueryError::Unsupported(
-                "company_regex requires TME's external assigned-number and CLUES metadata; use v1"
+                "company_regex requires TME's external assigned-number and CLUES metadata; use legacy_query"
                     .into(),
             ));
         }
         if params.GPS_exclude_upper_left.is_some() || params.GPS_exclude_lower_right.is_some() {
             return Err(NativeQueryError::Unsupported(
-                "GPS exclusion boxes are currently available through v1".into(),
+                "GPS exclusion boxes are currently available through legacy_query".into(),
             ));
         }
         Ok(())
