@@ -2344,7 +2344,7 @@ fn collect_gps_ops(entry: &serde_json::Map<String, J>, b: &mut Buffers) {
         None => return,
     };
     let bdaddr = match entry.get("bdaddr").and_then(|v| v.as_str()) {
-        Some(s) => s.to_string(),
+        Some(s) => s.to_lowercase(),
         None => return,
     };
     let bdaddr_random = match obj_i64(entry, "bdaddr_rand") {
