@@ -56,7 +56,7 @@ from TME.TME_BTIDES_base import rebuild_SingleBDADDR_index
 def validate_bdaddr(value):
     if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', value):
         raise argparse.ArgumentTypeError("bdaddr must be in the form of a Bluetooth Device Address (e.g., AA:BB:CC:11:22:33).")
-    return value
+    return value.lower()
 
 
 # Main function to handle command line arguments
