@@ -15,6 +15,10 @@ USERNAME="$SUDO_USER"
 BASE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 echo "Username detected as '$USERNAME'."
 echo "Repo detected at '$BASE_PATH'."
+# The steps below use relative paths (./venv, cd scapy, cd ./Analysis/...), so
+# they only work when the CWD is the repo. Invoked by absolute path from
+# elsewhere, the venv lands in the caller's directory and the cd's fail.
+cd "$BASE_PATH" || exit -1
 
 if [[ ! -f "$BASE_PATH/Analysis/handle_venv.py" ]]; then
     echo "Could not find Analysis/handle_venv.py relative to this script. Run setup from inside a Blue2thprinting checkout."
@@ -49,9 +53,28 @@ echo ""
 echo "====================================================================="
 echo "Installing Rust toolchain (needed to build Analysis/BTIDES_Schema/rust/ workspace)."
 echo "====================================================================="
+# Gate on the cargo VERSION, not on cargo merely being present. A cargo left
+# over from an older rustup or an older brew formula satisfies a bare
+# `command -v cargo` test but is rejected by the >= 1.79 requirement below, so
+# the install would be skipped and both builds at the end would fail.
+RUST_MIN=1.79   # jsonschema 0.30 sets rust-version = 1.79
+CARGO_VER=""
+# Sets CARGO_VER. Returns success when cargo is absent, unparseable, or older
+# than $RUST_MIN -- i.e. when the toolchain still needs installing.
+cargo_too_old () {
+    local major minor min_major min_minor
+    CARGO_VER="$(sudo -u "$USERNAME" bash -lc 'cargo --version' 2>/dev/null | awk '{print $2}')"
+    [[ "$CARGO_VER" =~ ^([0-9]+)\.([0-9]+) ]] || return 0
+    major="${BASH_REMATCH[1]}"; minor="${BASH_REMATCH[2]}"
+    min_major="${RUST_MIN%%.*}"; min_minor="${RUST_MIN##*.}"
+    (( major > min_major )) && return 1
+    (( major < min_major )) && return 0
+    (( minor < min_minor ))
+}
 # Install as the invoking user — brew refuses to run as root.
-if ! sudo -u "$USERNAME" bash -lc 'command -v cargo' >/dev/null 2>&1; then
-    sudo -u "$USERNAME" brew install rust
+if cargo_too_old; then
+    echo "Installing rust (cargo ${CARGO_VER:-not found} is below $RUST_MIN)."
+    sudo -u "$USERNAME" brew install rust || sudo -u "$USERNAME" brew upgrade rust
 fi
 # Re-resolve cargo for the current (root) shell so the build step below can find it.
 USER_HOME="$(eval echo ~"$USERNAME")"
@@ -60,7 +83,13 @@ if [[ -z "$CARGO_BIN" ]]; then
     echo "Rust toolchain install failed — 'cargo' is not on \$PATH for $USERNAME."
     exit -1
 fi
-echo "Using cargo: $CARGO_BIN"
+if cargo_too_old; then
+    echo "cargo ${CARGO_VER:-(unknown version)} at $CARGO_BIN is older than $RUST_MIN, which the Rust workspaces require."
+    echo "An older cargo is probably still ahead of brew's on \$PATH for $USERNAME."
+    echo "Fix with: sudo -u $USERNAME brew upgrade rust   (or remove the stale ~/.cargo/bin/cargo)"
+    exit -1
+fi
+echo "Using cargo: $CARGO_BIN ($CARGO_VER)"
 
 python3 -m venv ./venv
 source ./venv/bin/activate
@@ -149,6 +178,12 @@ echo "  * Analysis/rust/ — Blue2thprinting-specific tools"
 echo "      (wigle-to-BTIDES, import-all-BTIDES)"
 echo "Release builds, may take a minute or two."
 echo "================================================================================="
+# Hand the tree back before dropping privileges. Everything above ran as root
+# -- the submodule checkout, the venv, the pip installs -- so cargo running as
+# $USERNAME cannot create target/ yet. That failure would exit -1 below, i.e.
+# before the chown at the end of this script, leaving the checkout root-owned
+# and every retry (git pull, submodule update, this script) failing the same way.
+sudo chown -R "$USERNAME" "$BASE_PATH"
 sudo -u "$USERNAME" bash -lc "cd '$BASE_PATH/Analysis/BTIDES_Schema/rust' && cargo build --release"
 if [ $? -ne 0 ]; then
     echo "cargo build failed in Analysis/BTIDES_Schema/rust. Check the output above."
