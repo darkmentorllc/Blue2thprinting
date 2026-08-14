@@ -413,6 +413,34 @@ build_sniffle_receiver_rust() {
     #
     # On a Pi Zero W the first build takes ~6–12 min single-threaded.
     # Subsequent rebuilds are seconds.
+    #
+    # aarch64 (e.g. Pi Zero 2 W) CANNOT build this crate natively: the 64-bit
+    # rustc segfaults compiling it regardless of toolchain, flags, memory or
+    # swap — even `cargo check` crashes. This is a defect in the aarch64 rustc,
+    # not the source: the same source cross-compiles fine on x86_64. Skip the
+    # doomed native build here; the operator supplies a cross-built binary.
+    # The 32-bit Pi Zero W (armv6l) is unaffected and still builds below.
+    # See PI_ZERO_2W_RUST_BUILD.md for the failure analysis and the cross-build.
+    local arch
+    arch="$(uname -m)"
+    if [ "$arch" = "aarch64" ] || [ "$arch" = "arm64" ]; then
+        local dest="$BASE_PATH/Sniffle/sniffle_receiver_rust"
+        if [ -x "$dest" ]; then
+            echo "  aarch64 host detected; a prebuilt sniffle_receiver_rust is already"
+            echo "  present at Sniffle/sniffle_receiver_rust — keeping it, skipping the build."
+            return 0
+        fi
+        echo ""
+        echo "Blue2thprinting: aarch64 host ($arch) detected — SKIPPING the native cargo"
+        echo "build of sniffle_receiver_rust; the aarch64 rustc segfaults on this crate."
+        echo ""
+        echo "ACTION REQUIRED: cross-compile a static aarch64-musl binary on an x86_64"
+        echo "host and install it at Sniffle/sniffle_receiver_rust, or central_app_launcher.py"
+        echo "will not be able to spawn Sniffle sniffers."
+        echo "Instructions: $BASE_PATH/PI_ZERO_2W_RUST_BUILD.md"
+        echo ""
+        return 0
+    fi
     cd "$BASE_PATH/Sniffle/sniffle_receiver_rust_src"
     # Cargo.lock written by a newer cargo would be rejected by Debian's
     # apt-installed cargo (1.65 on Bookworm); start fresh and let it
