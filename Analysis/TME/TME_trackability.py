@@ -258,7 +258,38 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
                 qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 TME.TME_glob.privacy_report_no_results_found = False
 
-    # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
+    # Apple Continuity / Find My carryover-capable messages (MSD, Company ID 76).
+    # These sub-messages carry a per-unit counter / IV / token that can persist
+    # across a BLE random-address rotation (Martin, "Handoff All Your Privacy";
+    # Celosia, "Discontinued Privacy"), so their presence is a device-tracking
+    # signal. (The AirDrop/Nearby hash -> phone-number brute-force is a separate
+    # offline cross-record analysis and is intentionally not attempted here.)
+    continuity_carryover = {0x05: "AirDrop", 0x0c: "Handoff", 0x0f: "Nearby Action", 0x10: "Nearby Info", 0x12: "Find My"}
+    if(bdaddr_random is not None):
+        cont_vals = (bdaddr_random, bdaddr)
+        cont_query = "SELECT DISTINCT manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_BT_CID = 76 AND bdaddr_random = %s AND bdaddr = %s"
+    else:
+        cont_vals = (bdaddr,)
+        cont_query = "SELECT DISTINCT manufacturer_specific_data FROM LE_bdaddr_to_MSD WHERE device_BT_CID = 76 AND bdaddr = %s"
+    continuity_types_seen = set()
+    for (cont_msd,) in execute_query(cont_query, cont_vals):
+        if(not cont_msd):
+            continue
+        try:
+            cont_bytes = bytes.fromhex(cont_msd)
+        except ValueError:
+            continue
+        cont_idx = 0
+        while(cont_idx + 1 < len(cont_bytes)):
+            sub_type = cont_bytes[cont_idx]
+            sub_len = cont_bytes[cont_idx + 1]
+            if(sub_type in continuity_carryover):
+                continuity_types_seen.add(sub_type)
+            cont_idx += 2 + sub_len
+    for sub_type in sorted(continuity_types_seen):
+        print_unique_ID_header_if_needed()
+        qprint(f"{i3}* This device advertises an Apple Continuity \"{continuity_carryover[sub_type]}\" message (type 0x{sub_type:02x}) in its Manufacturer-Specific Data. Continuity messages of this kind carry a per-unit counter/IV/token that can persist across a BLE random-address rotation, so the device can be re-linked to its previous address(es) despite address randomization.")
+        TME.TME_glob.privacy_report_no_results_found = False
 
     #================#
     # NamePrint data #
