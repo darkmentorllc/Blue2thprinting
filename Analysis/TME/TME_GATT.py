@@ -104,13 +104,13 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
         color_str = f"{indent}PPCP decodes as: " + Fore.BLUE + Style.BRIGHT + f"Interval_Min:0x{Interval_Min:04x}, Interval_Max:0x{Interval_Max:04x}, Latency:0x{Latency:04x}, Timeout:0x{Timeout:04x}" + Style.RESET_ALL
         qprint(color_str)
 
-    elif(UUID == "2a04"): # Central Address Resolution
+    elif(UUID == "2aa6"): # Central Address Resolution
         addr_res_support = struct.unpack('<b', bytes)
         addr_res_support = "True" if addr_res_support == (1,) else "False"
         color_str = f"{indent}Central Address Resolution decodes as: " + Fore.BLUE + Style.BRIGHT + f"Address Resolution Supported = {addr_res_support}" + Style.RESET_ALL
         qprint(color_str)
 
-    elif(UUID == "2a04"): # System ID
+    elif(UUID == "2a23"): # System ID
         big_endian_OUI = f"{bytes[0]:02X}:{bytes[1]:02X}:{bytes[2]:02X}"
         if(big_endian_OUI != "00:00:00"): # Don't want to show likely-false-positives as "Xerox"
             be_company_name = lookup_company_name_by_OUI(big_endian_OUI)
