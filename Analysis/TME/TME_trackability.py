@@ -257,6 +257,18 @@ def print_UniqueIDReport(bdaddr, bdaddr_random):
                 print_unique_ID_header_if_needed()
                 qprint(f"{i3}* This device indicates that it contains GATT Characteristic 0x2bff (\"UID (Unique ID) for Medical Devices\"). Because this UID is by definition meant to be device-unique, and not change over time, this could be used to track the device.")
                 TME.TME_glob.privacy_report_no_results_found = False
+            if(check_if_UUIDs_match(UUID_db, "2a23")):
+                print_unique_ID_header_if_needed()
+                qprint(f"{i3}* This device exposes GATT Characteristic 0x2a23 (\"System ID\"). Per the Device Information Service spec the System ID is commonly derived from the device's EUI-48 (its public MAC address), so it can carry a permanent per-unit identifier readable across BLE address randomization.")
+                TME.TME_glob.privacy_report_no_results_found = False
+            if(check_if_UUIDs_match(UUID_db, "2b2a")):
+                print_unique_ID_header_if_needed()
+                qprint(f"{i3}* This device exposes GATT Characteristic 0x2b2a (\"Database Hash\"), a single hash over its entire GATT attribute table: a compact, stable fingerprint of its exact service/characteristic layout that does not change as the address rotates.")
+                TME.TME_glob.privacy_report_no_results_found = False
+            if(check_if_UUIDs_match(UUID_db, "2a4b")):
+                print_unique_ID_header_if_needed()
+                qprint(f"{i3}* This device exposes GATT Characteristic 0x2a4b (\"Report Map\"), the HID report descriptor: a detailed, model-specific blob that is a stable fingerprint of the HID product/firmware across address rotation.")
+                TME.TME_glob.privacy_report_no_results_found = False
 
     # TODO: Apple FindMy (designed to be tracked) and/or Continuity (leaked phone number if they didn't fix that yet) evidence?
 
