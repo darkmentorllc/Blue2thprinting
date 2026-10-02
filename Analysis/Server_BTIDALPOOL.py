@@ -41,6 +41,10 @@ g_max_file_size = 10
 g_max_connections_per_day = 100
 g_max_simultaneous_connections = 10
 g_max_returned_records_per_query = 100
+g_query_timeout_seconds = 120
+# A TME subprocess can use over 300 MiB. Keep its execution and response
+# serialization exclusive even when several HTTP clients connect at once.
+g_query_capacity = threading.BoundedSemaphore(1)
 
 # Global dictionary to store unique file hashes for avoiding duplicate uploads
 g_unique_files = {}
@@ -126,14 +130,22 @@ def run_btides_to_sql(filename, use_test_db=False):
 
 # args_array should be individual arguments to pass to the script
 def run_TellMeEverything(self, username, args_array, output_filename):
-    # Run the TellMeEverything.py script in a new thread.
-    def target():
-        # FIXME: update to refactor to not require subprocess.run (or to use a separate script)
-        args_list = ["python3", "Tell_Me_Everything.py"] + args_array + ["--output", output_filename]
-        subprocess.run(args_list)
-    thread = threading.Thread(target=target)
-    thread.start()  # Starts the thread and returns immediately.
-    thread.join()   # Blocks until the thread has finished executing.
+    # The HTTP handler is already threaded. A bounded subprocess call ensures
+    # a disconnected or slow client cannot leave an unbounded TME worker.
+    args_list = ["python3", "Tell_Me_Everything.py"] + args_array + ["--output", output_filename]
+    try:
+        result = subprocess.run(args_list, timeout=g_query_timeout_seconds)
+    except subprocess.TimeoutExpired:
+        send_back_response(self, username, 504, 'text/plain', b'Query timed out.')
+        return 1
+    except OSError as error:
+        print(f"Query process could not start: {error}")
+        send_back_response(self, username, 500, 'text/plain', b'Query process could not start.')
+        return 1
+    if result.returncode != 0:
+        print(f"Query process exited with code {result.returncode}")
+        send_back_response(self, username, 500, 'text/plain', b'Query process failed.')
+        return 1
 
     try:
         with open(output_filename, 'r') as f:
@@ -252,6 +264,16 @@ def handle_btides_data(self, username, json_content, use_test_db=False):
 
 
 def handle_query(self, username, query_object, use_test_db=False):
+    if not g_query_capacity.acquire(blocking=False):
+        send_back_response(self, username, 503, 'text/plain', b'Query capacity busy. Retry later.')
+        return
+    try:
+        _handle_query_under_capacity(self, username, query_object, use_test_db=use_test_db)
+    finally:
+        g_query_capacity.release()
+
+
+def _handle_query_under_capacity(self, username, query_object, use_test_db=False):
     print(query_object)
 
     # Arguments we always want to pass to TellMeEverything.py
@@ -281,17 +303,16 @@ def handle_query(self, username, query_object, use_test_db=False):
     with open(user_log_filename, 'a') as user_log_file:
         user_log_file.write(f"{current_time}: {username}: Query: {query_object}\n")
 
-    json_content = run_TellMeEverything(self, username, args_array, output_filename)
-    if(json_content == 1): # Error
-        # Error message should have already been sent to the client in run_TellMeEverything
-        return
-    else:
+    try:
+        json_content = run_TellMeEverything(self, username, args_array, output_filename)
+        if(json_content == 1): # Error
+            # Error message should have already been sent to the client in run_TellMeEverything
+            return
         send_back_response(self, username, 200, 'application/json', json.dumps(json_content).encode('utf-8'))
         log_user_result(username, self.client_address[0], f"{len(json_content)} records returned.")
-
-    # Delete the output file after sending the response
-    if os.path.exists(output_filename):
-        os.remove(output_filename)
+    finally:
+        # TME may have written a partial file before timing out or failing.
+        Path(output_filename).unlink(missing_ok=True)
 
 
 log_file = open('./user_access.log', 'a')

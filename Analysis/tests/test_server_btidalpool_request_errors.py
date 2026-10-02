@@ -9,6 +9,8 @@ import ast
 import io
 import json
 from pathlib import Path
+import subprocess
+import threading
 from types import SimpleNamespace
 
 import pytest
@@ -99,3 +101,55 @@ def test_response_has_content_length():
     respond(handler, "unauthenticated", 400, "text/plain", b"error")
     assert ("Content-Length", "5") in events
     assert handler.wfile.getvalue() == b"error"
+
+
+def test_query_capacity_rejects_overlap_without_starting_tme():
+    responses = []
+    capacity = threading.BoundedSemaphore(1)
+    assert capacity.acquire(blocking=False)
+    namespace = {
+        "g_query_capacity": capacity,
+        "send_back_response": lambda _handler, *args: responses.append(args),
+        "_handle_query_under_capacity": lambda *_args, **_kwargs:
+            pytest.fail("overlapping TME process started"),
+    }
+    handle_query = _load_function("handle_query", namespace)
+    handle_query(object(), "student@example.com", {"bdaddr": "00:00:00:00:00:44"})
+    assert responses == [(
+        "student@example.com", 503, "text/plain",
+        b"Query capacity busy. Retry later.")]
+    capacity.release()
+
+
+def test_query_capacity_released_after_worker_error():
+    capacity = threading.BoundedSemaphore(1)
+
+    def fail(*_args, **_kwargs):
+        raise ValueError("worker failed")
+
+    namespace = {
+        "g_query_capacity": capacity,
+        "_handle_query_under_capacity": fail,
+    }
+    handle_query = _load_function("handle_query", namespace)
+    with pytest.raises(ValueError, match="worker failed"):
+        handle_query(object(), "student@example.com", {})
+    assert capacity.acquire(blocking=False)
+    capacity.release()
+
+
+def test_tme_timeout_returns_gateway_timeout():
+    responses = []
+
+    def time_out(_args, timeout):
+        assert timeout == 120
+        raise subprocess.TimeoutExpired(["python3"], timeout)
+
+    namespace = {
+        "subprocess": SimpleNamespace(run=time_out, TimeoutExpired=subprocess.TimeoutExpired),
+        "g_query_timeout_seconds": 120,
+        "send_back_response": lambda _handler, *args: responses.append(args),
+    }
+    run_tme = _load_function("run_TellMeEverything", namespace)
+    assert run_tme(object(), "student@example.com", ["--bdaddr", "00:00:00:00:00:44"], "/tmp/out") == 1
+    assert responses == [("student@example.com", 504, "text/plain", b"Query timed out.")]
