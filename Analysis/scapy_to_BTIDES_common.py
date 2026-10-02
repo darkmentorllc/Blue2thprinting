@@ -598,7 +598,7 @@ def export_ATT_Error_Response(connect_ind_obj, packet, direction=None):
             io_array = [ {"io_type": type_ATT_ERROR_RSP, "value_hex_str": value_hex_str} ]
             io_array = ff_GATT_IO(io_array)
             if("char_value" not in char_obj.keys()):
-                char_obj["char_value"] = {"value_handle": attribute_handle_in_error, "value_uuid": char_obj["value_uuid"], "io_array": io_array }
+                char_obj["char_value"] = {"handle": attribute_handle_in_error, "value_uuid": char_obj["value_uuid"], "io_array": io_array }
             else:
                 if("io_array" not in char_obj["char_value"].keys()):
                     char_obj["char_value"]["io_array"] = io_array
