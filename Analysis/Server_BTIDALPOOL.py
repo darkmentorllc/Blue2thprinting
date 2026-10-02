@@ -184,6 +184,7 @@ def send_back_response(self, username, type, header, text):
         log_user_result(username, self.client_address[0], f"{type}: {text}")
     self.send_response(type)
     self.send_header('Content-Type', header)
+    self.send_header('Content-Length', str(len(text)))
     self.end_headers()
     self.wfile.write(text)
     self.wfile.flush()  # Ensure the response is sent
@@ -359,15 +360,29 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         client_ip = self.client_address[0]
+        username = 'unauthenticated'
 
         # Get the content length
-        content_length = int(self.headers['Content-Length'])
+        try:
+            content_length = int(self.headers['Content-Length'])
+            if content_length < 0:
+                raise ValueError('negative Content-Length')
+        except (KeyError, TypeError, ValueError):
+            send_back_response(self, username, 400, 'text/plain', b'Missing or invalid Content-Length.')
+            return
 
         # Read the POST data
         post_raw_data = self.rfile.read(content_length)
 
         # Extract fields to determine whether this is a send of BTIDES data, or a query requesting BTIDES data
-        post_json_data = json.loads(post_raw_data)
+        try:
+            post_json_data = json.loads(post_raw_data)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data.')
+            return
+        if not isinstance(post_json_data, dict):
+            send_back_response(self, username, 400, 'text/plain', b'JSON object required.')
+            return
 
         # Initial sanity checks
         if 'token' not in post_json_data or 'refresh_token' not in post_json_data:
@@ -378,10 +393,11 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # Validate OAuth token
-        username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
-        if not username:
+        authenticated_username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
+        if not authenticated_username:
             send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
             return
+        username = authenticated_username
 
         # Check rate limits
         if not rate_limit_checks(client_ip):
