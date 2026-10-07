@@ -331,6 +331,15 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
             ") AS t "
             "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
         )
+    # BDADDR columns span VARCHAR and VARBINARY tables with different
+    # collations. MariaDB rejects the UNION before the outer REGEXP runs if
+    # even an empty branch has an incompatible collation. Normalize every
+    # branch explicitly so broad course searches work across the full schema.
+    bdaddr_query = re.sub(
+        r'SELECT (?:CONVERT\(bdaddr USING utf8mb4\)|bdaddr) FROM',
+        'SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM',
+        bdaddr_query,
+    )
     bdaddr_result = execute_query(bdaddr_query, values)
     for (bdaddr,) in bdaddr_result:
         bdaddr_hash[bdaddr] = 1

@@ -277,7 +277,7 @@ def _handle_query_under_capacity(self, username, query_object, use_test_db=False
     print(query_object)
 
     # Arguments we always want to pass to TellMeEverything.py
-    args_array = ["--max-records-output", str(g_max_returned_records_per_query), "--quiet-print"]
+    args_array = ["--max-records-output", str(g_max_returned_records_per_query), "--quiet-print", "--server-export"]
     if use_test_db:
         args_array.append("--use-test-db")
 

@@ -93,6 +93,7 @@ impl QueryEngine for SubprocessQueryEngine {
             "--max-records-output".into(),
             max_records.to_string(),
             "--quiet-print".into(),
+            "--server-export".into(),
         ];
         if use_test_db {
             args.push("--use-test-db".into());
@@ -165,7 +166,7 @@ fn tail_chars(s: &str, n: usize) -> String {
 /// compare this against the Python server's flag construction.
 ///
 /// Does NOT include the infrastructure flags (--max-records-output /
-/// --quiet-print / --use-test-db / --output) — those are identical between
+/// --quiet-print / --server-export / --use-test-db / --output) — those are identical between
 /// the two servers by construction and don't affect which records match.
 pub fn tme_query_args(params: &QueryParams) -> Vec<String> {
     let mut args = Vec::new();

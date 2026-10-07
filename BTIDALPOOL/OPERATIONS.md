@@ -88,6 +88,25 @@ limit is approached.
 
 ## 1 GiB host capacity measurements
 
+### Python listener query memory
+
+The separate `BTIDALPOOL.service` Python listener runs
+`Tell_Me_Everything.py` for legacy course queries. In October 2026 its
+workers were globally OOM-killed at roughly 300–325 MiB RSS on the 1 GiB
+host. A local single-address run peaked at 327 MiB. Instrumentation showed
+the CLUES catalog import alone raised resident memory from 40 to 293 MiB.
+
+The Python and Rust legacy query handlers now pass `--server-export` to TME.
+That mode skips the catalog for address, name, UUID, and BDADDR regex
+queries, and loads a compact UUID/company index for company regex queries.
+It leaves interactive TME's full CLUES descriptions intact. On the local
+course VM, a single-address export used 54 MiB and an 89-device Apple
+company search used 166 MiB. Their BTIDES JSON matched ordinary TME output.
+The Python listener still admits only one query worker at a time; keep that
+cap on this host. These local measurements do not establish a production
+memory bound for every future database result, so check RSS and OOM counters
+after deployment before resuming bulk QA.
+
 Measurements on the production one-vCPU, approximately 1 GiB host used a
 real 100-record Samsung query against `bt2` and exact 10 MiB uploads:
 

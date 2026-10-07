@@ -119,17 +119,56 @@ def _load_clues_file(path, required):
             TME.TME_glob.clues_regexed[entry['UUID']] = entry
 
 
+def _iter_clues_shards(path):
+    """Read one CLUES shard at a time instead of joining all 16 in memory."""
+    if os.path.isfile(path):
+        paths = [path]
+    else:
+        base, extension = os.path.splitext(path)
+        paths = [f"{base}_{digit}{extension}" for digit in "0123456789abcdef"]
+    for shard in paths:
+        if not os.path.isfile(shard):
+            continue
+        with open(shard, encoding="utf-8") as file:
+            entries = json.load(file)
+        if isinstance(entries, list):
+            yield from entries
+
+
+def _load_clues_company_index(path, required):
+    """Keep only fields used by quiet BTIDALPOOL company searches.
+
+    The full Android CLUES corpus is around 150 MB on disk and expanded a
+    query worker by over 250 MiB. The search needs the UUID/company index;
+    small display fields are retained because TME still evaluates some
+    description helpers while building the BTIDES export.
+    """
+    if not clues_exists(path):
+        if required:
+            raise FileNotFoundError(path)
+        return
+    for entry in _iter_clues_shards(path):
+        compact = {key: entry[key] for key in
+                   ("UUID", "company", "UUID_name", "UUID_purpose", "regex")
+                   if key in entry}
+        compact['UUID'] = entry['UUID'].replace('-', '')
+        TME.TME_glob.clues[compact['UUID']] = compact
+        if "regex" in compact:
+            TME.TME_glob.clues_regexed[compact['UUID']] = compact
+
+
 # This is data in CLUES format
-def import_CLUES():
+def import_CLUES(company_index_only=False):
     """Load every CLUES tier — public, then private override per tier —
     in increasing priority order so higher-priority entries win
     overlapping UUIDs. See _CLUES_DATA_FILES above for the tier list.
     """
     global clues
     global clues_regexed
+    loader = _load_clues_company_index if company_index_only else _load_clues_file
     for public_path, private_path, required in _CLUES_DATA_FILES:
-        _load_clues_file(public_path, required=required)
-        _load_clues_file(private_path, required=False)
+        loader(public_path, required=required)
+        loader(private_path, required=False)
 
 
 # Kept as a no-op for backward compatibility with anything outside this

@@ -67,6 +67,7 @@ def main():
     printout_group = parser.add_argument_group('Print verbosity arguments')
     printout_group.add_argument('--verbose-print', action='store_true', required=False, help='Show explicit data-not-found output.')
     printout_group.add_argument('--quiet-print', action='store_true', required=False, help='Hide all print output (useful when you only want to use --output to export data).')
+    printout_group.add_argument('--server-export', action='store_true', help=argparse.SUPPRESS)
     printout_group.add_argument('--max-records-output', type=int, default=1000, required=False, help='This will limit the number of bdaddrs for which records which are printed out and exported via --output).')
     printout_group.add_argument('--hide-android-data', action='store_true', help='Pass this argument to not print out the BLEScope data about Android package names associated with vendor-specific GATT UUID128s')
 
@@ -125,6 +126,8 @@ def main():
     testing_group.add_argument('--use-test-db', action='store_true', required=False, help='This will store to / query from an alternate database, used for testing.')
 
     args = parser.parse_args()
+    if args.server_export and (not args.quiet_print or not args.output):
+        parser.error('--server-export requires --quiet-print and --output')
     out_filename = args.output
     if args.to_BTIDALPOOL and not out_filename:
         # Create a default temporary filename if people provide the --to-BTIDALPOOL flag without a --output filename
@@ -322,7 +325,14 @@ def main():
     import_private_metadata_v2()
 
     # Import CLUES
-    import_CLUES()
+    # BTIDALPOOL only needs the database rows in its BTIDES response. Loading
+    # the full CLUES corpus for every request adds over 250 MiB to a worker.
+    # Company searches still need a compact UUID/company index, while local
+    # interactive TME keeps its full descriptions.
+    if not args.server_export:
+        import_CLUES()
+    elif args.company_regex or args.NOT_company_regex:
+        import_CLUES(company_index_only=True)
     import_private_CLUES()
 
     # Import other JSON
