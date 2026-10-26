@@ -418,8 +418,13 @@ def main():
             vprint(f"{bdaddrs}")
 
     if(args.name_regex != None):
+        name_candidate_limit = args.max_records_output
+        if any((args.NOT_bdaddr, args.NOT_bdaddr_regex, args.NOT_name_regex,
+                args.NOT_company_regex, args.NOT_UUID_regex)):
+            name_candidate_limit *= 10
         for entry in args.name_regex:
-            bdaddrs_tmp = get_bdaddrs_by_name_regex(entry, args.bdaddr_type)
+            bdaddrs_tmp = get_bdaddrs_by_name_regex(
+                entry, args.bdaddr_type, max_candidates=name_candidate_limit)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
             print(f"{len(bdaddrs)} bdaddrs after --name-regex processing")
@@ -522,7 +527,8 @@ def main():
 
         if(args.NOT_name_regex != None):
             for entry in args.NOT_name_regex:
-                bdaddrs_to_remove.update(get_bdaddrs_by_name_regex(entry, args.bdaddr_type))
+                bdaddrs_to_remove.update(get_bdaddrs_by_name_regex(
+                    entry, args.bdaddr_type, candidates=bdaddrs))
 
         if(args.NOT_company_regex != None):
             for entry in args.NOT_company_regex:

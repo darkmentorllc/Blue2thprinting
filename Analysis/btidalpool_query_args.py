@@ -35,52 +35,40 @@ implementations agree.
 """
 
 
+def _repeated_values(query_object, key):
+    """Accept legacy scalar strings as one filter, never as characters."""
+    if key not in query_object:
+        return ()
+    value = query_object[key]
+    if isinstance(value, str):
+        return (value,)
+    if isinstance(value, list) and all(isinstance(item, str) for item in value):
+        return value
+    raise ValueError(f"{key} must be a string or an array of strings")
+
+
 def build_query_args(query_object):
     """Return the list of TME query-filter CLI flags for `query_object`."""
+    if not isinstance(query_object, dict):
+        raise ValueError("query must be a JSON object")
     args = []
     if "bdaddr" in query_object:
         args.append("--bdaddr")
         args.append(f"{query_object['bdaddr']}")
-    if "NOT_bdaddr" in query_object:
-        for entry in query_object['NOT_bdaddr']:
-            args.append("--NOT-bdaddr")
-            args.append(f"{entry}")
-    if "bdaddr_regex" in query_object:
-        for entry in query_object['bdaddr_regex']:
-            args.append("--bdaddr-regex")
-            args.append(f"{entry}")
-    if "NOT_bdaddr_regex" in query_object:
-        for entry in query_object['NOT_bdaddr_regex']:
-            args.append("--NOT-bdaddr-regex")
-            args.append(f"{entry}")
-    if "name_regex" in query_object:
-        for entry in query_object['name_regex']:
-            args.append("--name-regex")
-            args.append(f"{entry}")
-    if "NOT_name_regex" in query_object:
-        for entry in query_object['NOT_name_regex']:
-            args.append("--NOT-name-regex")
-            args.append(f"{entry}")
-    if "company_regex" in query_object:
-        for entry in query_object['company_regex']:
-            args.append("--company-regex")
-            args.append(f"{entry}")
-    if "NOT_company_regex" in query_object:
-        for entry in query_object['NOT_company_regex']:
-            args.append("--NOT-company-regex")
-            args.append(f"{entry}")
-    if "UUID_regex" in query_object:
-        for entry in query_object['UUID_regex']:
-            args.append("--UUID-regex")
-            args.append(f"{entry}")
-    if "NOT_UUID_regex" in query_object:
-        for entry in query_object['NOT_UUID_regex']:
-            args.append("--NOT-UUID-regex")
-            args.append(f"{entry}")
-    if "MSD_regex" in query_object:
-        for entry in query_object['MSD_regex']:
-            args.append("--MSD-regex")
-            args.append(f"{entry}")
+    for key, flag in (
+        ("NOT_bdaddr", "--NOT-bdaddr"),
+        ("bdaddr_regex", "--bdaddr-regex"),
+        ("NOT_bdaddr_regex", "--NOT-bdaddr-regex"),
+        ("name_regex", "--name-regex"),
+        ("NOT_name_regex", "--NOT-name-regex"),
+        ("company_regex", "--company-regex"),
+        ("NOT_company_regex", "--NOT-company-regex"),
+        ("UUID_regex", "--UUID-regex"),
+        ("NOT_UUID_regex", "--NOT-UUID-regex"),
+        ("MSD_regex", "--MSD-regex"),
+    ):
+        for entry in _repeated_values(query_object, key):
+            args.extend((flag, entry))
     if "LL_VERSION_IND" in query_object:
         args.append("--LL_VERSION_IND")
         args.append(f"{query_object['LL_VERSION_IND']}")

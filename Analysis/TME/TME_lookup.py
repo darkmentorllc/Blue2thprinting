@@ -28,72 +28,72 @@ def device_has_LL_VERSION_IND_info(bdaddr, bdaddr_random):
 def device_has_LMP_VERSION_RES_info(bdaddr):
     return device_row_exists_by_bdaddr("LMP_VERSION_RES", bdaddr)
 
-def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
+def get_bdaddrs_by_name_regex(nameregex, bdaddr_random, max_candidates=None,
+                              candidates=None):
+    """Stream name rows and retain only the addresses a caller can use."""
     vprint(nameregex)
-    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
-    bdaddrs = []
-
-    # Regex matching done in Python (not MySQL) to tolerate non-UTF-8 byte sequences in stored names
     name_pattern = re.compile(nameregex)
+    bdaddr_hash = {}  # preserve first-seen order while de-duplicating
+    candidate_set = set(candidates) if candidates is not None else None
+    if candidate_set is not None:
+        max_candidates = (len(candidate_set) if max_candidates is None
+                          else min(max_candidates, len(candidate_set)))
+    if max_candidates is not None and max_candidates <= 0:
+        return bdaddr_hash.keys()
 
-    eir_query = "SELECT bdaddr, name_hex_str FROM EIR_bdaddr_to_name"
-    eir_result = execute_query(eir_query, ())
-    eir_matches = 0
-    for (bdaddr, name_hex_str) in eir_result:
-        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
-        if name_pattern.search(name):
-            bdaddrs.append((bdaddr,))
-            bdaddr_hash[bdaddr] = 1
-            eir_matches += 1
-    qprint(f"get_bdaddrs_by_name_regex: {eir_matches} results found in DB:EIR_bdaddr_to_name")
-    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
+    def collect(query, values, label, hex_encoded):
+        matched = 0
+        rows = execute_query_rows(query, values)
+        try:
+            for bdaddr, raw_name in rows:
+                if candidate_set is not None and bdaddr not in candidate_set:
+                    continue
+                try:
+                    name = (bytes.fromhex(raw_name).decode('utf-8', 'ignore')
+                            if hex_encoded else bytes(raw_name).decode('utf-8', 'ignore'))
+                except (TypeError, ValueError):
+                    continue  # A malformed name should not abort the search.
+                if name_pattern.search(name):
+                    bdaddr_hash[bdaddr] = 1
+                    matched += 1
+                    if max_candidates is not None and len(bdaddr_hash) >= max_candidates:
+                        break
+        finally:
+            close = getattr(rows, 'close', None)
+            if close is not None:
+                close()
+        qprint(f"get_bdaddrs_by_name_regex: {matched} matching names in DB:{label}")
+        return max_candidates is not None and len(bdaddr_hash) >= max_candidates
 
-    # Query for HCI_bdaddr_to_name table
-    hci_query = "SELECT bdaddr, name_hex_str FROM HCI_bdaddr_to_name"
-    hci_result = execute_query(hci_query, ())
-    hci_matches = 0
-    for (bdaddr, name_hex_str) in hci_result:
-        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
-        if name_pattern.search(name):
-            bdaddr_hash[bdaddr] = 1
-            hci_matches += 1
-    qprint(f"get_bdaddrs_by_name_regex: {hci_matches} results found in DB:HCI_bdaddr_to_name")
-    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
-
-    # Query for LE_bdaddr_to_name table
-    if(bdaddr_random is not None):
+    if collect("SELECT bdaddr, name_hex_str FROM EIR_bdaddr_to_name", (),
+               "EIR_bdaddr_to_name", True):
+        return bdaddr_hash.keys()
+    if collect("SELECT bdaddr, name_hex_str FROM HCI_bdaddr_to_name", (),
+               "HCI_bdaddr_to_name", True):
+        return bdaddr_hash.keys()
+    if bdaddr_random is not None:
         le_query = "SELECT bdaddr, name_hex_str FROM LE_bdaddr_to_name WHERE bdaddr_random = %s"
-        le_result = execute_query(le_query, (bdaddr_random,))
+        le_values = (bdaddr_random,)
     else:
         le_query = "SELECT bdaddr, name_hex_str FROM LE_bdaddr_to_name"
-        le_result = execute_query(le_query, ())
-    le_matches = 0
-    for (bdaddr, name_hex_str) in le_result:
-        name = bytes.fromhex(name_hex_str).decode('utf-8', errors='ignore')
-        if name_pattern.search(name):
-            bdaddr_hash[bdaddr] = 1
-            le_matches += 1
-    qprint(f"get_bdaddrs_by_name_regex: {le_matches} results found in DB:LE_bdaddr_to_name")
-    vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash = {bdaddr_hash}")
+        le_values = ()
+    if collect(le_query, le_values, "LE_bdaddr_to_name", True):
+        return bdaddr_hash.keys()
 
-    # Query GATT Characteristic values for Device Name (0x2a00) entries, and then checking regex in python instead of MySQL, because the byte values may not be directly translatable to UTF-8 within MySQL
-    if(bdaddr_random is not None):
-        values = (bdaddr_random, bdaddr_random)
-        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.bdaddr_random = %s AND cv.bdaddr_random = %s AND c.UUID = '2a00';"
-    else:
-        values = ()
-        chars_query = "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle AND cv.bdaddr = c.bdaddr WHERE c.UUID = '2a00';"
-    chars_result = execute_query(chars_query, values)
-    if(len(chars_result) > 0):
-        for (bdaddr, byte_values) in chars_result:
-            tmpstr = byte_values.decode('utf-8', 'ignore')
-            #qprint(f"byte_values: {tmpstr}")
-            if name_pattern.search(tmpstr):
-                vprint(f"{nameregex} matched bdaddr = {bdaddr}")
-                bdaddr_hash[bdaddr] = 1
-    qprint(f"get_bdaddrs_by_name_regex: {len(chars_result)} results found in DB:GATT_characteristics_values and DB:GATT_characteristics")
+    # Device Name characteristic (0x2a00). Match the address type on both
+    # sides of the join so a reused handle cannot borrow another observation.
+    chars_query = (
+        "SELECT cv.bdaddr, cv.byte_values FROM GATT_characteristics_values AS cv "
+        "JOIN GATT_characteristics AS c ON cv.char_value_handle = c.char_value_handle "
+        "AND cv.bdaddr = c.bdaddr AND cv.bdaddr_random = c.bdaddr_random "
+        "WHERE c.UUID = '2a00'"
+    )
+    values = ()
+    if bdaddr_random is not None:
+        chars_query += " AND c.bdaddr_random = %s"
+        values = (bdaddr_random,)
+    collect(chars_query, values, "GATT_characteristics_values", False)
     vprint(f"get_bdaddrs_by_name_regex: bdaddr_hash (len = {len(bdaddr_hash)}) = {bdaddr_hash}")
-
     return bdaddr_hash.keys()
 
 # Keep this table set aligned with the device observations searched by the

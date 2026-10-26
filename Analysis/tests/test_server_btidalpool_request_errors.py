@@ -15,6 +15,7 @@ import threading
 from types import SimpleNamespace
 
 import pytest
+from btidalpool_query_args import build_query_args
 
 
 SERVER = Path(__file__).resolve().parent.parent / "Server_BTIDALPOOL.py"
@@ -207,3 +208,25 @@ def test_low_memory_defers_query_before_worker(args, available_mib, expect_rejec
     else:
         assert responses == [(
             "student@example.com", 504, "text/plain", b"Query timed out.")]
+
+
+def test_legacy_scalar_name_regex_is_one_pattern():
+    assert build_query_args({"name_regex": "^FEED SYNC$"}) == [
+        "--name-regex", "^FEED SYNC$",
+    ]
+    assert build_query_args({"name_regex": ["^FEED SYNC$"]}) == [
+        "--name-regex", "^FEED SYNC$",
+    ]
+
+
+def test_invalid_repeatable_filter_returns_400_without_starting_query():
+    responses = []
+    namespace = {
+        "g_max_returned_records_per_query": 100,
+        "build_query_args": build_query_args,
+        "send_back_response": lambda _handler, *args: responses.append(args),
+    }
+    handle = _load_function("_handle_query_under_capacity", namespace)
+    handle(object(), "student@example.com", {"name_regex": 123})
+    assert responses == [(
+        "student@example.com", 400, "text/plain", b"Invalid query filters.")]

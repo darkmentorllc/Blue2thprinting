@@ -322,7 +322,12 @@ def _handle_query_under_capacity(self, username, query_object, use_test_db=False
     # (btidalpool_server::query::tme_query_args) can be parity-tested against
     # this exact logic. Only allow-listed keys are honored (for security);
     # everything else in query_object is ignored.
-    args_array += build_query_args(query_object)
+    try:
+        args_array += build_query_args(query_object)
+    except ValueError as error:
+        print(f"Invalid query filters: {error}")
+        send_back_response(self, username, 400, 'text/plain', b'Invalid query filters.')
+        return
 
     current_time = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     random = os.urandom(4).hex()
