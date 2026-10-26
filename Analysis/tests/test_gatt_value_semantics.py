@@ -59,3 +59,13 @@ def test_orphaned_multiple_read_values_are_rendered(monkeypatch):
     assert "first" in read_lines[0]
     assert "second" in read_lines[1]
     assert all("service association unavailable" in line for line in read_lines)
+
+
+def test_truncated_ppcp_value_does_not_abort_device_render(monkeypatch):
+    output = []
+    monkeypatch.setattr(gatt, "qprint", output.append)
+    gatt.characteristic_value_decoding("", "2a04", b"\x02\x07\x00\x04\x2a")
+    assert any("expected 8" in line for line in output)
+    output.clear()
+    gatt.characteristic_value_decoding("", "2a04", b"\x06\x00\x0c\x00\x00\x00\x64\x00")
+    assert any("PPCP decodes as" in line for line in output)

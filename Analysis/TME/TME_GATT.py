@@ -100,6 +100,9 @@ def characteristic_value_decoding(indent, UUID128, bytes, bdaddr=None, bdaddr_ra
         qprint(color_str)
 
     elif(UUID == "2a04"): # Peripheral Preferred Connection Parameters
+        if len(bytes) != 8:
+            qprint(f"{indent}PPCP value has {len(bytes)} bytes; expected 8, so it cannot be decoded.")
+            return
         Interval_Min, Interval_Max, Latency, Timeout = struct.unpack('<HHHH', bytes)
         color_str = f"{indent}PPCP decodes as: " + Fore.BLUE + Style.BRIGHT + f"Interval_Min:0x{Interval_Min:04x}, Interval_Max:0x{Interval_Max:04x}, Latency:0x{Latency:04x}, Timeout:0x{Timeout:04x}" + Style.RESET_ALL
         qprint(color_str)
