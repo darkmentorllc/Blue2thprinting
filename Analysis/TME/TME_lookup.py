@@ -96,257 +96,120 @@ def get_bdaddrs_by_name_regex(nameregex, bdaddr_random):
 
     return bdaddr_hash.keys()
 
-def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random):
-    # Translate bare glob '*' to regex '.*' so users can pass '*' to mean "match all"
+# Keep this table set aligned with the device observations searched by the
+# original BDADDR regex UNION.  Separate queries prevent MariaDB from
+# materializing and de-duplicating all 52 tables in one large temp table.
+_BDADDR_REGEX_LE_TABLES = (
+    'LE_bdaddr_to_3d_info',
+    'LE_bdaddr_to_appearance',
+    'LE_bdaddr_to_CoD',
+    'LE_bdaddr_to_connect_interval',
+    'LE_bdaddr_to_flags',
+    'LE_bdaddr_to_MSD',
+    'LE_bdaddr_to_name',
+    'LE_bdaddr_to_other_le_bdaddr',
+    'LE_bdaddr_to_public_target_bdaddr',
+    'LE_bdaddr_to_random_target_bdaddr',
+    'LE_bdaddr_to_role',
+    'LE_bdaddr_to_tx_power',
+    'LE_bdaddr_to_URI',
+    'LE_bdaddr_to_UUID128_service_data',
+    'LE_bdaddr_to_UUID128_service_solicit',
+    'LE_bdaddr_to_UUID128s_list',
+    'LE_bdaddr_to_UUID32_service_data',
+    'LE_bdaddr_to_UUID32_service_solicit',
+    'LE_bdaddr_to_UUID32s_list',
+    'LE_bdaddr_to_UUID16_service_data',
+    'LE_bdaddr_to_UUID16_service_solicit',
+    'LE_bdaddr_to_UUID16s_list',
+    'LL_FEATUREs',
+    'LL_LENGTHs',
+    'LL_PHYs',
+    'LL_PINGs',
+    'LL_UNKNOWN_RSP',
+    'LL_VERSION_IND',
+    'GATT_attribute_handles',
+    'GATT_characteristic_descriptor_values',
+    'GATT_characteristics',
+    'GATT_characteristics_values',
+    'GATT_services',
+)
+_BDADDR_REGEX_CLASSIC_TABLES = (
+    'EIR_bdaddr_to_3d_info',
+    'EIR_bdaddr_to_CoD',
+    'EIR_bdaddr_to_DevID',
+    'EIR_bdaddr_to_flags',
+    'EIR_bdaddr_to_MSD',
+    'EIR_bdaddr_to_name',
+    'EIR_bdaddr_to_PSRM',
+    'EIR_bdaddr_to_tx_power',
+    'EIR_bdaddr_to_URI',
+    'EIR_bdaddr_to_UUID128s',
+    'EIR_bdaddr_to_UUID16s',
+    'EIR_bdaddr_to_UUID32s',
+    'LMP_FEATURES_RES',
+    'LMP_FEATURES_RES_EXT',
+    'LMP_NAME_RES_defragmented',
+    'LMP_VERSION_RES',
+    'HCI_bdaddr_to_name',
+    'SDP_Common',
+    'SDP_ERROR_RSP',
+)
+_BDADDR_REGEX_REQUIRED_ONLY_TABLES = {
+    'SMP_Pairing_Req_Res': True,
+    'bdaddr_to_GPS': False,
+}
+
+
+def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random, source_tables=None,
+                                max_candidates=None):
+    # Translate bare glob '*' to regex '.*' so users can pass '*' to mean "match all".
     bdaddrregex = re.sub(r'(?<!\.)[\*]', '.*', bdaddrregex)
     vprint(bdaddrregex)
-    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
-    bdaddrs = []
+    bdaddr_hash = {}  # preserve first-seen order while de-duplicating
+    le_tables = _BDADDR_REGEX_LE_TABLES
+    classic_tables = _BDADDR_REGEX_CLASSIC_TABLES
+    if source_tables is not None:
+        # Only callers inside TME select source tables.  This also ensures a
+        # user-supplied value can never be interpolated as a SQL identifier.
+        selected = set(source_tables)
+        unknown = selected.difference(
+            le_tables + classic_tables + tuple(_BDADDR_REGEX_REQUIRED_ONLY_TABLES))
+        if unknown:
+            raise ValueError(f"Unknown BDADDR regex source table(s): {unknown}")
+        le_tables = tuple(table for table in le_tables if table in selected)
+        classic_tables = tuple(table for table in classic_tables if table in selected)
+        for table in _BDADDR_REGEX_REQUIRED_ONLY_TABLES:
+            if table in selected:
+                if _BDADDR_REGEX_REQUIRED_ONLY_TABLES[table]:
+                    le_tables += (table,)
+                else:
+                    classic_tables += (table,)
 
-    if(bdaddr_random is not None):
-        values = (bdaddrregex,) + (bdaddr_random,) * 33
-        bdaddr_query = (
-            "SELECT DISTINCT t.bdaddr "
-            "FROM ("
-            "    SELECT %s AS bdaddr_regex "
-            ") AS regex "
-            "CROSS JOIN ("
-            "    SELECT bdaddr FROM LE_bdaddr_to_3d_info WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_appearance WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_CoD WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_connect_interval WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_flags WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_MSD WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_name WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_other_le_bdaddr WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_public_target_bdaddr WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_random_target_bdaddr WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_role WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_tx_power WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_URI WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services WHERE bdaddr_random = %s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_CoD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_DevID"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_flags"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_MSD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_name"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_PSRM"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_tx_power"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_URI"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID128s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID16s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
-            ") AS t "
-            "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
-        )
-    else:
+    # A SELECT per table pushes REGEXP before de-duplication.  DISTINCT and
+    # LIMIT keep each SQL result bounded; fetchmany keeps client buffering
+    # bounded even when the caller needs every match.
+    address_expr = "CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci"
+    for table in le_tables + classic_tables:
+        if max_candidates is not None and len(bdaddr_hash) >= max_candidates:
+            break
         values = (bdaddrregex,)
-        bdaddr_query = (
-            "SELECT DISTINCT t.bdaddr "
-            "FROM ("
-            "    SELECT %s AS bdaddr_regex "
-            ") AS regex "
-            "CROSS JOIN ("
-            "    SELECT bdaddr FROM LE_bdaddr_to_3d_info"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_appearance"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_CoD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_connect_interval"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_flags"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_MSD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_name"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_other_le_bdaddr"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_public_target_bdaddr"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_random_target_bdaddr"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_role"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_tx_power"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_URI"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_FEATUREs"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_LENGTHs"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PHYs"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_PINGs"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_UNKNOWN_RSP"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LL_VERSION_IND"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_attribute_handles"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristic_descriptor_values"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_characteristics_values"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM GATT_services"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_3d_info"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_CoD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_DevID"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_flags"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_MSD"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_name"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_PSRM"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_tx_power"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_URI"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID128s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID16s"
-            "    UNION ALL"
-            "    SELECT bdaddr FROM EIR_bdaddr_to_UUID32s"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_FEATURES_RES_EXT"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_NAME_RES_defragmented"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM LMP_VERSION_RES"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM HCI_bdaddr_to_name"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_Common"
-            "    UNION ALL"
-            "    SELECT CONVERT(bdaddr USING utf8mb4) FROM SDP_ERROR_RSP"
-            ") AS t "
-            "WHERE t.bdaddr REGEXP regex.bdaddr_regex;"
-        )
-    # BDADDR columns span VARCHAR and VARBINARY tables with different
-    # collations. MariaDB rejects the UNION before the outer REGEXP runs if
-    # even an empty branch has an incompatible collation. Normalize every
-    # branch explicitly so broad course searches work across the full schema.
-    bdaddr_query = re.sub(
-        r'SELECT (?:CONVERT\(bdaddr USING utf8mb4\)|bdaddr) FROM',
-        'SELECT CONVERT(bdaddr USING utf8mb4) COLLATE utf8mb4_unicode_ci AS bdaddr FROM',
-        bdaddr_query,
-    )
-    bdaddr_result = execute_query(bdaddr_query, values)
-    for (bdaddr,) in bdaddr_result:
-        bdaddr_hash[bdaddr] = 1
+        where = f"{address_expr} REGEXP %s"
+        if table in le_tables and bdaddr_random is not None:
+            where = f"bdaddr_random = %s AND {where}"
+            values = (bdaddr_random, bdaddrregex)
+        if table == 'SMP_Pairing_Req_Res':
+            where += " AND auth_req & 8 = 0"
+        query = f"SELECT DISTINCT {address_expr} AS bdaddr FROM {table} WHERE {where}"
+        if max_candidates is not None:
+            query += " LIMIT %s"
+            values += (max_candidates,)
+        for (bdaddr,) in execute_query_rows(query, values):
+            if max_candidates is None or len(bdaddr_hash) < max_candidates:
+                bdaddr_hash[bdaddr] = 1
 
-    qprint(f"get_bdaddrs_by_bdaddr_regex: {len(bdaddr_result)} results found across all tables")
-    qprint(f"get_bdaddrs_by_bdaddr_regex: bdaddr_hash = {bdaddr_hash}")
-
+    qprint(f"get_bdaddrs_by_bdaddr_regex: {len(bdaddr_hash)} results found across all tables")
+    vprint(f"get_bdaddrs_by_bdaddr_regex: bdaddr_hash = {bdaddr_hash}")
     return bdaddr_hash.keys()
 
 def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):

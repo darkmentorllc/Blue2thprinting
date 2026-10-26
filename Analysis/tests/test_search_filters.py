@@ -20,6 +20,33 @@ from test_db_query import rendered_bdaddrs, ALL_TEST_BDADDR_REGEX
 ALL_SEEDED = {f"aa:bb:cc:11:22:0{n}" for n in range(1, 6)}
 
 
+def test_broad_bdaddr_regex_with_LL_version_requirement(run_tme):
+    """The course's broad search must retain only the seeded LL device."""
+    result = run_tme("--bdaddr-regex", "a", "--require-LL_VERSION_IND")
+    assert rendered_bdaddrs(result.stdout) == {"aa:bb:cc:11:22:04"}
+
+
+def test_broad_bdaddr_regex_with_classic_SDP_requirement(run_tme):
+    """A source-table shortcut must still find classic SDP data."""
+    result = run_tme("--bdaddr-regex", "a", "--require-SDP")
+    assert rendered_bdaddrs(result.stdout) == {"aa:bb:cc:11:22:03"}
+
+
+def test_broad_bdaddr_regex_with_SMP_and_GPS_requirements(run_tme):
+    """The course's other broad filters must find their seeded devices."""
+    smp = run_tme("--bdaddr-regex", "a", "--require-SMP-legacy-pairing")
+    gps = run_tme("--bdaddr-regex", "a", "--require-GPS")
+    assert rendered_bdaddrs(smp.stdout) == {"aa:bb:cc:11:22:05"}
+    assert rendered_bdaddrs(gps.stdout) == {"aa:bb:cc:11:22:02"}
+
+
+def test_broad_bdaddr_regex_with_GATT_and_LMP_requirements(run_tme):
+    gatt = run_tme("--bdaddr-regex", "a", "--require-GATT-values")
+    lmp = run_tme("--bdaddr-regex", "a", "--require-LMP_VERSION_RES")
+    assert rendered_bdaddrs(gatt.stdout) == {"aa:bb:cc:11:22:02"}
+    assert rendered_bdaddrs(lmp.stdout) == {"aa:bb:cc:11:22:04"}
+
+
 # ---------------------------------------------------------------------------
 # --NOT-bdaddr (exact exclusion, repeatable)
 # ---------------------------------------------------------------------------

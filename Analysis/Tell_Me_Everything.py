@@ -23,6 +23,7 @@ except (AttributeError, ValueError):
     pass
 
 import argparse
+import re
 # Import from my files
 from TME.TME_helpers import *
 from TME.TME_import import *
@@ -389,8 +390,27 @@ def main():
     #######################################################
 
     if(args.bdaddr_regex != None):
+        # Start from the table that satisfies a required data family.  This
+        # avoids scanning all 52 regex sources and probing every candidate.
+        # SMP and GPS are not in the old union; using their own source also
+        # makes those requirement searches find devices with only that data.
+        regex_source_tables = None
+        if args.require_LL_VERSION_IND:
+            regex_source_tables = ("LL_VERSION_IND",)
+        elif args.require_LMP_VERSION_RES:
+            regex_source_tables = ("LMP_VERSION_RES",)
+        elif args.require_GATT_values:
+            regex_source_tables = ("GATT_characteristics_values",)
+        elif args.require_SDP:
+            regex_source_tables = ("SDP_Common",)
+        elif args.require_SMP_legacy_pairing:
+            regex_source_tables = ("SMP_Pairing_Req_Res",)
+        elif args.require_GPS:
+            regex_source_tables = ("bdaddr_to_GPS",)
         for entry in args.bdaddr_regex:
-            bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(entry, args.bdaddr_type)
+            bdaddrs_tmp = get_bdaddrs_by_bdaddr_regex(
+                entry, args.bdaddr_type, source_tables=regex_source_tables,
+                max_candidates=args.max_records_output)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
             qprint(f"{len(bdaddrs)} bdaddrs after --bdaddr-regex processing")
@@ -488,7 +508,9 @@ def main():
     if(bdaddrs):
         if(args.NOT_bdaddr_regex != None):
             for entry in args.NOT_bdaddr_regex:
-                bdaddrs_to_remove.update(get_bdaddrs_by_bdaddr_regex(entry, args.bdaddr_type))
+                pattern = re.compile(re.sub(r'(?<!\.)[\*]', '.*', entry), re.IGNORECASE)
+                bdaddrs_to_remove.update(
+                    bdaddr for bdaddr in bdaddrs if pattern.search(bdaddr))
 
         if(args.NOT_name_regex != None):
             for entry in args.NOT_name_regex:

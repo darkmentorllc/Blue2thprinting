@@ -51,6 +51,22 @@ def execute_query(query, values):
     cursor.close()
     return result
 
+
+def execute_query_rows(query, values, batch_size=512):
+    """Yield an unbuffered result in small batches, closing the cursor on exit.
+
+    Search queries can match many devices.  Unlike execute_query(), this
+    does not retain the entire result set in a list before the caller can
+    de-duplicate it.
+    """
+    cursor = _get_mysql_conn().cursor(buffered=False)
+    try:
+        cursor.execute(query, values)
+        while rows := cursor.fetchmany(batch_size):
+            yield from rows
+    finally:
+        cursor.close()
+
 def execute_update(query, values):
     connection = _get_mysql_conn()
     cursor = connection.cursor()
