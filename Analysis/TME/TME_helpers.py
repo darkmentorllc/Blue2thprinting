@@ -70,19 +70,31 @@ def execute_query(query, values):
 
 
 def execute_query_rows(query, values, batch_size=512):
-    """Yield an unbuffered result in small batches, closing the cursor on exit.
+    """Yield an unbuffered result in small batches, discarding partial results.
 
     Search queries can match many devices.  Unlike execute_query(), this
     does not retain the entire result set in a list before the caller can
     de-duplicate it.
     """
-    cursor = _get_mysql_conn().cursor(buffered=False)
+    global _mysql_conn
+    connection = _get_mysql_conn()
+    cursor = connection.cursor(buffered=False)
     try:
         cursor.execute(query, values)
         while rows := cursor.fetchmany(batch_size):
             yield from rows
     finally:
-        cursor.close()
+        if connection.unread_result:
+            # A caller may stop after enough matches. MySQL Connector refuses
+            # to close an unbuffered cursor while rows remain unread; discard
+            # this connection so the next query opens a clean one.
+            try:
+                connection.close()
+            finally:
+                if _mysql_conn is connection:
+                    _mysql_conn = None
+        else:
+            cursor.close()
 
 def execute_update(query, values):
     connection = _get_mysql_conn()
