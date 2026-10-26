@@ -155,6 +155,9 @@ _BDADDR_REGEX_CLASSIC_TABLES = (
     'SDP_Common',
     'SDP_ERROR_RSP',
 )
+_OUI_SEARCH_TABLES = _BDADDR_REGEX_LE_TABLES + tuple(
+    table for table in _BDADDR_REGEX_CLASSIC_TABLES
+    if table not in ('SDP_Common', 'SDP_ERROR_RSP'))
 _BDADDR_REGEX_REQUIRED_ONLY_TABLES = {
     'SMP_Pairing_Req_Res': True,
     'bdaddr_to_GPS': False,
@@ -324,20 +327,19 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random, max_candidates=Non
         # The former UNION ALL materialized every observation row per OUI,
         # then applied LIKE outside the temporary table. Thirteen Telink
         # prefixes made that path exceed the production query timeout.
-        oui_tables = _BDADDR_REGEX_LE_TABLES + tuple(
-            table for table in _BDADDR_REGEX_CLASSIC_TABLES
-            if table not in ('SDP_Common', 'SDP_ERROR_RSP'))
-        if bdaddr_prefixes:
+        # IEEE OUIs identify public addresses only. A random BLE address can
+        # coincidentally start with a company's registered prefix, as
+        # 4c:a0:d4:4a:ed:45 does for Telink.
+        if bdaddr_prefixes and bdaddr_random != 1:
             prefixes = tuple(prefix + '%' for prefix in bdaddr_prefixes)
             prefix_where = '(' + ' OR '.join(['bdaddr LIKE %s'] * len(prefixes)) + ')'
-            for table in oui_tables:
+            for table in _OUI_SEARCH_TABLES:
                 if max_candidates is not None and len(bdaddr_hash) >= max_candidates:
                     break
                 where = prefix_where
                 values = prefixes
-                if table in _BDADDR_REGEX_LE_TABLES and bdaddr_random is not None:
-                    where += ' AND bdaddr_random = %s'
-                    values += (bdaddr_random,)
+                if table in _BDADDR_REGEX_LE_TABLES:
+                    where += ' AND bdaddr_random = 0'
                 found = collect(f'SELECT DISTINCT bdaddr FROM {table} WHERE {where}', values)
                 qprint(f'{found} new BDADDRs with matching OUI in {table}')
 
@@ -432,9 +434,21 @@ def get_candidate_bdaddrs_matching_company_regex(companyregex, bdaddr_random, ca
     oui_result = execute_query(oui_query, values)
     matching_ouis = {oui.lower() for (oui, _company_name) in oui_result}
     qprint(f"{i1}{len(matching_ouis)} OUIs matched in IEEE_bdaddr_to_company")
-    if matching_ouis:
-        for bdaddr in list(remaining):
-            if bdaddr[:8].lower() in matching_ouis:
+    if matching_ouis and bdaddr_random != 1:
+        # Check the candidate's stored address type before treating its
+        # prefix as an IEEE OUI. Prefix matching alone misclassifies random
+        # BLE addresses and can incorrectly exclude them from a NOT filter.
+        for table in _OUI_SEARCH_TABLES:
+            prefixed = sorted(bdaddr for bdaddr in remaining
+                              if bdaddr[:8].lower() in matching_ouis)
+            if not prefixed:
+                break
+            placeholders = ','.join(['%s'] * len(prefixed))
+            query = (f'SELECT DISTINCT bdaddr FROM {table} '
+                     f'WHERE bdaddr IN ({placeholders})')
+            if table in _BDADDR_REGEX_LE_TABLES:
+                query += ' AND bdaddr_random = 0'
+            for (bdaddr,) in execute_query_rows(query, tuple(prefixed)):
                 matched.add(bdaddr)
                 remaining.discard(bdaddr)
 

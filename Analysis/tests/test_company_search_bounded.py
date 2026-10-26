@@ -34,6 +34,54 @@ def test_many_ouis_use_one_indexable_query_per_table(monkeypatch):
                and "LIMIT %s" in query for query, _ in queries)
     assert all(values[:13] == tuple(prefix + "%" for prefix in prefixes)
                for _, values in queries)
+    assert all("bdaddr_random = 0" in query
+               for query, _ in queries
+               if any(f"FROM {table} " in query
+                      for table in lookup._BDADDR_REGEX_LE_TABLES))
+
+
+def test_company_oui_does_not_match_random_le_address(monkeypatch):
+    _stub_metadata(monkeypatch)
+    monkeypatch.setattr(lookup, "execute_query",
+                        lambda _q, _v: [("4C:A0:D4", "Telink")])
+    queries = []
+
+    def rows(query, values):
+        queries.append((query, values))
+        # A random BLE address happens to share the Telink public OUI.
+        # The SQL filter must prevent that row from being returned.
+        if "FROM LE_bdaddr_to_flags " in query and "bdaddr_random = 0" not in query:
+            yield ("4c:a0:d4:4a:ed:45",)
+
+    monkeypatch.setattr(lookup, "execute_query_rows", rows)
+    assert not list(lookup.get_bdaddrs_by_company_regex(
+        "Telink", None, max_candidates=100))
+    assert queries
+    assert not list(lookup.get_bdaddrs_by_company_regex(
+        "Telink", 1, max_candidates=100))
+    assert len(queries) == len(lookup._OUI_SEARCH_TABLES)
+
+
+def test_negative_company_oui_checks_candidate_address_type(monkeypatch):
+    _stub_metadata(monkeypatch)
+    monkeypatch.setattr(lookup, "execute_query",
+                        lambda query, _v: [("4C:A0:D4", "Telink")]
+                        if "FROM IEEE_bdaddr_to_company" in query else [])
+    random = "4c:a0:d4:4a:ed:45"
+    public = "4c:a0:d4:11:22:33"
+    queries = []
+
+    def rows(query, values):
+        queries.append((query, values))
+        if "FROM LE_bdaddr_to_flags " in query:
+            assert "bdaddr_random = 0" in query
+            assert set(values) == {random, public}
+            yield (public,)
+
+    monkeypatch.setattr(lookup, "execute_query_rows", rows)
+    assert lookup.get_candidate_bdaddrs_matching_company_regex(
+        "Telink", None, [random, public]) == {public}
+    assert queries
 
 
 def test_clues_uuids_are_batched_by_storage_format(monkeypatch):
