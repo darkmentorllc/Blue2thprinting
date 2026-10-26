@@ -11,8 +11,12 @@ from google.auth.transport.requests import Request
 import os
 import pwd
 import time
+import sys
 from collections import defaultdict
 from http.server import BaseHTTPRequestHandler
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'Analysis'))
+from btidalpool_ip_bans import BanAwareTLSServerMixin, ban_ip, verify_ban_store
 
 def load_oauth_secrets():
 #    secrets_path = Path(__file__).parent / 'google_oauth_client_secret.json'
@@ -32,7 +36,18 @@ except RuntimeError as e:
     exit(1)
 
 class OAuthHandler(http.server.BaseHTTPRequestHandler):
+    def send_response(self, code, message=None):
+        if code in (400, 404, 405, 408, 501):
+            ban_ip(self.client_address[0])
+        super().send_response(code, message)
+
     def do_GET(self):
+        if self.path == '/favicon.ico':
+            # Browsers request this automatically after visiting a valid SSO page.
+            self.send_response(204)
+            self.end_headers()
+            return
+
         if self.path == '/tos':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -67,7 +82,7 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
             """.encode())
             return
 
-        elif self.path == '/oauth2callback':
+        elif urllib.parse.urlparse(self.path).path == '/oauth2callback':
             query_components = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
 
             if 'code' in query_components:
@@ -118,10 +133,34 @@ class OAuthHandler(http.server.BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        if self.path == '/refresh':
-            content_length = int(self.headers['Content-Length'])
-            post_data = json.loads(self.rfile.read(content_length))
+        if self.path != '/refresh':
+            self.send_error(404)
+            return
 
+        try:
+            content_length = int(self.headers['Content-Length'])
+            if not 0 <= content_length <= 64 * 1024:
+                raise ValueError('invalid Content-Length')
+            post_raw_data = self.rfile.read(content_length)
+            if len(post_raw_data) != content_length:
+                raise ValueError('incomplete request body')
+            post_data = json.loads(post_raw_data)
+            if not isinstance(post_data, dict):
+                raise ValueError('JSON object required')
+        except socket.timeout:
+            ban_ip(self.client_address[0])
+            self.close_connection = True
+            return
+        except (KeyError, TypeError, ValueError, UnicodeDecodeError):
+            self.send_error(400, 'Invalid JSON request')
+            self.close_connection = True
+            return
+
+        if not post_data.get('refresh_token'):
+            self.send_error(400, 'Missing refresh_token')
+            return
+
+        if self.path == '/refresh':
             try:
                 credentials = Credentials(
                     token=None,
@@ -180,6 +219,7 @@ def run_server():
     context.load_cert_chain(certfile=certfile, keyfile=keyfile)
 
     drop_privileges()
+    verify_ban_store()
 
     class RateLimitingHandler(OAuthHandler):
         connections = defaultdict(list)
@@ -212,11 +252,12 @@ def run_server():
                 self.close_connection = True
 
     handler = TimeoutHandler
-    socketserver.TCPServer.allow_reuse_address = True
-    httpd = socketserver.ThreadingTCPServer(("", PORT), handler)
-    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
-    httpd.socket.settimeout(10)  # 10 second timeout
-    httpd.request_queue_size = 10  # Limit concurrent connections
+    class BanAwareSSOServer(BanAwareTLSServerMixin, socketserver.ThreadingTCPServer):
+        allow_reuse_address = True
+        request_queue_size = 10
+
+    httpd = BanAwareSSOServer(("", PORT), handler)
+    httpd.ssl_context = context
 
     print(f"Server running on port {PORT}")
     httpd.serve_forever()

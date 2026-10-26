@@ -12,6 +12,7 @@ use btidalpool_server::http::{self, Config, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::IngestSink;
 #[cfg(not(feature = "sql-ingest"))]
 use btidalpool_server::ingest::NoopIngestSink;
+use btidalpool_server::ip_bans::IpBanStore;
 #[cfg(feature = "sql-ingest")]
 use btidalpool_server::native_query::MysqlNativeQueryEngine;
 use btidalpool_server::native_query::NativeQueryEngine;
@@ -37,6 +38,9 @@ struct Cli {
     /// VM keeps working without changes.
     #[arg(long, default_value = "0.0.0.0:3567")]
     bind: SocketAddr,
+    /// SQLite IP ban list shared with the Python pool and SSO listeners.
+    #[arg(long, default_value = "/tmp/btidalpool-ip-bans.sqlite3")]
+    ban_db: PathBuf,
     /// TLS certificate chain (PEM). Required unless `--no-tls` is set.
     #[arg(long, default_value = "./btidalpool.ddns.net.crt")]
     cert: PathBuf,
@@ -140,6 +144,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let state = ServerState::initialize(&cli.pool_dir, &cli.user_logs_dir, &cli.access_log)?;
+    let ip_bans = Arc::new(IpBanStore::open(&cli.ban_db)?);
 
     // Ingest: production uses the BTIDES-to-SQL library (gated behind the
     // `sql-ingest` Cargo feature so `cargo test` doesn't need MySQL). When
@@ -232,6 +237,7 @@ fn main() -> Result<()> {
 
     http::run(Config {
         bind: cli.bind,
+        ip_bans,
         tls,
         enable_healthz: cli.enable_healthz,
         ip_limiter,

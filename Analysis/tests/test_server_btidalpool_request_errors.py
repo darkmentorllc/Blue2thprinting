@@ -8,6 +8,7 @@ certificate, database, or live listener.
 import ast
 import io
 import json
+import socket
 from pathlib import Path
 import subprocess
 import threading
@@ -41,6 +42,7 @@ def _load_function(name, namespace, class_name=None):
 ])
 def test_post_rejects_unauthenticated_requests_without_crashing(body, headers, expected):
     responses = []
+    bans = []
 
     def send_back_response(_handler, username, status, content_type, response_body):
         responses.append((username, status, content_type, response_body))
@@ -49,6 +51,9 @@ def test_post_rejects_unauthenticated_requests_without_crashing(body, headers, e
         "json": json,
         "send_back_response": send_back_response,
         "validate_oauth_token": lambda *_: pytest.fail("unexpected authentication"),
+        "ban_ip": bans.append,
+        "g_max_file_size": 10,
+        "socket": socket,
     }
     do_post = _load_function("do_POST", namespace, "CustomHandler")
     request_headers = {"Content-Length": str(len(body))} if headers is None else headers
@@ -59,14 +64,19 @@ def test_post_rejects_unauthenticated_requests_without_crashing(body, headers, e
     )
     do_post(handler)
     assert responses == [("unauthenticated", 400, "text/plain", expected)]
+    assert bans == ["127.0.0.1"]
 
 
 def test_invalid_token_does_not_log_a_missing_username():
     responses = []
+    bans = []
     namespace = {
         "json": json,
         "send_back_response": lambda _handler, *args: responses.append(args),
         "validate_oauth_token": lambda *_: None,
+        "ban_ip": bans.append,
+        "g_max_file_size": 10,
+        "socket": socket,
     }
     do_post = _load_function("do_POST", namespace, "CustomHandler")
     body = b'{"token":"invalid","refresh_token":"invalid","command":"query"}'
@@ -77,6 +87,7 @@ def test_invalid_token_does_not_log_a_missing_username():
     )
     do_post(handler)
     assert responses == [("unauthenticated", 400, "text/plain", b"Invalid OAuth token.")]
+    assert bans == ["127.0.0.1"]
 
 
 def test_response_has_content_length():

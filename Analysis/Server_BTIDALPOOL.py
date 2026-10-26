@@ -12,6 +12,7 @@ activate_venv()
 
 import http.server
 import ssl
+import socket
 import json
 import datetime
 import hashlib
@@ -31,6 +32,7 @@ from pathlib import Path
 from oauth_helper import AuthClient
 from BTIDES_to_SQL import btides_to_sql_args, btides_to_sql
 from btidalpool_query_args import build_query_args
+from btidalpool_ip_bans import BanAwareTLSServerMixin, ban_ip, verify_ban_store
 
 g_local_testing = False
 
@@ -339,10 +341,15 @@ def log_user_result(username, client_ip, result_str):
         log_file.flush()
 
 
-class ThreadingHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+class ThreadingHTTPServer(BanAwareTLSServerMixin, ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
+    def send_error(self, code, message=None, explain=None):
+        if code in (400, 404, 405, 501):
+            ban_ip(self.client_address[0])
+        super().send_error(code, message, explain)
+
     # Don't accept any GET or other command requests
     def do_GET(self):
         """Reject GET requests."""
@@ -389,33 +396,54 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             if content_length < 0:
                 raise ValueError('negative Content-Length')
         except (KeyError, TypeError, ValueError):
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Missing or invalid Content-Length.')
             return
 
+        if content_length > g_max_file_size * 1024 * 1024:
+            ban_ip(client_ip)
+            send_back_response(self, username, 400, 'text/plain', b'Content-Length too large.')
+            self.close_connection = True
+            return
+
         # Read the POST data
-        post_raw_data = self.rfile.read(content_length)
+        try:
+            post_raw_data = self.rfile.read(content_length)
+        except socket.timeout:
+            ban_ip(client_ip)
+            self.close_connection = True
+            return
+        if len(post_raw_data) != content_length:
+            ban_ip(client_ip)
+            self.close_connection = True
+            return
 
         # Extract fields to determine whether this is a send of BTIDES data, or a query requesting BTIDES data
         try:
             post_json_data = json.loads(post_raw_data)
         except (UnicodeDecodeError, json.JSONDecodeError):
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Invalid JSON data.')
             return
         if not isinstance(post_json_data, dict):
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'JSON object required.')
             return
 
         # Initial sanity checks
         if 'token' not in post_json_data or 'refresh_token' not in post_json_data:
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Missing Google OAuth SSO token.')
             return
         if 'command' not in post_json_data:
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Missing command.')
             return
 
         # Validate OAuth token
         authenticated_username = validate_oauth_token(post_json_data['token'], post_json_data['refresh_token'])
         if not authenticated_username:
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Invalid OAuth token.')
             return
         username = authenticated_username
@@ -445,6 +473,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             query_object = post_json_data.get('query')
             handle_query(self, username, query_object, use_test_db=use_test_db)
         else:
+            ban_ip(client_ip)
             send_back_response(self, username, 400, 'text/plain', b'Invalid input. Either both or neither of json_content and query_object are present.')
             return
 
@@ -460,6 +489,8 @@ registry = load_schemas()
 # Define the handler to use for the server
 handler = CustomHandler
 
+verify_ban_store()
+
 # Create the server
 if(g_local_testing):
     hostname = 'localhost'
@@ -471,8 +502,8 @@ httpd = ThreadingHTTPServer((hostname, 3567), handler)
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain(certfile="./btidalpool.ddns.net.crt", keyfile="./btidalpool.ddns.net.key")
 
-# Wrap the server socket with SSL
-httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+# Wrap accepted connections after checking the peer's ban status.
+httpd.ssl_context = context
 
 print(f"Serving on https://{hostname}:3567")
 httpd.serve_forever()

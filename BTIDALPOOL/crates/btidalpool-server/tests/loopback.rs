@@ -15,6 +15,7 @@ use btidalpool_proto::{
 use btidalpool_server::handlers::Deps;
 use btidalpool_server::http::{self, Config as ServerConfig, OverloadConfig, TlsConfig};
 use btidalpool_server::ingest::NoopIngestSink;
+use btidalpool_server::ip_bans::IpBanStore;
 use btidalpool_server::native_query::{NativeQueryEngine, StubNativeQueryEngine};
 use btidalpool_server::oauth::{MockOAuthValidator, OAuthValidator};
 use btidalpool_server::query::{QueryEngine, StubQueryEngine};
@@ -102,6 +103,7 @@ impl Harness {
         });
         let cfg = ServerConfig {
             bind,
+            ip_bans: Arc::new(IpBanStore::open(&td.path().join("bans.sqlite3")).unwrap()),
             tls: Some(TlsConfig {
                 cert_pem_path: cert_path,
                 key_pem_path: key_path,
@@ -464,15 +466,15 @@ fn rust_listener_rejects_removed_protocol_routes() {
         "tester@example.com",
     );
     let agent = build_insecure_agent();
-    for path in ["/", "/v2", "/v3"] {
+    for (path, expected) in [("/", 404), ("/v2", 403), ("/v3", 403)] {
         let response = agent
             .post(&format!("{}{path}", harness.server_url))
             .set("Content-Type", &format!("{CONTENT_TYPE}; version=4"))
             .send_bytes(b"ignored");
         match response {
-            Err(ureq::Error::Status(404, _)) => {}
+            Err(ureq::Error::Status(status, _)) if status == expected => {}
             Ok(response) => panic!("{path} unexpectedly returned {}", response.status()),
-            Err(error) => panic!("{path} expected 404, got {error}"),
+            Err(error) => panic!("{path} expected {expected}, got {error}"),
         }
     }
 }
@@ -492,20 +494,24 @@ fn v4_requires_explicit_version_four_content_type() {
         payload: V4Payload::CreateSession,
     })
     .unwrap();
-    for content_type in [
+    for (index, content_type) in [
         CONTENT_TYPE.to_string(),
         format!("{CONTENT_TYPE}; version=1"),
         format!("{CONTENT_TYPE}; version=2"),
         format!("{CONTENT_TYPE}; version=3"),
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let expected = if index == 0 { 415 } else { 403 };
         let response = build_insecure_agent()
             .post(&format!("{}/v4", harness.server_url))
             .set("Content-Type", &content_type)
             .send_bytes(&body);
         match response {
-            Err(ureq::Error::Status(415, _)) => {}
+            Err(ureq::Error::Status(status, _)) if status == expected => {}
             Ok(response) => panic!("{content_type} unexpectedly returned {}", response.status()),
-            Err(error) => panic!("{content_type} expected 415, got {error}"),
+            Err(error) => panic!("{content_type} expected {expected}, got {error}"),
         }
     }
 }
@@ -529,8 +535,8 @@ fn health_is_hidden_by_default_and_other_methods_are_rejected() {
         .get(&format!("{}/v4", harness.server_url))
         .call()
     {
-        Err(ureq::Error::Status(405, _)) => {}
-        other => panic!("GET /v4 expected 405, got {other:?}"),
+        Err(ureq::Error::Status(403, _)) => {}
+        other => panic!("GET /v4 expected 403 after the first invalid request, got {other:?}"),
     }
 }
 

@@ -50,6 +50,7 @@ generates an in-memory key; existing sessions then expire on restart.
 | Option | Default | Purpose |
 | --- | ---: | --- |
 | `--enable-healthz` | false | Temporarily expose unauthenticated `GET /healthz` during a controlled test window |
+| `--ban-db` | `/tmp/btidalpool-ip-bans.sqlite3` | Shared 24-hour IP bans with the Python pool and SSO listeners |
 | `--max-concurrent` | 10 | Simultaneous requests per authenticated identity |
 | `--max-per-day` | 100 | Rolling-day requests per authenticated identity |
 | `--max-ip-concurrent` | 50 | Simultaneous pre-auth abuse cap per IP |

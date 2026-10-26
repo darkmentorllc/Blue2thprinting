@@ -20,7 +20,7 @@
 //! count is self-limiting in steady state.
 
 use std::io::{self, Read, Write};
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -30,6 +30,7 @@ use btidalpool_proto::{
 use tiny_http::{Header, Method, Request, Response as TinyResp, Server, StatusCode};
 
 use crate::handlers::{dispatch_v4, Deps};
+use crate::ip_bans::IpBanStore;
 use crate::oauth::{AuthError, OAuthValidator};
 use crate::rate_limit::{ConcurrencyGuard, ConcurrencyLimiter, Decision, Guard, Limiter};
 use crate::session::{SessionError, SessionTokens};
@@ -38,6 +39,7 @@ use crate::session::{SessionError, SessionTokens};
 /// [`run`].
 pub struct Config {
     pub bind: SocketAddr,
+    pub ip_bans: Arc<IpBanStore>,
     pub tls: Option<TlsConfig>,
     /// Whether the unauthenticated GET /healthz route is exposed. Production
     /// defaults this off and enables it only for controlled test windows.
@@ -95,6 +97,7 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
     log::info!("Listening on {}", cfg.bind);
 
     let cfg = Arc::new(SharedCfg {
+        ip_bans: cfg.ip_bans,
         enable_healthz: cfg.enable_healthz,
         ip_limiter: cfg.ip_limiter,
         identity_limiter: cfg.identity_limiter,
@@ -112,6 +115,20 @@ pub fn run(cfg: Config) -> anyhow::Result<()> {
                 continue;
             }
         };
+        if let Some(ip) = request.remote_addr().map(|address| address.ip()) {
+            match cfg.ip_bans.is_banned(ip) {
+                Ok(true) => {
+                    let _ = request.respond(TinyResp::empty(403));
+                    continue;
+                }
+                Err(error) => {
+                    log::error!("IP ban lookup failed: {error}");
+                    let _ = request.respond(TinyResp::empty(503));
+                    continue;
+                }
+                Ok(false) => {}
+            }
+        }
         let cfg = cfg.clone();
         std::thread::spawn(move || {
             if let Err(e) = handle(request, &cfg) {
@@ -138,6 +155,7 @@ fn build_server(cfg: &Config) -> anyhow::Result<Server> {
 }
 
 struct SharedCfg {
+    ip_bans: Arc<IpBanStore>,
     enable_healthz: bool,
     ip_limiter: Limiter,
     identity_limiter: Limiter,
@@ -159,17 +177,17 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         return if cfg.enable_healthz {
             reply_plain(request, 200, "ok")
         } else {
-            reply_plain(request, 404, "Not Found")
+            ban_and_reply_plain(request, cfg, client_ip, 404, "Not Found")
         };
     }
 
     // The Rust service exposes one protocol route. The original non-Rust
     // service is separate and is intentionally unaffected by this listener.
     if request.method() != &Method::Post {
-        return reply_plain(request, 405, "Method Not Allowed");
+        return ban_and_reply_plain(request, cfg, client_ip, 405, "Method Not Allowed");
     }
     if path != "/v4" {
-        return reply_plain(request, 404, "Not Found");
+        return ban_and_reply_plain(request, cfg, client_ip, 404, "Not Found");
     }
 
     // Content-Type gate.
@@ -187,8 +205,10 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         .windows(2)
         .any(|parts| parts[0] == CONTENT_TYPE && parts[1].eq_ignore_ascii_case("version=4"))
     {
-        return reply_plain(
+        return ban_and_reply_plain(
             request,
+            cfg,
+            client_ip,
             415,
             &format!(
                 "Unsupported Media Type: expected {}, got {:?}",
@@ -215,7 +235,7 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
         .and_then(|h| h.value.as_str().parse::<usize>().ok())
         .unwrap_or(0);
     if content_len > codec::DEFAULT_MAX_COMPRESSED {
-        return reply_plain(request, 413, "Payload Too Large");
+        return ban_and_reply_plain(request, cfg, client_ip, 413, "Payload Too Large");
     }
     let mut body = Vec::with_capacity(content_len.min(codec::DEFAULT_MAX_COMPRESSED));
     // The reader is bounded by Content-Length on the tiny_http side, but we
@@ -224,9 +244,12 @@ fn handle(mut request: Request, cfg: &SharedCfg) -> io::Result<()> {
     let mut take = request
         .as_reader()
         .take(codec::DEFAULT_MAX_COMPRESSED as u64 + 1);
-    take.read_to_end(&mut body)?;
+    if let Err(error) = take.read_to_end(&mut body) {
+        cfg.ip_bans.ban(client_ip).map_err(io::Error::other)?;
+        return Err(error);
+    }
     if body.len() > codec::DEFAULT_MAX_COMPRESSED {
-        return reply_plain(request, 413, "Payload Too Large");
+        return ban_and_reply_plain(request, cfg, client_ip, 413, "Payload Too Large");
     }
 
     handle_v4(request, body, client_ip, cfg)
@@ -241,7 +264,13 @@ fn handle_v4(
     let env: V4Envelope = match codec::decode_v4(&body) {
         Ok(envelope) => envelope,
         Err(error) => {
-            return reply_plain(request, 400, &format!("Bad v4 request body: {error}"));
+            return ban_and_reply_plain(
+                request,
+                cfg,
+                client_ip,
+                400,
+                &format!("Bad v4 request body: {error}"),
+            );
         }
     };
 
@@ -249,22 +278,24 @@ fn handle_v4(
         let access_token = match env.auth {
             V4Auth::Google { access_token } => access_token,
             V4Auth::Session { .. } => {
+                cfg.ip_bans.ban(client_ip).map_err(io::Error::other)?;
                 return reply_v4(
                     request,
                     v4_error(
                         V4ErrorKind::Unauthorized,
                         "create_session requires a Google access token",
                     ),
-                )
+                );
             }
         };
         let email = match cfg.validator.validate(&access_token, "") {
             Ok(email) => email,
             Err(AuthError::InvalidToken(_)) => {
+                cfg.ip_bans.ban(client_ip).map_err(io::Error::other)?;
                 return reply_v4(
                     request,
                     v4_error(V4ErrorKind::Unauthorized, "Invalid Google access token."),
-                )
+                );
             }
             Err(error) => {
                 log::error!("Google validation failed during v4 session exchange: {error}");
@@ -307,13 +338,14 @@ fn handle_v4(
     let session_token = match env.auth {
         V4Auth::Session { token } => token,
         V4Auth::Google { .. } => {
+            cfg.ip_bans.ban(client_ip).map_err(io::Error::other)?;
             return reply_v4(
                 request,
                 v4_error(
                     V4ErrorKind::Unauthorized,
                     "v4 operations require a BTIDALPOOL session token",
                 ),
-            )
+            );
         }
     };
     let identity = match cfg.sessions.verify(&session_token) {
@@ -325,10 +357,11 @@ fn handle_v4(
             )
         }
         Err(_) => {
+            cfg.ip_bans.ban(client_ip).map_err(io::Error::other)?;
             return reply_v4(
                 request,
                 v4_error(V4ErrorKind::Unauthorized, "Invalid BTIDALPOOL session."),
-            )
+            );
         }
     };
     let _identity_guard = match acquire_identity(cfg, &identity.email) {
@@ -433,6 +466,17 @@ fn reply_plain(req: Request, status: u16, msg: &str) -> io::Result<()> {
                 .unwrap(),
         );
     req.respond(resp)
+}
+
+fn ban_and_reply_plain(
+    req: Request,
+    cfg: &SharedCfg,
+    ip: IpAddr,
+    status: u16,
+    msg: &str,
+) -> io::Result<()> {
+    cfg.ip_bans.ban(ip).map_err(io::Error::other)?;
+    reply_plain(req, status, msg)
 }
 
 fn reply_plain_retry(req: Request, msg: &str, retry_after: std::time::Duration) -> io::Result<()> {

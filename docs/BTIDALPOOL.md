@@ -53,4 +53,22 @@ should follow the complete contract in
 
 If you'd like to bypass these limits, you can email btidalpool at gmail to request Trusted Contributor status. This status is granted to researchers who provide a significant contribution of data to the BTIDALPOOL server.
 
+## Invalid connection bans
+
+The Python pool, Rust pool, and Google SSO listeners share a 24-hour IP ban
+list. Invalid methods, routes, payloads, and credentials ban the peer IP.
+The Python and SSO listeners also ban malformed TLS handshakes and close
+subsequent connections before TLS negotiation. The Rust listener checks the
+ban after TLS parsing but before spawning a request worker, returning 403.
+Successful requests and application errors after authentication do not trigger
+bans. Because the ban is per public IP, clients sharing a NAT address are
+affected together.
+
+All three services must be able to read and write the same SQLite file. Set
+`BTIDALPOOL_BAN_DB` for the Python services and `--ban-db` for the Rust service
+to configure its path; both default to `/tmp/btidalpool-ip-bans.sqlite3`. Run
+the services as the same OS user, or provision a shared writable location.
+Expired entries are removed on subsequent ban activity or when that IP
+reconnects.
+
 Copyright(c) © Dark Mentor LLC 2023-2026
