@@ -425,8 +425,15 @@ def main():
             vprint(f"{bdaddrs}")
 
     if(args.company_regex != None):
+        # Exclusions run after the positive search. Leave candidate headroom
+        # so a common excluded device does not consume the entire output cap.
+        company_candidate_limit = args.max_records_output
+        if any((args.NOT_bdaddr, args.NOT_bdaddr_regex, args.NOT_name_regex,
+                args.NOT_company_regex, args.NOT_UUID_regex)):
+            company_candidate_limit *= 10
         for entry in args.company_regex:
-            bdaddrs_tmp = get_bdaddrs_by_company_regex(entry, args.bdaddr_type)
+            bdaddrs_tmp = get_bdaddrs_by_company_regex(
+                entry, args.bdaddr_type, max_candidates=company_candidate_limit)
             if(bdaddrs_tmp is not None):
                 bdaddrs += bdaddrs_tmp
             qprint(f"{len(bdaddrs)} bdaddrs after --company-regex processing")
