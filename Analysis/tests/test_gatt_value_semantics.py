@@ -2,6 +2,7 @@
 
 from TME import TME_GATT as gatt
 from TME import TME_lookup as lookup
+from TME.TME_BTIDES_base import ff_SingleBDADDR_base
 
 
 def test_require_gatt_values_rejects_failed_reads(monkeypatch):
@@ -79,3 +80,9 @@ def test_malformed_descriptor_values_do_not_abort_device_render(monkeypatch):
     output.clear()
     gatt.descriptor_print("", "2901", 11, b"\xff")
     assert any("Description:" in line for line in output)
+
+
+def test_gatt_only_export_has_numeric_bdaddr_type():
+    entry = ff_SingleBDADDR_base("f0:74:64:ca:2e:f1", True)
+    assert entry["bdaddr_rand"] == 1
+    assert type(entry["bdaddr_rand"]) is int

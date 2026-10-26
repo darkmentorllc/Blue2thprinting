@@ -284,7 +284,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         UUID = add_dashes_to_UUID128(UUID)
         utype = db_service_type_to_BTIDES_utype(service_type)
         data = ff_GATT_Service({"utype": utype, "begin_handle": begin_handle, "end_handle": end_handle, "UUID": UUID})
-        BTIDES_export_GATT_Service(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_GATT_Service(bdaddr=bdaddr, random=bdaddr_random2, data=data)
 
     if(bdaddr_random is not None):
         query = "SELECT bdaddr_random, attribute_handle, UUID FROM GATT_attribute_handles WHERE bdaddr_random = %s AND bdaddr = %s";
@@ -296,7 +296,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         UUID = add_dashes_to_UUID128(UUID)
         attribute_handles_dict[attribute_handle] = UUID
         data = ff_ATT_handle_entry(attribute_handle, UUID)
-        BTIDES_export_ATT_handle(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_ATT_handle(bdaddr=bdaddr, random=bdaddr_random2, data=data)
 
     if(bdaddr_random is not None):
         query = "SELECT bdaddr_random, declaration_handle, char_properties, char_value_handle, UUID FROM GATT_characteristics WHERE bdaddr_random = %s AND bdaddr = %s";
@@ -316,7 +316,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
     for bdaddr_random2, declaration_handle, char_properties, char_value_handle, UUID in GATT_characteristics_result:
         UUID = add_dashes_to_UUID128(UUID)
         data = {"handle": declaration_handle, "properties": char_properties, "value_handle": char_value_handle, "value_uuid": UUID}
-        BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_GATT_Characteristic(bdaddr=bdaddr, random=bdaddr_random2, data=data)
 
     if(bdaddr_random is not None):
         query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr_random = %s AND bdaddr = %s";
@@ -335,7 +335,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         value_uuid = add_dashes_to_UUID128(value_uuid)
         data = {"handle": char_value_handle, "value_uuid": value_uuid,
                 "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
-        BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
+        BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random2, data=data)
 
         # A handle can have multiple observed values and both successful reads
         # and ATT errors. Keep each operation's observations together.

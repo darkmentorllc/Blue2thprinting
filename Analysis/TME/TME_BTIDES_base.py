@@ -124,7 +124,10 @@ def lookup_DualBDADDR_base_entry(connect_ind_obj):
 def ff_SingleBDADDR_base(bdaddr, random):
     base = {}
     base["bdaddr"] = bdaddr
-    base["bdaddr_rand"] = random
+    # is_bdaddr_le_and_random() returns a bool, but BTIDES requires the
+    # numeric address type. A GATT-only device has no earlier advertising
+    # entry to supply the integer, so bool here invalidates its whole export.
+    base["bdaddr_rand"] = int(random) if isinstance(random, bool) else random
     return base
 
 
