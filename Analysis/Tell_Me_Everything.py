@@ -149,6 +149,7 @@ def main():
     TME.TME_glob.quiet_print = args.quiet_print
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
     TME.TME_glob.use_test_db = args.use_test_db
+    TME.TME_glob.server_export = args.server_export
     TME.TME_glob.hide_android_data = args.hide_android_data
 
     bdaddrs = []

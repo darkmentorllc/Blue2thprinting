@@ -159,8 +159,51 @@ def test_tme_timeout_returns_gateway_timeout():
     namespace = {
         "subprocess": SimpleNamespace(run=time_out, TimeoutExpired=subprocess.TimeoutExpired),
         "g_query_timeout_seconds": 120,
+        "available_memory_bytes": lambda: 400 * 1024 * 1024,
+        "g_min_query_available_bytes": 200 * 1024 * 1024,
+        "g_min_broad_query_available_bytes": 280 * 1024 * 1024,
         "send_back_response": lambda _handler, *args: responses.append(args),
     }
     run_tme = _load_function("run_TellMeEverything", namespace)
     assert run_tme(object(), "student@example.com", ["--bdaddr", "00:00:00:00:00:44"], "/tmp/out") == 1
     assert responses == [("student@example.com", 504, "text/plain", b"Query timed out.")]
+
+
+def test_available_memory_reads_memavailable(tmp_path):
+    meminfo = tmp_path / "meminfo"
+    meminfo.write_text("MemTotal: 974848 kB\nMemAvailable: 250000 kB\n")
+    available_memory_bytes = _load_function("available_memory_bytes", {})
+    assert available_memory_bytes(meminfo) == 250000 * 1024
+    assert available_memory_bytes(tmp_path / "missing") is None
+
+
+@pytest.mark.parametrize("args,available_mib,expect_rejected", [
+    (["--bdaddr", "00:00:00:00:00:44"], 199, True),
+    (["--bdaddr", "00:00:00:00:00:44"], 201, False),
+    (["--company-regex", "Telink"], 279, True),
+    (["--company-regex", "Telink"], 281, False),
+])
+def test_low_memory_defers_query_before_worker(args, available_mib, expect_rejected):
+    responses = []
+
+    def spawn(_args, timeout):
+        assert timeout == 120
+        raise subprocess.TimeoutExpired(_args, timeout)
+
+    namespace = {
+        "subprocess": SimpleNamespace(run=spawn, TimeoutExpired=subprocess.TimeoutExpired),
+        "g_query_timeout_seconds": 120,
+        "available_memory_bytes": lambda: available_mib * 1024 * 1024,
+        "g_min_query_available_bytes": 200 * 1024 * 1024,
+        "g_min_broad_query_available_bytes": 280 * 1024 * 1024,
+        "send_back_response": lambda _handler, *call: responses.append(call),
+    }
+    run_tme = _load_function("run_TellMeEverything", namespace)
+    assert run_tme(object(), "student@example.com", args, "/tmp/out") == 1
+    if expect_rejected:
+        assert responses == [(
+            "student@example.com", 503, "text/plain",
+            b"Query temporarily unavailable: low server memory. Retry later.")]
+    else:
+        assert responses == [(
+            "student@example.com", 504, "text/plain", b"Query timed out.")]

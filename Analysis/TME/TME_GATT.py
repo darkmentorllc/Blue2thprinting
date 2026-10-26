@@ -213,7 +213,7 @@ def descriptor_print(indent, UUID, operation, byte_values):
         qprint(fmt_str)
 
     elif(UUID == "2901"):
-        fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values.decode('utf-8')}"
+        fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values.decode('utf-8', 'replace')}"
         qprint(f"{indent}Description: {fmt_byte_values}")
 
     elif(UUID == "2902"):
@@ -229,6 +229,9 @@ def descriptor_print(indent, UUID, operation, byte_values):
         print("2903-specific stuff")
 
     elif(UUID == "2904"):
+        if len(byte_values) != 7:
+            qprint(f"{indent}Characteristic Presentation Format value has {len(byte_values)} bytes; expected 7, so it cannot be decoded.")
+            return
         format, exponent, unit, name_space, description = struct.unpack('<BBHBH', byte_values)
         qprint(f"{indent}Characteristic Presentation Format:")
 

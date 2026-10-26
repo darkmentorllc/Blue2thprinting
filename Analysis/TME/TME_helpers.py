@@ -28,7 +28,7 @@ def _get_mysql_conn():
     global _mysql_conn
     if _mysql_conn is None:
         database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
-        _mysql_conn = mysql.connector.connect(
+        connection = mysql.connector.connect(
             host='localhost',
             user='user',
             password='a',
@@ -39,6 +39,23 @@ def _get_mysql_conn():
             get_warnings=True,
             raise_on_warnings=True,
         )
+        if TME.TME_glob.server_export:
+            # Large SELECT DISTINCT searches can otherwise leave MariaDB
+            # holding many in-memory temporary tables on the 952 MiB host.
+            # These limits are per connection and spill larger tables to disk.
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    'SET SESSION tmp_table_size = 4194304, '
+                    'max_heap_table_size = 4194304, sort_buffer_size = 262144'
+                )
+            except Exception:
+                cursor.close()
+                connection.close()
+                raise
+            else:
+                cursor.close()
+        _mysql_conn = connection
     return _mysql_conn
 
 

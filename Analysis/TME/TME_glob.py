@@ -154,6 +154,7 @@ quiet_print = False
 # Use alternate test database (for development)
 ###############################################
 use_test_db = False
+server_export = False
 insert_count = 0
 duplicate_count = 0
 

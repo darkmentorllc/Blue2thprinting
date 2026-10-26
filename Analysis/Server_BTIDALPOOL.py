@@ -47,6 +47,11 @@ g_query_timeout_seconds = 120
 # A TME subprocess can use over 300 MiB. Keep its execution and response
 # serialization exclusive even when several HTTP clients connect at once.
 g_query_capacity = threading.BoundedSemaphore(1)
+# The production host has 952 MiB and no swap. A query worker has used about
+# 145 MiB RSS while MariaDB grew to about 400 MiB during a broad company
+# search. Leave room for both processes and the OS before starting a worker.
+g_min_query_available_bytes = 200 * 1024 * 1024
+g_min_broad_query_available_bytes = 280 * 1024 * 1024
 
 # Global dictionary to store unique file hashes for avoiding duplicate uploads
 g_unique_files = {}
@@ -131,9 +136,38 @@ def run_btides_to_sql(filename, use_test_db=False):
 
 
 # args_array should be individual arguments to pass to the script
+def available_memory_bytes(meminfo_path='/proc/meminfo'):
+    """Read Linux MemAvailable; return None if the metric is unavailable."""
+    try:
+        with open(meminfo_path, 'r') as meminfo:
+            for line in meminfo:
+                if line.startswith('MemAvailable:'):
+                    amount, unit = line.split()[1:3]
+                    if unit != 'kB':
+                        return None
+                    return int(amount) * 1024
+    except (OSError, ValueError, IndexError):
+        pass
+    return None
+
+
 def run_TellMeEverything(self, username, args_array, output_filename):
     # The HTTP handler is already threaded. A bounded subprocess call ensures
     # a disconnected or slow client cannot leave an unbounded TME worker.
+    available = available_memory_bytes()
+    broad_search = any(arg in args_array for arg in (
+        '--company-regex', '--NOT-company-regex',
+        '--bdaddr-regex', '--NOT-bdaddr-regex',
+        '--name-regex', '--NOT-name-regex',
+        '--UUID-regex', '--NOT-UUID-regex', '--MSD-regex',
+    ))
+    minimum = (g_min_broad_query_available_bytes if broad_search
+               else g_min_query_available_bytes)
+    if available is not None and available < minimum:
+        print(f"Query deferred: MemAvailable={available} bytes, minimum={minimum} bytes")
+        send_back_response(self, username, 503, 'text/plain',
+                           b'Query temporarily unavailable: low server memory. Retry later.')
+        return 1
     args_list = ["python3", "Tell_Me_Everything.py"] + args_array + ["--output", output_filename]
     try:
         result = subprocess.run(args_list, timeout=g_query_timeout_seconds)

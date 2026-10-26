@@ -69,3 +69,13 @@ def test_truncated_ppcp_value_does_not_abort_device_render(monkeypatch):
     output.clear()
     gatt.characteristic_value_decoding("", "2a04", b"\x06\x00\x0c\x00\x00\x00\x64\x00")
     assert any("PPCP decodes as" in line for line in output)
+
+
+def test_malformed_descriptor_values_do_not_abort_device_render(monkeypatch):
+    output = []
+    monkeypatch.setattr(gatt, "qprint", output.append)
+    gatt.descriptor_print("", "2904", 11, b"\x01\x02")
+    assert any("expected 7" in line for line in output)
+    output.clear()
+    gatt.descriptor_print("", "2901", 11, b"\xff")
+    assert any("Description:" in line for line in output)

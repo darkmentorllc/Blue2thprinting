@@ -25,7 +25,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use btidalpool_proto::{
-    codec, V4Auth, V4Envelope, V4ErrorKind, V4Payload, V4Response, CONTENT_TYPE,
+    codec, QueryParams, V4Auth, V4Envelope, V4ErrorKind, V4Payload, V4Response, CONTENT_TYPE,
 };
 use tiny_http::{Header, Method, Request, Response as TinyResp, Server, StatusCode};
 
@@ -416,6 +416,16 @@ fn acquire_identity(cfg: &SharedCfg, email: &str) -> Result<Guard, std::time::Du
 type CapacityGuards = Option<(Option<ConcurrencyGuard>, ConcurrencyGuard)>;
 
 fn acquire_v4_capacity(cfg: &SharedCfg, payload: &V4Payload) -> Result<CapacityGuards, ()> {
+    if let Some(minimum) = query_memory_requirement(payload) {
+        if let Some(available) = available_memory_bytes() {
+            if available < minimum {
+                log::warn!(
+                    "Query deferred: MemAvailable={available} bytes, minimum={minimum} bytes"
+                );
+                return Err(());
+            }
+        }
+    }
     match payload {
         V4Payload::Upload { .. } => acquire_capacity(cfg, &cfg.overload.whole_uploads, 2),
         V4Payload::LegacyQuery { .. } => acquire_capacity(cfg, &cfg.overload.queries, 4),
@@ -430,6 +440,46 @@ fn acquire_v4_capacity(cfg: &SharedCfg, payload: &V4Payload) -> Result<CapacityG
         | V4Payload::Manifest { .. }
         | V4Payload::Status { .. } => Ok(None),
     }
+}
+
+fn query_memory_requirement(payload: &V4Payload) -> Option<u64> {
+    let params = match payload {
+        V4Payload::LegacyQuery { params, .. } | V4Payload::NativeQuery { params, .. } => params,
+        _ => return None,
+    };
+    let broad = is_broad_query(params);
+    Some(if broad { 280 } else { 200 } * 1024 * 1024)
+}
+
+fn is_broad_query(params: &QueryParams) -> bool {
+    params.company_regex.is_some()
+        || params.NOT_company_regex.is_some()
+        || params.bdaddr_regex.is_some()
+        || params.NOT_bdaddr_regex.is_some()
+        || params.name_regex.is_some()
+        || params.NOT_name_regex.is_some()
+        || params.UUID_regex.is_some()
+        || params.NOT_UUID_regex.is_some()
+        || params.MSD_regex.is_some()
+}
+
+fn available_memory_bytes() -> Option<u64> {
+    let meminfo = std::fs::read_to_string("/proc/meminfo").ok()?;
+    parse_mem_available_bytes(&meminfo)
+}
+
+fn parse_mem_available_bytes(meminfo: &str) -> Option<u64> {
+    let line = meminfo
+        .lines()
+        .find(|line| line.starts_with("MemAvailable:"))?;
+    let mut fields = line.split_whitespace();
+    if fields.next()? != "MemAvailable:" {
+        return None;
+    }
+    let kib = fields.next()?.parse::<u64>().ok()?;
+    (fields.next()? == "kB")
+        .then(|| kib.checked_mul(1024))
+        .flatten()
 }
 
 fn acquire_capacity(
@@ -602,3 +652,43 @@ fn chrono_ish_now() -> String {
 /// errors; we only use this in pathological accept-error logs.
 #[allow(dead_code)]
 fn _quiet_writer<W: Write>(_: W) {}
+
+#[cfg(test)]
+mod memory_admission_tests {
+    use super::{parse_mem_available_bytes, query_memory_requirement};
+    use btidalpool_proto::{QueryParams, V4Payload};
+
+    #[test]
+    fn reads_available_memory_in_bytes() {
+        assert_eq!(
+            parse_mem_available_bytes("MemTotal: 974848 kB\nMemAvailable: 250000 kB\n"),
+            Some(250000 * 1024)
+        );
+        assert_eq!(
+            parse_mem_available_bytes("MemAvailable: unknown kB\n"),
+            None
+        );
+    }
+
+    #[test]
+    fn broad_queries_need_more_headroom() {
+        let fixed = V4Payload::LegacyQuery {
+            params: QueryParams {
+                bdaddr: Some("00:00:00:00:00:44".into()),
+                ..QueryParams::default()
+            },
+            use_test_db: false,
+        };
+        assert_eq!(query_memory_requirement(&fixed), Some(200 * 1024 * 1024));
+
+        let broad = V4Payload::NativeQuery {
+            params: QueryParams {
+                company_regex: Some(vec!["Telink".into()]),
+                ..QueryParams::default()
+            },
+            use_test_db: false,
+        };
+        assert_eq!(query_memory_requirement(&broad), Some(280 * 1024 * 1024));
+        assert_eq!(query_memory_requirement(&V4Payload::CreateSession), None);
+    }
+}
