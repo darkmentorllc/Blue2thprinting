@@ -200,6 +200,9 @@ def get_bdaddrs_by_bdaddr_regex(bdaddrregex, bdaddr_random, source_tables=None,
             values = (bdaddr_random, bdaddrregex)
         if table == 'SMP_Pairing_Req_Res':
             where += " AND auth_req & 8 = 0"
+        if source_tables is not None and table == 'GATT_characteristics_values':
+            where += " AND operation = %s AND OCTET_LENGTH(byte_values) > 0"
+            values += (11,)  # ATT_READ_RSP: a read value, not an ATT error.
         query = f"SELECT DISTINCT {address_expr} AS bdaddr FROM {table} WHERE {where}"
         if max_candidates is not None:
             query += " LIMIT %s"

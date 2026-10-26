@@ -192,9 +192,12 @@ def device_has_GATT_any(bdaddr, bdaddr_random):
 #      uni_name index and therefore did a full table scan (cost ~25k on
 #      bt2). With N candidates from --UUID-regex that was N full table
 #      scans per --require-GATT-values invocation.
+# ATT_ERROR_RSP rows are failed reads and must not satisfy this flag.
 def device_has_GATT_values(bdaddr, bdaddr_random):
     return device_row_exists_by_bdaddr_random(
-        "GATT_characteristics_values", bdaddr, bdaddr_random)
+        "GATT_characteristics_values", bdaddr, bdaddr_random,
+        extra_sql="operation = %s AND OCTET_LENGTH(byte_values) > 0",
+        extra_values=(type_ATT_READ_RSP,))
 
 def descriptor_print(indent, UUID, operation, byte_values):
     if(UUID == "2900"):
@@ -328,12 +331,9 @@ def print_GATT_info(bdaddr, bdaddr_random):
                 "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
 
-        if(char_value_handle in char_value_handles_dict.keys()):
-            # There is already an entry for this handle, so append the new value to the list of possible values
-            char_value_handles_dict[(char_value_handle, operation)].append(byte_values)
-        else:
-            # There wasn't already an entry, so insert a list of a single value")
-            char_value_handles_dict[(char_value_handle, operation)] = [ byte_values ]
+        # A handle can have multiple observed values and both successful reads
+        # and ATT errors. Keep each operation's observations together.
+        char_value_handles_dict.setdefault((char_value_handle, operation), []).append(byte_values)
 
     if(bdaddr_random is not None):
         query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s AND bdaddr = %s";
@@ -419,6 +419,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         qprint(f"{i1}GATT Information:")
 
     unknown_UUID128_hash = {}
+    printed_read_handles = set()
     # Print semantically-meaningful information
     for bdaddr_random2, service_type, svc_begin_handle, svc_end_handle, UUID in GATT_services_result:
         UUID = add_dashes_to_UUID128(UUID)
@@ -515,6 +516,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
                                 service_match_dict[handle] = 1
                                 fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
                                 qprint(f"{i5}GATT Characteristic Value read as {fmt_byte_values}")
+                                printed_read_handles.add(handle)
                                 if(handle in attribute_handles_dict.keys()):
                                     characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values, bdaddr=bdaddr, bdaddr_random=bdaddr_random)
 
@@ -557,12 +559,18 @@ def print_GATT_info(bdaddr, bdaddr_random):
                     unknown_UUID128_hash[UUID] = ("Characteristic",f"{i3}")
 
             # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
-            if(handle in char_value_handles_dict.keys()):
-                char_value_handle = handle
-                for byte_values in char_value_handles_dict[handle]:
-                    qprint(f"{i3}(G)ATT handle {handle} read results: {byte_values}")
-                    # FIXME: do we have an enclosing characteristic? If so do the below...
-                    #characteristic_value_decoding("\t        ", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+
+    # A read can be hidden by an incomplete service range, an overlapping
+    # declaration/descriptor handle, or a partial enumeration. Show every
+    # successful value once even when the contextual GATT tree cannot place it.
+    for (handle, operation), values in char_value_handles_dict.items():
+        if operation != type_ATT_READ_RSP or handle in printed_read_handles:
+            continue
+        for byte_values in values:
+            if byte_values:
+                fmt_byte_values = Fore.BLUE + Style.BRIGHT + f"{byte_values}"
+                qprint(f"{i3}GATT Characteristic Value read as {fmt_byte_values} "
+                       f"(attribute handle {handle}; service association unavailable)")
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):
