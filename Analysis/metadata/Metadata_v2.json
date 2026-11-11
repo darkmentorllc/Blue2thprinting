@@ -371,10 +371,48 @@
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
 			"fee8": "Service: (Quintic->)NXP: OTA firmware update",
-			"fee9": "Service: (Quintic->)NXP: Unknown (from public/assigned_numbers/uuids/member_uuids.yaml). Observed in wild data.",
 			"0000fee8-0000-1000-8000-00805f9b34fb": "Service: (Quintic->)NXP: OTA firmware update",
 			"003784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA TX",
 			"013784cf-f7e3-55b4-6c4c-9fd140100a16": "Characteristic: (Quintic->)NXP: OTA RX"
+		}
+	},
+	"NXP MCUXpresso SDK GATTPrints": {
+		"comment": "These UUIDs identify NXP or Quintic SDK example profiles. They support a likely NXP SDK lineage ChipMakerPrint, not a verified silicon maker: products can reuse the profiles on other chips. Wireless Ranging values also appear in a historical public NXP source; the newer Builder archive itself required login.",
+		"2thprint_Chip_Maker": "Likely NXP-based (SDK GATT profile; chip unverified)",
+		"company_website": "https://www.nxp.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-11",
+		"evidence_URL": {
+			"QPP profile": "https://www.nxp.com/docs/en/application-note/AN11846.pdf",
+			"Wireless UART": "https://mcuxpresso.nxp.com/mcuxsdk/latest/middleware/wireless/bluetooth/doc/Bluetooth%20Low%20Energy%20Demo%20Applications%20Users%20Guide/topics/wireless_uart.html",
+			"OTAP": "https://mcuxpresso.nxp.com/mcuxsdk/latest/middleware/wireless/bluetooth/doc/Bluetooth%20Low%20Energy%20Demo%20Applications%20Users%20Guide/topics/over_the_air_programming_otap.html",
+			"Temperature example": "https://mcuxpresso.nxp.com/mcuxsdk/latest/middleware/wireless/bluetooth/doc/Bluetooth%20Low%20Energy%20Demo%20Applications%20Users%20Guide/topics/low-power_temperature_sensor_and_collector.html",
+			"BLE Shell throughput source": "https://github.com/nxp-mcuxpresso/mcuxsdk-middleware-bluetooth-host/blob/640e46c5b16ae53a8638becaea610914e7b964bc/examples/ble_shell/gatt_uuid128.h",
+			"Wireless Ranging historical public source": "https://github.com/nxp-mcuxpresso/mcuxsdk-middleware-bluetooth-host/blob/9fd8d1c507bfca8bf50287986b4f6d41953b9204/examples/wireless_ranging/gatt_uuid128.h"
+		},
+		"confirmation_method": "NXP first-party guide or source defines the UUID; chip-maker inference remains qualified",
+		"confirmation_confidence": "6/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"fee9": "Service: Quintic Private Profile (QPP), also used in NXP SDK examples; profile lineage clue",
+			"0000fee9-0000-1000-8000-00805f9b34fb": "Service: Quintic Private Profile (QPP); assigned-number alias, not proof of chip silicon",
+			"d44bc439-abfd-45a2-b575-925416129600": "Characteristic: NXP/Quintic QPP RX (write without response); SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129601": "Characteristic: NXP/Quintic QPP TX (1) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129602": "Characteristic: NXP/Quintic QPP optional TX (2) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129603": "Characteristic: NXP/Quintic QPP optional TX (3) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129604": "Characteristic: NXP/Quintic QPP optional TX (4) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129605": "Characteristic: NXP/Quintic QPP optional TX (5) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129606": "Characteristic: NXP/Quintic QPP optional TX (6) notify; SDK lineage clue",
+			"d44bc439-abfd-45a2-b575-925416129607": "Characteristic: NXP/Quintic QPP optional TX (7) notify; SDK lineage clue",
+			"01ff0100-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Service: NXP Wireless UART SDK example; SDK lineage clue",
+			"01ff0101-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Characteristic: NXP Wireless UART stream; also used by BLE Shell throughput demo",
+			"01ff5550-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Service: NXP Bluetooth LE OTAP firmware delivery example",
+			"01ff5551-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Characteristic: NXP OTAP control point",
+			"01ff5552-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Characteristic: NXP OTAP image data",
+			"01ff0200-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Service: NXP custom Temperature SDK example",
+			"01ff5560-ba5e-f4ee-5ca1-eb1e5e4b1ce0": "Service: NXP BLE Shell throughput SDK example",
+			"01ff0100-ba5e-f4ee-0010-000000010000": "Service: NXP Wireless Ranging SDK example, distinct from Wireless UART",
+			"01ff0100-ba5e-f4ee-0010-000000010001": "Characteristic: NXP Wireless Ranging control stream SDK example"
 		}
 	},
 	"Realtek": {
