@@ -76,6 +76,8 @@ Pass `--folder` multiple times to mix PCAP and HCI directories in a single run:
 
 **Atomicity / resume semantics:** after a successful SQL import, each `<stem>.btides` is renamed to `<stem>.btides.processed` so a re-run of `import-all-BTIDES` skips it automatically. If the SQL import fails for a particular file, the `.btides` is left in place untouched and the next run retries just that file. Concurrent workers writing overlapping rows are deadlock-retried internally with exponential backoff.
 
+**DM BT QA fixtures:** the shared `BTIDES-to-SQL` parser skips records for `F0:F1:F2:*` addresses, `DMQA*` local names, or the existing company `0xFFFF` / ASCII `DMQ` manufacturer marker. It checks all records in each BTIDES file before writing any rows, so an address-only inquiry or GATT record in the same file is also skipped when a later record identifies that fixture. This applies to direct `BTIDES-to-SQL` runs and to `import-all-BTIDES --to-SQL`, including replays of retained raw HCI captures. Conversion-only output and original HCI bytes remain available for diagnostics; filter derived files before archiving them long term.
+
 **Useful flags:**
 
 - `--use-test-db` — import into the `bttest` database instead of `bt2` (matches the Python `--use-test-db` semantics).
