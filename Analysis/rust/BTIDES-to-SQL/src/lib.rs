@@ -1728,6 +1728,94 @@ fn merge_buffers(dst: &mut Buffers, mut src: Buffers) {
     dst.gps_ops.extend(src.gps_ops);
 }
 
+// DM BT's on-air QA identities must remain visible to live scanners and in raw
+// diagnostic HCI captures, but must never enter the durable SQL corpus. Keep
+// this at the shared SQL boundary so both BTIDES-to-SQL and import-all-BTIDES
+// --to-SQL enforce it, including replays of old HCI captures.
+fn qa_ad_marker(bytes: &[u8]) -> bool {
+    let mut index = 0;
+    while index < bytes.len() {
+        let length = bytes[index] as usize;
+        if length == 0 || index + length >= bytes.len() {
+            break;
+        }
+        let kind = bytes[index + 1];
+        let data = &bytes[index + 2..index + length + 1];
+        if (kind == 8 || kind == 9) && data.len() >= 4 && data[..4].eq_ignore_ascii_case(b"DMQA") {
+            return true;
+        }
+        if kind == 0xff && data.starts_with(b"\xff\xffDMQ") {
+            return true;
+        }
+        index += length + 1;
+    }
+    false
+}
+
+fn qa_marker(value: &J) -> bool {
+    match value {
+        J::Object(map) => {
+            let company = map.get("company_id_hex_str").and_then(J::as_str).unwrap_or("");
+            let msd = map.get("msd_hex_str").and_then(J::as_str).unwrap_or("");
+            if company.eq_ignore_ascii_case("ffff") && msd.to_ascii_lowercase().starts_with("444d51") {
+                return true;
+            }
+            map.iter().any(|(key, child)| {
+                let marked = child.as_str().is_some_and(|text| {
+                    ((key == "bdaddr" || key.ends_with("_bdaddr")) && text.to_ascii_uppercase().starts_with("F0:F1:F2:")) ||
+                    (matches!(key.as_str(), "name" | "utf8_name" | "remote_name" | "device_name") && text.to_ascii_uppercase().starts_with("DMQA")) ||
+                    (key == "name_hex_str" && text.to_ascii_lowercase().starts_with("444d5141")) ||
+                    (key == "msd_hex_str" && text.to_ascii_lowercase().starts_with("ffff444d51")) ||
+                    (key == "full_pkt_hex_str" && hex::decode(text).is_ok_and(|bytes| qa_ad_marker(&bytes)))
+                });
+                marked || qa_marker(child)
+            })
+        }
+        J::Array(array) => array.iter().any(qa_marker),
+        _ => false,
+    }
+}
+
+fn qa_record_addresses(value: &J, out: &mut HashSet<String>) {
+    match value {
+        J::Object(map) => {
+            for (key, child) in map {
+                if (key == "bdaddr" || key.ends_with("_bdaddr")) && child.is_string() {
+                    out.insert(child.as_str().unwrap().to_ascii_uppercase());
+                } else {
+                    qa_record_addresses(child, out);
+                }
+            }
+        }
+        J::Array(array) => array.iter().for_each(|child| qa_record_addresses(child, out)),
+        _ => {}
+    }
+}
+
+fn qa_fixture_addresses(entries: &[J]) -> HashSet<String> {
+    let mut fixtures = HashSet::new();
+    for entry in entries {
+        let mut addresses = HashSet::new();
+        qa_record_addresses(entry, &mut addresses);
+        fixtures.extend(addresses.iter().filter(|address| address.starts_with("F0:F1:F2:")).cloned());
+        if qa_marker(entry) {
+            if let Some(address) = entry.get("bdaddr").and_then(J::as_str) {
+                fixtures.insert(address.to_ascii_uppercase());
+            }
+        }
+    }
+    fixtures
+}
+
+fn qa_fixture_entry(entry: &J, fixtures: &HashSet<String>) -> bool {
+    if qa_marker(entry) {
+        return true;
+    }
+    let mut addresses = HashSet::new();
+    qa_record_addresses(entry, &mut addresses);
+    !addresses.is_disjoint(fixtures)
+}
+
 // Parse one BTIDES file from disk into a fresh Buffers. Defragmentation is
 // not finalized here — that happens once after all parses merge.
 fn parse_file(path: &str) -> Buffers {
@@ -1754,7 +1842,13 @@ fn parse_file(path: &str) -> Buffers {
             return buffers;
         }
     };
+    let fixtures = qa_fixture_addresses(arr);
+    let mut qa_skipped = 0;
     for e in arr {
+        if qa_fixture_entry(e, &fixtures) {
+            qa_skipped += 1;
+            continue;
+        }
         let obj = match e.as_object() {
             Some(o) => o,
             None => continue,
@@ -1770,6 +1864,9 @@ fn parse_file(path: &str) -> Buffers {
         parse_eir_array(obj, &mut buffers);
         parse_sdp_array(obj, &mut buffers);
         collect_gps_ops(obj, &mut buffers);
+    }
+    if qa_skipped > 0 {
+        eprintln!("{}: skipped {} marked QA fixture BTIDES record(s)", path, qa_skipped);
     }
     buffers
 }
@@ -2933,6 +3030,39 @@ mod tests {
     // Borrow a json! object as the &Map the parse_* fns expect.
     fn obj(v: &J) -> &serde_json::Map<String, J> {
         v.as_object().expect("test JSON must be an object")
+    }
+
+    #[test]
+    fn qa_filter_catches_reserved_name_and_vendor_marker_without_dropping_real_vendor_names() {
+        let records = vec![
+            json!({"bdaddr":"F0:F1:F2:FC:12:34","AdvChanArray":[]}),
+            json!({"bdaddr":"42:11:22:33:44:55","AdvChanArray":[{"AdvDataArray":[{"utf8_name":"DMQA-PAIR"}]}]}),
+            json!({"bdaddr":"42:11:22:33:44:55","GATTArray":[{"handle":1}]}),
+            json!({"bdaddr":"42:11:22:33:44:56","AdvChanArray":[{"AdvDataArray":[{"company_id_hex_str":"FFFF","msd_hex_str":"444D5101"},{"utf8_name":"Tesla Model S"}]}]}),
+            json!({"HCIArray":[{"central_bdaddr":"00:00:00:00:00:00","peripheral_bdaddr":"F0:F1:F2:F3:11:22"}]}),
+            json!({"bdaddr":"42:11:22:33:44:57","AdvChanArray":[{"AdvDataArray":[{"utf8_name":"Tesla Model S"}]}]}),
+        ];
+        let fixtures = qa_fixture_addresses(&records);
+        assert_eq!(fixtures.len(), 4);
+        for entry in &records[..5] {
+            assert!(qa_fixture_entry(entry, &fixtures));
+        }
+        assert!(!qa_fixture_entry(&records[5], &fixtures));
+    }
+
+    #[test]
+    fn parse_file_does_not_buffer_rows_from_replayed_fixture_btides() {
+        let path = std::env::temp_dir().join(format!("btides-qa-filter-{}-{}.btides",
+            std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let document = json!([
+            {"bdaddr":"F0:F1:F2:FC:12:34","bdaddr_rand":1,"AdvChanArray":[{"type":0,"AdvDataArray":[{"type":9,"name_hex_str":"5465736c61"}]}]},
+            {"bdaddr":"AA:BB:CC:DD:EE:FF","bdaddr_rand":1,"AdvChanArray":[{"type":0,"AdvDataArray":[{"type":9,"name_hex_str":"5265616c"}]}]}
+        ]);
+        std::fs::write(&path, document.to_string()).unwrap();
+        let buffers = parse_file(path.to_str().unwrap());
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(buffers.le_name.len(), 1);
+        assert_eq!(buffers.le_name[0][0], Value::Bytes(b"aa:bb:cc:dd:ee:ff".to_vec()));
     }
 
     // ----------------------------- pure helpers -----------------------------
