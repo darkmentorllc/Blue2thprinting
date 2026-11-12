@@ -158,7 +158,9 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-09-02",
 		"evidence_URL": {
-			"PSoC® Creator™ Example Project BLE External Memory Bootloader and Bootloadable Example Projects": "https://web.archive.org/web/20170908223844/https://www.cypress.com/file/228556/download"
+			"PSoC® Creator™ Example Project BLE External Memory Bootloader and Bootloadable Example Projects": "https://web.archive.org/web/20170908223844/https://www.cypress.com/file/228556/download",
+			"Infineon Hello Sensor example": "https://github.com/Infineon/mtb-example-btsdk-ble-hello-client-20736/blob/master/hello_sensor.h",
+			"Infineon EZ-Serial CYSPP guide": "https://www.infineon.com/assets/row/public/documents/non-assigned/44/infineon-ez-serial-firmware-platform-user-guide-for-cyw20822-module-usermanual-en.pdf"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-09-02",
@@ -167,7 +169,12 @@
 		"2thprint_ChipMaker_GATTprint": "True",
 		"Vendor_Specific_UUIDs": {
 			"00060000-f8ce-11e4-abf4-0002a5d5c51b": "Service: Cypress: Bootloader",
-			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command"
+			"00060001-f8ce-11e4-abf4-0002a5d5c51b": "Characteristic: Cypress: Bootloader Command",
+			"1b7e8251-2877-41c3-b46e-cf057c562023": "Service: Infineon/Cypress Hello Sensor SDK example: Hello Service",
+			"5e9bf2a8-f93f-4481-a67e-3b2f4a07891a": "Characteristic: Infineon/Cypress Hello Sensor SDK example: Hello configuration",
+			"8ac32d3f-5cb9-4d44-bec2-ee689169f626": "Characteristic: Infineon/Cypress Hello Sensor SDK example: Hello input",
+			"8e57e44f-b26a-f030-141a-09b19b267a02": "Service: Infineon/Cypress Hello Sensor SDK example: Hello test",
+			"65333333-a115-11e2-9e9a-0800200ca100": "Service: Infineon/Cypress CYSPP serial port profile"
 		}
 	},
 	"Dialog Semiconductor GmbH": {
@@ -197,7 +204,8 @@
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
 			"Michael Angerer's BLE OTA for ESP32 1": "https://github.com/michael-angerer/esp32_ble_ota/blob/main/esp/main/gatt_svr.h",
-			"Michael Angerer's BLE OTA for ESP32 2": "https://web.archive.org/web/20251211232606/http://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html"
+			"Michael Angerer's BLE OTA for ESP32 2": "https://web.archive.org/web/20251211232606/http://michaelangerer.dev/esp32/ble/ota/2021/06/08/esp32-ota-part-2.html",
+			"Espressif ESP-IDF provisioning log": "https://github.com/espressif/esp-idf/issues/9242"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -207,7 +215,8 @@
 		"Vendor_Specific_UUIDs": {
 			"d6f1d96d-594c-4c53-b1c6-244a1dfde6d8": "Service: NimBLE ESP32: OTA",
 			"7ad671aa-21c0-46a4-b722-270e3ae3d830": "Characteristic: NimBLE ESP32: OTA Control",
-			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data"
+			"23408888-1f40-4cd8-9b89-ca8d45f8a5b0": "Characteristic: NimBLE ESP32: OTA Data",
+			"021a9004-0382-4aea-bff4-6b3f1c5adfb4": "Service: Espressif ESP-IDF legacy BLE provisioning; SDK lineage clue"
 		}
 	},
 	"Intel": {
@@ -276,7 +285,8 @@
 		"evidence_URL": {
 			"UART": "https://web.archive.org/web/20240718111653/https://developerhelp.microchip.com/xwiki/bin/view/products/wireless-connectivity/ble/bm70/bm70-compact-demo-board-users-guide/transparent-uart/",
 			"RN4871 BLE module": "https://web.archive.org/web/20221225142328/https://ww1.microchip.com/downloads/en/DeviceDoc/50002639A.pdf",
-			"Advanced Usage of Microchip RN4020": "https://archive.org/details/advanced-useof-rn-4020-cookbook"
+			"Advanced Usage of Microchip RN4020": "https://archive.org/details/advanced-useof-rn-4020-cookbook",
+			"IS1678S ISSC Update Connection Parameter": "https://ww1.microchip.com/downloads/en/Appnotes/IS1678S_ApplicationNote.pdf"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2025-01-19",
@@ -289,7 +299,8 @@
 			"49535343-8841-43f4-a8d4-ecbe34729bb3": "Characteristic: Microchip: Transparent UART Receive (RX)",
 			"00035b03-58e6-07dd-021a-08123a000300": "Service: Microchip: Microchip Low energy Data Profile (MLDP)",
 			"00035b03-58e6-07dd-021a-08123a000301": "Characteristic: Microchip: MLDP Data",
-			"00035b03-58e6-07dd-021a-08123a0003ff": "Characteristic: Microchip: MLDP Control"
+			"00035b03-58e6-07dd-021a-08123a0003ff": "Characteristic: Microchip: MLDP Control",
+			"49535343-6daa-4d02-abf6-19569aca69fe": "Characteristic: Microchip/ISSC Update Connection Parameter"
 		}
 	},
 	"Nordic GATTPrints": {
@@ -303,7 +314,10 @@
 			"Nordic insecure DFU 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
 			"Nordic insecure DFU 2": "https://web.archive.org/web/20250109022624/https://github.com/adafruit/Bluefruit_LE_Connect_Android/blob/master/app/src/main/java/com/adafruit/bluefruit/le/connect/ble/KnownUUIDs.java",
 			"Nordic secure DFU": "https://infocenter.nordicsemi.com/index.jsp?topic=%2Fsdk_nrf5_v16.0.0%2Flib_dfu_transport_ble.html",
-			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf"
+			"Nordic Experimental Buttonless DFU Service 1": "https://web.archive.org/web/20201012094636/https://nordicsemiconductor.github.io/IOS-nRF-Connect/assets/files/UserManual.pdf",
+			"Nordic LED Button Service": "https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/lbs.html",
+			"Nordic Status Message Service": "https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/libraries/bluetooth_services/services/nsms.html",
+			"Nordic Multi-Link demo": "https://github.com/NordicPlayground/android-multi-link-demo/blob/master/src/com/nordicsemi/MultiLinkDemo/LedButtonService.java"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -325,7 +339,19 @@
 			"0000fe59-0000-1000-8000-00805f9b34fb": "Service: Nordic: Secure Device Firmware Update (DFU)",
 			"8EC90001-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Control Point",
 			"8EC90002-F315-4F60-9FB8-838830DAEA50": "Characteristic: Nordic: Secure DFU: Packet",
-			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU"
+			"8E400001-F315-4F60-9FB8-838830DAEA50": "Service: Nordic: Experimental Buttonless DFU",
+			"14387800-130c-49e7-b877-2881c89cb258": "Service: Nordic SDK: Wi-Fi Provisioning",
+			"14387801-130c-49e7-b877-2881c89cb258": "Characteristic: Nordic SDK: Information",
+			"14387802-130c-49e7-b877-2881c89cb258": "Characteristic: Nordic SDK: Operation Control Point",
+			"14387803-130c-49e7-b877-2881c89cb258": "Characteristic: Nordic SDK: Data Out",
+			"00001523-1212-efde-1523-785feabcd123": "Service: Nordic SDK: LED Button Service (LBS)",
+			"00001524-1212-efde-1523-785feabcd123": "Characteristic: Nordic SDK: Button",
+			"00001525-1212-efde-1523-785feabcd123": "Characteristic: Nordic SDK: LED",
+			"8ec90003-f315-4f60-9fb8-838830daea50": "Characteristic: Nordic SDK: Buttonless DFU",
+			"0483dadd-6c9d-6ca9-5d41-03ad4fff4abb": "Service: Nordic SDK: GATT Throughput",
+			"57a70000-9350-11ed-a1eb-0242ac120002": "Service: Nordic SDK: Nordic Status Message Service (NSMS)",
+			"57a70001-9350-11ed-a1eb-0242ac120002": "Characteristic: Nordic SDK: NSMS status",
+			"3e520001-1368-b682-4440-d7dd234c45bc": "Service: Nordic Multi-Link LED Button SDK example; SDK lineage clue"
 		},
 		"TODO: GATT values": "Need to handle cases like 2a28 'Software Revision String' and then have a regex like '^nRF52' and have that be a Nordic ChipMakerPrint"
 	},
@@ -361,7 +387,8 @@
 			"'DataTrans(fer)' Vendor-specific UUID": "https://web.archive.org/web/20250730111949/https://github.com/songjw0820/AmebaPro2_SDK_v9.0a/blob/7cb6eae4736e220db2165dafdb5cd4f7afdc2f25/component/bluetooth/rtk_stack/example/bt_datatrans/bt_datatrans_module_param_config.c#L38",
 			"'DataTrans(fer)' alternate Vendor-specific UUID": "https://web.archive.org/web/20250731173150/https://github.com/Ameba-AIoT/ameba-rtos/blob/1b0b089ff45a26c1db85841441f622e61c49dd2b/component/bluetooth/rtk_stack/src/mesh/profile/datatrans_service.c#L16",
 			"DFU UUID": "https://web.archive.org/web/20250730221829/https://github.com/ambiot/ambz2_matter/blob/942359f7fcda6f1f8675c7ee548aa8bc08abf639/component/common/bluetooth/realtek/sdk/example/bt_ota_central_client/dfu_client.c#L45C41-L45C135",
-			"OTA UUID": "https://web.archive.org/web/20250731114339/https://github.com/Ameba-AIoT/ameba-rtos-z2/blob/main/component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/client/ota_client.h#L25"
+			"OTA UUID": "https://web.archive.org/web/20250731114339/https://github.com/Ameba-AIoT/ameba-rtos-z2/blob/main/component/common/bluetooth/realtek/sdk/inc/bluetooth/profile/client/ota_client.h#L25",
+			"RealSil DFU CLUES entries": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_0.json"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-04-22",
@@ -375,7 +402,11 @@
 			"12a24d2e-fe14-488e-93d2-173c87620000": "Service: Realtek: Device firmware update (DFU).",
 			"12a24d2e-fe14-488e-93d2-173c87630000": "Characteristic: Realtek: Device firmware update (DFU) 'data'.",
 			"12a24d2e-fe14-488e-93d2-173c87640000": "Characteristic: Realtek: Device firmware update (DFU) 'control point'.",
-			"12a24d2e-fe14-488e-93d2-173cffd00000": "Service: Realtek: Over-the-air (OTA) firmware update."
+			"12a24d2e-fe14-488e-93d2-173cffd00000": "Service: Realtek: Over-the-air (OTA) firmware update.",
+			"00006287-3c17-d293-8e48-14fe2e4da212": "Service: Realtek/Realsil DFU service; SDK lineage clue",
+			"00006387-3c17-d293-8e48-14fe2e4da212": "Characteristic: Realtek/Realsil DFU data; SDK lineage clue",
+			"00006487-3c17-d293-8e48-14fe2e4da212": "Characteristic: Realtek/Realsil DFU control point; SDK lineage clue",
+			"00006587-3c17-d293-8e48-14fe2e4da212": "Characteristic: Realtek/Realsil DFU buffer check / extended flash; SDK lineage clue"
 		}
 	},
 	"Silicon Labs GATTPrints": {
@@ -391,7 +422,8 @@
 		},
 		"evidence_URL": {
 			"Silicon Labs BGX": "https://web.archive.org/web/20240518104416/https://docs.silabs.com/gecko-os/1/bgx/latest/ble-services",
-			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html"
+			"Silicon Labs OTA": "https://web.archive.org/web/20240229185430/https://blog.quarkslab.com/breaking-secure-boot-on-the-silicon-labs-gecko-platform.html",
+			"Silicon Labs Gecko Bootloader OTA UUID table": "https://www.silabs.com/documents/public/application-notes/an1086-gecko-bootloader-bluetooth.pdf"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -405,7 +437,14 @@
 			"331a36f5-2459-45ea-9d95-6142f0c4b307": "Service: Silicon Labs: BGX Xpress Streaming",
 			"a9da6040-0823-4995-94ec-9ce41ca28833": "Characteristic: Silicon Labs: BGX: Peripheral Receive (RX)",
 			"a73e9a10-628f-4494-a099-12efaf72258f": "Characteristic: Silicon Labs: BGX: Peripheral Transmit (TX)",
-			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)"
+			"75a9f022-af03-4e41-b4bc-9de90a47d50b": "Characteristic: Silicon Labs: BGX: Stream Mode (Mode)",
+			"0bd51666-e7cb-469b-8e4d-2742f1ba77cc": "Service: Silicon Labs: Cable replacement service",
+			"e7add780-b042-4876-aae1-112855353cc1": "Characteristic: Silicon Labs: xgatt_data",
+			"4880c12c-fdcb-4077-8920-a450d7f9b907": "Service: Silicon Labs: Serial Port Profile (SPP)",
+			"fec26ec4-6d71-4442-9f81-55bc21d658d6": "Characteristic: Silicon Labs: Serial Port Profile (SPP) data",
+			"25f05c0a-e917-46e9-b2a5-aa2be1245afe": "Characteristic: Silicon Labs Gecko Bootloader version",
+			"4cc07bcf-0868-4b32-9dad-ba4cc41e5316": "Characteristic: Silicon Labs OTA version",
+			"4f4a2368-8cca-451e-bfff-cf0e2ee23e9f": "Characteristic: Silicon Labs AppLoader version"
 		}
 	},
 	"ST BlueNRG GATTPrints": {
@@ -479,7 +518,8 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2025-01-16",
 		"evidence_URL": {
-				"Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h"
+			"Open source SDK code": "https://web.archive.org/web/20250117012825/https://raw.githubusercontent.com/telink-semi/telink_b91m_btble_dual_mode_general_sdk/98b6453c5859b51feca6ec7a61b271fcb5538b8b/sdk/tlkstk/ble/service/uuid.h",
+			"Telink APK SDK UUID evidence": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_0.json"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2025-01-16",
@@ -498,7 +538,10 @@
 			"00010203-0405-0607-0809-0a0b0c0d1913": "Characteristic: TeLink: Mesh Light OTA update",
 			"00010203-0405-0607-0809-0a0b0c0d1914": "Characteristic: TeLink: Mesh Light Pair",
 			"00010203-0405-0607-0809-0a0b0c0d1920": "Service: TeLink: TeLink Mesh (proprietary?)",
-			"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)"
+			"00010203-0405-0607-0809-0a0b0c0d1921": "Service: TeLink: Mesh LT (lighting?)",
+			"00010203-0405-0607-0809-0a0b0c0d1926": "Characteristic: Telink SDK: TELINK_FIRMWARE_ID_CHAR",
+			"00010203-0405-0607-0809-0a0b0c0d1a10": "Service: Telink SDK: TELINK_MESH_OTA_SERVICE",
+			"00010203-0405-0607-0809-0a0b0c0d1a11": "Characteristic: Telink SDK: CHARACTERISTIC_ONLINE_STATUS"
 		}
 	},
 	"Texas Instruments GATTPrints": {
@@ -508,7 +551,10 @@
 		"submitted_by": "Xeno Kovah",
 		"submission_date": "2024-01-01",
 		"evidence_URL": {
-			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0"
+			"Texas Instruments: Over the Air Download (OAD) firmware update service": "https://web.archive.org/web/20240518160126/https://software-dl.ti.com/lprf/simplelink_cc2640r2_sdk/1.35.00.33/exports/docs/ble5stack/ble_user_guide/html/oad/oad_concepts.html#oad-service-0xffc0",
+			"TI CC256x SPPLE demo": "https://www.ti.com/lit/ug/swra772/swra772.pdf",
+			"TI Sensor BoosterPack UUID table": "https://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/simple_msp432_sdk_bluetooth_plugin/1_00_00_84/exports/docs/examples/rtos/MSP_EXP432P401R/bluetooth/sensor_booster_pack/README.html",
+			"TI extended OAD control": "https://software-dl.ti.com/msp430/msp430_public_sw/mcu/msp430/simple_msp432_sdk_bluetooth_plugin/1.40.00.42/exports/simplelink_sdk_ble_plugin_1_40_00_42/examples/rtos/MSP_EXP432P401R/bluetooth/oad_firmware_update/README.html"
 		},
 		"confirmed_by": "Xeno Kovah",
 		"confirmation_date": "2024-01-01",
@@ -520,7 +566,51 @@
 			"f000ffc1-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Identify",
 			"f000ffc2-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Block",
 			"f000ffc3-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Count",
-			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status"
+			"f000ffc4-0451-4000-b000-000000000000": "Characteristic: Texas Instruments: Over the Air Download (OAD) firmware update: Image Status",
+			"14839ac4-7d7e-415c-9a42-167340cf2339": "Service: TI SDK: TI custom serial example; SDK lineage clue",
+			"0734594a-a8e7-4b1a-a6b1-cd5243059a57": "Characteristic: TI SDK: Transmit (TX); SDK lineage clue",
+			"8b00ace7-eb0b-49b0-bbe9-9aee0a26e1a3": "Characteristic: TI SDK: Receive (RX); SDK lineage clue",
+			"ba04c4b2-892b-43be-b69c-5d13f2195392": "Characteristic: TI SDK: Transmit (TX) Credits; SDK lineage clue",
+			"e06d5efb-4f4a-45c0-9eb1-371ae5a14ad4": "Characteristic: TI SDK: Receive (RX) Credits; SDK lineage clue",
+			"f000ffc5-0451-4000-b000-000000000000": "Characteristic: TI SDK: Control; SDK lineage clue",
+			"f000aa10-0451-4000-b000-000000000000": "Service: TI SDK: Accelerometer; SDK lineage clue",
+			"f000aa40-0451-4000-b000-000000000000": "Service: TI SDK: Barometer; SDK lineage clue",
+			"f000aa50-0451-4000-b000-000000000000": "Service: TI SDK: Gyroscope; SDK lineage clue",
+			"f000aa20-0451-4000-b000-000000000000": "Service: TI SDK: Humidity; SDK lineage clue",
+			"f000aa00-0451-4000-b000-000000000000": "Service: TI SDK: Infrared Thermometer; SDK lineage clue",
+			"f000aa70-0451-4000-b000-000000000000": "Service: TI SDK: Luxometer; SDK lineage clue",
+			"f000aa30-0451-4000-b000-000000000000": "Service: TI SDK: Magnetometer; SDK lineage clue",
+			"f000aa31-0451-4000-b000-000000000000": "Characteristic: TI SDK: Magnet Data; SDK lineage clue",
+			"f000aa32-0451-4000-b000-000000000000": "Characteristic: TI SDK: Magnet Config; SDK lineage clue",
+			"f000aa80-0451-4000-b000-000000000000": "Service: TI SDK: Movement; SDK lineage clue",
+			"f000ffd0-0451-4000-b000-000000000000": "Service: TI SDK: OAD Reset; SDK lineage clue",
+			"f000ffd1-0451-4000-b000-000000000000": "Characteristic: TI SDK: OAD Start/Reset; SDK lineage clue",
+			"f000c0e0-0451-4000-b000-000000000000": "Service: TI SDK: Serial Port; SDK lineage clue",
+			"f000aa60-0451-4000-b000-000000000000": "Service: TI SDK: Test; SDK lineage clue",
+			"f000ffe0-0451-4000-b000-000000000000": "Service: TI SDK: UART serial; SDK lineage clue",
+			"f000aa01-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Irt Data; SDK lineage clue",
+			"f000aa02-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Irt Conf; SDK lineage clue",
+			"f000aa03-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Irt Peri; SDK lineage clue",
+			"f000aa11-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Acc Data; SDK lineage clue",
+			"f000aa12-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Acc Conf; SDK lineage clue",
+			"f000aa13-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Acc Peri; SDK lineage clue",
+			"f000aa21-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Humidity Data Char; SDK lineage clue",
+			"f000aa22-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Humidity Config Char; SDK lineage clue",
+			"f000aa23-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Hum Peri; SDK lineage clue",
+			"f000aa33-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Mag Peri; SDK lineage clue",
+			"f000aa41-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Pressure Data Char; SDK lineage clue",
+			"f000aa42-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Pressure Config Char; SDK lineage clue",
+			"f000aa43-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Pressure Cal Char; SDK lineage clue",
+			"f000aa44-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Bar Peri; SDK lineage clue",
+			"f000aa51-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Gyr Data; SDK lineage clue",
+			"f000aa52-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Gyr Conf; SDK lineage clue",
+			"f000aa53-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Gyr Peri; SDK lineage clue",
+			"f000aa71-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Opt Data; SDK lineage clue",
+			"f000aa72-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Opt Conf; SDK lineage clue",
+			"f000aa73-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Opt Peri; SDK lineage clue",
+			"f000aa81-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Mov Data; SDK lineage clue",
+			"f000aa82-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Mov Conf; SDK lineage clue",
+			"f000aa83-0451-4000-b000-000000000000": "Characteristic: TI SensorTag/SDK: Mov Peri; SDK lineage clue"
 		}
 	},
 	"Jabra Elite 3":{
@@ -721,6 +811,297 @@
 			"377c5001-d305-4d3e-b6ee-67610e18b575": "Service: Polara: iNXv2",
 			"377c5002-d305-4d3e-b6ee-67610e18b575": "Characteristic: Polara: iNXv2",
 			"377c5003-d305-4d3e-b6ee-67610e18b575": "Characteristic: Polara: iNXv2"
+		}
+	},
+	"Ambiq Apollo SDK GATTPrints": {
+		"comment": "These UUIDs are published by Ambiq for Apollo AMOTA and AMDTP examples. They identify Ambiq SDK lineage; their presence alone does not prove the physical chip.",
+		"2thprint_Chip_Maker": "Likely Ambiq Apollo (SDK GATT profile; chip unverified)",
+		"company_website": "https://ambiq.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Ambiq AMOTA guide": "https://ambiq.com/wp-content/uploads/2022/04/AMOTA-Example-UsersGuide.pdf",
+			"Ambiq AMDTP guide": "https://ambiq.com/wp-content/uploads/2022/03/AMDTP-Example-UsersGuide.pdf"
+		},
+		"confirmation_method": "Ambiq first-party SDK guides and CLUES APK findings; chip-maker inference qualified",
+		"confirmation_confidence": "7/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"00002760-08c2-11e1-9073-0e8ac72e0001": "Characteristic: Ambiq Apollo AMOTA RX; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e0002": "Characteristic: Ambiq Apollo AMOTA TX; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e0011": "Characteristic: Ambiq Apollo AMDTP RX; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e0012": "Characteristic: Ambiq Apollo AMDTP TX; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e0013": "Characteristic: Ambiq Apollo AMDTP ACK; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e1001": "Service: Ambiq Apollo AMOTA; SDK lineage clue",
+			"00002760-08c2-11e1-9073-0e8ac72e1011": "Service: Ambiq Apollo AMDTP; SDK lineage clue"
+		}
+	},
+	"Renesas/Dialog SUOTA GATTPrints": {
+		"comment": "These characteristic UUIDs identify the Dialog/Renesas SUOTA firmware-update profile. They are SDK lineage clues and do not by themselves prove the chip silicon.",
+		"2thprint_Chip_Maker": "Likely Renesas/Dialog (SUOTA profile; chip unverified)",
+		"company_website": "https://www.renesas.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Renesas SUOTA documentation": "https://lpccs-docs.renesas.com/UM-140-DA145x-CodeLess/sdkinfo.html",
+			"Mirrored Dialog DA14585 SDK SUOTA implementation": "https://github.com/byteman/da14585/blob/286060d1b264caf25da11c75517b9454b699257c/sdk/ble_stack/profiles/suota/suotar/src/suotar.c"
+		},
+		"confirmation_method": "CLUES human-verified SUOTA entries and Dialog SDK implementation; chip-maker inference qualified",
+		"confirmation_confidence": "7/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"42c3dfdd-77be-4d9c-8454-8f875267fb3b": "Characteristic: Renesas/Dialog SUOTA: Patch Data Char Size; SDK lineage clue",
+			"457871e8-d516-4ca1-9116-57d0b17b9cb2": "Characteristic: Renesas/Dialog SUOTA: Patch Data; SDK lineage clue",
+			"5f78df94-798c-46f5-990a-b3eb6a065c88": "Characteristic: Renesas/Dialog SUOTA: Serv Status; SDK lineage clue",
+			"64b4e8b5-0de5-401b-a21d-acc8db3b913a": "Characteristic: Renesas/Dialog SUOTA: Version; SDK lineage clue",
+			"6c53db25-47a1-45fe-a022-7c92fb334fd4": "Characteristic: Renesas/Dialog SUOTA: Mem Info; SDK lineage clue",
+			"724249f0-5ec3-4b5f-8804-42345af08651": "Characteristic: Renesas/Dialog SUOTA: Gpio Map; SDK lineage clue",
+			"8082caa8-41a6-4021-91c6-56f9b954cc34": "Characteristic: Renesas/Dialog SUOTA: Mem Dev; SDK lineage clue",
+			"9d84b9a3-000c-49d8-9183-855b673fda31": "Characteristic: Renesas/Dialog SUOTA: Patch Len; SDK lineage clue",
+			"b7de1eea-823d-43bb-a3af-c4903dfce23c": "Characteristic: Renesas/Dialog SUOTA: Mtu; SDK lineage clue"
+		}
+	},
+	"ST BlueST SDK GATTPrints": {
+		"comment": "These UUIDs identify ST BlueST SDK debug and configuration profiles. They identify ST SDK lineage, not necessarily physical ST silicon.",
+		"2thprint_Chip_Maker": "Likely STMicroelectronics (BlueST SDK profile; chip unverified)",
+		"company_website": "https://www.st.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"ST BlueST protocol user manual": "https://www.st.com/resource/en/user_manual/um2496-getting-started-with-the-bluest-protocol-and-sdk-stmicroelectronics.pdf"
+		},
+		"confirmation_method": "ST first-party BlueST protocol user manual and CLUES human-verified entries; chip-maker inference qualified",
+		"confirmation_confidence": "8/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"00000000-000f-11e1-9ab4-0002a5d5c51b": "Service: ST BlueST SDK: BlueST SDK Configuration; SDK lineage clue",
+			"00000001-000f-11e1-ac36-0002a5d5c51b": "Characteristic: ST BlueST SDK: Feature board configuration register; SDK lineage clue",
+			"00000002-000f-11e1-ac36-0002a5d5c51b": "Characteristic: ST BlueST SDK: Feature configuration; SDK lineage clue",
+			"00000000-000e-11e1-9ab4-0002a5d5c51b": "Service: ST BlueST SDK: BlueST SDK Debug; SDK lineage clue",
+			"00000001-000e-11e1-ac36-0002a5d5c51b": "Characteristic: ST BlueST SDK: Debug notify user message; SDK lineage clue",
+			"00000002-000e-11e1-ac36-0002a5d5c51b": "Characteristic: ST BlueST SDK: Debug notify user error message; SDK lineage clue"
+		}
+	},
+	"Avnera Audio SDK GATTPrints": {
+		"comment": "The UUIDs occur in com.avnera.audiomanager SDK code. Skyworks acquired Avnera in 2018. These identify SDK lineage; physical chip unverified.",
+		"2thprint_Chip_Maker": "Likely Avnera (Skyworks; audio SDK profile; chip unverified)",
+		"company_website": "https://www.skyworksinc.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Avnera SDK CLUES entries": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_6.json",
+			"Avnera SDK scan-filter entry": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_5.json",
+			"Skyworks acquisition SEC filing": "https://www.sec.gov/Archives/edgar/data/4127/000000412718000046/R10.htm"
+		},
+		"confirmation_method": "Avnera Android SDK package and Skyworks SEC filing; chip-maker inference qualified",
+		"confirmation_confidence": "6/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"58622534-68b7-4304-aef2-0de6f02e2018": "Service: Avnera audio scan filter; SDK lineage clue",
+			"6bcebee0-fcf8-4ed7-88c6-b41c1f240b86": "Service: Avnera audio service; SDK lineage clue",
+			"6bcebee1-fcf8-4ed7-88c6-b41c1f240b86": "Characteristic: Avnera audio command; SDK lineage clue",
+			"6bcebee2-fcf8-4ed7-88c6-b41c1f240b86": "Characteristic: Avnera audio notify 1; SDK lineage clue",
+			"6bcebee3-fcf8-4ed7-88c6-b41c1f240b86": "Characteristic: Avnera audio notify 2; SDK lineage clue",
+			"6bcebee4-fcf8-4ed7-88c6-b41c1f240b86": "Characteristic: Avnera audio notify 3; SDK lineage clue",
+			"6bcebee5-fcf8-4ed7-88c6-b41c1f240b86": "Characteristic: Avnera audio auxiliary; SDK lineage clue"
+		}
+	},
+	"Airoha RACE GATTPrints": {
+		"comment": "The ASCII UUID namespace and CLUES RACE protocol research identify Airoha RACE GATT profile lineage. Presence alone does not prove physical silicon.",
+		"2thprint_Chip_Maker": "Likely Airoha (RACE GATT profile; chip unverified)",
+		"company_website": "https://www.airoha.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"RACE toolkit Airoha UUID": "https://github.com/auracast-research/race-toolkit/blob/main/librace/constants.py"
+		},
+		"confirmation_method": "CLUES web-search attribution and literal AirohaBLE UUID namespace; chip inference qualified",
+		"confirmation_confidence": "7/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"5052494d-2dab-0341-6972-6f6861424c45": "Service: Airoha RACE GATT (PRIM/AirohaBLE); SDK lineage clue"
+		}
+	},
+	"PhyPlus OAD SDK GATTPrints": {
+		"comment": "The UUIDs occur in the PhyPlus PHY6202 OAD Android SDK. This OTA profile is used by other module and product vendors; it identifies protocol lineage, not physical silicon.",
+		"2thprint_Chip_Maker": "Likely PhyPlus (OAD SDK profile; chip unverified)",
+		"company_website": "https://en.phyplusinc.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"PhyPlus OAD CLUES APK entries": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_5.json",
+			"Hoperf module OTA service illustration": "https://www.hoperf.cn/uploads/CMT4522_EVB_%E5%BC%80%E5%8F%91%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C_v1.1_1693204615.pdf"
+		},
+		"confirmation_method": "PhyPlus PHY6202 SDK package and independent module documentation; chip inference qualified",
+		"confirmation_confidence": "6/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"5833ff01-9b8b-5191-6142-22a4536ef123": "Service: PhyPlus PHY6202 OTA application; SDK lineage clue",
+			"5833ff02-9b8b-5191-6142-22a4536ef123": "Characteristic: PhyPlus OTA identify; SDK lineage clue",
+			"5833ff03-9b8b-5191-6142-22a4536ef123": "Characteristic: PhyPlus OTA status notification; SDK lineage clue",
+			"5833ff04-9b8b-5191-6142-22a4536ef123": "Characteristic: PhyPlus OTA image block; SDK lineage clue"
+		}
+	},
+	"Chipsea Smart Scale SDK GATTPrints": {
+		"comment": "These UUIDs are used in the Chipsea BtGattAttr JD smart-scale profile. The profile is a Chipsea SDK clue; the physical Bluetooth chip is unverified.",
+		"2thprint_Chip_Maker": "Likely Chipsea (JD smart-scale SDK profile; chip unverified)",
+		"company_website": "https://www.chipsea.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Chipsea first-party Android app CLUES entries": "Analysis/CLUES_Schema/data/CLUES_data_LLM_Android_APK_search_d.json"
+		},
+		"confirmation_method": "Chipsea first-party Android app and BtGattAttr names; chip inference qualified",
+		"confirmation_confidence": "6/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"d618d000-6000-1000-8000-000000000000": "Service: Chipsea JD smart-scale SDK; SDK lineage clue",
+			"d618d001-6000-1000-8000-000000000000": "Characteristic: Chipsea JD smart-scale TX; SDK lineage clue",
+			"d618d002-6000-1000-8000-000000000000": "Characteristic: Chipsea JD smart-scale RX; SDK lineage clue"
+		}
+	},
+	"Goodix GR551x SDK GATTPrints": {
+		"comment": "These UUIDs identify vendor SDK/profile lineage; a UUID match alone does not prove the physical chip maker.",
+		"2thprint_Chip_Maker": "Likely Goodix (GR551x SDK profiles; chip unverified)",
+		"company_website": "https://www.goodix.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Goodix OTA source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/otas/otas.c",
+			"Goodix throughput source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/ths/ths.c",
+			"Goodix sample profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/sample/sample_service.c",
+			"Goodix gus profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/gus/gus.c",
+			"Goodix pcs profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/pcs/pcs.c",
+			"Goodix hrrcps profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/hrrcps/hrrcps.c",
+			"Goodix lns profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/lns/lns.c",
+			"Goodix dss profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/dss/dss.c",
+			"Goodix lms profile source": "https://github.com/goodix-ble/GR551x.SDK/blob/master/components/profiles/lms/lms.c"
+		},
+		"confirmation_method": "Goodix GR551x SDK profile source; chip inference qualified",
+		"confirmation_confidence": "8/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"a6ed0401-d344-460a-8075-b9e8ec90d71b": "Service: Goodix OTA/DFU; SDK lineage clue",
+			"a6ed0402-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix OTA/DFU TX; SDK lineage clue",
+			"a6ed0403-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix OTA/DFU RX; SDK lineage clue",
+			"a6ed0404-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix OTA/DFU control; SDK lineage clue",
+			"a6ed0301-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Throughput; SDK lineage clue",
+			"a6ed0302-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Throughput TX; SDK lineage clue",
+			"a6ed0303-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Throughput RX; SDK lineage clue",
+			"a6ed0304-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Throughput settings; SDK lineage clue",
+			"a6ed0305-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Throughput toggle; SDK lineage clue",
+			"a6ed0101-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Sample; SDK lineage clue",
+			"a6ed0102-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Sample TX; SDK lineage clue",
+			"a6ed0103-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Sample RX; SDK lineage clue",
+			"a6ed0201-d344-460a-8075-b9e8ec90d71b": "Service: Goodix UART; SDK lineage clue",
+			"a6ed0202-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix UART TX; SDK lineage clue",
+			"a6ed0203-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix UART RX; SDK lineage clue",
+			"a6ed0204-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix UART flow control; SDK lineage clue",
+			"a6ed0501-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Power Consumption; SDK lineage clue",
+			"a6ed0502-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Power Consumption TX; SDK lineage clue",
+			"a6ed0503-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Power Consumption settings; SDK lineage clue",
+			"a6ed0601-d344-460a-8075-b9e8ec90d71b": "Service: Goodix HRS/RSCS relay control point; SDK lineage clue",
+			"a6ed0602-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix HRS/RSCS relay command; SDK lineage clue",
+			"a6ed0603-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix HRS/RSCS relay response; SDK lineage clue",
+			"a6ed0801-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Log Notification; SDK lineage clue",
+			"a6ed0802-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Log information; SDK lineage clue",
+			"a6ed0803-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Log control point; SDK lineage clue",
+			"a6ed0a01-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Device Synchronize; SDK lineage clue",
+			"a6ed0a02-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Device Synchronize role; SDK lineage clue",
+			"a6ed0a03-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Device Synchronize event count; SDK lineage clue",
+			"a6ed0a04-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Device Synchronize event period; SDK lineage clue",
+			"a6ed0a05-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Device Synchronize status; SDK lineage clue",
+			"a6ed0a06-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Device Synchronize control point; SDK lineage clue",
+			"a6ed0b01-d344-460a-8075-b9e8ec90d71b": "Service: Goodix Log Management; SDK lineage clue",
+			"a6ed0b02-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Log Management command; SDK lineage clue",
+			"a6ed0b03-d344-460a-8075-b9e8ec90d71b": "Characteristic: Goodix Log Management data; SDK lineage clue"
+		}
+	},
+	"Actions ATS3089 SDK GATTPrints": {
+		"comment": "These UUIDs identify vendor SDK/profile lineage; a UUID match alone does not prove the physical chip maker.",
+		"2thprint_Chip_Maker": "Likely Actions Technology (ATS3089 OTA and watch logging SDK profiles; chip unverified)",
+		"company_website": "https://www.actionstech.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Actions OTA source": "https://github.com/linhui200699/ats3089/blob/master/application/bt_watch/src/ota/ota_app_foreground.c",
+			"Actions log source": "https://github.com/linhui200699/ats3089/blob/master/application/bt_watch/src/bt_log/log_service.c"
+		},
+		"confirmation_method": "Actions ATS3089 SDK mirror and matching Android CLUES; chip inference qualified",
+		"confirmation_confidence": "7/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"e49a25f8-f69a-11e8-8eb2-f2801f1b9fd1": "Service: Actions OTA; SDK lineage clue",
+			"e49a25e0-f69a-11e8-8eb2-f2801f1b9fd1": "Characteristic: Actions OTA RX; SDK lineage clue",
+			"e49a28e1-f69a-11e8-8eb2-f2801f1b9fd1": "Characteristic: Actions OTA TX; SDK lineage clue",
+			"e49a3001-f69a-11e8-8eb2-f2801f1b9fd1": "Service: Actions Watch log; SDK lineage clue",
+			"e49a3002-f69a-11e8-8eb2-f2801f1b9fd1": "Characteristic: Actions Watch log RX; SDK lineage clue",
+			"e49a3003-f69a-11e8-8eb2-f2801f1b9fd1": "Characteristic: Actions Watch log TX; SDK lineage clue"
+		}
+	},
+	"EM Microelectronic Data Transfer SDK GATTPrints": {
+		"comment": "These UUIDs identify vendor SDK/profile lineage; a UUID match alone does not prove the physical chip maker.",
+		"2thprint_Chip_Maker": "Likely EM Microelectronic (EM9304/EM9305 data transfer SDK profile; chip unverified)",
+		"company_website": "https://www.emmicroelectronic.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"EM9305 SDK data transfer UUIDs": "https://github.com/C0R3YY2/em9305_original/blob/main/doc/sdk/_sources/IC/nvm_emb_datatransfer_server/index.rst.txt",
+			"EM9304 datasheet": "https://www.emmicroelectronic.com/sites/default/files/products/datasheets/9304-DS.pdf"
+		},
+		"confirmation_method": "EM9304 SDK source and public EM9305 SDK guide listing both UUIDs; chip inference qualified",
+		"confirmation_confidence": "8/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"81cf6f08-454d-11e8-adc0-fa7ae01bd428": "Service: EM Microelectronic EM Data Transfer; SDK lineage clue",
+			"81cf7192-454d-11e8-adc0-fa7ae01bd428": "Characteristic: EM Microelectronic EM Data Transfer data; SDK lineage clue"
+		}
+	},
+	"onsemi RSL15 DFU SDK GATTPrints": {
+		"comment": "These UUIDs identify vendor SDK/profile lineage; a UUID match alone does not prove the physical chip maker.",
+		"2thprint_Chip_Maker": "Likely onsemi (RSL15 FOTA/DFU SDK profile; chip unverified)",
+		"company_website": "https://www.onsemi.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"onsemi RSL15 FOTA UUID definitions": "https://github.com/nimish/rsl15_cmake/blob/master/firmware/source/lib/fota/include/sys_fota.h"
+		},
+		"confirmation_method": "onsemi RSL15 SDK mirror and com.onsemi.protocol.update Android CLUES; chip inference qualified",
+		"confirmation_confidence": "8/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"b2152466-d600-11e8-9f8b-f2801f1b9fd1": "Service: onsemi DFU; SDK lineage clue",
+			"b2152466-d601-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU data; SDK lineage clue",
+			"b2152466-d602-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU device ID; SDK lineage clue",
+			"b2152466-d603-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU bootloader version; SDK lineage clue",
+			"b2152466-d604-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU BLE stack version; SDK lineage clue",
+			"b2152466-d605-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU application version; SDK lineage clue",
+			"b2152466-d606-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU build ID; SDK lineage clue",
+			"b2152466-d607-11e8-9f8b-f2801f1b9fd1": "Characteristic: onsemi DFU enter FOTA; SDK lineage clue"
+		}
+	},
+	"Bouffalo Lab BLE SDK GATTPrints": {
+		"comment": "These UUIDs identify Bouffalo Lab SDK/profile lineage; a UUID match alone does not prove the physical chip maker. The throughput test service is a public sample reused in other products.",
+		"2thprint_Chip_Maker": "Likely Bouffalo Lab (BLE OAD and peripheral test SDK profiles; chip unverified)",
+		"company_website": "https://bouffalolab.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-12",
+		"evidence_URL": {
+			"Bouffalo Lab OAD source": "https://github.com/bouffalolab/bl_iot_sdk/blob/master/components/network/ble/blestack/src/services/oad/oad.h",
+			"Bouffalo Lab throughput example": "https://github.com/bouffalolab/bouffalo_sdk/blob/master/examples/btble/peripheral/ble_tp_svc.h"
+		},
+		"confirmation_method": "Public Bouffalo Lab SDK sources; chip inference qualified",
+		"confirmation_confidence": "7/10",
+		"2thprint_ChipMaker_GATTprint": "True",
+		"Vendor_Specific_UUIDs": {
+			"00070000-0745-4650-8d93-df59be2fc10a": "Service: Bouffalo Lab OAD; SDK lineage clue",
+			"00070001-0745-4650-8d93-df59be2fc10a": "Characteristic: Bouffalo Lab OAD data in; SDK lineage clue",
+			"00070002-0745-4650-8d93-df59be2fc10a": "Characteristic: Bouffalo Lab OAD data out; SDK lineage clue",
+			"07af27a5-9c22-11ea-9afe-02fcdc4e7412": "Service: Bouffalo Lab BLE throughput test; SDK lineage clue",
+			"07af27a6-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput read; SDK lineage clue",
+			"07af27a7-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput write; SDK lineage clue",
+			"07af27a8-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput indicate; SDK lineage clue",
+			"07af27a9-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput notify; SDK lineage clue"
 		}
 	}
 }
