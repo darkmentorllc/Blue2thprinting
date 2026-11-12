@@ -643,6 +643,7 @@ def print_company_name_from_bdaddr(indent, bdaddr, print_type):
 
 def find_nameprint_match(name_string):
     found = False
+    unknown_device_usage = False
     for key, value in TME.TME_glob.full_nameprint_data.items():
         #regex_pattern = key
         # Compensate for difference in how MySQL regex requires three \ to escape ( whereas python only requires one
@@ -651,10 +652,14 @@ def find_nameprint_match(name_string):
         if re.search(regex_pattern, name_string):
             qprint(f"{i3}NamePrint: match found for {key}: {value}")
             found = True
+            if "Device type/usage unknown." in value:
+                unknown_device_usage = True
 
-    if(not found and (name_string != "" and name_string != '\x00')):
-        qprint(f"{i4}NamePrint: no match found")
-        qprint(f"{i4}Do you know what device this is? If so, submit a NamePrint here: https://forms.gle/T6GwPs5NqDTxxzK36")
+    if name_string != "" and name_string != '\x00':
+        if not found:
+            qprint(f"{i4}NamePrint: no match found")
+        if not found or unknown_device_usage:
+            qprint(f"{i4}Do you know what device this is? If so, submit a NamePrint here: https://forms.gle/T6GwPs5NqDTxxzK36")
 
 
 def name_matches_nonunique_nameprint(name_string):
