@@ -4,6 +4,7 @@
 ########################################
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 # import TME.TME_glob
 from TME.TME_helpers import *
 from TME.TME_glob import i1, i2, i3, i4, i5 # Required for terser usage within print statements
@@ -510,9 +511,8 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
         # LOOKUP BDADDRS BY OUIS (ACROSS ALL TABLES!)
         #############################################
 
+        oui_jobs = []
         for prefix in bdaddr_prefixes.keys():
-            qprint(f"BDADDR OUI: {prefix}")
-
             if(bdaddr_random is not None):
                 values = (prefix,) + (bdaddr_random,) * 33
                 oui_search_query = f"""
@@ -733,15 +733,30 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
                 ) AS t
                 WHERE t.bdaddr LIKE CONCAT(prefix.bdaddr_prefix, '%');
                 """
-            #qprint(oui_search_query)
+            oui_jobs.append((prefix, oui_search_query, values))
 
+        # Each worker uses its own MySQL connection. Keep the worker count
+        # bounded because each OUI query scans many tables.
+        if len(oui_jobs) > 1:
+            with ThreadPoolExecutor(max_workers=min(4, len(oui_jobs))) as executor:
+                oui_results = executor.map(
+                    lambda job: execute_query_isolated(job[1], job[2]), oui_jobs
+                )
+                for (prefix, _, _), oui_search_result in zip(oui_jobs, oui_results):
+                    qprint(f"BDADDR OUI: {prefix}")
+                    for (bdaddr,) in oui_search_result:
+                        bdaddr_hash[bdaddr] = 1
+                    qprint(f"{i1}{len(oui_search_result)} results found in all scanned tables")
+                    qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash)}")
+        elif oui_jobs:
+            prefix, oui_search_query, values = oui_jobs[0]
+            qprint(f"BDADDR OUI: {prefix}")
             oui_search_result = execute_query(oui_search_query, values)
             for (bdaddr,) in oui_search_result:
                 bdaddr_hash[bdaddr] = 1
 
             qprint(f"{i1}{len(oui_search_result)} results found in all scanned tables")
-            #qprint(f"get_bdaddrs_by_company_regex: bdaddr_hash = {bdaddr_hash}")
-            qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash.keys())}")
+            qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash)}")
 
     if(enable_CLUES_lookup):
         UUIDs_to_company_map = {}
@@ -750,13 +765,27 @@ def get_bdaddrs_by_company_regex(companyregex, bdaddr_random):
                 qprint(f"UUID {TME.TME_glob.clues[key]["UUID"]} matched company name regex {companyregex} in CLUES data")
                 UUIDs_to_company_map[TME.TME_glob.clues[key]["UUID"]] = 1
 
-        for UUID in UUIDs_to_company_map.keys():
-            bdaddrs_tmp = get_bdaddrs_by_uuid_regex(UUID.replace("-", ""), bdaddr_random)
-            if(bdaddrs_tmp is not None):
-                for bdaddr in bdaddrs_tmp:
-                    bdaddr_hash[bdaddr] = 1
-                qprint(f"{i1}{len(bdaddrs_tmp)} results found for UUID {UUID}")
-                qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash.keys())}")
+        def lookup_clues_uuid(UUID):
+            jobs = _uuid_query_jobs(UUID.replace("-", ""), bdaddr_random)
+            results = execute_queries_isolated(
+                (query, values) for _, query, values in jobs
+            )
+            return jobs, results
+
+        UUIDs = list(UUIDs_to_company_map)
+        if UUIDs:
+            # Parallelize across UUIDs, not across their tables, so no more
+            # than four database connections are active for this path.
+            with ThreadPoolExecutor(max_workers=min(4, len(UUIDs))) as executor:
+                lookup_results = executor.map(lookup_clues_uuid, UUIDs)
+                for UUID, (jobs, results) in zip(UUIDs, lookup_results):
+                    bdaddrs_tmp = _merge_uuid_query_results(
+                        UUID.replace("-", ""), jobs, results
+                    )
+                    for bdaddr in bdaddrs_tmp:
+                        bdaddr_hash[bdaddr] = 1
+                    qprint(f"{i1}{len(bdaddrs_tmp)} results found for UUID {UUID}")
+                    qprint(f"{i1}bdaddr_hash current length = {len(bdaddr_hash)}")
 
 # TODO! Add the capability to search within the read values from GATT "Manufacturer Name" characteristics (will require interpreting as string within MySQL)
 #    if(enable_GATT_manufacturer_lookup):
@@ -986,212 +1015,58 @@ def sanity_check_UUID_regex(entry):
         print("Input must be y or n. Try again!")
 
 
-def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
+def _uuid_query_jobs(uuid_regex, bdaddr_random):
+    # A regex can match more than one UUID width, so check all 15 tables.
+    uuid_tables = (
+        ("EIR_bdaddr_to_UUID128s", "str_UUID128s", False),
+        ("LE_bdaddr_to_UUID128s_list", "str_UUID128s", True),
+        ("LE_bdaddr_to_UUID128_service_solicit", "str_UUID128s", True),
+        ("LE_bdaddr_to_UUID128_service_data", "UUID128_hex_str", True),
+        ("EIR_bdaddr_to_UUID32s", "str_UUID32s", False),
+        ("LE_bdaddr_to_UUID32s_list", "str_UUID32s", True),
+        ("LE_bdaddr_to_UUID32_service_solicit", "str_UUID32s", True),
+        ("LE_bdaddr_to_UUID32_service_data", "UUID32_hex_str", True),
+        ("EIR_bdaddr_to_UUID16s", "str_UUID16s", False),
+        ("LE_bdaddr_to_UUID16s_list", "str_UUID16s", True),
+        ("LE_bdaddr_to_UUID16_service_solicit", "str_UUID16s", True),
+        ("LE_bdaddr_to_UUID16_service_data", "UUID16_hex_str", True),
+        ("GATT_services", "UUID", True),
+        ("GATT_characteristics", "UUID", True),
+        ("GATT_attribute_handles", "UUID", True),
+    )
+    jobs = []
+    for table, column, has_bdaddr_random in uuid_tables:
+        if has_bdaddr_random and bdaddr_random is not None:
+            query = f"SELECT bdaddr FROM {table} WHERE bdaddr_random = %s AND {column} REGEXP %s"
+            values = (bdaddr_random, uuid_regex)
+        else:
+            query = f"SELECT bdaddr FROM {table} WHERE {column} REGEXP %s"
+            values = (uuid_regex,)
+        jobs.append((table, query, values))
+    return jobs
 
+
+def _merge_uuid_query_results(uuid_regex, jobs, results):
     qprint(f"{uuid_regex} in get_bdaddrs_by_uuid_regex")
-    bdaddr_hash = {} # Use hash to de-duplicate between all results from all tables
-
-    # We probably shouldn't remove - since it can change the meaning of things like [1-4]...
-    #uuid_regex.replace("-", "")
-
-    # It could be argued that I could skip some UUID16 tables if the regex is guaranteed to be
-    # > 4 characters, but that would require fully interpolating the regex.
-    # So I'm just going to do it the simple but inefficient way, and look at all the tables
-    # which contain a UUID, regardless of length.
-
-    values = (uuid_regex,)
-
-    ###################################
-    # Start with UUID128 tables
-    ###################################
-
-    # BR/EDR advertisements
-    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID128s WHERE str_UUID128s REGEXP %s"
-    eir_result = execute_query(eir_query, values)
-    for (bdaddr,) in eir_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID128s")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    # LE advertisements
-    if(bdaddr_random is not None):
-        values = (bdaddr_random, uuid_regex)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE bdaddr_random = %s AND str_UUID128s REGEXP %s"
-    else:
-        values = (uuid_regex,)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128s_list WHERE str_UUID128s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128s_list")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE bdaddr_random = %s AND str_UUID128s REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_solicit WHERE str_UUID128s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128_service_solicit")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE bdaddr_random = %s AND UUID128_hex_str REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID128_service_data WHERE UUID128_hex_str REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID128_service_solicit")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    ###################################
-    # Then UUID32 tables
-    ###################################
-
-    # BR/EDR advertisements
-    values = (uuid_regex,)
-    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID32s WHERE str_UUID32s REGEXP %s"
-    eir_result = execute_query(eir_query, values)
-    for (bdaddr,) in eir_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID32s")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    # LE advertisements
-    if(bdaddr_random is not None):
-        values = (bdaddr_random, uuid_regex)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE bdaddr_random = %s AND str_UUID32s REGEXP %s"
-    else:
-        values = (uuid_regex,)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32s_list WHERE str_UUID32s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32s_list")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE bdaddr_random = %s AND str_UUID32s REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_solicit WHERE str_UUID32s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32_service_solicit")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE bdaddr_random = %s AND UUID32_hex_str REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID32_service_data WHERE UUID32_hex_str REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID32_service_data")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    ###################################
-    # Then UUID16 tables
-    ###################################
-
-    # BR/EDR advertisements
-    values = (uuid_regex,)
-    eir_query = "SELECT bdaddr FROM EIR_bdaddr_to_UUID16s WHERE str_UUID16s REGEXP %s"
-    eir_result = execute_query(eir_query, values)
-    for (bdaddr,) in eir_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in DB:EIR_bdaddr_to_UUID16s")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    # LE advertisements
-    if(bdaddr_random is not None):
-        values = (bdaddr_random, uuid_regex)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
-    else:
-        values = (uuid_regex,)
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16s_list WHERE str_UUID16s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16s_list")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE bdaddr_random = %s AND str_UUID16s REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_solicit WHERE str_UUID16s REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16_service_solicit")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE bdaddr_random = %s AND UUID16_hex_str REGEXP %s"
-    else:
-        le_query = "SELECT bdaddr FROM LE_bdaddr_to_UUID16_service_data WHERE UUID16_hex_str REGEXP %s"
-    le_result = execute_query(le_query, values)
-    for (bdaddr,) in le_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(le_result)} results found in DB:LE_bdaddr_to_UUID16_service_data")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    ################################################
-    # Then GATT, which can have UUID16s or UUID128s
-    ################################################
-
-    # GATT (technically LE or BR/EDR but I don't have BR/EDR-based collection)
-
-    if(bdaddr_random is not None):
-        gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE bdaddr_random = %s AND UUID REGEXP %s"
-    else:
-        gatt_service_query = "SELECT bdaddr FROM GATT_services WHERE UUID REGEXP %s"
-    gatt_service_result = execute_query(gatt_service_query, values)
-    for (bdaddr,) in gatt_service_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_service_result)} results found in GATT_services")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE bdaddr_random = %s AND UUID REGEXP %s"
-    else:
-        gatt_char_query = "SELECT bdaddr FROM GATT_characteristics WHERE UUID REGEXP %s"
-    gatt_char_result = execute_query(gatt_char_query, values)
-    for (bdaddr,) in gatt_char_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_char_result)} results found in GATT_characteristics")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
-    if(bdaddr_random is not None):
-        gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE bdaddr_random = %s AND UUID REGEXP %s"
-    else:
-        gatt_desc_query = "SELECT bdaddr FROM GATT_attribute_handles WHERE UUID REGEXP %s"
-    gatt_desc_result = execute_query(gatt_desc_query, values)
-    for (bdaddr,) in gatt_desc_result:
-        bdaddr_hash[bdaddr] = 1
-    vprint(f"get_bdaddrs_by_uuid_regex: {len(gatt_desc_result)} results found in GATT_attribute_handles")
-    vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash len {len(bdaddr_hash)} = {bdaddr_hash}")
-
-    ################################################
-    # Then SDP, which can have UUID16/32/128s
-    ################################################
-
-    # BR/EDR SDP
-
-    # TODO: I'd like to pull out UUIDs specifically and put them back in a separate table,
-    # because right now this will probably yield a decent number of false positives...
-    # It can also yield false negatives, if given the full UUID, because I've seen
-    # them be fragmented across packets.
-    # eir_query = "SELECT bdaddr FROM SDP_Common HERE HEX(byte_values) REGEXP %s"
-    # eir_result = execute_query(eir_query, values)
-    # for (bdaddr,) in eir_result:
-    #     bdaddr_hash[bdaddr] = 1
-    # qprint(f"get_bdaddrs_by_uuid_regex: {len(eir_result)} results found in SDP_Common")
-    # vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
-
+    bdaddr_hash = {}  # Preserve table order while de-duplicating addresses.
+    for (table, _, _), rows in zip(jobs, results):
+        for (bdaddr,) in rows:
+            bdaddr_hash[bdaddr] = 1
+        vprint(f"get_bdaddrs_by_uuid_regex: {len(rows)} results found in DB:{table}")
+        vprint(f"get_bdaddrs_by_uuid_regex: bdaddr_hash = {bdaddr_hash}")
     return bdaddr_hash.keys()
+
+
+def get_bdaddrs_by_uuid_regex(uuid_regex, bdaddr_random):
+    jobs = _uuid_query_jobs(uuid_regex, bdaddr_random)
+    # For a single UUID, overlap table queries on at most four connections.
+    # The CLUES path instead overlaps UUIDs and runs each UUID's queries on
+    # one connection, so the worker limit is still four overall.
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        results = executor.map(
+            lambda job: execute_query_isolated(job[1], job[2]), jobs
+        )
+        return _merge_uuid_query_results(uuid_regex, jobs, results)
 
 
 def get_bdaddrs_by_LL_VERSION_IND(version, company_id, subversion, bdaddr_random):

@@ -24,21 +24,25 @@ init(autoreset=True)
 _mysql_conn = None
 
 
+def _connect_mysql():
+    database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
+    return mysql.connector.connect(
+        host='localhost',
+        user='user',
+        password='a',
+        database=database,
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
+        auth_plugin='mysql_native_password',
+        get_warnings=True,
+        raise_on_warnings=True,
+    )
+
+
 def _get_mysql_conn():
     global _mysql_conn
     if _mysql_conn is None:
-        database = 'bttest' if TME.TME_glob.use_test_db else 'bt2'
-        _mysql_conn = mysql.connector.connect(
-            host='localhost',
-            user='user',
-            password='a',
-            database=database,
-            charset='utf8mb4',
-            collation='utf8mb4_unicode_ci',
-            auth_plugin='mysql_native_password',
-            get_warnings=True,
-            raise_on_warnings=True,
-        )
+        _mysql_conn = _connect_mysql()
     return _mysql_conn
 
 
@@ -46,10 +50,33 @@ def _get_mysql_conn():
 def execute_query(query, values):
     connection = _get_mysql_conn()
     cursor = connection.cursor()
-    cursor.execute(query, values)
-    result = cursor.fetchall()
-    cursor.close()
-    return result
+    try:
+        cursor.execute(query, values)
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+
+
+def execute_query_isolated(query, values):
+    """Run a read on its own connection, safe for a parallel lookup worker."""
+    return execute_queries_isolated(((query, values),))[0]
+
+
+def execute_queries_isolated(queries):
+    """Run a worker's reads on one private connection in query order."""
+    connection = _connect_mysql()
+    try:
+        cursor = connection.cursor()
+        try:
+            results = []
+            for query, values in queries:
+                cursor.execute(query, values)
+                results.append(cursor.fetchall())
+            return results
+        finally:
+            cursor.close()
+    finally:
+        connection.close()
 
 def execute_update(query, values):
     connection = _get_mysql_conn()
