@@ -11,13 +11,15 @@
 // the BlueZ source tree at all. It just happens to live under tools/ for
 // historical / colocation reasons.
 //
-// DarkFirmware_real_i LMP-RX Vendor-Specific Event (0xFF) parameter layout
-// (see DarkFirmware_real_i/02_custom_patch_src_asm/RTL8761B_patch_modification.asm):
-//   [0..1] 'D','F'   [2] firmware connection index
-//   [3]    number of received LMP PDUs the firmware did NOT report since the
-//          previous VSE (it skips them when its 8-entry HCI event pool is low)
-//   [4]    LMP PDU length N (opcode byte(s) + payload, max 17)
-//   [5..]  N bytes of LMP PDU: (opcode << 1) | TID, then payload
+// Uses Realtek's "VSC over HCI for LMP/LLCP Passthrough" interface (RTL8761CUV
+// spec V1.1.0), which DarkFirmware_real_i also implements on the RTL8761B
+// (see DarkFirmware_real_i/02_custom_patch_src_asm/RTL8761B_patch_modification.asm).
+// LMP-RX Vendor-Specific Event (0xFF) parameter layout, always 22 bytes:
+//   [0]     0x85 SubEventCode     [1] 0x00 Type (LMP)
+//   [2..3]  ConnHandle (little-endian)
+//   [4]     lmp_opcode (7-bit)    [5] Trans_id
+//   [6..21] lmp_res_data: the PDU bytes after the opcode, zero-padded to 16
+//           (for lmp_opcode 0x7F, lmp_res_data[0] is the extended opcode)
 // In the raw read() buffer these parameters start at buf[3] (after the 1-byte
 // HCI packet type and the 2-byte hci_event_hdr).
 
@@ -37,6 +39,7 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 #include <pthread.h>
+#include <poll.h>
 #include <json-c/json.h>
 
 unsigned long long g_lmp_opcodes_seen = 0;
@@ -245,10 +248,31 @@ const char *lmp_ext_opcode_names[ext_opcode_MAX_VALUE] = {
 #define OPCODE_SEEN(x) (g_lmp_opcodes_seen & (1ULL << (x)))
 #define EXT_OPCODE_SEEN(x) (g_lmp_ext_opcodes_seen & (1ULL << (x)))
 
-// Payload size table (opcode -> payload bytes excluding the opcode byte).
-// Mirrors examples/LMP_common.py:163 LMP_BASIC_OPCODES_TO_BYTE_SIZES.
-// Only entries we actually need to parse; everything else falls back to
-// the variable-length read up to readlen.
+// Payload size table (opcode -> payload bytes excluding the opcode byte), from
+// the Core spec's LMP PDU lengths. The Realtek VSE always carries 16 bytes of
+// zero-padded data, so this is how the real payload length is recovered.
+// Only entries we actually need to parse; everything else is reported with
+// all of the bytes the VSE carries.
+static int lmp_payload_size_for(int opcode, int ext_opcode) {
+    switch (opcode) {
+    case opcode_LMP_ACCEPTED:        return 1;
+    case opcode_LMP_NOT_ACCEPTED:    return 2;
+    case opcode_LMP_NAME_REQ:        return 1;
+    case opcode_LMP_NAME_RES:        return 16;
+    case opcode_LMP_VERSION_REQ:     return 5;
+    case opcode_LMP_VERSION_RES:     return 5;
+    case opcode_LMP_FEATURES_REQ:    return 8;
+    case opcode_LMP_FEATURES_RES:    return 8;
+    case 0x7F:
+        // Payload after the extended opcode: page, max page, 8 feature bytes
+        if (ext_opcode == ext_opcode_LMP_FEATURES_REQ_EXT ||
+            ext_opcode == ext_opcode_LMP_FEATURES_RES_EXT)
+            return 10;
+        return -1;
+    default:                         return -1;
+    }
+}
+
 // State machine bitmask
 unsigned long long gAllRequiredResponses = 0;
 #define RR_LMP_FEATURES_RES         (1ULL << 0)
@@ -664,39 +688,38 @@ static void write_btides_file(void) {
 
 static void parse_name_fragment(const unsigned char *payload, int payload_len);
 
-#define DF_VSE_PARAMS_OFFSET 3   // buf[0] = HCI packet type, buf[1..2] = hci_event_hdr
-#define DF_VSE_HDR_LEN       5   // 'D','F', conn index, missed count, PDU length
+#define RTK_VSE_PARAMS_OFFSET 3   // buf[0] = HCI packet type, buf[1..2] = hci_event_hdr
+#define RTK_VSE_SUBEVT        0x85
+#define RTK_VSE_TYPE_LMP      0x00
+#define RTK_VSE_DATA_OFFSET   6     // SubEventCode, Type, ConnHandle(2), opcode, Trans_id
+#define RTK_VSE_DATA_LEN      16
 
 static void parse_vse(const unsigned char *buf, int readlen) {
-    const unsigned char *p = buf + DF_VSE_PARAMS_OFFSET;
-    int plen = readlen - DF_VSE_PARAMS_OFFSET;
-    if (plen < DF_VSE_HDR_LEN + 1) return;
-    if (p[0] != 'D' || p[1] != 'F') return; // not one of our VSEs
+    const unsigned char *p = buf + RTK_VSE_PARAMS_OFFSET;
+    int plen = readlen - RTK_VSE_PARAMS_OFFSET;
+    if (plen < RTK_VSE_DATA_OFFSET + RTK_VSE_DATA_LEN) return;
+    if (p[0] != RTK_VSE_SUBEVT || p[1] != RTK_VSE_TYPE_LMP) return; // not an LMP passthrough VSE
 
-    int missed = p[3];
-    int pdu_len = p[4];
-    const unsigned char *pdu = p + DF_VSE_HDR_LEN;
-    if (pdu_len < 1 || DF_VSE_HDR_LEN + pdu_len > plen) return; // malformed
-    if (missed)
-        fprintf(stderr, "\t[!] firmware skipped %d LMP PDU(s) before this one (HCI event pool low)\n",
-                missed);
-
-    unsigned char raw = pdu[0];
-    int opcode = raw >> 1;
+    int conn_handle = p[2] | (p[3] << 8);
+    int opcode = p[4] & 0x7F;
+    int tid = p[5];
+    const unsigned char *data = p + RTK_VSE_DATA_OFFSET;
     int ext_opcode = -1;
     int payload_offset; // offset of the LMP payload within buf
+    int avail;          // payload bytes the VSE carries
     if (opcode == 0x7F) {
-        if (pdu_len < 2) return;
-        ext_opcode = pdu[1];
-        payload_offset = (int)(pdu - buf) + 2;
+        ext_opcode = data[0];
+        payload_offset = (int)(data - buf) + 1;
+        avail = RTK_VSE_DATA_LEN - 1;
     } else {
-        payload_offset = (int)(pdu - buf) + 1;
+        payload_offset = (int)(data - buf);
+        avail = RTK_VSE_DATA_LEN;
     }
-    // The firmware reports the PDU's real length, so no per-opcode size table is needed.
-    int payload_len = (int)(pdu - buf) + pdu_len - payload_offset;
+    int payload_len = lmp_payload_size_for(opcode, ext_opcode);
+    if (payload_len < 0 || payload_len > avail) payload_len = avail;
 
-    fprintf(stderr, "\t[!] VSE opcode raw=0x%02X opcode=%d ext=%d plen=%d\n",
-            raw, opcode, ext_opcode, payload_len);
+    fprintf(stderr, "\t[!] VSE handle=0x%04X opcode=%d tid=%d ext=%d plen=%d\n",
+            conn_handle, opcode, tid, ext_opcode, payload_len);
 
     // Side effects + BTIDES emission.
     if (opcode == 0x7F && ext_opcode >= 0) {
@@ -827,71 +850,177 @@ void *threaded_hci_read(void *arg) {
 }
 
 // ---------------------------------------------------------------------------
-// Send helpers. Per the firmware-side VSC contract: byte 0 = bare 7-bit LMP
-// opcode, byte 1 = connection selector (0x00 = first active BR/EDR connection,
-// 0x01-0x0C = that HCI connection handle), bytes 2..N = LMP payload (2..18 bytes
-// total). The firmware left-shifts opcode and sets the TID. Matches the payloads
-// in DarkFirmware_real_i/05_XENO_VSC_RX_TX/bumble/examples/Xeno_VSC_send_custom_LMP.py
-// at lines 129 and 135.
+// Send helpers. Realtek LMP passthrough VSC (opcode 0xFDD1) parameters:
+//   [0] SubCommand 0x00 (LMP)   [1] Passthrough 0x01
+//   [2..3] ConnHandle (little-endian)   [4] 7-bit LMP opcode   [5] Trans_id
+//   [6..] lmp_data, 0..16 bytes (for opcode 0x7F, [6] is the extended opcode)
+// The firmware sends exactly lmp_data as the LMP payload. With Passthrough 1 the
+// peer's response is reported to us but not processed by the controller itself.
 // ---------------------------------------------------------------------------
-static const uint8_t  XENO_OGF = 0x3F;
-static const uint16_t XENO_OCF = 0x0222;
+static const uint8_t  RTK_OGF = 0x3F;
+static const uint16_t RTK_OCF_LMP_LLCP_PASSTHROUGH = 0x01D1;
+#define RTK_SUBCMD_LMP  0x00
+
+// libbluetooth's hci_send_req() (behind hci_create_connection() and friends)
+// gives up after reading 10 events that pass its socket filter, and that filter
+// always lets LE Meta events through. central_app_launcher.py runs BlueZ
+// discovery (including LE scanning) on this same Realtek adapter, so advertising
+// reports use up those 10 reads in well under a second and the call fails with
+// ETIMEDOUT while the command is still running (the connection then comes up
+// anyway, with nobody using it). This version only lets through the events it
+// is waiting for and keeps reading until the real deadline.
+// For wait_evt == EVT_CMD_COMPLETE, rparam gets the return parameters; otherwise
+// it gets the parameters of the first wait_evt event that match() accepts.
+typedef int (*evt_match_fn)(const uint8_t *p, int len, void *ctx);
+
+static int hci_req_until(int dd, uint16_t ogf, uint16_t ocf, void *cparam, uint8_t clen,
+                         uint8_t wait_evt, evt_match_fn match, void *ctx,
+                         void *rparam, int rlen, int timeout_ms) {
+    uint16_t opcode = htobs(cmd_opcode_pack(ogf, ocf));
+    struct hci_filter of, nf;
+    socklen_t olen = sizeof(of);
+    unsigned char buf[HCI_MAX_EVENT_SIZE];
+    struct timespec t0, now;
+    int ret = -1, err = ETIMEDOUT;
+
+    if (getsockopt(dd, SOL_HCI, HCI_FILTER, &of, &olen) < 0) return -1;
+    hci_filter_clear(&nf);
+    hci_filter_set_ptype(HCI_EVENT_PKT, &nf);
+    hci_filter_set_event(EVT_CMD_STATUS, &nf);
+    hci_filter_set_event(EVT_CMD_COMPLETE, &nf);
+    hci_filter_set_event(wait_evt, &nf);
+    hci_filter_set_opcode(opcode, &nf);
+    if (setsockopt(dd, SOL_HCI, HCI_FILTER, &nf, sizeof(nf)) < 0) return -1;
+
+    if (hci_send_cmd(dd, ogf, ocf, clen, cparam) < 0) { err = errno; goto out; }
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    for (;;) {
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        long left = timeout_ms - ((now.tv_sec - t0.tv_sec) * 1000L +
+                                  (now.tv_nsec - t0.tv_nsec) / 1000000L);
+        if (left <= 0) { err = ETIMEDOUT; goto out; }
+        struct pollfd pfd = { .fd = dd, .events = POLLIN };
+        int n = poll(&pfd, 1, (int)left);
+        if (n < 0) { if (errno == EINTR) continue; err = errno; goto out; }
+        if (n == 0) { err = ETIMEDOUT; goto out; }
+        int len = read(dd, buf, sizeof(buf));
+        if (len < 0) { if (errno == EINTR || errno == EAGAIN) continue; err = errno; goto out; }
+        if (len < 1 + HCI_EVENT_HDR_SIZE) continue;
+        hci_event_hdr *hdr = (void *)(buf + 1);
+        unsigned char *p = buf + 1 + HCI_EVENT_HDR_SIZE;
+        int plen = len - 1 - HCI_EVENT_HDR_SIZE;
+
+        if (hdr->evt == EVT_CMD_STATUS) {
+            evt_cmd_status *cs = (void *)p;
+            if (plen < EVT_CMD_STATUS_SIZE || cs->opcode != opcode) continue;
+            if (cs->status) { err = EIO; goto out; }
+            continue;
+        }
+        if (hdr->evt == EVT_CMD_COMPLETE) {
+            evt_cmd_complete *cc = (void *)p;
+            if (plen < EVT_CMD_COMPLETE_SIZE || cc->opcode != opcode ||
+                wait_evt != EVT_CMD_COMPLETE) continue;
+            p += EVT_CMD_COMPLETE_SIZE;
+            plen -= EVT_CMD_COMPLETE_SIZE;
+        } else if (hdr->evt != wait_evt || (match && !match(p, plen, ctx))) {
+            continue;
+        }
+        if (rparam) {
+            memset(rparam, 0, rlen);
+            memcpy(rparam, p, plen < rlen ? plen : rlen);
+        }
+        ret = 0;
+        err = 0;
+        goto out;
+    }
+out:
+    setsockopt(dd, SOL_HCI, HCI_FILTER, &of, sizeof(of));
+    errno = err;
+    return ret;
+}
+
+static int match_conn_complete(const uint8_t *p, int len, void *ctx) {
+    const evt_conn_complete *cc = (const void *)p;
+    return len >= EVT_CONN_COMPLETE_SIZE && bacmp(&cc->bdaddr, (const bdaddr_t *)ctx) == 0;
+}
+
+// Same as hci_create_connection(), minus the 10-event limit (see above).
+static int create_connection_until(int dd, const bdaddr_t *ba, uint16_t ptype,
+                                   uint16_t clkoffset, uint8_t rswitch,
+                                   uint16_t *handle, int timeout_ms) {
+    create_conn_cp cp;
+    evt_conn_complete rp;
+    memset(&cp, 0, sizeof(cp));
+    bacpy(&cp.bdaddr, ba);
+    cp.pkt_type       = ptype;
+    cp.pscan_rep_mode = 0x02;
+    cp.clock_offset   = clkoffset;
+    cp.role_switch    = rswitch;
+    if (hci_req_until(dd, OGF_LINK_CTL, OCF_CREATE_CONN, &cp, CREATE_CONN_CP_SIZE,
+                      EVT_CONN_COMPLETE, match_conn_complete, (void *)ba,
+                      &rp, sizeof(rp), timeout_ms) < 0)
+        return -1;
+    if (rp.status) {
+        fprintf(stderr, "[!] Connection Complete status 0x%02x\n", rp.status);
+        errno = EIO;
+        return -1;
+    }
+    *handle = btohs(rp.handle);
+    return 0;
+}
+
+// Trans_id of a transaction we start = our current role on the link (0 central,
+// 1 peripheral). We page the target, but it may still switch roles, so ask the
+// controller each time rather than assuming central.
+static uint8_t current_lmp_tid(int dev) {
+    role_discovery_cp cp;
+    role_discovery_rp rp;
+    cp.handle = htobs(g_handle);
+    if (hci_req_until(dev, OGF_LINK_POLICY, OCF_ROLE_DISCOVERY, &cp, ROLE_DISCOVERY_CP_SIZE,
+                      EVT_CMD_COMPLETE, NULL, NULL, &rp, ROLE_DISCOVERY_RP_SIZE, 2000) < 0 ||
+        rp.status != 0) {
+        fprintf(stderr, "\t[!] Role Discovery failed, assuming central\n");
+        return 0;
+    }
+    return rp.role ? 1 : 0;
+}
+
+static int send_LMP(int dev, uint8_t lmp_opcode, const uint8_t *data, int data_len) {
+    unsigned char b[6 + 16];
+    if (data_len < 0 || data_len > 16) return -1;
+    b[0] = RTK_SUBCMD_LMP;
+    b[1] = 0x01;                   // Passthrough: the response goes only to us
+    b[2] = g_handle & 0xFF;
+    b[3] = (g_handle >> 8) & 0xFF;
+    b[4] = lmp_opcode;
+    b[5] = current_lmp_tid(dev);
+    memcpy(b + 6, data, data_len);
+    return hci_send_cmd(dev, RTK_OGF, RTK_OCF_LMP_LLCP_PASSTHROUGH, 6 + data_len, b);
+}
 
 static int send_LMP_features_req(int dev) {
-    unsigned char b[] = {
-        39,    // byte 0: LMP opcode (LMP_FEATURES_REQ); firmware shifts + sets TID
-        0x00,  // byte 1: connection selector (0 = first active connection)
-        0xff,  // features byte 0
-        0xff,  // features byte 1
-        0xff,  // features byte 2
-        0xff,  // features byte 3
-        0xff,  // features byte 4
-        0xff,  // features byte 5
-        0xff,  // features byte 6
-        0xff,  // features byte 7
-    };
-    return hci_send_cmd(dev, XENO_OGF, XENO_OCF, sizeof(b), b);
+    // LMP_FEATURES_REQ: 8 feature bytes (all set)
+    const uint8_t d[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+    return send_LMP(dev, opcode_LMP_FEATURES_REQ, d, sizeof(d));
 }
 
 static int send_LMP_features_req_ext(int dev, uint8_t page) {
-    unsigned char b[] = {
-        127,   // byte 0: escape opcode (LMP_FEATURES_REQ_EXT uses ext-opcode 3)
-        0x00,  // byte 1: connection selector (0 = first active connection)
-        3,     // byte 2: ext-opcode = LMP_FEATURES_REQ_EXT
-        page,  // byte 3: requested feature page
-        0x02,  // byte 4: max_page we advertise
-        0,     // features byte 0
-        0,     // features byte 1
-        0,     // features byte 2
-        0,     // features byte 3
-        0,     // features byte 4
-        0,     // features byte 5
-        0,     // features byte 6
-        0,     // features byte 7
-    };
-    return hci_send_cmd(dev, XENO_OGF, XENO_OCF, sizeof(b), b);
+    // Escape 127 / LMP_FEATURES_REQ_EXT: ext opcode, page, max page, 8 feature bytes
+    const uint8_t d[] = { ext_opcode_LMP_FEATURES_REQ_EXT, page, 0x02,
+                          0, 0, 0, 0, 0, 0, 0, 0 };
+    return send_LMP(dev, 127, d, sizeof(d));
 }
 
 static int send_LMP_name_req(int dev, uint8_t off) {
-    unsigned char b[] = {
-        1,     // byte 0: LMP opcode (LMP_NAME_REQ)
-        0x00,  // byte 1: connection selector (0 = first active connection)
-        off,   // byte 2: name offset to retrieve from
-    };
-    return hci_send_cmd(dev, XENO_OGF, XENO_OCF, sizeof(b), b);
+    // LMP_NAME_REQ: name offset to retrieve from
+    const uint8_t d[] = { off };
+    return send_LMP(dev, opcode_LMP_NAME_REQ, d, sizeof(d));
 }
 
 static int send_LMP_version_req(int dev) {
-    unsigned char b[] = {
-        37,    // byte 0: LMP opcode (LMP_VERSION_REQ)
-        0x00,  // byte 1: connection selector (0 = first active connection)
-        0x0D,  // version = 0x0D
-        0x4D,  // company_id LE byte 0 ("M")
-        0x44,  // company_id LE byte 1 ("D") -> 0x444D = "DM"
-        0x37,  // subversion LE byte 0 -> 0x1337
-        0x13,  // subversion LE byte 1
-    };
-    return hci_send_cmd(dev, XENO_OGF, XENO_OCF, sizeof(b), b);
+    // LMP_VERSION_REQ: version 0x0D, company_id 0x444D ("DM"), subversion 0x1337
+    const uint8_t d[] = { 0x0D, 0x4D, 0x44, 0x37, 0x13 };
+    return send_LMP(dev, opcode_LMP_VERSION_REQ, d, sizeof(d));
 }
 
 // ---------------------------------------------------------------------------
@@ -1073,7 +1202,7 @@ static void usage(const char *prog) {
         "       %s --target=<bdaddr> [options]\n"
         "\n"
         "Connects to the BR/EDR target via the Realtek dongle running\n"
-        "DarkFirmware_real_i, then injects LMP packets via Xeno VSC and\n"
+        "DarkFirmware_real_i, then injects LMP packets via the Realtek LMP passthrough VSC and\n"
         "writes the captured PDUs to <out-dir>/<bdaddr_compact>.btides.\n"
         "\n"
         "Options:\n"
@@ -1222,8 +1351,8 @@ int main(int argc, char *argv[]) {
     // enough to leave headroom under the launcher's 15s SIGTERM. Was
     // originally 25s; we trade some max-target-budget for a guaranteed
     // graceful BTIDES flush.
-    if (hci_create_connection(g_dev, &bdaddr, htobs(packettypes),
-                              htobs(0x0000), role, &g_handle, 15000) < 0) {
+    if (create_connection_until(g_dev, &bdaddr, htobs(packettypes),
+                                htobs(0x0000), role, &g_handle, 15000) < 0) {
         perror("Failed to create connection");
         return 1;
     }

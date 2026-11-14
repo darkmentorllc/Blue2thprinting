@@ -27,9 +27,10 @@ int check_expected_values(int dev, unsigned char offset, unsigned char value){
             return -1;
         }
 
-        // DarkFirmware LMP-RX VSE params: 'D','F', conn idx, missed, len, PDU...
+        // Realtek LMP passthrough VSE params: 0x85, Type 0x00 (LMP), ConnHandle(2),
+        // lmp_opcode, Trans_id, 16 bytes of lmp_res_data
         if (readlen > offset + header_len && buf[1] == 0xFF &&
-            buf[header_len] == 'D' && buf[header_len + 1] == 'F') {
+            buf[header_len] == 0x85 && buf[header_len + 1] == 0x00) {
             if (buf[header_len + offset] == value) {
                 printf("Found matching value 0x%02x at offset 0x%02x!\n", value, offset);
                 return 1;
@@ -39,7 +40,7 @@ int check_expected_values(int dev, unsigned char offset, unsigned char value){
                 printf("Value at offset 0x%02X: 0x%02X\n", offset, buf[header_len+offset]);
             }
         } else {
-            printf("Not a DarkFirmware LMP VSE (or too short), length: %d\n", readlen);
+            printf("Not a Realtek LMP passthrough VSE (or too short), length: %d\n", readlen);
         }
     }
     return 0;
@@ -107,6 +108,14 @@ int main(int argc, char *argv[]) {
         *ptr++ = (unsigned char)strtol(argv[i], NULL, 16);
     }
 
+    // Realtek LMP/LLCP passthrough VSC (0xFDD1): params [2..3] are the ConnHandle,
+    // which is only known now that the connection exists, so fill it in.
+    if (ogf == 0x3F && ocf == 0x01D1 && len >= 4) {
+        buf[2] = handle & 0xFF;
+        buf[3] = (handle >> 8) & 0xFF;
+        printf("Filled in ConnHandle 0x%04x at parameter bytes 2..3\n", handle);
+    }
+
     printf("< HCI Command: ogf 0x%02x, ocf 0x%04x, plen %d\n", ogf, ocf, len);
     if (len > 0) {
         printf("  Parameters: ");
@@ -124,9 +133,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // VSE param offset 5 = first LMP PDU byte; 0x4C = LMP_VERSION_RES (38) << 1
-    printf("Checking LMP PDU opcode byte == 0x4C...\n");
-    int ret = check_expected_values(dev, 5, 0x4C);
+    // VSE param offset 4 = lmp_opcode; 38 = LMP_VERSION_RES
+    printf("Checking VSE lmp_opcode == 38 (LMP_VERSION_RES)...\n");
+    int ret = check_expected_values(dev, 4, 38);
     switch(ret)
     {
         case 1:
