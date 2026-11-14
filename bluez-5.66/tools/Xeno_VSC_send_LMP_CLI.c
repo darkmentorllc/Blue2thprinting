@@ -27,18 +27,19 @@ int check_expected_values(int dev, unsigned char offset, unsigned char value){
             return -1;
         }
 
-        // Check if the event length is sufficient to access offset 0x1C
-        if (readlen > offset + header_len) {
+        // DarkFirmware LMP-RX VSE params: 'D','F', conn idx, missed, len, PDU...
+        if (readlen > offset + header_len && buf[1] == 0xFF &&
+            buf[header_len] == 'D' && buf[header_len + 1] == 'F') {
             if (buf[header_len + offset] == value) {
                 printf("Found matching value 0x%02x at offset 0x%02x!\n", value, offset);
                 return 1;
                 break;
             } else {
                 // printf("Value at offset 0x10: 0x%02X\n", buf[header_len+0x10]);
-                printf("Value at offset 0x1C: 0x%02X\n", buf[header_len+offset]);
+                printf("Value at offset 0x%02X: 0x%02X\n", offset, buf[header_len+offset]);
             }
         } else {
-            printf("Event too short to check offset 0x1C, length: %d\n", readlen);
+            printf("Not a DarkFirmware LMP VSE (or too short), length: %d\n", readlen);
         }
     }
     return 0;
@@ -123,8 +124,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Checking offset 0x1C == 0x4C...\n");
-    int ret = check_expected_values(dev, 0x1C, 0x4C);
+    // VSE param offset 5 = first LMP PDU byte; 0x4C = LMP_VERSION_RES (38) << 1
+    printf("Checking LMP PDU opcode byte == 0x4C...\n");
+    int ret = check_expected_values(dev, 5, 0x4C);
     switch(ret)
     {
         case 1:

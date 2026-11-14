@@ -11,13 +11,15 @@
 // the BlueZ source tree at all. It just happens to live under tools/ for
 // historical / colocation reasons.
 //
-// VSE byte layout vs. the Bumble Python prototype:
-//   The Bumble prototype (DarkFirmware_real_i/05_XENO_VSC_RX_TX/bumble/examples/
-//   Xeno_VSC_send_custom_LMP.py:49-78) sees `payload[0x1C]` as the LMP opcode byte.
-//   Bumble strips the 3-byte HCI prefix (1 byte HCI packet-type + 2-byte hci_event_hdr)
-//   before invoking add_vendor_factory, so its offset 0x1C corresponds to 0x1C+3 = 0x1F
-//   in the raw read() buffer this tool consumes. The +3 accounting below is therefore
-//   correct, and `0x41414141` magic appears at buf[3..6] in raw form.
+// DarkFirmware_real_i LMP-RX Vendor-Specific Event (0xFF) parameter layout
+// (see DarkFirmware_real_i/02_custom_patch_src_asm/RTL8761B_patch_modification.asm):
+//   [0..1] 'D','F'   [2] firmware connection index
+//   [3]    number of received LMP PDUs the firmware did NOT report since the
+//          previous VSE (it skips them when its 8-entry HCI event pool is low)
+//   [4]    LMP PDU length N (opcode byte(s) + payload, max 17)
+//   [5..]  N bytes of LMP PDU: (opcode << 1) | TID, then payload
+// In the raw read() buffer these parameters start at buf[3] (after the 1-byte
+// HCI packet type and the 2-byte hci_event_hdr).
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -247,20 +249,6 @@ const char *lmp_ext_opcode_names[ext_opcode_MAX_VALUE] = {
 // Mirrors examples/LMP_common.py:163 LMP_BASIC_OPCODES_TO_BYTE_SIZES.
 // Only entries we actually need to parse; everything else falls back to
 // the variable-length read up to readlen.
-static int lmp_payload_size_for(int opcode) {
-    switch (opcode) {
-    case opcode_LMP_ACCEPTED:        return 1;
-    case opcode_LMP_NOT_ACCEPTED:    return 2;
-    case opcode_LMP_NAME_REQ:        return 16;
-    case opcode_LMP_NAME_RES:        return 16;
-    case opcode_LMP_VERSION_REQ:     return 5;
-    case opcode_LMP_VERSION_RES:     return 5;
-    case opcode_LMP_FEATURES_REQ:    return 8;
-    case opcode_LMP_FEATURES_RES:    return 8;
-    default:                         return -1;
-    }
-}
-
 // State machine bitmask
 unsigned long long gAllRequiredResponses = 0;
 #define RR_LMP_FEATURES_RES         (1ULL << 0)
@@ -323,6 +311,7 @@ static int  g_btides_written = 0;
 
 // Resources we need to clean up on exit.
 static int  g_dev = -1;
+static int  g_reader_dev = -1;  // separate socket for the VSE reader thread
 static int  g_have_handle = 0;
 static uint16_t g_handle = 0;
 
@@ -675,44 +664,36 @@ static void write_btides_file(void) {
 
 static void parse_name_fragment(const unsigned char *payload, int payload_len);
 
+#define DF_VSE_PARAMS_OFFSET 3   // buf[0] = HCI packet type, buf[1..2] = hci_event_hdr
+#define DF_VSE_HDR_LEN       5   // 'D','F', conn index, missed count, PDU length
+
 static void parse_vse(const unsigned char *buf, int readlen) {
-    static const unsigned char MAGIC[4] = {0x41, 0x41, 0x41, 0x41};
-    // Need at least: 3 (HCI prefix) + 4 (magic) + payload up to opcode byte
-    if (readlen < (int)(0x1F + 1)) return;
-    if (memcmp(buf + 3, MAGIC, 4) != 0) return; // not one of our VSEs
+    const unsigned char *p = buf + DF_VSE_PARAMS_OFFSET;
+    int plen = readlen - DF_VSE_PARAMS_OFFSET;
+    if (plen < DF_VSE_HDR_LEN + 1) return;
+    if (p[0] != 'D' || p[1] != 'F') return; // not one of our VSEs
 
-    unsigned char raw = buf[0x1F];
-    if (raw == 0xCC) return; // uninitialized memory sentinel from firmware
+    int missed = p[3];
+    int pdu_len = p[4];
+    const unsigned char *pdu = p + DF_VSE_HDR_LEN;
+    if (pdu_len < 1 || DF_VSE_HDR_LEN + pdu_len > plen) return; // malformed
+    if (missed)
+        fprintf(stderr, "\t[!] firmware skipped %d LMP PDU(s) before this one (HCI event pool low)\n",
+                missed);
 
+    unsigned char raw = pdu[0];
     int opcode = raw >> 1;
     int ext_opcode = -1;
-    int payload_offset;
+    int payload_offset; // offset of the LMP payload within buf
     if (opcode == 0x7F) {
-        if (readlen < 0x21) return;
-        ext_opcode = buf[0x20];
-        payload_offset = 0x21;
+        if (pdu_len < 2) return;
+        ext_opcode = pdu[1];
+        payload_offset = (int)(pdu - buf) + 2;
     } else {
-        payload_offset = 0x20;
+        payload_offset = (int)(pdu - buf) + 1;
     }
-
-    // Determine payload length to copy.
-    int psize = lmp_payload_size_for(opcode);
-    int payload_len;
-    if (psize >= 0) {
-        payload_len = psize;
-    } else if (ext_opcode == ext_opcode_LMP_FEATURES_RES_EXT ||
-               ext_opcode == ext_opcode_LMP_FEATURES_REQ_EXT) {
-        payload_len = 10; // 1 page + 1 max_page + 8 features
-    } else {
-        // Unknown: read whatever's available, capped to 31 bytes.
-        payload_len = readlen - payload_offset;
-        if (payload_len > 31) payload_len = 31;
-        if (payload_len < 0) payload_len = 0;
-    }
-    if (payload_offset + payload_len > readlen) {
-        payload_len = readlen - payload_offset;
-        if (payload_len < 0) payload_len = 0;
-    }
+    // The firmware reports the PDU's real length, so no per-opcode size table is needed.
+    int payload_len = (int)(pdu - buf) + pdu_len - payload_offset;
 
     fprintf(stderr, "\t[!] VSE opcode raw=0x%02X opcode=%d ext=%d plen=%d\n",
             raw, opcode, ext_opcode, payload_len);
@@ -847,8 +828,9 @@ void *threaded_hci_read(void *arg) {
 
 // ---------------------------------------------------------------------------
 // Send helpers. Per the firmware-side VSC contract: byte 0 = bare 7-bit LMP
-// opcode, byte 1 = reserved/padding (0x00), bytes 2..N = LMP payload.
-// The firmware left-shifts opcode and sets the TID. Matches the payloads
+// opcode, byte 1 = connection selector (0x00 = first active BR/EDR connection,
+// 0x01-0x0C = that HCI connection handle), bytes 2..N = LMP payload (2..18 bytes
+// total). The firmware left-shifts opcode and sets the TID. Matches the payloads
 // in DarkFirmware_real_i/05_XENO_VSC_RX_TX/bumble/examples/Xeno_VSC_send_custom_LMP.py
 // at lines 129 and 135.
 // ---------------------------------------------------------------------------
@@ -858,7 +840,7 @@ static const uint16_t XENO_OCF = 0x0222;
 static int send_LMP_features_req(int dev) {
     unsigned char b[] = {
         39,    // byte 0: LMP opcode (LMP_FEATURES_REQ); firmware shifts + sets TID
-        0x00,  // byte 1: reserved/padding
+        0x00,  // byte 1: connection selector (0 = first active connection)
         0xff,  // features byte 0
         0xff,  // features byte 1
         0xff,  // features byte 2
@@ -874,7 +856,7 @@ static int send_LMP_features_req(int dev) {
 static int send_LMP_features_req_ext(int dev, uint8_t page) {
     unsigned char b[] = {
         127,   // byte 0: escape opcode (LMP_FEATURES_REQ_EXT uses ext-opcode 3)
-        0x00,  // byte 1: reserved/padding
+        0x00,  // byte 1: connection selector (0 = first active connection)
         3,     // byte 2: ext-opcode = LMP_FEATURES_REQ_EXT
         page,  // byte 3: requested feature page
         0x02,  // byte 4: max_page we advertise
@@ -893,7 +875,7 @@ static int send_LMP_features_req_ext(int dev, uint8_t page) {
 static int send_LMP_name_req(int dev, uint8_t off) {
     unsigned char b[] = {
         1,     // byte 0: LMP opcode (LMP_NAME_REQ)
-        0x00,  // byte 1: reserved/padding
+        0x00,  // byte 1: connection selector (0 = first active connection)
         off,   // byte 2: name offset to retrieve from
     };
     return hci_send_cmd(dev, XENO_OGF, XENO_OCF, sizeof(b), b);
@@ -902,7 +884,7 @@ static int send_LMP_name_req(int dev, uint8_t off) {
 static int send_LMP_version_req(int dev) {
     unsigned char b[] = {
         37,    // byte 0: LMP opcode (LMP_VERSION_REQ)
-        0x00,  // byte 1: reserved/padding
+        0x00,  // byte 1: connection selector (0 = first active connection)
         0x0D,  // version = 0x0D
         0x4D,  // company_id LE byte 0 ("M")
         0x44,  // company_id LE byte 1 ("D") -> 0x444D = "DM"
@@ -1219,6 +1201,23 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // The VSE reader thread gets its OWN raw HCI socket. Every raw HCI socket
+    // receives its own copy of each event, so the reader and the libbluetooth
+    // request/response helpers on g_dev (hci_create_connection,
+    // hci_read_remote_version, ...) no longer steal each other's events.
+    // Starting it before connecting also captures the LMP PDUs exchanged
+    // during connection setup.
+    g_reader_dev = hci_open_dev(dev_id);
+    if (g_reader_dev < 0) { perror("Failed to open HCI device (reader)"); return 1; }
+    if (setsockopt(g_reader_dev, SOL_HCI, HCI_FILTER, &flt, sizeof(flt)) < 0) {
+        perror("HCI filter setup failed (reader)");
+        return 1;
+    }
+    if (pthread_create(&hci_read_thread, NULL, threaded_hci_read, &g_reader_dev) != 0) {
+        perror("Failed to create HCI read thread");
+        return 1;
+    }
+
     // Page timeout 15s — long enough for sleeping peers to wake, short
     // enough to leave headroom under the launcher's 15s SIGTERM. Was
     // originally 25s; we trade some max-target-budget for a guaranteed
@@ -1230,11 +1229,6 @@ int main(int argc, char *argv[]) {
     }
     g_have_handle = 1;
     fprintf(stderr, "Connection handle: %d (0x%04x)\n", g_handle, g_handle);
-
-    if (pthread_create(&hci_read_thread, NULL, threaded_hci_read, &g_dev) != 0) {
-        perror("Failed to create HCI read thread");
-        return 1;
-    }
 
     run_state_machine(g_dev);
 
