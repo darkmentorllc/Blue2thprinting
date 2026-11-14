@@ -151,49 +151,10 @@ configure_scripts() {
              "$BASE_PATH/Logs/DarkFirmwareLMPLog"
     echo "  Created $BASE_PATH/Logs/ + per-tool subdirs."
 
-    print_banner "Ensuring root crontab has exactly one @reboot Scripts/runall.sh entry."
-    #### Preserves everything else in the crontab. Strips ALL existing
-    #### `@reboot … Scripts/runall.sh` lines first (regardless of path)
-    #### before appending one for the current $BASE_PATH. This makes a
-    #### `rm -rf ~/Blue2thprinting && git clone && ./setup...sh` reinstall
-    #### idempotent: the stale entry from the deleted checkout gets
-    #### removed and replaced by the new one, never duplicated. The old
-    #### sentinel-file approach (Scripts/.cron_added) couldn't dedupe
-    #### across reinstalls because the sentinel lived inside the
-    #### now-deleted directory.
-    ####
-    #### runall.sh invokes the sub-scripts to run btmon (primary HCI
-    #### logging) and central_app_launcher.py (which performs in-process
-    #### BlueZ D-Bus discovery and orchestrates GATT/SDP/LL/LMP/Sniffle
-    #### measurements). See issue #47.
-    cron_entry="@reboot $BASE_PATH/Scripts/runall.sh"
-    existing=$(sudo crontab -u root -l 2>/dev/null || true)
-
-    echo "  Writing backup of existing root crontab to /tmp/crontab.root.bak"
-    printf '%s\n' "$existing" > /tmp/crontab.root.bak
-
-    # Remove any pre-existing @reboot runall.sh entry (any path), then
-    # append the canonical one for this install. The grep pattern only
-    # matches lines that are *exactly* an @reboot wrapper around
-    # Scripts/runall.sh — a more complex line that happens to mention
-    # runall.sh (e.g. chained with && or piping to a logger) is
-    # preserved untouched.
-    printf '%s\n' "$existing" \
-        | grep -vE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*$' \
-        > /tmp/crontab.root.new || true
-    echo "  Adding entry: $cron_entry"
-    echo "$cron_entry" >> /tmp/crontab.root.new
-
-    # Compare before/after, log how many entries got cleaned up.
-    removed=$(diff <(grep -cE '^[[:space:]]*@reboot[[:space:]]+.*Scripts/runall\.sh[[:space:]]*$' \
-                      /tmp/crontab.root.bak 2>/dev/null || echo 0) \
-                   <(echo 0) | head -1 | awk '{print $2-0}')
-    if [ "${removed:-0}" -gt 0 ]; then
-        echo "  Removed $removed pre-existing @reboot Scripts/runall.sh entry(ies) before re-adding."
-    fi
-
-    sudo crontab -u root /tmp/crontab.root.new
-    echo "  Crontab now ends with: $(sudo crontab -u root -l | tail -1)"
+    print_banner "Ensuring root crontab has one capture entry."
+    # This script keeps every unrelated cron line, replaces only this
+    # checkout's runall.sh entry, and saves a durable backup before changes.
+    sudo python3 "$BASE_PATH/Scripts/manage_capture_cron.py" || exit 1
 
     # Keep the sentinel for backward compat with any external tooling
     # that checks it; it's no longer used as a dedup gate.
