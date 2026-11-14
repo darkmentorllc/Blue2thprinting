@@ -27,6 +27,8 @@ CAPTURES = {
     "legacy": FIXTURES_DIR / "import.snoop",
     "att_gatt": REFERENCE_DIR / "att_gatt_qa.snoop",
     "classic": REFERENCE_DIR / "classic_sdp_qa.snoop",
+    "sdp_records": REFERENCE_DIR / "classic_sdp_records_qa.snoop",
+    "sdp_continuation": REFERENCE_DIR / "classic_sdp_continuation_qa.snoop",
     "smp": REFERENCE_DIR / "smp_pairing_sanitized.snoop",
 }
 
@@ -135,6 +137,22 @@ def test_classic_l2cap_sdp_lmp_and_remote_name(exported):
     name_event, = peer["HCIArray"]
     assert name_event["event_code"] == 7
     assert bytes.fromhex(name_event["remote_name_hex_str"]) == b"DMBT-SDP-QA"
+
+
+def test_real_sdp_records_and_continuations(exported):
+    records, = exported["sdp_records"]
+    assert records["CONNECT_IND"]["peripheral_bdaddr"] == "f0:f1:f2:f3:a0:ef"
+    responses = [item for item in records["SDPArray"] if item["pdu_id"] == 7]
+    assert [item["l2cap_cid"] for item in responses] == [81, 82, 82, 83]
+    assert [len(bytes.fromhex(item["raw_data_hex_str"])) for item in responses] == [79, 316, 5, 48]
+
+    continued, = exported["sdp_continuation"]
+    assert continued["CONNECT_IND"]["peripheral_bdaddr"] == "f0:f1:f2:f3:a0:f0"
+    responses = [item for item in continued["SDPArray"] if item["pdu_id"] == 7]
+    assert len(responses) == 11
+    assert [item["transaction_id"] for item in responses] == list(range(10)) + [0]
+    assert [item["raw_data_hex_str"][-6:] for item in responses[:2]] == ["02013b", "020115"]
+    assert len([item for item in continued["SDPArray"] if item["pdu_id"] == 5]) == 8
 
 
 def test_smp_pairing_request_and_response(exported):

@@ -8,6 +8,7 @@ from handle_venv import activate_venv
 activate_venv()
 import argparse
 import calendar
+from dataclasses import replace
 
 # HCI file reading related adapter to feed into scapy
 import hci_log_parser as bts
@@ -137,6 +138,7 @@ def export_HCI_Extended_Advertising_Report(report, timestamp, source_record_seq,
 def export_to_L2CAPArray(packet, direction):
 
     acl = packet.getlayer(HCI_ACL_Hdr)
+    connection_handle = acl.fields['handle']
 
     if(acl.fields['handle'] in g_last_handle_to_bdaddr.keys()):
         (bdaddr, bdaddr_type) = g_last_handle_to_bdaddr[acl.fields['handle']]
@@ -147,15 +149,18 @@ def export_to_L2CAPArray(packet, direction):
     # The opcodes are mutually exclusive, so if one returns true, we're done
     # To convert ATT data into a GATT hierarchy requires us to statefully
     # remember information between packets (i.e. which UUID corresponds to which handle)
-    if(export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=direction)):
+    if(export_L2CAP_CONNECTION_REQ(connect_ind_obj, packet, direction=direction,
+                                   connection_handle=connection_handle)):
         return True
-    if(export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=direction)):
+    if(export_L2CAP_CONNECTION_RSP(connect_ind_obj, packet, direction=direction,
+                                   connection_handle=connection_handle)):
         return True
     if(export_L2CAP_CONFIGURATION_REQ(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_L2CAP_CONFIGURATION_RSP(connect_ind_obj, packet, direction=direction)):
         return True
-    if(export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=direction)):
+    if(export_L2CAP_DISCONNECTION_REQ(connect_ind_obj, packet, direction=direction,
+                                      connection_handle=connection_handle)):
         return True
     if(export_L2CAP_DISCONNECTION_RSP(connect_ind_obj, packet, direction=direction)):
         return True
@@ -180,7 +185,7 @@ def export_to_SDPArray(packet, direction):
 
     l2cap_hdr = packet.getlayer(L2CAP_Hdr)
     # See if we've seen a connection with PSM == SDP, and see if the CID for this packet matches that one
-    if(CID_in_CIDs_used_for_SDP(connect_ind_obj, l2cap_hdr.cid)):
+    if(CID_in_CIDs_used_for_SDP(connect_ind_obj, l2cap_hdr.cid, acl.fields['handle'])):
         # If this matched, then this is an SDP packet
         # packet.show()
         # The opcodes are mutually exclusive, so if one returns true, we're done
@@ -361,6 +366,7 @@ def process_connections(p):
         #p.show()
         event = p.getlayer(HCI_LE_Meta_Connection_Complete)
         if event.fields['status'] == 0:
+            clear_SDP_CIDs_for_handle(event.fields['handle'])
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'] & 1)
             g_last_handle_transport[event.fields['handle']] = 'LE'
         return True
@@ -368,6 +374,7 @@ def process_connections(p):
         #p.show()
         event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
         if event.fields['status'] == 0:
+            clear_SDP_CIDs_for_handle(event.fields['handle'])
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'] & 1)
             g_last_handle_transport[event.fields['handle']] = 'LE'
         return True
@@ -375,12 +382,14 @@ def process_connections(p):
         #p.show()
         event = p.getlayer(HCI_Event_Connection_Complete)
         if(event.fields['status'] == 0):
+            clear_SDP_CIDs_for_handle(event.fields['handle'])
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
             g_last_handle_transport[event.fields['handle']] = 'BR/EDR'
         return True
     elif p.haslayer(HCI_Event_Disconnection_Complete):
         event = p.getlayer(HCI_Event_Disconnection_Complete)
         if event.fields['status'] == 0:
+            clear_SDP_CIDs_for_handle(event.fields['handle'])
             g_last_handle_to_bdaddr.pop(event.fields['handle'], None)
             g_last_handle_transport.pop(event.fields['handle'], None)
         return True
@@ -648,7 +657,55 @@ def process_DarkFirmware_LMP_Log(p, record):
     return False
 
 
+def _reassemble_sdp_acl(record, fragments):
+    """Join HCI ACL fragments only for an identified SDP dynamic channel."""
+    raw = record.data
+    if len(raw) < 5 or raw[0] != 2:
+        return record
+    handle_flags = int.from_bytes(raw[1:3], 'little')
+    handle = handle_flags & 0x0fff
+    boundary = (handle_flags >> 12) & 3
+    acl_len = int.from_bytes(raw[3:5], 'little')
+    if acl_len != len(raw) - 5:
+        if handle in fragments:
+            fragments.pop(handle, None)
+            return None
+        return record
+    if boundary == 1:  # continuation fragment
+        pending = fragments.get(handle)
+        if pending is None:
+            return None
+        first_record, expected, payload = pending
+        if record.flags != first_record.flags:
+            fragments.pop(handle, None)
+            return None
+        payload += raw[5:]
+        if len(payload) < expected:
+            fragments[handle] = (first_record, expected, payload)
+            return None
+        fragments.pop(handle, None)
+        if len(payload) != expected:
+            return None
+        frame = (first_record.data[:3] + expected.to_bytes(2, 'little') + payload)
+        return replace(first_record, data=frame, length=len(frame))
+    if boundary in (0, 2):  # start of a new L2CAP PDU
+        fragments.pop(handle, None)
+        if len(raw) >= 9:
+            l2cap_len = int.from_bytes(raw[5:7], 'little')
+            cid = int.from_bytes(raw[7:9], 'little')
+            expected = 4 + l2cap_len
+            if (acl_len < expected and
+                    ('hci_handle', handle, cid) in g_CIDs_used_for_SDP):
+                fragments[handle] = (record, expected, raw[5:])
+                return None
+    return record
+
+
 def read_HCI(file_path):
+    g_last_handle_to_bdaddr.clear()
+    g_last_handle_transport.clear()
+    g_CIDs_used_for_SDP.clear()
+    sdp_acl_fragments = {}
     try:
         try:
             records = bts.parse(file_path)
@@ -665,6 +722,9 @@ def read_HCI(file_path):
             if total_records > 0 and i % max(1, total_records // 100) == 0:
                 qprint(f"Processed {i} out of {total_records} records ({(i / total_records) * 100:.0f}%)")
 
+            record = _reassemble_sdp_acl(record, sdp_acl_fragments)
+            if record is None:
+                continue
             try:
                 p = HCI_Hdr(record.data)
             except Exception as e:
@@ -672,6 +732,15 @@ def read_HCI(file_path):
                 exit(1)
 
             #p.show()
+            if p.haslayer(HCI_Event_Disconnection_Complete):
+                sdp_acl_fragments.pop(
+                    p.getlayer(HCI_Event_Disconnection_Complete).fields['handle'], None)
+            elif p.haslayer(HCI_Event_Connection_Complete):
+                sdp_acl_fragments.pop(
+                    p.getlayer(HCI_Event_Connection_Complete).fields['handle'], None)
+            elif p.haslayer(HCI_LE_Meta_Connection_Complete):
+                sdp_acl_fragments.pop(
+                    p.getlayer(HCI_LE_Meta_Connection_Complete).fields['handle'], None)
             if(process_connections(p)):
                 continue
             elif(process_remote_version(p)):
@@ -738,7 +807,8 @@ def main():
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
     qprint("Reading all events from HCI log into memory.")
-    read_HCI(args.input)
+    if not read_HCI(args.input):
+        raise SystemExit(1)
 
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)

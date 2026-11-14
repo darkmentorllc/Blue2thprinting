@@ -29,7 +29,8 @@ init(autoreset=True)
 # `WHERE bdaddr = %s` is already indexed. The shared helper just narrows
 # the SELECT to `1 ... LIMIT 1` for a covering-index existence probe.
 def device_has_SDP_info(bdaddr):
-    return device_row_exists_by_bdaddr("SDP_Common", bdaddr)
+    return (device_row_exists_by_bdaddr("SDP_Common", bdaddr)
+            or device_row_exists_by_bdaddr("SDP_ERROR_RSP", bdaddr))
 
 # Per spec "DATA ELEMENT SIZE DESCRIPTOR" section
 data_element_size_to_actual_size = {
@@ -40,116 +41,75 @@ data_element_size_to_actual_size = {
     4: 16
 }
 
-def parse_SDP_data_element(indent, byte_values, i):
-    if i+1 > len(byte_values):
-        qprint(f"{indent}Error: i is greater than the length of the byte_values array. Aborting")
-        return None, None, byte_values, i  # Return gracefully if out of bounds (probable truncation)
-    data_element, = struct.unpack(">B", byte_values[i:i+1])
-    i+=1
-    data_element_type = (data_element >> 3) & 0x1F # 5 bits for type
-    data_element_size = (data_element) & 0x7 # 3 bits for size
-    if(data_element_size < 5):
-        actual_size = data_element_size_to_actual_size[data_element_size]
-    elif(data_element_size == 5):
-        actual_size, = struct.unpack(">B", byte_values[i:i+1])
-        i+=1
-    elif(data_element_size == 6):
-        actual_size, = struct.unpack(">H", byte_values[i:i+2])
-        i+=2
-    elif(data_element_size == 7):
-        actual_size, = struct.unpack(">I", byte_values[i:i+4])
-        i+=4
-    qprint(f"{indent}Size of element of type {data_element_type} is {actual_size}")
-    if(data_element_type == 1):
-        if(actual_size == 1):
-            integer_1b, = struct.unpack(">B", byte_values[i:i+1])
-            i+=actual_size
-            qprint(f"{indent}Found integer: 0x{integer_1b:02x}")
-        elif(actual_size == 2):
-            integer_2b, = struct.unpack(">H", byte_values[i:i+2])
-            i+=actual_size
-            if(integer_2b in TME.TME_glob.SDP_universal_attribute_names.keys()):
-                qprint(f"{indent}Found integer: 0x{integer_2b:04x} ({TME.TME_glob.SDP_universal_attribute_names[integer_2b]})")
-            else:
-                qprint(f"{indent}Found integer: 0x{integer_2b:04x}")
-        elif(actual_size == 4):
-            integer_4b, = struct.unpack(">I", byte_values[i:i+4])
-            i+=actual_size
-            qprint(f"{indent}Found integer: 0x{integer_4b:08x}")
-        elif(actual_size == 8):
-            integer_8b, = struct.unpack(">Q", byte_values[i:i+8])
-            i+=actual_size
-            qprint(f"{indent}Found integer: 0x{integer_8b:16x}")
-        elif(actual_size == 16):
-            high_bytes, low_bytes = struct.unpack(">QQ", byte_values[i:i+16])
-            integer_16b = (high_bytes << 64) | low_bytes
-            i+=actual_size
-            qprint(f"{indent}Found integer: 0x{integer_16b:32x}")
-    elif(data_element_type == 3):
-        if(actual_size == 2):
-            UUID16, = struct.unpack(">H", byte_values[i:i+2])
-            i+=actual_size
-            UUID_str = f"{UUID16:04x}"
-            # TODO: need to make this smarter so that it knows it's inside a type 0x0004 (ProtocolDescriptorList)
-            if(UUID16 in TME.TME_glob.SDP_protocol_identifiers.keys()):
-                UUID_name = TME.TME_glob.SDP_protocol_identifiers[UUID16]
-            elif(UUID16 in TME.TME_glob.uuid16_service_names.keys()):
-                UUID_name = TME.TME_glob.uuid16_service_names[UUID16]
-            else:
-                UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            qprint(f"{indent}Found UUID16: 0x{UUID_str} ({UUID_name})")
-        elif(actual_size == 4):
-            UUID32 = bytes_to_hex_str(byte_values[i:i+4])
-            i+=actual_size
-            UUID_str = f"{UUID32:08x}"
-            UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            qprint(f"{indent}Found UUID32: 0x{UUID_str} ({UUID_name})")
-        elif(actual_size == 16):
-            UUID128 = bytes_to_hex_str(byte_values[i:i+16])
-            i+=actual_size
-            UUID_str = add_dashes_to_UUID128(UUID128)
-            UUID_name = match_known_GATT_UUID_or_custom_UUID(UUID_str)
-            qprint(f"{indent}Found UUID128: 0x{UUID_str} ({UUID_name})")
-    elif(data_element_type == 4):
-        string = bytes_to_utf8(byte_values[i:i+actual_size])
-        i+=actual_size
-        qprint(f"{indent}Found string: {string}")
-    elif(data_element_type == 5):
-        boolean = struct.unpack(">B", byte_values[i:i+1])
-        i+=actual_size
-        qprint(f"{indent}Found boolean: {"True" if boolean else "False"}")
-    elif(data_element_type == 8):
-        URL = bytes_to_utf8(byte_values[i:i+actual_size])
-        i+=actual_size
-        qprint(f"{indent}Found URL: {URL}")
-
-    # If the data element is a sequence, recursively parse until we find normal data?
-    elif(data_element_type == 6):
-        j = 0
-        while(j < actual_size):
-            i_before = i
-            data_element_type, inner_actual_size, byte_values_new, new_i = parse_SDP_data_element(indent + f"{i1}", byte_values, i)
-            # move i and j forward by however many bytes were iterated
-            diff = new_i - i_before
-            if(diff == 0):
-                qprint(f"{indent}Error: no bytes were iterated. Exiting.")
-                break
-            j+= diff
-            i = new_i
-    elif(data_element_type == 7):
-        # FIXME: handle this type now that you have a sample!
-        exit(-1)
-    elif(data_element_type == 0):
-        # FIXME: handle this type now that you maybe have a sample! (Or possibly your parser's broken...)
-        exit(-1)
-    elif(data_element_type == 2):
-        # FIXME: handle this type now that you have a sample!
-        exit(-1)
+def _sdp_element_header(bv, i):
+    """Return (type, payload size, payload start, end), validating all bounds."""
+    if i >= len(bv):
+        raise ValueError("missing SDP element descriptor")
+    descriptor = bv[i]
+    type_id, size_code = descriptor >> 3, descriptor & 7
+    i += 1
+    if type_id == 0:
+        if size_code != 0:
+            raise ValueError("invalid NIL element")
+        size = 0
+    elif size_code < 5:
+        size = data_element_size_to_actual_size[size_code]
     else:
-        # FIXME: invalid type, probably an error in the code
-        exit(-1)
+        width = {5: 1, 6: 2, 7: 4}[size_code]
+        if i + width > len(bv):
+            raise ValueError("truncated SDP length")
+        size = int.from_bytes(bv[i:i + width], 'big')
+        i += width
+    if type_id in (1, 2) and size_code > 4:
+        raise ValueError("invalid integer width")
+    if type_id == 3 and size not in (2, 4, 16):
+        raise ValueError("invalid UUID width")
+    if type_id == 5 and size != 1:
+        raise ValueError("invalid boolean width")
+    if type_id in (4, 6, 7, 8) and size_code < 5:
+        raise ValueError("invalid variable length element")
+    if type_id > 8:
+        raise ValueError("unknown SDP element type")
+    end = i + size
+    if end > len(bv):
+        raise ValueError("truncated SDP element")
+    return type_id, size, i, end
 
-    return data_element_type, actual_size, byte_values[i:], i
+
+def parse_SDP_data_element(indent, byte_values, i, depth=0):
+    """Print one complete element for verbose TME output without exiting on bad data."""
+    try:
+        if depth > 32:
+            raise ValueError("SDP nesting too deep")
+        type_id, size, start, end = _sdp_element_header(byte_values, i)
+        value, parsed_end = _parse_sdp_elem_val(byte_values, i)
+        if parsed_end != end:
+            raise ValueError("incomplete SDP element")
+        qprint(f"{indent}Size of element of type {type_id} is {size}")
+        if type_id in (6, 7):
+            qprint(f"{indent}Found {'sequence' if type_id == 6 else 'alternate'}:")
+            j = start
+            while j < end:
+                _, _, _, new_j = parse_SDP_data_element(indent + i1, byte_values, j, depth + 1)
+                if new_j <= j or new_j > end:
+                    raise ValueError("invalid nested SDP element")
+                j = new_j
+        elif type_id == 0:
+            qprint(f"{indent}Found NIL")
+        elif type_id == 3:
+            qprint(f"{indent}Found UUID: {_sdp_uuid_label(value)}")
+        elif type_id == 4:
+            qprint(f"{indent}Found string: {value}")
+        elif type_id == 8:
+            qprint(f"{indent}Found URL: {value}")
+        elif type_id == 5:
+            qprint(f"{indent}Found boolean: {value}")
+        else:
+            qprint(f"{indent}Found integer: {value:#x}")
+        return type_id, size, byte_values[end:], end
+    except ValueError as exc:
+        qprint(f"{indent}Malformed SDP element: {exc}")
+        return None, None, byte_values[i:], i
 
 
 def print_SDP_Common(indent, direction, l2cap_len, l2cap_cid, transaction_id, param_len):
@@ -245,55 +205,32 @@ def print_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, p
 # Structured value parser and terse display
 ############################
 
-def _parse_sdp_elem_val(bv, i):
-    """Parse one SDP data element at bv[i]; return (python_value, new_i).
-
-    Values: int for integers, (kind, val) tuples for UUIDs where kind is
-    'uuid16'/'uuid32'/'uuid128', str for text/URL, bool for boolean,
-    list for sequence/alternate, None for nil.
-    Returns (None, i) on any error.
-    """
-    if i >= len(bv):
-        return None, i
-    descriptor = bv[i]; i += 1
-    type_id   = (descriptor >> 3) & 0x1F
-    size_code =  descriptor       & 0x07
-    try:
-        if size_code < 5:
-            size = data_element_size_to_actual_size[size_code]
-        elif size_code == 5:
-            size = bv[i]; i += 1
-        elif size_code == 6:
-            size, = struct.unpack('>H', bv[i:i+2]); i += 2
-        else:
-            size, = struct.unpack('>I', bv[i:i+4]); i += 4
-        end = i + size
-        if type_id == 0:
-            return None, end
-        elif type_id in (1, 2):
-            signed = (type_id == 2)
-            val = int.from_bytes(bv[i:end], 'big', signed=signed)
-            return val, end
-        elif type_id == 3:
-            if size == 2:
-                return ('uuid16',  struct.unpack('>H',  bv[i:i+2])[0]), end
-            elif size == 4:
-                return ('uuid32',  struct.unpack('>I',  bv[i:i+4])[0]), end
-            elif size == 16:
-                return ('uuid128', bv[i:i+16].hex()), end
-        elif type_id in (4, 8):
-            return bv[i:end].decode('utf-8', errors='replace'), end
-        elif type_id == 5:
-            return bool(bv[i]), end
-        elif type_id in (6, 7):
-            items, j = [], i
-            while j < end:
-                v, j = _parse_sdp_elem_val(bv, j)
-                items.append(v)
-            return items, end
-    except Exception:
-        pass
-    return None, i + size if 'size' in dir() else (None, i)
+def _parse_sdp_elem_val(bv, i, depth=0):
+    """Parse one bounded SDP element; raise ValueError for malformed input."""
+    if depth > 32:
+        raise ValueError("SDP nesting too deep")
+    type_id, size, start, end = _sdp_element_header(bv, i)
+    if type_id == 0:
+        return None, end
+    if type_id in (1, 2):
+        return int.from_bytes(bv[start:end], 'big', signed=type_id == 2), end
+    if type_id == 3:
+        if size == 16:
+            return ('uuid128', bv[start:end].hex()), end
+        return (f'uuid{size * 8}', int.from_bytes(bv[start:end], 'big')), end
+    if type_id in (4, 8):
+        return bv[start:end].decode('utf-8', errors='replace'), end
+    if type_id == 5:
+        return bool(bv[start]), end
+    items = []
+    j = start
+    while j < end:
+        value, new_j = _parse_sdp_elem_val(bv, j, depth + 1)
+        if new_j <= j or new_j > end:
+            raise ValueError("SDP child exceeds enclosing element")
+        items.append(value)
+        j = new_j
+    return items, end
 
 
 def _sdp_uuid_label(uuid_tup):
@@ -334,20 +271,22 @@ def _parse_sdp_record_dict(flat_list):
     return attrs
 
 
-def _parse_sdp_all_records(buf):
-    """Parse a reassembled AttributeLists buffer into a list of record attribute dicts.
-
-    buf starts at the outer sequence element (type byte included).
-    """
-    records = []
-    i = 0
-    while i < len(buf):
-        outer_val, i = _parse_sdp_elem_val(buf, i)
-        if isinstance(outer_val, list):
-            for inner in outer_val:
-                if isinstance(inner, list):
-                    records.append(_parse_sdp_record_dict(inner))
-    return records
+def _parse_sdp_all_records(buf, single_record=False):
+    """Parse complete ServiceAttribute or ServiceSearchAttribute data."""
+    try:
+        outer, end = _parse_sdp_elem_val(buf, 0)
+        if end != len(buf) or not isinstance(outer, list):
+            return []
+        lists = [outer] if single_record else outer
+        records = []
+        for item in lists:
+            if isinstance(item, list):
+                record = _parse_sdp_record_dict(item)
+                if record:
+                    records.append(record)
+        return records
+    except ValueError:
+        return []
 
 
 def _fmt_sdp_version(v):
@@ -433,141 +372,111 @@ def _terse_print_sdp_records(records):
             qprint(f"{i3}Desc:     {desc}")
 
 
-def defrag_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values):
+def _sdp_response_fragment(byte_values):
+    """Return (attribute bytes, has continuation) for a complete response PDU."""
+    if len(byte_values) < 3:
+        return None
+    count = int.from_bytes(byte_values[:2], 'big')
+    end = 2 + count
+    if end >= len(byte_values):
+        return None
+    continuation_len = byte_values[end]
+    if end + 1 + continuation_len != len(byte_values):
+        return None
+    return byte_values[2:end], continuation_len != 0
 
-    raw_byte_len = len(byte_values)
-    AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
-    #vprint(f"AttributeListsByteCount: 0x{AttributeListsByteCount:04x}")
-    fragment_bytes = byte_values[2:2+AttributeListsByteCount]
 
-    i = 2+AttributeListsByteCount
-    # Looping until AttributeListsByteCount because that's all the nested data
-    # while (i < AttributeListsByteCount):
-    #     (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{indent}{i2}", byte_values, i)
+def defrag_SDP_SERVICE_SEARCH_ATTR_RSP(indent, direction, l2cap_len, l2cap_cid,
+                                        pdu_id, transaction_id, param_len, byte_values):
+    """Compatibility helper for callers that inspect one response fragment."""
+    parsed = _sdp_response_fragment(byte_values)
+    if parsed is None:
+        qprint(f"{indent}Malformed SDP response parameters")
+        return b'', False
+    return parsed
 
-    ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
-    i+=1
-    #qprint(f"{indent}{i2}}ContinuationState: 0x{ContinuationState:02x}")
 
-    ContinuationStateBytes = 0
-    if(ContinuationState > 0):
-        ContinuationStateBytes = byte_values[i:i+ContinuationState]
-        #qprint(f"{indent}{i2}ContinuationStateBytes: {ContinuationStateBytes}")
+def _merge_sdp_records(records):
+    """Coalesce attributes learned from repeated queries for the same handle."""
+    merged = []
+    by_handle = {}
+    seen_without_handle = set()
+    for record in sorted(records, key=lambda item: not isinstance(item.get(0x0000), int)):
+        handle = record.get(0x0000)
+        if isinstance(handle, int):
+            if handle in by_handle:
+                by_handle[handle].update(record)
+            else:
+                copy = record.copy()
+                by_handle[handle] = copy
+                merged.append(copy)
+        else:
+            # An AttributeIDList may omit ServiceRecordHandle. Match that
+            # partial record to a full record only if the match is unique.
+            matches = [existing for existing in merged
+                       if isinstance(existing.get(0x0000), int)
+                       and all(existing.get(key) == value
+                               for key, value in record.items())]
+            if len(matches) == 1:
+                continue
+            signature = repr(record)
+            if signature not in seen_without_handle:
+                merged.append(record)
+                seen_without_handle.add(signature)
+    return merged
 
-    return fragment_bytes, True
 
 def print_SDP_info(bdaddr):
-    # Query the database for all SDP data
     values = (bdaddr,)
-    # This is the query which hopefully has no fragments...
-    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s and pdu_id != 7";
-    SDP_result = execute_query(query, values)
-    # This query will most likely have fragments that need to be reassembled
-    query = "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values FROM SDP_Common WHERE bdaddr = %s and pdu_id = 7 order by transaction_id asc";
-    SDP_result2 = execute_query(query, values)
-
-    # Now print what we want users to see
-    if (SDP_result or SDP_result2):
-        qprint(f"{i1}Service Discovery Protocol (SDP) data found:")
-    else:
+    common_rows = execute_query(
+        "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, "
+        "param_len, byte_values FROM SDP_Common WHERE bdaddr = %s ORDER BY id ASC",
+        values,
+    ) or []
+    error_rows = execute_query(
+        "SELECT direction, l2cap_len, l2cap_cid, transaction_id, param_len, "
+        "error_code FROM SDP_ERROR_RSP WHERE bdaddr = %s ORDER BY id ASC",
+        values,
+    ) or []
+    if not common_rows and not error_rows:
         vprint(f"{i1}No SDP data found.")
         return
 
-    # Records collected for the terse view (populated from pdu_id=5 and pdu_id=7).
-    terse_records = []
+    qprint(f"{i1}Service Discovery Protocol (SDP) data found:")
+    for direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code in error_rows:
+        data = ff_SDP_ERROR_RSP(direction, l2cap_len, l2cap_cid,
+                                transaction_id, param_len, error_code)
+        BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        qprint(f"{i2}SDP error response: 0x{error_code:04x}")
 
-    for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result:
-        raw_data_hex_str = bytes_to_hex_str(byte_values)
-        # First export BTIDES
-        if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-        elif(pdu_id == type_SDP_SERVICE_ATTR_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-        elif(pdu_id == type_SDP_SERVICE_ATTR_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            # Collect one service record for the terse view
-            try:
-                cnt = struct.unpack('>H', byte_values[:2])[0]
-                attr_list_bytes = byte_values[2:2+cnt]
-                inner_val, _ = _parse_sdp_elem_val(attr_list_bytes, 0)
-                if isinstance(inner_val, list):
-                    terse_records.append(_parse_sdp_record_dict(inner_val))
-            except Exception:
-                pass
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_ATTR_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-
-        # FIXME: We aren't handling the case where the PDU isn't fragmented currently
-
-    reassembly_buffer = b''
-    for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in SDP_result2:
-        # First export BTIDES
-        raw_data_hex_str = bytes_to_hex_str(byte_values)
-        if(pdu_id == type_SDP_SERVICE_SEARCH_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-        elif(pdu_id == type_SDP_SERVICE_ATTR_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-        elif(pdu_id == type_SDP_SERVICE_ATTR_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_REQ):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_REQ, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_ATTR_REQ(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-        elif(pdu_id == type_SDP_SERVICE_SEARCH_ATTR_RSP):
-            data = ff_SDP_Common(type_SDP_SERVICE_SEARCH_ATTR_RSP, direction, l2cap_len, l2cap_cid, transaction_id, param_len, raw_data_hex_str)
-            BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
-            #print_SDP_SERVICE_SEARCH_ATTR_RSP(f"{i2}", direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-
-        byte_size = len(byte_values)
-        i = 0
-        AttributeListsByteCount, = struct.unpack(">H", byte_values[:2])
-        i+=2
-
-        try:
-            fragment_bytes = byte_values[2:2+AttributeListsByteCount]
-            reassembly_buffer += fragment_bytes
-            i+=AttributeListsByteCount
-            if(i > byte_size):
-                qprint(f"{i2}Error: i is greater than the length of the byte_values array. Aborting.")
-                break
-            ContinuationState, = struct.unpack(">B", byte_values[i:i+1])
-        except Exception as e:
-            qprint(f"{i2}Possible out of bounds access: {e}. Aborting")
-            break
-
-        if(ContinuationState):
+    records = []
+    # Continuations belong to a response type and channel. Transaction IDs
+    # change between continuation requests, so they cannot be used as the key.
+    fragments = {}
+    for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in common_rows:
+        byte_values = bytes(byte_values)
+        data = ff_SDP_Common(pdu_id, direction, l2cap_len, l2cap_cid,
+                             transaction_id, param_len, byte_values.hex())
+        BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
+        if pdu_id not in (type_SDP_SERVICE_ATTR_RSP, type_SDP_SERVICE_SEARCH_ATTR_RSP):
             continue
+        key = (direction, l2cap_cid, pdu_id)
+        parsed = _sdp_response_fragment(byte_values)
+        if parsed is None:
+            fragments.pop(key, None)
+            vprint(f"{i2}Malformed SDP response on CID 0x{l2cap_cid:04x}")
+            continue
+        fragment, has_continuation = parsed
+        fragments.setdefault(key, bytearray()).extend(fragment)
+        if has_continuation:
+            continue
+        complete = bytes(fragments.pop(key))
+        if TME.TME_glob.verbose_print:
+            parse_SDP_data_element(i2, complete, 0)
         else:
-            if TME.TME_glob.verbose_print:
-                # Verbose form: raw data-element dump (current behaviour)
-                i = 0
-                while (i < len(reassembly_buffer)):
-                    (data_element_type, actual_size, byte_values_new, i) = parse_SDP_data_element(f"{i2}", reassembly_buffer, i)
-            else:
-                # Terse form: collect structured records for display below
-                terse_records.extend(_parse_sdp_all_records(reassembly_buffer))
+            records.extend(_parse_sdp_all_records(
+                complete, single_record=pdu_id == type_SDP_SERVICE_ATTR_RSP))
 
     if not TME.TME_glob.verbose_print:
-        _terse_print_sdp_records(terse_records)
-
+        _terse_print_sdp_records(_merge_sdp_records(records))
     qprint("")
