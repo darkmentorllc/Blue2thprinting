@@ -30,6 +30,7 @@ from TME.TME_BTIDES_base import (
     write_BTIDES,
 )
 from TME.TME_BTIDES_AdvData import ff_adv_data_type_specific_obj
+from TME.TME_BTIDES_LLCP import ff_LL_VERSION_IND
 
 # BTIDALPOOL access related
 from oauth_helper import AuthClient
@@ -38,6 +39,7 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 
 # Used to keep track of state between packets
 g_last_handle_to_bdaddr = {}
+g_last_handle_transport = {}
 g_last_bdaddr_connected_to = None
 
 def export_AdvChannelData(report, adv_type):
@@ -47,7 +49,9 @@ def export_AdvChannelData(report, adv_type):
         bdaddr = fields['bd_addr']
         data = fields['eir_data']
     else:
-        bdaddr_random = fields['atype']
+        if fields['atype'] > 3:
+            return False
+        bdaddr_random = fields['atype'] & 1
         bdaddr = fields['addr']
         data = fields['data']
 
@@ -356,18 +360,29 @@ def process_connections(p):
     if p.haslayer(HCI_LE_Meta_Connection_Complete):
         #p.show()
         event = p.getlayer(HCI_LE_Meta_Connection_Complete)
-        g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+        if event.fields['status'] == 0:
+            g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'] & 1)
+            g_last_handle_transport[event.fields['handle']] = 'LE'
         return True
     elif p.haslayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1):
         #p.show()
         event = p.getlayer(HCI_LE_Meta_Enhanced_Connection_Update_Complete_v1)
-        g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'])
+        if event.fields['status'] == 0:
+            g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['paddr'], event.fields['patype'] & 1)
+            g_last_handle_transport[event.fields['handle']] = 'LE'
         return True
     elif p.haslayer(HCI_Event_Connection_Complete):
         #p.show()
         event = p.getlayer(HCI_Event_Connection_Complete)
         if(event.fields['status'] == 0):
             g_last_handle_to_bdaddr[event.fields['handle']] = (event.fields['bd_addr'], 0)
+            g_last_handle_transport[event.fields['handle']] = 'BR/EDR'
+        return True
+    elif p.haslayer(HCI_Event_Disconnection_Complete):
+        event = p.getlayer(HCI_Event_Disconnection_Complete)
+        if event.fields['status'] == 0:
+            g_last_handle_to_bdaddr.pop(event.fields['handle'], None)
+            g_last_handle_transport.pop(event.fields['handle'], None)
         return True
     # Note: when processing DarkFirmware_real_i logs, we see LMP traffic after the HCI_Cmd_Create_Connection but before the HCI_Event_Connection_Complete
     # so we need to capture the bdaddr at this point to be able to make sense of that LMP traffic
@@ -378,6 +393,25 @@ def process_connections(p):
         return True
 
     return False
+
+
+def process_remote_version(p):
+    if not p.haslayer(HCI_Event_Read_Remote_Version_Information_Complete):
+        return False
+
+    event = p.getlayer(HCI_Event_Read_Remote_Version_Information_Complete)
+    handle = event.fields['handle']
+    if event.fields['status'] == 0 and handle in g_last_handle_to_bdaddr:
+        bdaddr, bdaddr_type = g_last_handle_to_bdaddr[handle]
+        version = event.fields['version']
+        company_id = event.fields['manufacturer_name']
+        subversion = event.fields['subversion']
+        if g_last_handle_transport.get(handle) == 'LE':
+            data = ff_LL_VERSION_IND(type_BTIDES_direction_P2C, version, company_id, subversion)
+            BTIDES_export_LLArray_entry(bdaddr=bdaddr, random=bdaddr_type, data=data)
+        elif g_last_handle_transport.get(handle) == 'BR/EDR':
+            BTIDES_export_LMP_VERSION_RES(bdaddr, version, company_id, subversion)
+    return True
 
 
 def process_advertisements(p, record):
@@ -639,6 +673,8 @@ def read_HCI(file_path):
 
             #p.show()
             if(process_connections(p)):
+                continue
+            elif(process_remote_version(p)):
                 continue
             elif(process_advertisements(p, record)):
                 continue
