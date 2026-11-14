@@ -7,7 +7,7 @@
 from handle_venv import activate_venv
 activate_venv()
 
-import argparse, os, re, struct
+import argparse, os, re, struct, sys
 import xml.etree.ElementTree as ET
 
 import TME.TME_glob
@@ -108,8 +108,7 @@ def encode_sdp_element(elem):
         return _sdp_var_len(8, _xml_string_bytes(elem))
 
     else:
-        qprint(f"Warning: unknown sdptool XML element type '{tag}', skipping")
-        return b''
+        raise ValueError(f"Unknown sdptool XML element type '{tag}'")
 
 
 def encode_record(record_elem):
@@ -118,6 +117,8 @@ def encode_record(record_elem):
     for attr in record_elem.findall('attribute'):
         attr_id = int(attr.get('id'), 16)
         pairs += struct.pack('>BH', 0x09, attr_id)
+        if len(attr) != 1:
+            raise ValueError(f"SDP attribute 0x{attr_id:04x} has {len(attr)} values; expected one")
         for child in attr:
             pairs += encode_sdp_element(child)
     return _sdp_var_len(6, pairs)
@@ -144,18 +145,24 @@ def _recover_binary_urls(raw):
     return re.sub(rb'<url\s+value="([^"]*)"\s*/>', replace, raw)
 
 
-def parse_sdp_xml_file(xml_path):
+def parse_sdp_xml_file(xml_path, errors=None):
     """Parse an sdptool XML file and return a list of <record> Element objects."""
     try:
         with open(xml_path, 'rb') as f:
-            content = _recover_binary_urls(f.read()).decode('utf-8', errors='replace')
+            raw = f.read()
     except OSError as e:
-        qprint(f"Warning: could not read {xml_path}: {e}")
-        return []
+        raise ValueError(f"Could not read {xml_path}: {e}") from e
+    if b'\x00' in raw:
+        message = f"NUL byte corruption in sdptool XML file {xml_path}"
+        if errors is None:
+            raise ValueError(message)
+        errors.append(message)
+    content = _recover_binary_urls(raw).decode('utf-8')
 
     # Split on XML declarations; the first chunk is the non-XML preamble.
     chunks = re.split(r'<\?xml[^?]*\?>', content)
     records = []
+    opening_records = len(re.findall(r'<record\b', content))
     for chunk in chunks:
         # A dump may contain more than one record per declaration as well as
         # trailing non-XML status messages from sdptool.
@@ -165,7 +172,27 @@ def parse_sdp_xml_file(xml_path):
                 if root.tag == 'record':
                     records.append(root)
             except ET.ParseError as e:
-                qprint(f"Warning: XML parse error in {xml_path}: {e}")
+                message = f"XML parse error in {xml_path}: {e}"
+                if errors is None:
+                    raise ValueError(message) from e
+                errors.append(message)
+    if len(records) != opening_records:
+        message = (f"Incomplete SDP XML in {xml_path}: {opening_records} opening record(s), "
+                   f"{len(records)} parsed")
+        if errors is None:
+            raise ValueError(message)
+        errors.append(message)
+    if not records and content.strip():
+        status_prefixes = ('Browsing ', 'Failed to connect to SDP server on ',
+                           'Service Search failed:')
+        unknown = [line[:100] for line in content.splitlines()
+                   if line.strip() and not line.startswith(status_prefixes)
+                   and not line.startswith('\x00')]
+        if unknown:
+            message = f"Unrecognized non-XML sdptool content in {xml_path}: {unknown[0]!r}"
+            if errors is None:
+                raise ValueError(message)
+            errors.append(message)
     return records
 
 
@@ -173,9 +200,9 @@ def parse_sdp_xml_file(xml_path):
 # Per-file BTIDES export
 ############################
 
-def process_sdp_file(xml_path, bdaddr):
+def process_sdp_file(xml_path, bdaddr, errors=None):
     """Parse one sdptool XML file and emit a BTIDES SDP_SERVICE_SEARCH_ATTR_RSP entry."""
-    records = parse_sdp_xml_file(xml_path)
+    records = parse_sdp_xml_file(xml_path, errors=errors)
     if not records:
         vprint(f"  No SDP records found in {xml_path}, skipping.")
         return False
@@ -220,6 +247,8 @@ def main():
     parser = argparse.ArgumentParser(description='sdptool XML input arguments')
     parser.add_argument('--input', type=str, required=True,
                         help='Input: a single {BDADDR}_sdp.xml file, or a directory containing them.')
+    parser.add_argument('--recursive', action='store_true',
+                        help='Include *_sdp.xml files in subdirectories of --input.')
 
     btides_group = parser.add_argument_group('BTIDES file output arguments')
     btides_group.add_argument('--output', type=str, required=False,
@@ -251,35 +280,51 @@ def main():
 
     # Collect input files
     if os.path.isdir(args.input):
-        input_files = sorted(
-            os.path.join(args.input, f)
-            for f in os.listdir(args.input)
-            if f.endswith('_sdp.xml')
-        )
+        if args.recursive:
+            input_files = sorted(os.path.join(root, f)
+                                 for root, _, files in os.walk(args.input)
+                                 for f in files if f.endswith('_sdp.xml'))
+        else:
+            input_files = sorted(os.path.join(args.input, f)
+                                 for f in os.listdir(args.input)
+                                 if f.endswith('_sdp.xml'))
         if not input_files:
-            print(f"No *_sdp.xml files found in directory: {args.input}")
-            return
+            parser.error(f"No *_sdp.xml files found in directory: {args.input}")
     elif os.path.isfile(args.input):
         input_files = [args.input]
     else:
-        print(f"Error: {args.input} is not a file or directory.")
-        return
+        parser.error(f"{args.input} is not a file or directory")
 
     qprint(f"Processing {len(input_files)} sdptool XML file(s)...")
 
     processed = 0
+    no_records = 0
+    errors = 0
     for xml_path in input_files:
-        bdaddr = extract_bdaddr_from_filename(xml_path)
-        if process_sdp_file(xml_path, bdaddr):
-            processed += 1
+        file_errors = []
+        try:
+            bdaddr = extract_bdaddr_from_filename(xml_path)
+            if not re.fullmatch(r'[0-9a-f]{2}(?::[0-9a-f]{2}){5}', bdaddr):
+                raise ValueError(f"Invalid BDADDR in filename: {bdaddr}")
+            if os.path.getsize(xml_path) == 0:
+                raise ValueError("Empty sdptool XML file")
+            if process_sdp_file(xml_path, bdaddr, errors=file_errors):
+                processed += 1
+            else:
+                no_records += 1
+        except (OSError, ValueError, TypeError, struct.error) as exc:
+            file_errors.append(str(exc))
+        for message in file_errors:
+            errors += 1
+            print(f"SDP XML error in {xml_path}: {message}", file=sys.stderr)
 
-    qprint(f"Exported SDP data for {processed} device(s).")
+    print(f"SDP XML summary: {processed} with records, {no_records} without records, {errors} errors across {len(input_files)} files")
 
     if args.output:
         write_BTIDES(args.output)
         qprint(f"BTIDES output written to {args.output}")
 
-    if args.to_SQL:
+    if args.to_SQL and processed:
         b2s_args = btides_to_sql_args(
             input=[args.output] if args.output else ["SKIPME"],
             use_test_db=args.use_test_db,
@@ -291,6 +336,8 @@ def main():
         )
         if not btides_to_sql(b2s_args):
             raise SystemExit(1)
+    if errors:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

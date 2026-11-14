@@ -20,6 +20,8 @@ import dataclasses
 import datetime
 import struct
 import typing
+import sys
+from collections import Counter
 
 
 _BTSNOOP_FORMAT_UART    = 1002  # H4 UART
@@ -52,45 +54,76 @@ class HCILogRecord:
     data: bytes
 
 
-def parse(filename, verbose=False):
+def parse(filename, verbose=False, allow_truncated_tail=False):
     """Parse a BTSnoop or Apple PacketLogger file. Returns a list of HCILogRecord."""
+    diagnostics = Counter()
     with open(filename, "rb") as f:
         ident = f.read(8)
         if ident == b"btsnoop\x00":
-            version, data_link_type = struct.unpack(">II", f.read(8))
+            header = f.read(8)
+            if len(header) != 8:
+                raise ValueError(f"Truncated BTSnoop header in {filename}: {len(header) + 8} bytes")
+            version, data_link_type = struct.unpack(">II", header)
             if version != 1 or data_link_type not in (_BTSNOOP_FORMAT_UART, _BTSNOOP_FORMAT_MONITOR):
                 raise ValueError(f"Unsupported BTSnoop file: version={version} type={data_link_type}")
-            return list(_read_btsnoop_records(f, data_link_type))
+            records = list(_read_btsnoop_records(f, data_link_type, allow_truncated_tail, diagnostics))
         # Apple PacketLogger has no file header. v1 = byte[1]==0x00, v2 = byte[1]==0x01.
-        if ident[0] == 0x00 and ident[1] in (0x00, 0x01):
+        elif len(ident) >= 2 and ident[0] == 0x00 and ident[1] in (0x00, 0x01):
             pklg_v2 = (ident[1] == 0x01)
             f.seek(0)
-            return list(_read_packetlogger_records(f, pklg_v2))
-        raise ValueError(f"Not a BTSnoop or Apple PacketLogger file: ident={ident!r}")
+            records = list(_read_packetlogger_records(f, pklg_v2, allow_truncated_tail, diagnostics))
+        else:
+            raise ValueError(f"Not a BTSnoop or Apple PacketLogger file: ident={ident!r}")
+    if diagnostics:
+        print(f"HCI log diagnostics for {filename}: {dict(diagnostics)}", file=sys.stderr)
+    return records
 
 
-def _read_btsnoop_records(f, fmt):
+def _read_btsnoop_records(f, fmt, allow_truncated_tail=False, diagnostics=None):
+    if diagnostics is None:
+        diagnostics = Counter()
     seq = 1
     while True:
+        offset = f.tell()
         hdr = f.read(24)
+        if not hdr:
+            return
         if len(hdr) != 24:
-            return  # EOF
+            if allow_truncated_tail:
+                diagnostics['truncated_tail_bytes'] += len(hdr)
+                return
+            raise ValueError(f"Truncated BTSnoop record header at offset {offset}: {len(hdr)}/24 bytes")
         orig_len, inc_len, flags, drops, time64 = struct.unpack(">IIIIq", hdr)
-        if inc_len == 0 or time64 == 0:
-            continue  # skip known-invalid truncated entries
         data = f.read(inc_len)
         if len(data) != inc_len:
-            return  # truncated file
+            if allow_truncated_tail:
+                diagnostics['truncated_tail_bytes'] += 24 + len(data)
+                return
+            raise ValueError(f"Truncated BTSnoop record body at offset {offset}: {len(data)}/{inc_len} bytes")
+        if inc_len == 0:
+            diagnostics['empty_records'] += 1
+            continue
+        if time64 == 0:
+            # The timestamp is irrelevant to HCI conversion. Preserve the
+            # packet, and report the bad timestamp instead of losing it or
+            # leaving its payload to be mistaken for the next record header.
+            diagnostics['zero_timestamps'] += 1
 
         if fmt == _BTSNOOP_FORMAT_MONITOR:
             # Strip the adapter index from the high 16 bits, look up the opcode.
             translated = _BTMON_TO_H4.get(flags & 0xFFFF)
             if translated is None:
+                diagnostics['non_hci_monitor_records'] += 1
                 continue  # unsupported monitor opcode (e.g. NEW_INDEX, SYSTEM_NOTE)
             h4_type, flags = translated
             data = bytes([h4_type]) + data
 
-        ts = datetime.datetime(2000, 1, 1) + datetime.timedelta(microseconds=time64 - _USECS_BETWEEN_0_AND_2000_AD)
+        try:
+            ts = (datetime.datetime(2000, 1, 1) if time64 == 0 else
+                  datetime.datetime(2000, 1, 1) + datetime.timedelta(
+                      microseconds=time64 - _USECS_BETWEEN_0_AND_2000_AD))
+        except (OverflowError, ValueError) as exc:
+            raise ValueError(f"Invalid BTSnoop timestamp at offset {offset}: {time64}") from exc
         yield HCILogRecord(seq=seq, length=inc_len, flags=flags, drops=drops, ts=ts, data=data)
         seq += 1
 
@@ -104,17 +137,33 @@ _PKLG_TO_BTSNOOP = {
 }
 
 
-def _read_packetlogger_records(f, pklg_v2):
+def _read_packetlogger_records(f, pklg_v2, allow_truncated_tail=False, diagnostics=None):
+    if diagnostics is None:
+        diagnostics = Counter()
     seq = 1
     fmt = "<IqB" if pklg_v2 else ">IqB"
     while True:
+        offset = f.tell()
         hdr = f.read(13)
-        if len(hdr) != 13:
+        if not hdr:
             return
+        if len(hdr) != 13:
+            if allow_truncated_tail:
+                diagnostics['truncated_tail_bytes'] += len(hdr)
+                return
+            raise ValueError(f"Truncated PacketLogger record header at offset {offset}: {len(hdr)}/13 bytes")
         length, timestamp, pkt_type = struct.unpack(fmt, hdr)
+        if length < 9:
+            raise ValueError(f"Invalid PacketLogger record length at offset {offset}: {length}")
         data = f.read(length - 9)  # length includes the 9 bytes after itself
+        if len(data) != length - 9:
+            if allow_truncated_tail:
+                diagnostics['truncated_tail_bytes'] += 13 + len(data)
+                return
+            raise ValueError(f"Truncated PacketLogger record body at offset {offset}: {len(data)}/{length - 9} bytes")
         translated = _PKLG_TO_BTSNOOP.get(pkt_type)
         if translated is None:
+            diagnostics['non_hci_packetlogger_records'] += 1
             continue
         flags, h4_type = translated
         data = bytes([h4_type]) + data

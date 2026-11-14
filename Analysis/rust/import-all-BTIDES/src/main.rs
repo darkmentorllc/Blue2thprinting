@@ -260,6 +260,13 @@ fn convert_hci(
     while let Some(rec) = reader.next_record() {
         handle_hci_packet(&mut bt, &mut conns, &mut hci, rec.uart_type, rec.direction, rec.data);
     }
+    if reader.unconsumed_bytes() != 0 {
+        return Err(format!(
+            "incomplete BTSnoop record at end of {}: {} unconsumed bytes",
+            input.display(),
+            reader.unconsumed_bytes()
+        ).into());
+    }
     if validate {
         bt.write_btides(output, schema_dir)?;
     } else {
@@ -587,10 +594,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
                     if let Some(tx) = sql_tx.as_ref() {
-                        // Send only fails if the writer panicked; the worker
-                        // has no useful recovery, so drop the result and keep
-                        // draining the queue.
-                        let _ = tx.send(job.output.clone());
+                        if let Err(send_error) = tx.send(job.output.clone()) {
+                            err.fetch_add(1, Ordering::SeqCst);
+                            eprintln!("ERROR queuing SQL import for {}: {send_error}", job.output.display());
+                        }
                     }
                 }
                 Err(e) => {
@@ -602,7 +609,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         handles.push(handle);
     }
     for h in handles {
-        let _ = h.join();
+        h.join().map_err(|_| "capture conversion worker panicked")?;
     }
     // All conversions done. Drop main's Sender so the channel closes once
     // every per-worker clone has also been dropped (which has already
@@ -611,7 +618,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // any remaining queued imports and exits its `for output in rx` loop.
     drop(sql_tx);
     if let Some(handle) = sql_writer {
-        let _ = handle.join();
+        handle.join().map_err(|_| "SQL import worker panicked")?;
     }
     let elapsed = t0.elapsed();
     if to_sql {
@@ -630,6 +637,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             err.load(Ordering::SeqCst),
             elapsed.as_secs_f64()
         );
+    }
+    if err.load(Ordering::SeqCst) != 0 || sql_err.load(Ordering::SeqCst) != 0 {
+        return Err("one or more capture conversions or SQL imports failed".into());
     }
     Ok(())
 }

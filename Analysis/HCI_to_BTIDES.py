@@ -8,6 +8,8 @@ from handle_venv import activate_venv
 activate_venv()
 import argparse
 import calendar
+import sys
+import traceback
 from dataclasses import replace
 
 # HCI file reading related adapter to feed into scapy
@@ -42,6 +44,8 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 g_last_handle_to_bdaddr = {}
 g_last_handle_transport = {}
 g_last_bdaddr_connected_to = None
+g_unattributed_lmp_count = 0
+g_malformed_inquiry_count = 0
 
 def export_AdvChannelData(report, adv_type):
     fields = report.fields
@@ -424,6 +428,27 @@ def process_remote_version(p):
 
 
 def process_advertisements(p, record):
+    global g_malformed_inquiry_count
+    raw = record.data
+    if len(raw) >= 2 and raw[0] == 4 and raw[1] in (0x02, 0x22):
+        # Scapy's Inquiry Result classes only decode the first response.
+        # The HCI event carries a count followed by fixed-width records.
+        if len(raw) < 4:
+            g_malformed_inquiry_count += 1
+            return True
+        count = raw[3]
+        widths = (13, 14) if raw[1] == 0x02 else (14, 15)
+        width = next((w for w in widths if len(raw) - 4 == count * w), None)
+        if raw[2] != len(raw) - 3 or width is None:
+            g_malformed_inquiry_count += 1
+            return True
+        for offset in range(4, len(raw), width):
+            response = raw[offset:offset + width]
+            bdaddr = ':'.join(f'{byte:02x}' for byte in response[:6][::-1])
+            export_Page_Scan_Repetition_Mode(bdaddr, response[6])
+            class_offset = 8 if (raw[1], width) in ((0x02, 13), (0x22, 14)) else 9
+            export_Class_of_Device(bdaddr, f'{int.from_bytes(response[class_offset:class_offset + 3], "little"):06x}')
+        return True
     if p.haslayer(HCI_LE_Meta_Advertising_Reports):
         #p.show()
         data_exported = False
@@ -488,41 +513,17 @@ def process_advertisements(p, record):
     elif p.haslayer(HCI_Event_Extended_Inquiry_Result):
         #p.show()
         inq_result = p.getlayer(HCI_Event_Extended_Inquiry_Result)
+        if (inq_result.fields['num_response'] != 1 or raw[2] != 255
+                or len(raw) != 258):
+            g_malformed_inquiry_count += 1
+            return True
         export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
         CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
         export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
-        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
-        if(inq_result.fields['num_response'] > 1):
-            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
-            exit(1)
         if (p.haslayer(EIR_Hdr)):
             eir = p.getlayer(EIR_Hdr)
             if eir.fields['len'] != 0:
                 export_AdvChannelData(inq_result, type_BTIDES_EIR)
-        return True
-    elif p.haslayer(HCI_Event_Inquiry_Result):
-        #p.show()
-        inq_result = p.getlayer(HCI_Event_Inquiry_Result)
-        export_Page_Scan_Repetition_Mode(inq_result.fields['addr'], inq_result.fields['page_scan_repetition_mode'])
-        CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
-        export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
-        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
-        if(inq_result.fields['num_response'] > 1):
-            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
-            exit(1)
-        # This has no AdvData inclusion
-        return True
-    elif p.haslayer(HCI_Event_Inquiry_Result_With_Rssi):
-        #p.show()
-        inq_result = p.getlayer(HCI_Event_Inquiry_Result_With_Rssi)
-        export_Page_Scan_Repetition_Mode(inq_result.fields['bd_addr'], inq_result.fields['page_scan_repetition_mode'])
-        CoD_hex_str = f"{inq_result.fields['device_class']:06x}"
-        export_Class_of_Device(inq_result.fields['bd_addr'], CoD_hex_str)
-        # Note: just doing it this way unlike the other entries because it seems scapy doesn't have support for num_response > 1
-        if(inq_result.fields['num_response'] > 1):
-            print("We have never seen this test case of num_response > 1. Please submit this sample so we can handle it.")
-            exit(1)
-        # This has no AdvData inclusion
         return True
     # This is obviously not an advertisement, but it does include the Class of Device, so we will collect it here with the other CoD entries
     elif p.haslayer(HCI_Event_Connection_Request):
@@ -644,6 +645,7 @@ def process_SMP(p, record):
 
 # Just hacking this in for now, since I don't want to fight with scapy definitions
 def process_DarkFirmware_LMP_Log(p, record):
+    global g_unattributed_lmp_count
     if p.haslayer(HCI_Event_Hdr) and p.code == 0xff and p.len == 56:
         #print(record)
         # The vendor-specific event sent back by DarkFirmware_real_i will always start with "AAAA"
@@ -652,6 +654,11 @@ def process_DarkFirmware_LMP_Log(p, record):
             return False
         else:
             #print("DarkFirmware_real_i LMP log data found")
+            if g_last_bdaddr_connected_to is None:
+                # A rotated capture can begin after Create_Connection. The
+                # vendor event has no validated peer mapping in that case.
+                g_unattributed_lmp_count += 1
+                return True
             export_to_LMPArray(p.load[28:])
             return True
     return False
@@ -701,19 +708,20 @@ def _reassemble_sdp_acl(record, fragments):
     return record
 
 
-def read_HCI(file_path):
+def read_HCI(file_path, allow_truncated_tail=False):
+    global g_last_bdaddr_connected_to, g_unattributed_lmp_count, g_malformed_inquiry_count
     g_last_handle_to_bdaddr.clear()
     g_last_handle_transport.clear()
     g_CIDs_used_for_SDP.clear()
+    g_last_bdaddr_connected_to = None
+    g_unattributed_lmp_count = 0
+    g_malformed_inquiry_count = 0
     sdp_acl_fragments = {}
     try:
         try:
-            records = bts.parse(file_path)
+            records = bts.parse(file_path, allow_truncated_tail=allow_truncated_tail)
         except Exception as e:
-            print(f"Error reading HCI log file: {e}")
-            # Note: as a temporary measure while doing bulk imports, make this return False instead of exit(1),
-            # so that invalid data can just be bypassed and the overall process can continue
-            #exit(1)
+            print(f"Error reading HCI log file {file_path}: {e}", file=sys.stderr)
             return False
         total_records = len(records)
         # for record in records:
@@ -762,12 +770,16 @@ def read_HCI(file_path):
             elif(process_DarkFirmware_LMP_Log(p, record)):
                 continue
 
+        if g_unattributed_lmp_count:
+            print(f"HCI log warning for {file_path}: skipped {g_unattributed_lmp_count} "
+                  "DarkFirmware LMP event(s) without a known peer BDADDR", file=sys.stderr)
+        if g_malformed_inquiry_count:
+            print(f"HCI log warning for {file_path}: skipped {g_malformed_inquiry_count} "
+                  "Inquiry Result event(s) with invalid response count or length", file=sys.stderr)
         return True
     except Exception as e:
-        print(f"Caught unhandled exception: {e}")
-        # Note: as a temporary measure while doing bulk imports, make this return False instead of exit(1),
-        # so that invalid data can just be bypassed and the overall process can continue
-        #exit(1)
+        print(f"Error processing HCI log {file_path} at record {i if 'i' in locals() else 'before parsing'}: {e}", file=sys.stderr)
+        traceback.print_exc()
         return False
 
 
@@ -775,6 +787,8 @@ def main():
     global verbose_print, verbose_BTIDES
     parser = argparse.ArgumentParser(description='HCI file input arguments')
     parser.add_argument('--input', type=str, required=True, help='Input file name for HCI log file.')
+    parser.add_argument('--allow-truncated-tail', action='store_true',
+                        help='Import complete records from a capture with a torn final record; report the discarded tail on stderr.')
 
     # BTIDES arguments
     btides_group = parser.add_argument_group('BTIDES file output arguments')
@@ -807,17 +821,19 @@ def main():
     TME.TME_glob.verbose_BTIDES = args.verbose_BTIDES
 
     qprint("Reading all events from HCI log into memory.")
-    if not read_HCI(args.input):
+    if not read_HCI(args.input, allow_truncated_tail=args.allow_truncated_tail):
         raise SystemExit(1)
 
     qprint("Writing BTIDES data to file.")
     write_BTIDES(out_BTIDES_filename)
-    qprint("Export completed with no errors.")
+    qprint("Export completed.")
 
     btides_to_sql_succeeded = False
     if args.to_SQL:
         b2s_args = btides_to_sql_args(input=[out_BTIDES_filename], use_test_db=args.use_test_db, quiet_print=args.quiet_print, verbose_print=args.verbose_print)
         btides_to_sql_succeeded = btides_to_sql(b2s_args)
+        if not btides_to_sql_succeeded:
+            raise SystemExit(1)
 
     if args.to_BTIDALPOOL:
         # If the token isn't given on the CLI, then redirect them to go login and get one

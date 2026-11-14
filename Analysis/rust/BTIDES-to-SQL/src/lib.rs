@@ -1973,12 +1973,20 @@ fn parse_sdp_array(entry: &serde_json::Map<String, J>, b: &mut Buffers) {
             Some(o) => o,
             None => continue,
         };
-        let (bdaddr, _) = if obj_i64(o, "direction") == Some(TYPE_BTIDES_DIR_C2P) {
+        let c2p = obj_i64(o, "direction") == Some(TYPE_BTIDES_DIR_C2P);
+        let (mut bdaddr, _) = if c2p {
             get_bdaddr_central(entry)
         } else {
             get_bdaddr_peripheral(entry)
         };
+        if c2p && bdaddr == "00:00:00:00:00:00" {
+            bdaddr = get_bdaddr_peripheral(entry).0;
+            if bdaddr != "00:00:00:00:00:00" {
+                eprintln!("Warning: attributing SDP request to remote peer {bdaddr} because local controller address is unknown");
+            }
+        }
         if bdaddr == "00:00:00:00:00:00" {
+            eprintln!("Warning: skipping SDP packet with no known BDADDR on either side of connection");
             continue;
         }
         let pdu_id = match obj_i64(o, "pdu_id") {
@@ -3029,6 +3037,30 @@ mod tests {
         assert_eq!(
             get_bdaddr_central(obj(&v)),
             ("c0:ff:ee:00:00:01".to_string(), 1)
+        );
+    }
+
+    #[test]
+    fn sdp_request_uses_remote_peer_when_local_address_is_placeholder() {
+        let entry = json!({
+            "CONNECT_IND": {
+                "central_bdaddr": "00:00:00:00:00:00",
+                "central_bdaddr_rand": 0,
+                "peripheral_bdaddr": "f0:f1:f2:f3:a0:f0",
+                "peripheral_bdaddr_rand": 0
+            },
+            "SDPArray": [{
+                "direction": 0, "l2cap_len": 8, "l2cap_cid": 64,
+                "pdu_id": 6, "transaction_id": 1, "param_len": 3,
+                "raw_data_hex_str": "000100"
+            }]
+        });
+        let mut buffers = Buffers::default();
+        parse_sdp_array(obj(&entry), &mut buffers);
+        assert_eq!(buffers.sdp_common.len(), 1);
+        assert_eq!(
+            buffers.sdp_common[0][0],
+            Value::Bytes(b"f0:f1:f2:f3:a0:f0".to_vec())
         );
     }
 

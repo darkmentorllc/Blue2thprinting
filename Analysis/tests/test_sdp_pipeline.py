@@ -69,7 +69,7 @@ def test_hci_to_btides_to_sql_to_tme(
     assert len(responses) == response_count
 
     query = ("SELECT HEX(byte_values) FROM SDP_Common "
-             f"WHERE bdaddr = '{peer}' ORDER BY id")
+             f"WHERE bdaddr = '{peer}' AND direction = 1 ORDER BY id")
     stored = subprocess.run(
         ["mysql", "-u", "user", "-pa", "-D", "bttest", "--batch",
          "--skip-column-names", "-e", query],
@@ -77,6 +77,18 @@ def test_hci_to_btides_to_sql_to_tme(
     )
     assert stored.stdout.splitlines() == [
         item["raw_data_hex_str"].upper() for item in responses
+    ]
+    requests = [item for item in connection["SDPArray"]
+                if item["direction"] == 0 and "raw_data_hex_str" in item]
+    stored_requests = subprocess.run(
+        ["mysql", "-u", "user", "-pa", "-D", "bttest", "--batch",
+         "--skip-column-names", "-e",
+         "SELECT HEX(byte_values) FROM SDP_Common "
+         f"WHERE bdaddr = '{peer}' AND direction = 0 ORDER BY id"],
+        check=True, capture_output=True, text=True,
+    )
+    assert stored_requests.stdout.splitlines() == [
+        item["raw_data_hex_str"].upper() for item in requests
     ]
 
     displayed = run_tme("--bdaddr", peer, "--output", str(tme_path))
@@ -88,8 +100,11 @@ def test_hci_to_btides_to_sql_to_tme(
 
     tme_rows = json.loads(tme_path.read_text())
     tme_sdp = [item for row in tme_rows for item in row.get("SDPArray", [])]
-    assert [item["raw_data_hex_str"] for item in tme_sdp] == [
+    assert [item["raw_data_hex_str"] for item in tme_sdp if item["direction"] == 1] == [
         item["raw_data_hex_str"] for item in responses
+    ]
+    assert [item["raw_data_hex_str"] for item in tme_sdp if item["direction"] == 0] == [
+        item["raw_data_hex_str"] for item in requests
     ]
 
 
@@ -189,4 +204,6 @@ def test_error_response_reaches_sql_and_tme(db_clean, run_tme, tmp_path):
     assert "SDP error response: 0x0002" in displayed.stdout
     exported = [item for row in json.loads(output.read_text())
                 for item in row.get("SDPArray", [])]
-    assert len(exported) == 1 and exported[0]["error_code"] == 2
+    assert len(exported) == 2
+    assert next(item for item in exported if item["pdu_id"] == 1)["error_code"] == 2
+    assert next(item for item in exported if item["direction"] == 0)["pdu_id"] == 6

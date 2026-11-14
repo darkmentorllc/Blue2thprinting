@@ -1427,17 +1427,26 @@ def import_SDP_Common(bdaddr, sdp_entry):
 
 def parse_SDPArray(entry):
     if("SDPArray" not in entry.keys() or entry["SDPArray"] == None):
-        return # Entry not valid for this type
+        return 0, 0
 
+    fallback_count = 0
+    skipped_count = 0
     for sdp_entry in entry["SDPArray"]:
         # TODO: this is a bit inefficient, but this is OK until we have a proper CONNECT_IND-aware database schema
         if("direction" in sdp_entry.keys() and sdp_entry["direction"] == type_BTIDES_direction_C2P):
             bdaddr, bdaddr_rand = get_bdaddr_central(entry)
+            if bdaddr == "00:00:00:00:00:00":
+                # HCI logs identify the remote peer but often not the local
+                # controller address. Retain the request under its target;
+                # direction still records which side transmitted it.
+                bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
+                if bdaddr != "00:00:00:00:00:00":
+                    fallback_count += 1
         else:
             bdaddr, bdaddr_rand = get_bdaddr_peripheral(entry)
 
         if(bdaddr == "00:00:00:00:00:00"):
-            # Skip placeholder entries for now which are due to not fully parsing HCI connections to capture initiator BDADDR
+            skipped_count += 1
             continue
 
         if("pdu_id" in sdp_entry.keys() and sdp_entry["pdu_id"] in sdp_pdu_strings.keys()):
@@ -1445,6 +1454,7 @@ def parse_SDPArray(entry):
                 import_SDP_ERROR_RSP(bdaddr, sdp_entry)
             else:
                 import_SDP_Common(bdaddr, sdp_entry)
+    return fallback_count, skipped_count
 
 ###################################
 
@@ -1684,6 +1694,8 @@ def btides_to_sql(args):
         total = len(TME.TME_glob.BTIDES_JSON)
         count = 0;
         skipped_extended_reports = 0
+        sdp_fallbacks = 0
+        sdp_skipped = 0
         for entry in TME.TME_glob.BTIDES_JSON:
             if not skip_schema_validation:
                 # Sanity check every entry against the Schema's SingleBDADDR (this way we don't have to validate all up front)
@@ -1718,7 +1730,9 @@ def btides_to_sql(args):
 
             parse_EIRArray(entry)
 
-            parse_SDPArray(entry)
+            fallback_count, skipped_count = parse_SDPArray(entry)
+            sdp_fallbacks += fallback_count
+            sdp_skipped += skipped_count
 
             # parse_GPSArray(entry) -- replaced by a single bulk call after the loop.
 
@@ -1738,6 +1752,13 @@ def btides_to_sql(args):
                 "in BTIDES, but there is no SQL table for HCI reports yet.",
                 file=sys.stderr,
             )
+        if sdp_fallbacks:
+            print(f"Warning: attributed {sdp_fallbacks} SDP request(s) to the "
+                  "remote peer because the local controller address is unknown.",
+                  file=sys.stderr)
+        if sdp_skipped:
+            print(f"Warning: skipped {sdp_skipped} SDP packet(s) with no known "
+                  "BDADDR on either side of the connection.", file=sys.stderr)
 
         qprint(f"New db records inserted: {TME.TME_glob.insert_count}")
         qprint(f"Duplicate db records ignored: {TME.TME_glob.duplicate_count}")
