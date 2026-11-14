@@ -207,3 +207,52 @@ def test_error_response_reaches_sql_and_tme(db_clean, run_tme, tmp_path):
     assert len(exported) == 2
     assert next(item for item in exported if item["pdu_id"] == 1)["error_code"] == 2
     assert next(item for item in exported if item["direction"] == 0)["pdu_id"] == 6
+
+
+def test_tme_reports_and_skips_truncated_legacy_sdp_row(db_clean, run_tme, tmp_path):
+    peer = "f0:f1:f2:f3:a0:f6"
+    query = ("INSERT INTO SDP_Common "
+             "(bdaddr,direction,l2cap_len,l2cap_cid,pdu_id,transaction_id,param_len,byte_values) "
+             f"VALUES ('{peer}',1,8,64,7,1,3,X'0001')")
+    subprocess.run(
+        ["mysql", "-u", "user", "-pa", "-D", "bttest", "-e", query],
+        check=True, capture_output=True, text=True,
+    )
+    subprocess.run(
+        ["mysql", "-u", "user", "-pa", "-D", "bttest", "-e",
+         "INSERT INTO SDP_ERROR_RSP "
+         "(bdaddr,direction,l2cap_len,l2cap_cid,transaction_id,param_len,error_code) "
+         f"VALUES ('{peer}',1,8,64,2,2,1)"],
+        check=True, capture_output=True, text=True,
+    )
+    output = tmp_path / "truncated_from_sql.btides"
+    displayed = run_tme("--bdaddr", peer, "--output", str(output))
+    assert "Malformed SDP_Common row" in displayed.stderr
+    assert "Malformed SDP_ERROR_RSP row" in displayed.stderr
+    assert not any("SDPArray" in row for row in json.loads(output.read_text()))
+
+
+def test_sql_import_rejects_sdp_length_mismatch(db_clean, tmp_path):
+    source = tmp_path / "bad_sdp.btides"
+    source.write_text(json.dumps([{
+        "bdaddr": "f0:f1:f2:f3:a0:f7", "bdaddr_rand": 0,
+        "SDPArray": [{
+            "direction": 1, "l2cap_len": 8, "l2cap_cid": 64,
+            "pdu_id": 7, "transaction_id": 1, "param_len": 3,
+            "raw_data_hex_str": "0001",
+        }],
+    }]))
+    result = subprocess.run(
+        [sys.executable, "BTIDES_to_SQL.py", "--input", str(source),
+         "--use-test-db", "--quiet-print"],
+        cwd=ANALYSIS_DIR, capture_output=True, text=True, timeout=60,
+    )
+    assert result.returncode != 0
+    assert "Invalid SDP packet lengths" in result.stderr
+    stored = subprocess.run(
+        ["mysql", "-u", "user", "-pa", "-D", "bttest", "--batch",
+         "--skip-column-names", "-e",
+         "SELECT COUNT(*) FROM SDP_Common WHERE bdaddr='f0:f1:f2:f3:a0:f7'"],
+        check=True, capture_output=True, text=True,
+    )
+    assert stored.stdout.strip() == "0"

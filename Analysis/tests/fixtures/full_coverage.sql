@@ -267,10 +267,10 @@ INSERT INTO LMP_POWER_CONTROL_RES (bdaddr, power_adj_res) VALUES ('aa:bb:cc:dd:e
 
 -- byte_values is a binary VARBINARY(1024); use UNHEX to insert the bytes.
 INSERT INTO SDP_Common (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
-VALUES ('aa:bb:cc:dd:ee:7f', 1, 12, 64, 7, 5, 8, UNHEX('00040000aabbccdd'));
+VALUES ('aa:bb:cc:dd:ee:7f', 1, 13, 64, 7, 5, 8, UNHEX('00040000aabbccdd'));
 
 INSERT INTO SDP_ERROR_RSP (bdaddr, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code)
-VALUES ('aa:bb:cc:dd:ee:7f', 1, 5, 64, 5, 2, 1);
+VALUES ('aa:bb:cc:dd:ee:7f', 1, 7, 64, 5, 2, 1);
 
 -- =====
 -- GPS

@@ -7,6 +7,7 @@
 # import re
 # import TME.TME_glob
 import struct
+import sys
 from TME.TME_helpers import *
 from TME.BT_Data_Types import *
 from TME.BTIDES_Data_Types import *
@@ -429,12 +430,12 @@ def _merge_sdp_records(records):
 def print_SDP_info(bdaddr):
     values = (bdaddr,)
     common_rows = execute_query(
-        "SELECT direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, "
+        "SELECT id, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, "
         "param_len, byte_values FROM SDP_Common WHERE bdaddr = %s ORDER BY id ASC",
         values,
     ) or []
     error_rows = execute_query(
-        "SELECT direction, l2cap_len, l2cap_cid, transaction_id, param_len, "
+        "SELECT id, direction, l2cap_len, l2cap_cid, transaction_id, param_len, "
         "error_code FROM SDP_ERROR_RSP WHERE bdaddr = %s ORDER BY id ASC",
         values,
     ) or []
@@ -443,7 +444,12 @@ def print_SDP_info(bdaddr):
         return
 
     qprint(f"{i1}Service Discovery Protocol (SDP) data found:")
-    for direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code in error_rows:
+    for row_id, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code in error_rows:
+        if param_len != 2 or l2cap_len != 7:
+            print(f"Malformed SDP_ERROR_RSP row {row_id} for {bdaddr}: "
+                  f"param_len={param_len}, l2cap_len={l2cap_len}; skipping",
+                  file=sys.stderr)
+            continue
         data = ff_SDP_ERROR_RSP(direction, l2cap_len, l2cap_cid,
                                 transaction_id, param_len, error_code)
         BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)
@@ -453,8 +459,13 @@ def print_SDP_info(bdaddr):
     # Continuations belong to a response type and channel. Transaction IDs
     # change between continuation requests, so they cannot be used as the key.
     fragments = {}
-    for direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in common_rows:
+    for row_id, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values in common_rows:
         byte_values = bytes(byte_values)
+        if len(byte_values) != param_len or l2cap_len != param_len + 5:
+            print(f"Malformed SDP_Common row {row_id} for {bdaddr}: "
+                  f"param_len={param_len}, stored_bytes={len(byte_values)}, "
+                  f"l2cap_len={l2cap_len}; skipping", file=sys.stderr)
+            continue
         data = ff_SDP_Common(pdu_id, direction, l2cap_len, l2cap_cid,
                              transaction_id, param_len, byte_values.hex())
         BTIDES_export_SDP_packet(bdaddr=bdaddr, random=0, data=data)

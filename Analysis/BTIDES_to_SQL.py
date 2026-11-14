@@ -1407,6 +1407,9 @@ def import_SDP_ERROR_RSP(bdaddr, sdp_entry):
     transaction_id = sdp_entry["transaction_id"]
     param_len = sdp_entry["param_len"]
     error_code = sdp_entry["error_code"]
+    if param_len != 2 or l2cap_len != param_len + 5:
+        raise ValueError(f"Invalid SDP error response lengths for {bdaddr}: "
+                         f"l2cap_len={l2cap_len}, param_len={param_len}")
     values = (bdaddr, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code)
     insert = f"INSERT IGNORE INTO SDP_ERROR_RSP (bdaddr, direction, l2cap_len, l2cap_cid, transaction_id, param_len, error_code) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)
@@ -1420,6 +1423,10 @@ def import_SDP_Common(bdaddr, sdp_entry):
     transaction_id = sdp_entry["transaction_id"]
     param_len = sdp_entry["param_len"]
     byte_values = bytes.fromhex(sdp_entry["raw_data_hex_str"])
+    if param_len != len(byte_values) or l2cap_len != param_len + 5:
+        raise ValueError(f"Invalid SDP packet lengths for {bdaddr}: "
+                         f"l2cap_len={l2cap_len}, param_len={param_len}, "
+                         f"stored_bytes={len(byte_values)}")
     values = (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values)
     insert = f"INSERT IGNORE INTO SDP_Common (bdaddr, direction, l2cap_len, l2cap_cid, pdu_id, transaction_id, param_len, byte_values) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);"
     execute_insert(insert, values)

@@ -158,6 +158,15 @@ pub fn import_files_with_pool(
         acc
     };
     finalize_lmp_name_res_defrag(&mut buffers);
+    if !buffers.sdp_validation_errors.is_empty() {
+        for error in &buffers.sdp_validation_errors {
+            eprintln!("ERROR: {error}");
+        }
+        return Err(mysql::Error::IoError(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("{} malformed SDP packet(s)", buffers.sdp_validation_errors.len()),
+        )));
+    }
     if opts.verbose {
         eprintln!(
             "Parsed {} file(s) with {} reader thread(s) in {:.2}s",
@@ -447,6 +456,7 @@ fn get_bdaddr_central(entry: &serde_json::Map<String, J>) -> (String, i64) {
 
 #[derive(Default)]
 struct Buffers {
+    sdp_validation_errors: Vec<String>,
     // EIR_*
     eir_flags: Vec<Vec<Value>>,        // (bdaddr, lim, gen, bredr_not, c, h)
     eir_uuid16s: Vec<Vec<Value>>,      // (bdaddr, list_type, str)
@@ -1678,6 +1688,7 @@ fn merge_buffers(dst: &mut Buffers, mut src: Buffers) {
     mv!(smp_pairing);
     mv!(sdp_error_rsp);
     mv!(sdp_common);
+    mv!(sdp_validation_errors);
 
     mv!(ll_unknown_rsp);
     mv!(ll_version_ind);
@@ -1999,6 +2010,12 @@ fn parse_sdp_array(entry: &serde_json::Map<String, J>, b: &mut Buffers) {
         let tx_id = obj_i64(o, "transaction_id").unwrap_or(0);
         let param_len = obj_i64(o, "param_len").unwrap_or(0);
         if pdu_id == SDP_ERROR_RSP_ID {
+            if param_len != 2 || l2cap_len != 7 {
+                b.sdp_validation_errors.push(format!(
+                    "invalid SDP error response lengths for {bdaddr}: l2cap_len={l2cap_len}, param_len={param_len}"
+                ));
+                continue;
+            }
             let ec = obj_i64(o, "error_code").unwrap_or(0);
             b.sdp_error_rsp.push(vec![
                 bdaddr.into(),
@@ -2011,6 +2028,13 @@ fn parse_sdp_array(entry: &serde_json::Map<String, J>, b: &mut Buffers) {
             ]);
         } else {
             let raw = hex_str_to_bytes(obj_str(o, "raw_data_hex_str").unwrap_or(""));
+            if param_len != raw.len() as i64 || l2cap_len != param_len + 5 {
+                b.sdp_validation_errors.push(format!(
+                    "invalid SDP packet lengths for {bdaddr}: l2cap_len={l2cap_len}, param_len={param_len}, stored_bytes={}",
+                    raw.len()
+                ));
+                continue;
+            }
             b.sdp_common.push(vec![
                 bdaddr.into(),
                 direction.into(),
@@ -3062,6 +3086,22 @@ mod tests {
             buffers.sdp_common[0][0],
             Value::Bytes(b"f0:f1:f2:f3:a0:f0".to_vec())
         );
+    }
+
+    #[test]
+    fn malformed_sdp_lengths_are_rejected_before_sql_buffering() {
+        let entry = json!({
+            "bdaddr": "f0:f1:f2:f3:a0:f7", "bdaddr_rand": 0,
+            "SDPArray": [{
+                "direction": 1, "l2cap_len": 8, "l2cap_cid": 64,
+                "pdu_id": 7, "transaction_id": 1, "param_len": 3,
+                "raw_data_hex_str": "0001"
+            }]
+        });
+        let mut buffers = Buffers::default();
+        parse_sdp_array(obj(&entry), &mut buffers);
+        assert!(buffers.sdp_common.is_empty());
+        assert_eq!(buffers.sdp_validation_errors.len(), 1);
     }
 
     // --------------------------- parse_smp_array ----------------------------
