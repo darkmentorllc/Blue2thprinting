@@ -78,8 +78,14 @@ install_prerequs(){
 }
 
 enter_venv(){
-    python3 -m venv ./venv
-    source ./venv/bin/activate
+    if ! python3 -m venv ./venv; then
+        echo "Blue2thprinting: failed to create the capture virtual environment."
+        exit 1
+    fi
+    if ! source ./venv/bin/activate; then
+        echo "Blue2thprinting: failed to activate the capture virtual environment."
+        exit 1
+    fi
     # --find-links lets pip prefer prebuilt wheels under wheels/ over source builds.
     # This is what saves Pi Zero W (armv6l) installs from a ~90-min dbus-fast source
     # compile — PyPI/piwheels don't publish armv6l wheels for dbus-fast, so we ship
@@ -101,9 +107,12 @@ enter_venv(){
     # googleapiclient are intentionally NOT installed here — they're only
     # needed for BTIDALPOOL features and add ~10 MB; install them via
     # setup_analysis_helper_debian-based.sh if you need that path.
-    pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
+    if ! pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
         gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast==4.0.4 \
-        jsonschema==4.23 colorama pyyaml==6.0.2
+        jsonschema==4.23 colorama pyyaml==6.0.2; then
+        echo "Blue2thprinting: failed to install capture Python dependencies."
+        exit 1
+    fi
 }
 
 ensure_sniffle_venv(){
