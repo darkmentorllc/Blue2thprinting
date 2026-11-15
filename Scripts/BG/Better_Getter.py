@@ -92,8 +92,10 @@ def main():
     # turn off RSSI filter
     globals.hw.cmd_rssi()
 
-    # Set TxPower to +5db (max?)
-    globals.hw.cmd_tx_power(5)
+    # Set TxPower to +20 dBm, the max of the Sonoff high-PA Sniffle build
+    # (Sniffle_fw_v1.11.0_20dBm_Sonoff_*.hex). Builds without the high PA
+    # top out at +5 dBm.
+    globals.hw.cmd_tx_power(20)
 
     # initiator doesn't care about this setting, it always accepts aux
     globals.hw.cmd_auxadv(True)
