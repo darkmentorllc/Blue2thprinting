@@ -16,14 +16,14 @@ def test_group_keeps_distinct_updates_and_operations():
         (0x12, 27): [b'Hello', b'World'], (0x12, 29): [b'\x00\xff']}
 
 
-def test_raw_hex_and_speculative_ascii_have_nested_indentation(monkeypatch):
+def test_raw_hex_and_speculative_ascii_color_only_values_at_nested_indentation(monkeypatch):
     lines = []
     monkeypatch.setattr(gatt, 'qprint', lines.append)
     gatt.print_characteristic_update(gatt.i5, 27, b'Hello World!\n')
     gatt.print_characteristic_update(gatt.i5, 29, b'A\x00\xff\\')
     assert lines == [
-        gatt.i5 + 'Notification raw hex: 48656c6c6f20576f726c64210a',
-        gatt.i5 + gatt.i1 + gatt.string_magenta_bright('Speculative ASCII: Hello World!\\n'),
-        gatt.i5 + 'Indication raw hex: 4100ff5c',
-        gatt.i5 + gatt.i1 + gatt.string_magenta_bright('Speculative ASCII: A\\x00\\xff\\\\'),
+        gatt.i5 + 'Notification raw hex: ' + gatt.string_magenta_bright('48656c6c6f20576f726c64210a'),
+        gatt.i5 + gatt.i1 + 'Speculative ASCII: ' + gatt.string_magenta_bright('Hello World!\\n'),
+        gatt.i5 + 'Indication raw hex: ' + gatt.string_magenta_bright('4100ff5c'),
+        gatt.i5 + gatt.i1 + 'Speculative ASCII: ' + gatt.string_magenta_bright('A\\x00\\xff\\\\'),
     ]

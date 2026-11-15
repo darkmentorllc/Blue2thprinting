@@ -72,12 +72,13 @@ level deeper by `Speculative ASCII: Hello World!\\n`. The BTIDES ATT schema
 did need a small correction: ATT_READ_RSP carries a value but no handle, so
 its required field is `value_hex_str`.
 
-Follow-up presentation check: TME now colors the entire `Speculative ASCII:`
-line bright magenta using the same helper as DeviceName values. The focused
+Follow-up presentation check: TME colors only the raw hex bytes and speculative
+ASCII interpretation bright magenta using the same helper as DeviceName values;
+the `Notification raw hex:` and `Speculative ASCII:` labels stay uncolored. The focused
 `python3 -m pytest -q Analysis/tests/test_tme_notification_values.py
 Analysis/tests/test_att_value_updates.py` run passed 7 tests. A TME run on the
 imported Nordic record through a terminal PTY exited 0 and contained the
-bright-magenta ANSI sequence around `Speculative ASCII: Hello World!\\n`.
+bright-magenta ANSI sequences immediately after both labels.
 
 ## Automated checks
 
