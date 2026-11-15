@@ -31,8 +31,8 @@ CCCD `0x0013`, then two notifications with exact bytes
 `48656c6c6f20576f726c64210a` (`Hello World!\n`). TShark found the CCCD
 ATT Write Request in frame 120 and notifications in frames 178 and 278.
 PCAP SHA-256: `38ec80a700aad86f663630eda373bd968677dc3af9a2a539f62dcc80b1e820b6`.
-This sample has a notify property; an indicate-only fixture is still needed for
-radio validation of indication confirmation.
+This sample has a notify property; the indicate-only characteristic and its
+confirmation are checked in the follow-up QA below.
 
 ## Conversion and database checks
 
@@ -91,3 +91,51 @@ replay fixtures predate CCCD capture and explicitly mark that phase complete.
 Python tests cover binary notifications, indications, writes, schema-valid
 read responses, and TME formatting. Rust tests cover exact binary update
 bytes, truncated updates, nesting, and identity address types.
+
+## Follow-up QA on `notification-checking`
+
+The local branch at `d369ce54` passed the Blue2thprinting QA skill's local
+streams on 2026-11-15: 227 Analysis pytest cases (3 BTIDALPOOL cases excluded),
+203 BG pytest cases, and 121 Rust tests. The BTIDALPOOL and remote install
+streams were skipped because they do not test this local notification path.
+Logs are in `/tmp/qa-pass-2026-11-15/`.
+
+The nRF52832 DK was reset and BG was run again with the same command above,
+writing `bg-nus-qa-20261115-new.pcap`. BG enabled the NUS TX CCCD at handle
+`0x0013` and received two notifications on value handle `0x0012`, each
+`48656c6c6f20576f726c64210a`. Python and Rust PCAP converters each produced
+schema-valid BTIDES with the notification at NUS TX. The Python BTIDES file
+imported into `bttest`; TME printed the notification raw hex and speculative
+ASCII beneath the TX characteristic.
+
+The new `Analysis/tests/test_gatt_update_sql_roundtrip.py` regression uses a
+synthetic BTIDES record with distinct binary notification and indication
+values. It checks exact operation and bytes in `GATT_characteristics_values`,
+then checks both values and speculative ASCII in nested TME output and BTIDES
+re-export. It passed
+with `python -m pytest -q Analysis/tests/test_gatt_update_sql_roundtrip.py`.
+
+The same DK also passed a physical indication check. Build stock Zephyr 3.7.0
+`zephyr/samples/bluetooth/peripheral_ht` for `nrf52dk/nrf52832` with the
+`gnuarmemb` toolchain, flash only J-Link `682768135` with `VERIFY_READ`, and
+reset it before running BG with the same port, address, channel, and options
+above but output `bg-ht-indication.pcap`. This sample advertises as Zephyr
+Health Thermometer at the same static random address. The test firmware SHA-256
+was `222894119bd9127d86c2781b5d417fff5570a61b00b9a5597c7d0c6d113d83df`.
+BG enabled notify CCCD `0x0013` and indicate CCCD `0x001d`; it captured six
+notifications on value handle `0x0012` and six indications on `0x001c`.
+TShark showed each ATT indication immediately followed by ATT confirmation
+(frame pairs 164/165, 201/202, 237/238, 276/277, 312/313, 348/349).
+The indication payload was `002e0900fe`. Both Python and Rust PCAP converters
+validated BTIDES with six nested indications and six nested notifications.
+The Python BTIDES file imported into `bttest`, and TME printed
+`Indication raw hex: 002e0900fe` and speculative ASCII beneath Health
+Thermometer Measurement UUID `2a1c`. The capture SHA-256 was
+`261384e224bfe7894e7d46763f2ab40edaff698fa14e4a6f2246543bf5e22d7b`.
+Finally, the original Nordic UART sample hex was restored to the DK with
+`VERIFY_READ`; its SHA-256 was
+`b7b6d4cfd3a87b48566007fd531ce07df30fec817db0f189d7898a23476ff8f2`.
+
+Checklist: local suites passed; live NUS notification passed; live thermometer
+indication and confirmation passed; Python/Rust conversions passed; SQL import,
+TME nesting, and BTIDES re-export passed; Nordic UART firmware restored.
