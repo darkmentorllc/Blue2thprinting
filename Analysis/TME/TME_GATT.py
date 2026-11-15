@@ -100,7 +100,7 @@ def group_characteristic_values(rows):
 def print_characteristic_update(indent, operation, value):
     label = "Notification" if operation == type_ATT_HANDLE_VALUE_NTF else "Indication"
     qprint(f"{indent}{label} raw hex: {value.hex()}")
-    qprint(f"{indent}{i1}Speculative ASCII: {speculative_ascii(value)}")
+    qprint(f"{indent}{i1}{string_magenta_bright(f'Speculative ASCII: {speculative_ascii(value)}')}")
 
 def lookup_company_name_by_OUI(OUI):
     values = (OUI,)

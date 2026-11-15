@@ -23,7 +23,7 @@ def test_raw_hex_and_speculative_ascii_have_nested_indentation(monkeypatch):
     gatt.print_characteristic_update(gatt.i5, 29, b'A\x00\xff\\')
     assert lines == [
         gatt.i5 + 'Notification raw hex: 48656c6c6f20576f726c64210a',
-        gatt.i5 + gatt.i1 + 'Speculative ASCII: Hello World!\\n',
+        gatt.i5 + gatt.i1 + gatt.string_magenta_bright('Speculative ASCII: Hello World!\\n'),
         gatt.i5 + 'Indication raw hex: 4100ff5c',
-        gatt.i5 + gatt.i1 + 'Speculative ASCII: A\\x00\\xff\\\\',
+        gatt.i5 + gatt.i1 + gatt.string_magenta_bright('Speculative ASCII: A\\x00\\xff\\\\'),
     ]
