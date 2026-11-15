@@ -14,6 +14,10 @@ _aa = 0
 # global variable for pcap writer
 pcwriter = None
 
+# Explicitly enabled, one-shot Nordic Secure DFU access probe. Normal scans
+# leave this unset and never send an ATT Write Request.
+nordic_dfu_access_probe = None
+
 # global variable for args I will need later for formatting printing
 target_bdaddr = ""
 target_bdaddr_type_public = False

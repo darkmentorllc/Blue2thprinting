@@ -60,7 +60,8 @@ class TestHelpOutput:
         for flag in ["-s", "--serport", "-c", "--advchan", "-b", "--bdaddr",
                       "-l", "--longrange", "-P", "--public",
                       "-o", "--output", "-q", "--quiet",
-                      "-2", "--attempt-2M-PHY-update", "-A", "--skip-apple"]:
+                      "-2", "--attempt-2M-PHY-update", "-A", "--skip-apple",
+                      "--nordic-dfu-access-probe"]:
             assert flag in result.stdout, f"flag {flag!r} missing from --help"
 
     def test_short_h_is_alias_for_help(self):
@@ -91,6 +92,19 @@ class TestArgparseRejection:
         result = _run_bg("--nonexistent-flag", "-b", "ca:fe:13:37:00:01")
         assert result.returncode == 2
         assert "unrecognized arguments" in result.stderr or "--nonexistent" in result.stderr
+
+    def test_dfu_probe_requires_pcap_output(self):
+        result = _run_bg("--nordic-dfu-access-probe", "-b", "ca:fe:13:37:00:01")
+        assert result.returncode == 2
+        assert "requires --output" in result.stderr
+
+    def test_dfu_probe_requires_explicit_target_before_opening_serial(self, tmp_path):
+        pcap = tmp_path / "probe.pcap"
+        result = _run_bg("--nordic-dfu-access-probe", "-o", str(pcap))
+        assert result.returncode == 2
+        assert "requires --bdaddr" in result.stderr
+        assert not pcap.exists()
+        assert not (tmp_path / "probe.nordic_dfu_probe.json").exists()
 
 
 # ---------------------------------------------------------------------------

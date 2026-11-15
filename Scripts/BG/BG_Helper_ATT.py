@@ -18,6 +18,8 @@ opcode_ATT_READ_REQ = 0x0A
 opcode_ATT_READ_RSP = 0x0B
 opcode_ATT_READ_BY_GROUP_TYPE_REQ = 0x10
 opcode_ATT_READ_BY_GROUP_TYPE_RSP = 0x11
+opcode_ATT_WRITE_REQ = 0x12
+opcode_ATT_WRITE_RSP = 0x13
 
 # Error codes that I expect to encounter
 errorcode_01_ATT_Invalid_Handle = 0x01
@@ -114,6 +116,13 @@ def send_ATT_READ_REQ(begin_handle):
     payload_len_bytes = v2b(len(payload_bytes))
     write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Sent read request for handle 0x{begin_handle:04x}")
+
+def send_ATT_WRITE_REQ(handle, value):
+    """Send one ATT Write Request; callers must await its ATT response."""
+    payload_bytes = v1b(opcode_ATT_WRITE_REQ) + v2b(handle) + bytes(value)
+    payload_len_bytes = v2b(len(payload_bytes))
+    write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
+    vprint(f"Sent ATT Write Request for handle 0x{handle:04x}")
 
 def send_ATT_FIND_BY_TYPE_VALUE_REQ_0x2A29_Apple():
     # LLID = 2 (L2CAP w/o fragmentation)

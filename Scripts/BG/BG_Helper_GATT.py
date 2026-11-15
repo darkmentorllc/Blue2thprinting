@@ -465,6 +465,12 @@ def stateful_GATT_getter(actual_body_len, dpkt):
             ####################################################################################
             incoming_characteristic_discovery(actual_body_len, dpkt)
 
+            # The opt-in probe consumes the first idle ATT slot after the
+            # structural map is complete, before any value reads or SMP.
+            if (globals.nordic_dfu_access_probe is not None and
+                    globals.nordic_dfu_access_probe.process(dpkt)):
+                return
+
             incoming_read_all_handles(actual_body_len, dpkt)
 
     else:
@@ -490,6 +496,10 @@ def stateful_GATT_getter(actual_body_len, dpkt):
         # This was only found to be necessary for things which misbehave like Meta Quest 3S...
         ################################################################################
         if(outgoing_characteristic_discovery(actual_body_len, dpkt)):
+            return
+
+        if globals.nordic_dfu_access_probe is not None:
+            globals.nordic_dfu_access_probe.process(dpkt)
             return
 
         ################################################################################

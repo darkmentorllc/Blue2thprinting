@@ -25,6 +25,7 @@ from BG_Helper_ATT import *
 from BG_Helper_GATT import *
 from BG_Helper_SMP import *
 from BG_Helper_Output import *
+from BG_Helper_DFU import NordicDfuAccessProbe
 from gatt_handle_uuid_priority import load_deprioritized_signatures
 
 def main():
@@ -38,6 +39,10 @@ def main():
     aparse.add_argument("-l", "--longrange", action="store_const", default=False, const=True, help="Use long range (coded) PHY for primary advertising")
     aparse.add_argument("-P", "--public", action="store_const", default=False, const=True, help="Supplied BDADDR address is public")
     aparse.add_argument("-o", "--output", default=None, help="PCAP output file name")
+    aparse.add_argument(
+        "--nordic-dfu-access-probe", action="store_true",
+        help="Opt in to a bounded plaintext FE59 GET_CRC access check; it may enable the exact Control Point CCCD and repeat GET_CRC once, saves JSON beside --output, and stops before value reads/pairing",
+    )
     aparse.add_argument("-q", "--quiet", action="store_true", help="Don't display empty packets")
     aparse.add_argument("-2", "--attempt-2M-PHY-update", action="store_true", help="Attempt to negotiate 2M PHY")
     aparse.add_argument("-A", "--skip-apple", action="store_true", help="Skip Apple devices")
@@ -56,6 +61,11 @@ def main():
         help="Read values even when the discovered handle/UUID map is deprioritized",
     )
     args = aparse.parse_args()
+
+    if args.nordic_dfu_access_probe and not args.output:
+        aparse.error("--nordic-dfu-access-probe requires --output for the PCAP and JSON result")
+    if args.nordic_dfu_access_probe and not args.bdaddr:
+        aparse.error("--nordic-dfu-access-probe requires --bdaddr")
 
     globals.force_gatt_value_reads = args.force_read_values
     try:
@@ -125,6 +135,12 @@ def main():
         globals.target_bdaddr = args.bdaddr
         globals.target_bdaddr_type_public = args.public
 
+    if args.nordic_dfu_access_probe:
+        globals.nordic_dfu_access_probe = NordicDfuAccessProbe(
+            result_path=Path(args.output).with_suffix(".nordic_dfu_probe.json"),
+            pcap_path=args.output,
+        )
+
     # initiator/Central needs a BDADDR
     central_bdaddr_bytes = bytes(globals.hw.random_addr())
 
@@ -146,6 +162,10 @@ def main():
         while True:
             msg = globals.hw.recv_and_decode()
             ret = print_sniffle_message_or_packet(msg, args.quiet)
+            if globals.nordic_dfu_access_probe is not None:
+                if ret == "restart":
+                    globals.nordic_dfu_access_probe.finish_link_lost()
+                globals.nordic_dfu_access_probe.tick()
             # Only retry if we're not on Linux (where it doesn't work and gets into a broken state, unlike macOS)
             if(ret == "restart"):
                 # Retry on macOS (which I'm detecting based on the serport string, which is different on Linux)
@@ -166,6 +186,8 @@ def main():
                         create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
 
     except KeyboardInterrupt:
+        if globals.nordic_dfu_access_probe is not None:
+            globals.nordic_dfu_access_probe.finish_interrupted()
         # Formally tear down with an LL_TERMINATE_IND, otherwise it will be harder to re-connect again afterwards,
         # because some devices may keep the connection open too long, and don't start advertising again right away
         # 0x13 = error code "Remote user terminated connection"
@@ -246,16 +268,24 @@ def print_packet(dpkt, quiet):
         header_ACID, ll_len_ACID, ll_ctl_opcode = unpack("<BBB", dpkt.body[:3])
         # Check if it's a LL control packet (LLID = 0b11)
         if((header_ACID & 0x3) == 0x3):
+            if globals.nordic_dfu_access_probe is not None:
+                globals.nordic_dfu_access_probe.observe_ll_control(ll_ctl_opcode)
             stateful_LL_CTRL_incoming_handler(actual_body_len, ll_ctl_opcode, dpkt)
             # Send any LL_CTRL packets we need to send based on updates due to incoming LL_CTRL packets
             stateful_LL_CTRL_outgoing_handler()
         else:
+            if (globals.nordic_dfu_access_probe is not None and actual_body_len >= 7 and
+                    (header_ACID & 0x3) == 0x2):
+                _, _, _, cid_ACID, smp_opcode = unpack("<BBHHB", dpkt.body[:7])
+                if cid_ACID == 0x0006:
+                    globals.nordic_dfu_access_probe.observe_smp(smp_opcode)
             # Check for any L2CAP_CONNECTION_PARAMETER_UPDATE_REQ to reject (for now)
             stateful_incoming_L2CAP_handler(actual_body_len, dpkt)
             # Begin GATT enumeration process
             stateful_GATT_getter(actual_body_len, dpkt)
             # Get SMP information once GATT enumeration is done
-            handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
+            if globals.nordic_dfu_access_probe is None:
+                handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
 
     # Use empty packets as an opportunity see if we need to send any further packets
     elif(actual_body_len == 2):
@@ -263,10 +293,12 @@ def print_packet(dpkt, quiet):
         stateful_LL_CTRL_outgoing_handler()
         stateful_incoming_L2CAP_handler(actual_body_len, dpkt)
         stateful_GATT_getter(actual_body_len, dpkt)
-        handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
+        if globals.nordic_dfu_access_probe is None:
+            handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10)
 
     # Current exit conditions
-    if(globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv):
+    if(globals.nordic_dfu_access_probe is None and
+       (globals.smp_legacy_pairing_rsp_recv or globals.smp_SC_pairing_rsp_recv)):
         print_and_exit()
 
 if __name__ == "__main__":
