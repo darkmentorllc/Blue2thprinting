@@ -41,6 +41,10 @@ def lookup_metadata_by_nameprint(bdaddr, bdaddr_random, metadata_type):
             if not TME.TME_glob.g_printed_unique_id_header:
                 qprint(f"{i2}Unique ID:")
                 TME.TME_glob.g_printed_unique_id_header = True
+        elif metadata_type == '2thprint_Module':
+            print_ModulePrint_header_if_needed()
+        elif metadata_type == '2thprint_Module_Maker':
+            print_ModuleMakerPrint_header_if_needed()
         else:
             print_ChipPrint_header_if_needed()
 
@@ -871,6 +875,9 @@ def print_ChipPrint(bdaddr, bdaddr_random, gatt_value_matches=None):
 ########################################
 
 def print_ModuleMakerPrint(bdaddr, bdaddr_random, gatt_value_matches=None):
+    name_match = lookup_metadata_by_nameprint(bdaddr, bdaddr_random, '2thprint_Module_Maker')
+    if name_match:
+        qprint(string_yellow_bright(name_match))
     if gatt_value_matches is None:
         gatt_value_matches = lookup_GATT_value_fingerprints(bdaddr, bdaddr_random)
     for rule, uuid, value in gatt_value_matches:
@@ -888,6 +895,9 @@ def print_ModuleMakerPrint(bdaddr, bdaddr_random, gatt_value_matches=None):
 ########################################
 
 def print_ModulePrint(bdaddr, bdaddr_random, gatt_value_matches=None):
+    name_match = lookup_metadata_by_nameprint(bdaddr, bdaddr_random, '2thprint_Module')
+    if name_match:
+        qprint(string_yellow_bright(name_match))
     if gatt_value_matches is None:
         gatt_value_matches = lookup_GATT_value_fingerprints(bdaddr, bdaddr_random)
     for rule, uuid, value in gatt_value_matches:

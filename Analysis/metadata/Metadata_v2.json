@@ -1150,5 +1150,35 @@
 			"07af27a8-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput indicate; SDK lineage clue",
 			"07af27a9-9c22-11ea-9afe-02fcdc4e7412": "Characteristic: Bouffalo Lab BLE throughput notify; SDK lineage clue"
 		}
+	},
+	"JieLi AC692x BLE default name": {
+		"comment": "AC692x_BLE is a repeated default-style BLE advertising name, not a product model. In bt2, 15 distinct named BDADDRs each also have LE manufacturer-specific data whose payload 4a49454c49 decodes to JIELI. The observed company IDs 0x485A/0x5A48 are not treated as assigned Jieli IDs. The name and payload support Jieli firmware lineage, but do not prove the exact physical chip or device maker.",
+		"2thprint_Chip": "Possible JieLi AC692x-family chip (exact silicon unverified)",
+		"2thprint_Chip_Maker": "Likely Zhuhai Jieli Technology Co., Ltd. (JIELI advertising payload)",
+		"2thprint_NamePrint": "^AC692x_BLE$",
+		"short_description": "Default-style BLE name associated with Jieli AC692x-family firmware; physical device type unknown.",
+		"company_website": "https://www.zh-jieli.com/",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-15",
+		"evidence_URL": {
+			"Jieli AC692x SDK type definition": "https://github.com/Jieli-Tech/AW30N/blob/main/sdk/apps/app/bsp/common/third_party_profile/jieli/JL_rcsp/rcsp_bluetooth.h",
+			"Jieli AC692x SDK documentation": "https://doc.zh-jieli.com/KDocs/master/%E9%9F%B3%E9%A2%91%E6%8A%80%E6%9C%AF%E5%BA%94%E7%94%A8%E6%96%87%E6%A1%A3%E5%85%A5%E5%8F%A3%E6%B1%87%E6%80%BB/%E8%93%9D%E7%89%99%E7%9B%B8%E5%85%B3/"
+		},
+		"confirmation_method": "Repeated LE names and JIELI ASCII manufacturer payload in bt2, plus Jieli AC692x documentation; chip family inference qualified",
+		"confirmation_confidence": "7/10"
+	},
+	"JDY-23 BLE module default name": {
+		"comment": "The module manufacturer's FCC-filed user manual lists JDY-23 as the factory-default broadcast name. A name match indicates likely use of this module, but the name can be changed with AT+NAME and does not establish the end product or underlying chip.",
+		"2thprint_Module": "Likely JDY-23 Bluetooth 5.0 BLE serial module (factory-default name)",
+		"2thprint_Module_Maker": "Shenzhen Jindouyun Electronic Technology Co., Ltd.",
+		"2thprint_NamePrint": "^JDY-23$",
+		"short_description": "Factory-default BLE broadcast name of the JDY-23 transparent serial module; end product unknown.",
+		"submitted_by": "OpenAI Codex",
+		"submission_date": "2026-11-15",
+		"evidence_URL": {
+			"Manufacturer FCC filing and user manual": "https://fccid.io/2AXM8-JDY-23/Users-Manual/15-JDY-23-UserMan-US-r1-4936741"
+		},
+		"confirmation_method": "Observed LE name and manufacturer FCC-filed factory-default broadcast name; no app or silicon attribution",
+		"confirmation_confidence": "8/10"
 	}
 }

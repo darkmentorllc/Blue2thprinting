@@ -68,6 +68,29 @@ def test_module_sections_use_module_fields(monkeypatch):
     assert 'Feasycom' in rendered
 
 
+def test_default_module_name_uses_module_sections(monkeypatch):
+    output = []
+    monkeypatch.setattr(metadata, 'qprint', output.append)
+    monkeypatch.setattr(metadata, 'vprint', lambda _value: None)
+    monkeypatch.setattr(metadata, 'string_yellow_bright', lambda value: value)
+    monkeypatch.setattr(glob, 'g_printed_ModulePrint_header', False)
+    monkeypatch.setattr(glob, 'g_printed_ModuleMakerPrint_header', False)
+    monkeypatch.setattr(glob, 'g_printed_ChipPrint_header', False)
+    def fake_nameprint(_address, _random, field):
+        return {
+            '2thprint_Module': 'JDY-23 serial module',
+            '2thprint_Module_Maker': 'Shenzhen Jindouyun',
+        }.get(field, '')
+    monkeypatch.setattr(metadata, 'lookup_metadata_by_nameprint', fake_nameprint)
+
+    metadata.print_ModulePrint('aa:bb:cc:00:00:01', 0, [])
+    metadata.print_ModuleMakerPrint('aa:bb:cc:00:00:01', 0, [])
+    rendered = '\n'.join(output)
+    assert 'JDY-23 serial module' in rendered
+    assert 'Shenzhen Jindouyun' in rendered
+    assert not glob.g_printed_ChipPrint_header
+
+
 def test_sdk_rules_capture_build_strings_without_chip_attribution():
     import_GATT_value_fingerprints()
     rules = {rule['id']: rule for rule in glob.gatt_value_fingerprint_rules}
