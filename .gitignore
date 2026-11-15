@@ -12,3 +12,5 @@ private
 btidalpool.ddns.net.key
 /Sniffle/experiments/
 /Sniffle/hardware/
+/Scripts/BG/experiments/
+*.pcap
