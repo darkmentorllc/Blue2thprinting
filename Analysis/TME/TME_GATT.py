@@ -76,6 +76,32 @@ def characteristic_extended_properties_to_string(number):
 def is_characteristic_readable(number):
     return (number & 0b00000010) != 0
 
+
+def speculative_ascii(value):
+    """Display printable ASCII cautiously; escape controls and binary octets."""
+    return ''.join(
+        chr(byte) if 0x20 <= byte <= 0x7e and byte != 0x5c else
+        '\\\\' if byte == 0x5c else
+        '\\n' if byte == 0x0a else
+        '\\r' if byte == 0x0d else
+        '\\t' if byte == 0x09 else
+        f'\\x{byte:02x}'
+        for byte in value
+    )
+
+
+def group_characteristic_values(rows):
+    grouped = {}
+    for _random, handle, operation, value in rows:
+        grouped.setdefault((handle, operation), []).append(value)
+    return grouped
+
+
+def print_characteristic_update(indent, operation, value):
+    label = "Notification" if operation == type_ATT_HANDLE_VALUE_NTF else "Indication"
+    qprint(f"{indent}{label} raw hex: {value.hex()}")
+    qprint(f"{indent}{i1}Speculative ASCII: {speculative_ascii(value)}")
+
 def lookup_company_name_by_OUI(OUI):
     values = (OUI,)
     query = "SELECT company_name FROM IEEE_bdaddr_to_company WHERE bdaddr = %s";
@@ -315,7 +341,7 @@ def print_GATT_info(bdaddr, bdaddr_random):
         query = "SELECT bdaddr_random, char_value_handle, operation, byte_values FROM GATT_characteristics_values WHERE bdaddr = %s";
     GATT_characteristics_values_result = execute_query(query, values)
     # Need to be smarter about storing values into lookup-by-handle dictionary, because there can be multiple distinct values in the database for a single handle
-    char_value_handles_dict = {}
+    char_value_handles_dict = group_characteristic_values(GATT_characteristics_values_result)
     for bdaddr_random2, char_value_handle, operation, byte_values in GATT_characteristics_values_result:
         # Resolve the value's UUID from the parent Characteristic. Fall back to
         # "FFFF" (the same placeholder used elsewhere in the codebase, e.g.
@@ -327,13 +353,6 @@ def print_GATT_info(bdaddr, bdaddr_random):
         data = {"handle": char_value_handle, "value_uuid": value_uuid,
                 "io_array": [ {"io_type": operation, "value_hex_str": byte_values.hex()} ] }
         BTIDES_export_GATT_Characteristic_Value(bdaddr=bdaddr, random=bdaddr_random, data=data)
-
-        if(char_value_handle in char_value_handles_dict.keys()):
-            # There is already an entry for this handle, so append the new value to the list of possible values
-            char_value_handles_dict[(char_value_handle, operation)].append(byte_values)
-        else:
-            # There wasn't already an entry, so insert a list of a single value")
-            char_value_handles_dict[(char_value_handle, operation)] = [ byte_values ]
 
     if(bdaddr_random is not None):
         query = "SELECT bdaddr_random, UUID, descriptor_handle, operation, byte_values FROM GATT_characteristic_descriptor_values WHERE bdaddr_random = %s AND bdaddr = %s";
@@ -517,6 +536,11 @@ def print_GATT_info(bdaddr, bdaddr_random):
                                 qprint(f"{i5}GATT Characteristic Value read as {fmt_byte_values}")
                                 if(handle in attribute_handles_dict.keys()):
                                     characteristic_value_decoding(f"{i5}", attribute_handles_dict[handle], byte_values, bdaddr=bdaddr, bdaddr_random=bdaddr_random)
+                    for operation in (type_ATT_HANDLE_VALUE_NTF, type_ATT_HANDLE_VALUE_IND):
+                        for byte_values in char_value_handles_dict.get((handle, operation), []):
+                            if svc_begin_handle <= handle <= svc_end_handle and handle not in descriptor_handles_dict:
+                                service_match_dict[handle] = 1
+                                print_characteristic_update(i5, operation, byte_values)
 
                 # Check if this handle is found in the GATT_characteristic_descriptor_values table, and if so, print that info
                 if(handle in descriptor_handles_dict.keys()):

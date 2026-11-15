@@ -42,8 +42,8 @@ def handle_SMP_Pairing(actual_body_len, dpkt, max_key_size=0x10):
     global smp_legacy_pairing_req_sent, smp_legacy_pairing_rsp_recv
     global smp_legacy_pairing_req_sent_time, smp_pairing_request_attempt_count
 
-    # Don't start until all handles have been read
-    if(not globals.all_handles_read):
+    # Keep the link open through CCCD subscriptions and the notification window.
+    if(not globals.all_handles_read or not globals.gatt_subscriptions_done):
         return
 
     if(not globals.smp_legacy_pairing_req_sent):

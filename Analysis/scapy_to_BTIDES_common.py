@@ -31,6 +31,7 @@ from TME.TME_BTIDES_L2CAP import *
 from TME.TME_BTIDES_SDP import *
 # ATT
 from TME.TME_BTIDES_ATT import *
+from TME.TME_BTIDES_GATT import BTIDES_export_GATT_Characteristic_Value, find_characteristic_by_handle
 # SMP
 from TME.TME_BTIDES_SMP import *
 #### Classic-specific
@@ -664,7 +665,10 @@ def export_ATT_Read_By_Type_Request(connect_ind_obj, packet, direction=None):
         print(f"Error processing ATT_Read_By_Type_Request: {e}")
         return False
     #handle = f"{att_data.gatt_handle:04x}" # FIXME: I'm not sure why this was accepted as valid output and the Schema validation says its fine...possible implicit conversion happening?
-    data = ff_ATT_READ_BY_TYPE_REQ(direction, start_handle, end_handle, attribute_uuid)
+    # The request UUID is an integer in Scapy, but BTIDES requires hex text.
+    # Keep the numeric value above for the characteristic-declaration parser.
+    uuid_hex = f"{attribute_uuid:04x}" if attribute_uuid <= 0xffff else f"{attribute_uuid:032x}"
+    data = ff_ATT_READ_BY_TYPE_REQ(direction, start_handle, end_handle, uuid_hex)
     if_verbose_insert_std_optional_fields(data, packet)
     BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
     return True
@@ -895,6 +899,58 @@ def export_ATT_Read_Response(connect_ind_obj, packet, direction=None):
                 return True
         return True
 
+    return False
+
+
+def _record_gatt_attribute_io(connect_ind_obj, handle, opcode, value):
+    """Keep a value under its characteristic even when a discovery is incomplete."""
+    io = {"io_type": opcode, "value_hex_str": bytes_to_hex_str(value)}
+    characteristic = find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, value_handle=handle)
+    if characteristic is not None:
+        char_value = characteristic.setdefault("char_value", {
+            "handle": handle, "value_uuid": characteristic["value_uuid"]})
+        char_value.setdefault("io_array", []).append(io)
+    else:
+        BTIDES_export_GATT_Characteristic_Value(connect_ind_obj=connect_ind_obj, data={
+            "handle": handle, "value_uuid": "FFFF", "io_array": [io]})
+
+
+def export_ATT_Attribute_Value_Change(connect_ind_obj, packet, direction=None):
+    """Export both ATTArray and nested GATT IO for server updates."""
+    for scapy_type, opcode in ((ATT_Handle_Value_Notification, type_ATT_HANDLE_VALUE_NTF),
+                               (ATT_Handle_Value_Indication, type_ATT_HANDLE_VALUE_IND)):
+        att_data = get_ATT_data(packet, scapy_type, opcode)
+        if att_data is None:
+            continue
+        if direction is None:
+            direction = get_packet_direction(packet)
+        handle = att_data.gatt_handle
+        value = bytes(att_data.value)
+        data = ff_ATT_attribute_value(direction, opcode, handle, bytes_to_hex_str(value))
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+        _record_gatt_attribute_io(connect_ind_obj, handle, opcode, value)
+        return True
+    return False
+
+
+def export_ATT_Write_Value(connect_ind_obj, packet, direction=None):
+    """Record RX writes and CCCD writes as ATT, and characteristic writes as GATT IO."""
+    for scapy_type, opcode in ((ATT_Write_Request, type_ATT_WRITE_REQ),
+                               (ATT_Write_Command, type_ATT_WRITE_CMD)):
+        att_data = get_ATT_data(packet, scapy_type, opcode)
+        if att_data is None:
+            continue
+        if direction is None:
+            direction = get_packet_direction(packet)
+        handle = att_data.gatt_handle
+        value = bytes(att_data.data)
+        data = ff_ATT_attribute_value(direction, opcode, handle, bytes_to_hex_str(value))
+        if_verbose_insert_std_optional_fields(data, packet)
+        BTIDES_export_ATT_packet(connect_ind_obj=connect_ind_obj, data=data)
+        if find_characteristic_by_handle(connect_ind_obj=connect_ind_obj, value_handle=handle) is not None:
+            _record_gatt_attribute_io(connect_ind_obj, handle, opcode, value)
+        return True
     return False
 
 

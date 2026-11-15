@@ -88,6 +88,10 @@ def _replay_pcap(pcap_path, mock_hw, clean_globals):
     from BG_Helper_GATT import stateful_GATT_getter
     from BG_Helper_SMP import handle_SMP_Pairing
 
+    # These historical captures predate CCCD subscriptions. Replay their
+    # original SMP phase after independently testing the new stage.
+    clean_globals.gatt_subscriptions_done = True
+
     frame_count = 0
     for body, chan, peripheral_send in _iter_pcap_frames(pcap_path):
         frame_count += 1

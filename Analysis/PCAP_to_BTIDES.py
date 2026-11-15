@@ -513,6 +513,10 @@ def export_to_ATTArray(packet):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet)):
         return True
+    if(export_ATT_Write_Value(connect_ind_obj, packet)):
+        return True
+    if(export_ATT_Attribute_Value_Change(connect_ind_obj, packet)):
+        return True
     if(export_ATT_Find_Information_Request(connect_ind_obj, packet)):
         return True
     if(export_ATT_Find_Information_Response(connect_ind_obj, packet)):

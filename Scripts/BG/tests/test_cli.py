@@ -178,6 +178,7 @@ class TestMainBDADDRValidation:
         bdaddr_bytes, is_random = mock_hw.mac_calls[0]
         assert bdaddr_bytes == (0x01, 0x00, 0x37, 0x13, 0xfe, 0xca)
         assert is_random is False  # cmd_mac always gets False per BG code
+        assert mock_hw.connection_calls[0][2:] == (24, 0, 50)
 
     def test_valid_bdaddr_uppercase_accepted(
             self, patched_main, monkeypatch, mock_hw):

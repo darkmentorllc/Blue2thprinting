@@ -9,9 +9,102 @@ from gatt_handle_uuid_priority import handle_uuid_signature
 
 GATT_VALUES_DEFERRED_EXIT_CODE = 0x2D
 
+GATT_SUBSCRIPTION_TIMEOUT_NS = 2_000_000_000
+
+
+def plan_gatt_subscriptions(received_handles, received_values):
+    """Map characteristic properties to their own CCCD, without crossing a declaration."""
+    boundaries = sorted(handle for handle, uuid in received_handles.items()
+                        if uuid in (b'\x00\x28', b'\x01\x28', b'\x03\x28'))
+    plan = []
+    for declaration in boundaries:
+        if received_handles[declaration] != b'\x03\x28':
+            continue
+        value = received_values.get(declaration)
+        if not isinstance(value, bytes) or len(value) < 3:
+            continue
+        properties = value[0]
+        bits = (1 if properties & 0x10 else 0) | (2 if properties & 0x20 else 0)
+        if not bits:
+            continue
+        value_handle = int.from_bytes(value[1:3], 'little')
+        end = next((handle for handle in boundaries if handle > declaration), 0x10000)
+        cccd = next((handle for handle in sorted(received_handles)
+                     if value_handle < handle < end and received_handles[handle] == b'\x02\x29'), None)
+        if cccd is not None:
+            plan.append((cccd, bits, value_handle))
+    return plan
+
+
+def incoming_gatt_subscription_response(actual_body_len, dpkt):
+    pending = globals.gatt_subscription_pending_handle
+    if pending is None or actual_body_len < 7:
+        return False
+    matched, _, _, _, _, _, _ = is_packet_ATT_type(opcode_ATT_WRITE_RSP, dpkt)
+    if matched:
+        globals.gatt_subscription_pending_handle = None
+        globals.gatt_subscription_index += 1
+        return True
+    matched, _, _, _, _, _, _ = is_packet_ATT_type(opcode_ATT_ERROR_RSP, dpkt)
+    if matched and actual_body_len >= 11:
+        request_opcode, handle, error = unpack('<BHB', dpkt.body[7:11])
+        if request_opcode == opcode_ATT_WRITE_REQ and handle == pending:
+            print(f"CCCD write at 0x{handle:04x} rejected with ATT error 0x{error:02x}")
+            globals.gatt_subscription_pending_handle = None
+            globals.gatt_subscription_index += 1
+            return True
+    return False
+
+
+def incoming_gatt_update(actual_body_len, dpkt):
+    """Record unsolicited updates and confirm indications so the server can continue."""
+    if actual_body_len < 9:
+        return False
+    for opcode in (opcode_ATT_HANDLE_VALUE_NTF, opcode_ATT_HANDLE_VALUE_IND):
+        matched, _, _, _, _, _, _ = is_packet_ATT_type(opcode, dpkt)
+        if not matched:
+            continue
+        handle = int.from_bytes(dpkt.body[7:9], 'little')
+        value = bytes(dpkt.body[9:])
+        globals.gatt_updates.append((opcode, handle, value))
+        print(f"ATT {'notification' if opcode == opcode_ATT_HANDLE_VALUE_NTF else 'indication'} "
+              f"handle 0x{handle:04x}: {value.hex()}")
+        if opcode == opcode_ATT_HANDLE_VALUE_IND:
+            send_ATT_HANDLE_VALUE_CFM()
+        return True
+    return False
+
+
+def outgoing_gatt_subscriptions():
+    if not globals.all_handles_read or globals.gatt_subscriptions_done:
+        return
+    if globals.gatt_subscription_plan is None:
+        globals.gatt_subscription_plan = plan_gatt_subscriptions(
+            globals.received_handles, globals.all_handles_received_values)
+        print(f"GATT CCCD subscription plan: {len(globals.gatt_subscription_plan)} characteristic(s)")
+    now = time.time_ns()
+    if globals.gatt_subscription_pending_handle is not None:
+        if now - globals.gatt_subscription_sent_ns > GATT_SUBSCRIPTION_TIMEOUT_NS:
+            print("CCCD write timed out; closing link without starting another ATT request")
+            print_and_exit()
+        return
+    if globals.gatt_subscription_index < len(globals.gatt_subscription_plan):
+        handle, bits, value_handle = globals.gatt_subscription_plan[globals.gatt_subscription_index]
+        send_ATT_WRITE_REQ(handle, v2b(bits))
+        globals.gatt_subscription_pending_handle = handle
+        globals.gatt_subscription_sent_ns = now
+        print(f"Enabled GATT updates for value handle 0x{value_handle:04x} via CCCD 0x{handle:04x}: {bits:04x}")
+        return
+    if globals.gatt_subscription_observe_until_ns is None:
+        globals.gatt_subscription_observe_until_ns = now + (globals.gatt_notification_window_ns if globals.gatt_subscription_plan else 0)
+    if now >= globals.gatt_subscription_observe_until_ns:
+        globals.gatt_subscriptions_done = True
+        if globals.gatt_value_reads_deferred:
+            print_and_exit(GATT_VALUES_DEFERRED_EXIT_CODE)
+
 
 def maybe_defer_gatt_value_reads():
-    """Persist the discovered map and exit before ATT_READ on a covered family."""
+    """Defer value reads while still subscribing to supported updates."""
     if globals.gatt_value_priority_checked:
         return False
     if not globals.characteristic_read_by_type_req_all_received:
@@ -28,11 +121,9 @@ def maybe_defer_gatt_value_reads():
     if not signature or signature not in globals.gatt_value_priority_signatures:
         return False
 
-    print(
-        "GATT value priority: exact handle/UUID map already has value data; "
-        "saving structure and deferring ATT_READ"
-    )
-    print_and_exit(GATT_VALUES_DEFERRED_EXIT_CODE)
+    print("GATT value priority: deferring ATT_READ but collecting supported updates first")
+    globals.gatt_value_reads_deferred = True
+    globals.all_handles_read = True
     return True
 
 ####################################################################################
@@ -341,7 +432,7 @@ def outgoing_read_all_handles(actual_body_len, dpkt):
     global all_info_handles_recv
     global handle_read_last_sent_handle
 
-    if(not globals.characteristic_read_by_type_req_all_received):
+    if(not globals.characteristic_read_by_type_req_all_received or globals.gatt_value_reads_deferred):
         return
 
     # This is the exact boundary between structural enumeration and value
@@ -438,6 +529,7 @@ def stateful_GATT_getter(actual_body_len, dpkt):
         if(not cid_ACID == 0x0004 or (header_ACID & 0b10 != 0b10)):
             return
         else:
+            incoming_gatt_update(actual_body_len, dpkt)
             ####################################################################################
             # Exchange ATT_MTU to try and get more data in less packets
             ####################################################################################
@@ -466,6 +558,7 @@ def stateful_GATT_getter(actual_body_len, dpkt):
             incoming_characteristic_discovery(actual_body_len, dpkt)
 
             incoming_read_all_handles(actual_body_len, dpkt)
+            incoming_gatt_subscription_response(actual_body_len, dpkt)
 
     else:
         # take this opportunity to handle any necessary outgoing ATT packets
@@ -496,3 +589,4 @@ def stateful_GATT_getter(actual_body_len, dpkt):
         # Read all Values from all handles (regardless of whether they have read propery or not)
         ################################################################################
         outgoing_read_all_handles(actual_body_len, dpkt)
+        outgoing_gatt_subscriptions()

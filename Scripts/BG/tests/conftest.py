@@ -68,6 +68,7 @@ class MockHW:
     def __init__(self):
         self.transmitted = []   # list[(llid, bytes)]
         self.mac_calls = []     # list[(bdaddr_bytes, is_random)]
+        self.connection_calls = []
         self.intervals_preloaded = False
         self.next_aa = 0x63980B2E
         self.decoder_state = _MockDecoderState()
@@ -107,6 +108,7 @@ class MockHW:
         return [0xC0, 0x5F, 0xB6, 0xCF, 0x70, 0xFB]
 
     def initiate_conn(self, bdaddr_bytes, is_random, interval=7, latency=0, timeout=50):
+        self.connection_calls.append((tuple(bdaddr_bytes), is_random, interval, latency, timeout))
         return self.next_aa
 
 

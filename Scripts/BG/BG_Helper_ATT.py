@@ -18,6 +18,11 @@ opcode_ATT_READ_REQ = 0x0A
 opcode_ATT_READ_RSP = 0x0B
 opcode_ATT_READ_BY_GROUP_TYPE_REQ = 0x10
 opcode_ATT_READ_BY_GROUP_TYPE_RSP = 0x11
+opcode_ATT_WRITE_REQ = 0x12
+opcode_ATT_WRITE_RSP = 0x13
+opcode_ATT_HANDLE_VALUE_NTF = 0x1b
+opcode_ATT_HANDLE_VALUE_IND = 0x1d
+opcode_ATT_HANDLE_VALUE_CFM = 0x1e
 
 # Error codes that I expect to encounter
 errorcode_01_ATT_Invalid_Handle = 0x01
@@ -114,6 +119,16 @@ def send_ATT_READ_REQ(begin_handle):
     payload_len_bytes = v2b(len(payload_bytes))
     write_outbound_pkt(2, payload_len_bytes + globals.ATT_CID_bytes + payload_bytes)
     vprint(f"Sent read request for handle 0x{begin_handle:04x}")
+
+def send_ATT_WRITE_REQ(handle, value):
+    """Write a descriptor after all reads, with one ATT request in flight."""
+    payload_bytes = v1b(opcode_ATT_WRITE_REQ) + v2b(handle) + value
+    write_outbound_pkt(2, v2b(len(payload_bytes)) + globals.ATT_CID_bytes + payload_bytes)
+    vprint(f"Sent ATT_WRITE_REQ for handle 0x{handle:04x}: {value.hex()}")
+
+def send_ATT_HANDLE_VALUE_CFM():
+    payload = v1b(opcode_ATT_HANDLE_VALUE_CFM)
+    write_outbound_pkt(2, v2b(len(payload)) + globals.ATT_CID_bytes + payload)
 
 def send_ATT_FIND_BY_TYPE_VALUE_REQ_0x2A29_Apple():
     # LLID = 2 (L2CAP w/o fragmentation)

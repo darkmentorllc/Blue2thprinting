@@ -35,6 +35,12 @@ from BTIDES_to_BTIDALPOOL import send_btides_to_btidalpool
 g_last_handle_to_bdaddr = {}
 g_last_bdaddr_connected_to = None
 
+def btides_addr_random_from_hci(address_type):
+    """HCI identity address types 2/3 retain their public/random bit in BTIDES."""
+    if address_type in (0, 1, 2, 3):
+        return address_type & 1
+    return address_type
+
 def export_AdvChannelData(packet, scapy_type, adv_type):
     fields = packet.getlayer(scapy_type).fields
     if(scapy_type == HCI_Event_Extended_Inquiry_Result):
@@ -42,7 +48,7 @@ def export_AdvChannelData(packet, scapy_type, adv_type):
         bdaddr = fields['bd_addr']
         data = fields['eir_data']
     else:
-        bdaddr_random = fields['atype']
+        bdaddr_random = btides_addr_random_from_hci(fields['atype'])
         bdaddr = fields['addr']
         data = fields['data']
 
@@ -146,6 +152,14 @@ def export_to_ATTArray(packet, direction):
     if(export_ATT_Read_Request(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Type_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Write_Value(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Attribute_Value_Change(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_ATT_Find_Information_Request(connect_ind_obj, packet, direction=direction)):
         return True

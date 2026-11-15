@@ -39,6 +39,8 @@ def main():
     aparse.add_argument("-P", "--public", action="store_const", default=False, const=True, help="Supplied BDADDR address is public")
     aparse.add_argument("-o", "--output", default=None, help="PCAP output file name")
     aparse.add_argument("-q", "--quiet", action="store_true", help="Don't display empty packets")
+    aparse.add_argument("--notification-window-seconds", type=float, default=5.0,
+                        help="Observe notifications and indications for this many seconds after CCCD setup (default: 5)")
     aparse.add_argument("-2", "--attempt-2M-PHY-update", action="store_true", help="Attempt to negotiate 2M PHY")
     aparse.add_argument("-A", "--skip-apple", action="store_true", help="Skip Apple devices")
     aparse.add_argument(
@@ -56,6 +58,10 @@ def main():
         help="Read values even when the discovered handle/UUID map is deprioritized",
     )
     args = aparse.parse_args()
+
+    if args.notification_window_seconds < 0:
+        aparse.error("--notification-window-seconds must be nonnegative")
+    globals.gatt_notification_window_ns = int(args.notification_window_seconds * 1_000_000_000)
 
     globals.force_gatt_value_reads = args.force_read_values
     try:
@@ -133,7 +139,9 @@ def main():
     globals.hw.mark_and_flush()
 
     # now enter initiator/Central mode
-    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=7, latency=0, timeout=50)
+    # Sniffle picks WinOffset from 5..15 units; a 7-unit interval can make
+    # CONNECT_IND invalid. Use a 24-unit interval that accommodates it.
+    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=24, latency=0, timeout=50)
 
     if not (args.output is None):
         globals.pcwriter = PcapBleWriter(args.output)
@@ -150,7 +158,7 @@ def main():
                 if(not re.search(r"ttyUSB", args.serport)):
                     # It timed out. Go ahead and try to connect again
                     print("Connect timeout... restarting")
-                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=10, latency=0, timeout=50)
+                    globals._aa = globals.hw.initiate_conn(bdaddr_bytes, not args.public, interval=24, latency=0, timeout=50)
                     create_pcap_CONNECT_IND(args, bdaddr_bytes, globals._aa, central_bdaddr_bytes)
                 else:
                     linux_retry_count += 1

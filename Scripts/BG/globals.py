@@ -215,6 +215,17 @@ all_handles_read = False
 handle_read_req_sent_time = None
 handle_read_last_sent_handle = 1
 
+# Post-read CCCD subscription stage. One ATT write is outstanding at a time.
+gatt_subscription_plan = None
+gatt_subscription_index = 0
+gatt_subscription_pending_handle = None
+gatt_subscription_sent_ns = None
+gatt_subscription_observe_until_ns = None
+gatt_subscriptions_done = False
+gatt_notification_window_ns = 5_000_000_000
+gatt_updates = []
+gatt_value_reads_deferred = False
+
 # GATT state
 last_requested_service_type = None
 # Reading all primary services via ATT_READ_BY_GROUP_TYPE_REQ
