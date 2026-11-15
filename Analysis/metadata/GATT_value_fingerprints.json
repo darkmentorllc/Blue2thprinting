@@ -44,6 +44,16 @@
       "source": "B-HIVEMIND Datasheets_and_Documentation/Microchip/ChipToDatasheet.md; GATT suffix S152 not decoded"
     },
     {
+      "id": "microchip_bt5056_firmware",
+      "uuid": "2a24",
+      "match": "exact",
+      "pattern": "BT5056",
+      "chip": "Possible Microchip/ISSC IS1678 S/SM family",
+      "chip_maker": "Microchip Technology (ISSC lineage)",
+      "confidence": "low",
+      "source": "https://ww1.microchip.com/downloads/aemDocuments/documents/WSG/ProductDocuments/UserGuides/RN4678-PICtail-PICtail-Plus-Daughter-Board-User-Guide-DS50002566.pdf (RN4678 default GATT model BT5056); https://onlinedocs.microchip.com/oxy/GUID-B3BF9AB9-9AE0-49D0-B8D1-D5E72BD0171E-en-US-1/GUID-43F18641-8DC6-4520-B106-D72904DD72E2.html (BM78 and RN4678 share IS1678); observed FA-470 devices also report ISSC as GATT Manufacturer Name. Firmware/model string does not establish exact physical chip or module."
+    },
+    {
       "id": "nordic_nrf51822_hardware",
       "uuid": "2a27",
       "match": "regex",
