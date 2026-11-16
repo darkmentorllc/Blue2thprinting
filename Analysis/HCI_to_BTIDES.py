@@ -47,6 +47,12 @@ g_last_bdaddr_connected_to = None
 g_unattributed_lmp_count = 0
 g_malformed_inquiry_count = 0
 
+def btides_addr_random_from_hci(address_type):
+    """HCI identity address types 2/3 retain their public/random bit in BTIDES."""
+    if address_type in (0, 1, 2, 3):
+        return address_type & 1
+    return address_type
+
 def export_AdvChannelData(report, adv_type):
     fields = report.fields
     if isinstance(report, HCI_Event_Extended_Inquiry_Result):
@@ -56,7 +62,7 @@ def export_AdvChannelData(report, adv_type):
     else:
         if fields['atype'] > 3:
             return False
-        bdaddr_random = fields['atype'] & 1
+        bdaddr_random = btides_addr_random_from_hci(fields['atype'])
         bdaddr = fields['addr']
         data = fields['data']
 
@@ -232,6 +238,14 @@ def export_to_ATTArray(packet, direction):
     if(export_ATT_Read_Request(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_ATT_Read_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Type_Request(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Read_By_Type_Response(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Write_Value(connect_ind_obj, packet, direction=direction)):
+        return True
+    if(export_ATT_Attribute_Value_Change(connect_ind_obj, packet, direction=direction)):
         return True
     if(export_ATT_Find_Information_Request(connect_ind_obj, packet, direction=direction)):
         return True

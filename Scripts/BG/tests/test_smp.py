@@ -76,12 +76,19 @@ class TestHandleSMPGating:
     def test_sends_initial_request_once_gatt_done(
             self, clean_globals, mock_hw, make_dpkt):
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         handle_SMP_Pairing(0, make_dpkt(body=b""))
         assert clean_globals.smp_legacy_pairing_req_sent is True
         assert clean_globals.smp_pairing_request_attempt_count == 1
         # The request bytes should start with the SMP opcode at L2CAP offset 4.
         body = mock_hw.transmitted[0][1]
         assert body[4] == opcode_SMP_Pairing_Req
+
+    def test_waits_for_subscription_stage(self, clean_globals, mock_hw, make_dpkt):
+        clean_globals.all_handles_read = True
+        handle_SMP_Pairing(0, make_dpkt(body=b""))
+        assert mock_hw.transmitted == []
+        assert clean_globals.smp_legacy_pairing_req_sent is False
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +115,7 @@ class TestSMPPairingResponse:
     def test_pairing_rsp_marks_legacy_phase_complete(
             self, clean_globals, mock_hw, make_dpkt):
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         clean_globals.smp_legacy_pairing_req_sent = True
         clean_globals.smp_SC_pairing_req_sent = False
 
@@ -118,6 +126,7 @@ class TestSMPPairingResponse:
     def test_pairing_rsp_after_SC_request_marks_SC_complete(
             self, clean_globals, mock_hw, make_dpkt):
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         clean_globals.smp_legacy_pairing_req_sent = True
         clean_globals.smp_SC_pairing_req_sent = True
 
@@ -145,6 +154,7 @@ class TestSMPPairingFailed:
     def test_pairing_not_supported_marks_phase_complete_no_fallback(
             self, clean_globals, mock_hw, make_dpkt):
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         clean_globals.smp_legacy_pairing_req_sent = True
 
         body = self._build_pairing_failed(pairing_failure_reason_Pairing_Not_Supported)
@@ -158,6 +168,7 @@ class TestSMPPairingFailed:
             self, clean_globals, mock_hw, make_dpkt, monkeypatch):
         import BG_Helper_SMP
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         clean_globals.smp_legacy_pairing_req_sent = True
         clean_globals.smp_SC_pairing_req_sent = False
         # Pin time so the 1-second retry path doesn't fire; we only want the
@@ -190,6 +201,7 @@ class TestSMPPairingRetryCap:
         # retry threshold; record attempts climbing to the 5-attempt cap.
         import BG_Helper_SMP
         clean_globals.all_handles_read = True
+        clean_globals.gatt_subscriptions_done = True
         clean_globals.smp_legacy_pairing_req_sent = True
         clean_globals.smp_legacy_pairing_rsp_recv = False
         clean_globals.smp_pairing_request_attempt_count = 5  # one more attempt should trip the cap

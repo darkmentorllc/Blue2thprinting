@@ -111,7 +111,7 @@ def find_service_with_target_handle_in_range(connect_ind_obj=None, bdaddr=None, 
         base = lookup_DualBDADDR_base_entry(connect_ind_obj)
     else:
         base = lookup_SingleBDADDR_base_entry(bdaddr, random)
-    if("GATTArray" not in base.keys()):
+    if base is None or "GATTArray" not in base:
         return None
     for service_entry in base["GATTArray"]:
         # Check if the begin and end service handles enclose this characteristic value

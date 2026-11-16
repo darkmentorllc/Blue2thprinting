@@ -118,6 +118,15 @@ def ff_ATT_READ_RSP(direction, value_hex_str):
     return obj
 
 
+def ff_ATT_attribute_value(direction, opcode, attribute_handle, value_hex_str):
+    """ATT writes, notifications, and indications carry the same handle/value pair."""
+    obj = {"direction": direction, "opcode": opcode,
+           "attribute_handle": attribute_handle, "value_hex_str": value_hex_str}
+    if TME.TME_glob.verbose_BTIDES:
+        obj["opcode_str"] = att_opcode_strings[opcode]
+    return obj
+
+
 def ff_ATT_READ_BY_GROUP_TYPE_REQ(direction, start_handle, end_handle, group_type):
     obj = {"direction": direction, "opcode": type_ATT_READ_BY_GROUP_TYPE_REQ, "start_handle": start_handle, "end_handle": end_handle, "group_type": group_type}
     if(TME.TME_glob.verbose_BTIDES):
