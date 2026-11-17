@@ -1,7 +1,8 @@
 # Novelty mode
 
-Branch `novelty-mode` starts from local `master` commit `557d291d`.
-Set `novelty_mode = True` in `Scripts/central_app_launcher.py` (the branch default)
+Novelty mode was written on branch `novelty-mode`, which starts from `master` commit
+`557d291d`, and was merged into `master` on 2026-11-17.
+Set `novelty_mode = True` in `Scripts/central_app_launcher.py` (the default)
 to skip Apple, Samsung, Android phones, reviewed vehicles/keys, and headphones /
 speakers before active probing. Set it to `False` and restart the launcher to
 disable all category skips. There are no separate category toggles.
@@ -383,6 +384,10 @@ launcher uses the one BlueZ registered and keeps to its USB port (see the field 
 above). So far that has been the TP-Link at USB `1-1.4.4`; in the runs that followed
 the old launcher it was the weaker `0bda:a729` at `1-1.3`. Unplug the Realteks you
 do not want it to use.
+
+The side tree was only for testing the branch next to that checkout. A capture node
+installed from `master` after the merge has novelty mode in its one checkout and
+needs only the two private name files copied in (see "Private metadata" above).
 
 `~/novelty_test` holds the helper scripts used here (`boot_switch.sh`,
 `stop_novelty.sh`, `start_novelty_boot_style.sh`, `start_old.sh`, `recorder.py`)

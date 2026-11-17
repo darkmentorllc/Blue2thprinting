@@ -286,6 +286,17 @@ compile_toolz() {
     fi
 }
 
+tune_capture_host() {
+    print_banner "Tuning this host for capture if it is a small one (single CPU core, under 1 GB of RAM)."
+    # On a Raspberry Pi Zero this lowers the duty cycle of BlueZ LE discovery
+    # scanning and enlarges the swap file; on a larger host it changes nothing.
+    # It runs before the compile stages so they have the swap available.
+    # The files it changes are first saved under /var/backups/blue2thprinting,
+    # and a repeat run is a no-op. docs/Capture.md has the reasons.
+    sudo python3 "$BASE_PATH/Scripts/manage_capture_host_tuning.py" || \
+        echo "  Host tuning did not complete (see above). Setup continues without it."
+}
+
 unblock_bluetooth_rfkill() {
     print_banner "Ensuring Bluetooth is not soft-blocked by rfkill."
     # Raspbian (and some Ubuntu images) ship with bluetooth soft-blocked at
@@ -484,8 +495,14 @@ for arg in "$@"; do
             cd $BASE_PATH
             exit 0
             ;;
+        --tune-host)
+            check_env
+            tune_capture_host
+            cd $BASE_PATH
+            exit 0
+            ;;
         --help)
-            echo "Usage: $0 [--flash-sniffle | --build-rust | --install-rtl-firmware | --force-reinstall-rtl-firmware]"
+            echo "Usage: $0 [--flash-sniffle | --build-rust | --install-rtl-firmware | --force-reinstall-rtl-firmware | --tune-host]"
             echo "       $0 (no args) runs the full setup."
             exit 0
             ;;
@@ -495,6 +512,7 @@ done
 do_all(){
     check_env
     install_prerequs
+    tune_capture_host
     enter_venv
     configure_scripts
     compile_toolz
