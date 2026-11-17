@@ -580,13 +580,22 @@ def print_GATT_info(bdaddr, bdaddr_random):
                 if(not TME.TME_glob.hide_android_data and (UUID128_description == "Unknown UUID128")):
                     unknown_UUID128_hash[UUID] = ("Characteristic",f"{i3}")
 
-            # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info
-            if(handle in char_value_handles_dict.keys()):
-                char_value_handle = handle
-                for byte_values in char_value_handles_dict[handle]:
-                    qprint(f"{i3}(G)ATT handle {handle} read results: {byte_values}")
-                    # FIXME: do we have an enclosing characteristic? If so do the below...
-                    #characteristic_value_decoding("\t        ", UUID, byte_values) #NOTE: This leads to sub-optimal formatting due to the unconditional tabs above. TODO: adjust
+            # Check if this handle is found in the GATT_characteristics_values table, and if so, print that info.
+            # Values are grouped by (handle, operation), so match the handle in each key: a plain
+            # `handle in char_value_handles_dict` never matched, and these values were never printed.
+            for (value_handle, operation), values_for_op in char_value_handles_dict.items():
+                if value_handle != handle:
+                    continue
+                for byte_values in values_for_op:
+                    if operation in (type_ATT_HANDLE_VALUE_NTF, type_ATT_HANDLE_VALUE_IND):
+                        print_characteristic_update(i3, operation, byte_values)
+                    elif operation == type_ATT_ERROR_RSP:
+                        error_code = int.from_bytes(byte_values)
+                        error_str = TME.BT_Data_Types.att_errorcode_to_str.get(
+                            error_code, f"Unknown ATT error 0x{error_code:02x}")
+                        qprint(f"{i3}(G)ATT handle {handle} error received when attempting read: {Fore.RED + Style.BRIGHT + error_str}")
+                    else:
+                        qprint(f"{i3}(G)ATT handle {handle} read results: {byte_values}")
 
     # Print raw GATT data minus the values read from characteristics. This can be a superset of the above due to handles potentially not being within the subsetted ranges of enclosing Services or Descriptors
     if(len(GATT_services_result) != 0):

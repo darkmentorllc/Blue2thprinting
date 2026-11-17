@@ -1197,6 +1197,19 @@ def import_ATT_packet(bdaddr, bdaddr_random, att_entry):
     elif(att_entry["opcode"] == type_ATT_READ_REQ):
         g_last_read_req_handle = att_entry["handle"]
         operation = type_ATT_READ_REQ
+    elif(att_entry["opcode"] in (type_ATT_HANDLE_VALUE_NTF, type_ATT_HANDLE_VALUE_IND)):
+        # A notification or indication names its handle, so store it even when
+        # GATT discovery never reached that characteristic (a peer often sends
+        # one, e.g. Service Changed, right after the link comes up, and the link
+        # can drop before discovery gets that far). A copy that is also nested
+        # in GATTArray is the same row, which INSERT IGNORE drops.
+        handle = att_entry.get("attribute_handle", 0)
+        if isinstance(handle, str):
+            handle = int(handle, 16)
+        if(handle != 0):
+            values = (bdaddr, bdaddr_random, handle, att_entry["opcode"], bytes.fromhex(att_entry.get("value_hex_str", "")))
+            insert = f"INSERT IGNORE INTO GATT_characteristics_values (bdaddr, bdaddr_random, char_value_handle, operation, byte_values) VALUES (%s, %s, %s, %s, %s);"
+            execute_insert(insert, values)
     elif(att_entry["opcode"] == type_ATT_READ_RSP):
         handle = g_last_read_req_handle
         operation = type_ATT_READ_RSP

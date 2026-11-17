@@ -337,6 +337,8 @@ const EXT_LMP_POWER_CONTROL_RES: i64 = 32;
 const ATT_FIND_INFORMATION_RSP: i64 = 0x05;
 const ATT_READ_REQ: i64 = 0x0a;
 const ATT_READ_RSP: i64 = 0x0b;
+const ATT_HANDLE_VALUE_NTF: i64 = 0x1b;
+const ATT_HANDLE_VALUE_IND: i64 = 0x1d;
 
 // L2CAP codes
 const L2CAP_CONN_PARAM_UPDATE_REQ: i64 = 0x12;
@@ -2246,6 +2248,28 @@ fn parse_att_array(entry: &serde_json::Map<String, J>, b: &mut Buffers) {
             ATT_READ_REQ => {
                 last_read_req_handle = obj_i64(o, "handle").unwrap_or(0);
             }
+            // A notification or indication names its handle, so it is stored
+            // even when GATT discovery never reached that characteristic: a
+            // peer often sends one (e.g. Service Changed) right after the link
+            // comes up, and the link can drop before discovery gets that far.
+            // The converter then has no characteristic to nest it under in
+            // GATTArray, and it would otherwise be lost. A copy that is also
+            // nested in GATTArray is the same row, which INSERT IGNORE drops.
+            ATT_HANDLE_VALUE_NTF | ATT_HANDLE_VALUE_IND => {
+                let handle = obj_i64(o, "attribute_handle").unwrap_or(0);
+                if handle == 0 {
+                    continue;
+                }
+                let byte_values =
+                    hex_str_to_bytes(obj_str(o, "value_hex_str").unwrap_or(""));
+                b.gatt_characteristics_values.push(vec![
+                    bdaddr.clone().into(),
+                    bdaddr_rand.into(),
+                    handle.into(),
+                    opcode.into(),
+                    byte_values.into(),
+                ]);
+            }
             ATT_READ_RSP => {
                 let handle = last_read_req_handle;
                 if handle == 0 {
@@ -3270,6 +3294,41 @@ mod tests {
         assert_eq!(b.smp_pairing[1][0], Value::from("aa:bb:cc:dd:ee:ff"));
         assert_eq!(b.smp_pairing[1][2], Value::from(2i64));
         assert_eq!(b.smp_pairing[1][5], Value::from(5i64)); // auth_req
+    }
+
+    #[test]
+    fn parse_att_array_stores_updates_that_no_discovered_characteristic_holds() {
+        // Seen on pi0-2 (2026-11-17): a peer sent a Service Changed indication
+        // right after the link came up, and the link dropped before discovery
+        // reached any characteristic, so GATTArray had nothing to nest it under.
+        let v = json!({
+            "CONNECT_IND": {
+                "central_bdaddr": "11:22:33:44:55:66", "central_bdaddr_rand": 1,
+                "peripheral_bdaddr": "AA:BB:CC:DD:EE:FF", "peripheral_bdaddr_rand": 1
+            },
+            "ATTArray": [
+                {"direction": 1, "opcode": 29, "attribute_handle": 3, "value_hex_str": "0000ffff"},
+                {"direction": 1, "opcode": 27, "attribute_handle": 23, "value_hex_str": "415355535f30"},
+                // Sent by the central's own GATT server: stored under the central.
+                {"direction": 0, "opcode": 27, "attribute_handle": 9, "value_hex_str": "01"},
+                // No handle: nothing to store it under.
+                {"direction": 1, "opcode": 29, "value_hex_str": "02"}
+            ]
+        });
+        let mut b = Buffers::default();
+        parse_att_array(obj(&v), &mut b);
+        let peripheral = Value::from("aa:bb:cc:dd:ee:ff");
+        assert_eq!(
+            b.gatt_characteristics_values,
+            vec![
+                vec![peripheral.clone(), Value::from(1i64), Value::from(3i64), Value::from(29i64),
+                     Value::from(vec![0x00u8, 0x00, 0xff, 0xff])],
+                vec![peripheral, Value::from(1i64), Value::from(23i64), Value::from(27i64),
+                     Value::from(b"ASUS_0".to_vec())],
+                vec![Value::from("11:22:33:44:55:66"), Value::from(1i64), Value::from(9i64),
+                     Value::from(27i64), Value::from(vec![0x01u8])],
+            ]
+        );
     }
 
     #[test]
