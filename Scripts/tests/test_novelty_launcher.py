@@ -196,6 +196,74 @@ class LauncherTests(unittest.TestCase):
                 self.assertFalse(cal.bg_inflight_bdaddrs)    # no stale in-flight marker
                 self.assertNotIn(ADDRESS,cal.ble_bdaddrs)
 
+    def quiet_for(self, seconds, address=ADDRESS):
+        cal.device_last_seen[address]=cal.datetime.datetime.now()-cal.datetime.timedelta(seconds=seconds)
+
+    def test_a_candidate_that_has_gone_quiet_leaves_the_queue_until_heard_again(self):
+        """Nothing else takes a device out of the queue when it goes out of range.
+        On pi0-2 the first attempt came a median of 25 minutes after the device was
+        first heard, and none of 716 attempts in 140 minutes succeeded."""
+        for kind,worker,queue in (('BLE',self.run_ble_worker,cal.ble_bdaddrs),('BTC',self.run_btc_worker,cal.btc_bdaddrs)):
+            limit=cal.CANDIDATE_STALE_S[kind]
+            with self.subTest(kind=kind):
+                for store in (cal.ble_bdaddrs,cal.btc_bdaddrs,cal.device_connect_attempts,cal.device_total_attempts,
+                              cal.device_last_seen): store.clear()
+                self.feed(ad(9,'Novel Sensor'),kind)
+                self.quiet_for(limit+1)
+                self.assertEqual(worker(),[])                             # nothing launched
+                self.assertNotIn(ADDRESS,queue)
+                self.assertEqual((cal.device_connect_attempts[ADDRESS],cal.device_total_attempts[ADDRESS]),(0,0))
+                self.assertIsNone(cal._candidate_skip_reason(kind,ADDRESS,'random' if kind=='BLE' else 'public'))
+                self.feed(ad(9,'Novel Sensor'),kind)                      # heard again: a candidate again
+                self.assertIn(ADDRESS,queue)
+                self.quiet_for(limit-1)                                   # still inside the window
+                self.assertTrue(worker())
+
+    def test_a_candidate_that_goes_quiet_while_waiting_for_a_dongle_is_not_probed(self):
+        self.feed(ad(9,'Novel Sensor'))
+        class SlowQueue(Queue):
+            def get(queue,*args,**kwargs):
+                self.quiet_for(cal.CANDIDATE_STALE_S['BLE']+1)            # the wait outlasted the device
+                return Queue.get(queue,*args,**kwargs)
+        queue=SlowQueue();queue.put('/fake/sonoff')
+        with patch.object(cal,'bg_dongle_queue',queue), patch.object(cal.subprocess,'Popen') as spawn, \
+             patch.object(cal,'external_log_write'), patch.object(cal.time,'sleep',side_effect=StopWorker):
+            with self.assertRaises(StopWorker):
+                cal.ble_thread_function()
+        self.assertEqual(spawn.call_count,0)
+        self.assertEqual((cal.device_connect_attempts[ADDRESS],cal.device_total_attempts[ADDRESS]),(0,0))
+        self.assertEqual(queue.qsize(),1)                                 # dongle returned
+        self.assertFalse(cal.bg_inflight_bdaddrs)
+        self.assertNotIn(ADDRESS,cal.ble_bdaddrs)
+
+    def test_a_device_being_probed_is_not_dropped_for_being_quiet(self):
+        """It stops advertising while Better Getter is connected to it."""
+        self.feed(ad(9,'Novel Sensor'))
+        self.quiet_for(cal.CANDIDATE_STALE_S['BLE']+60)
+        cal.bg_inflight_bdaddrs.add(ADDRESS)
+        self.assertFalse(cal._drop_stale_candidate('BLE',ADDRESS))
+        self.assertIn(ADDRESS,cal.ble_bdaddrs)
+        cal.bg_inflight_bdaddrs.discard(ADDRESS)
+        self.assertTrue(cal._drop_stale_candidate('BLE',ADDRESS))
+        self.assertFalse(cal._drop_stale_candidate('BLE',ADDRESS))       # already gone
+
+    def run_btc_worker(self):
+        """Drive the real BTC worker loop once; every probe it launches fails."""
+        launched=[]
+        class FakeThread:
+            def __init__(self,process,bdaddr,info_type,**kwargs): pass
+            def start(self): pass
+            def join(self): pass
+        def popen(cmd,**kwargs):
+            launched.append(cmd)
+            return type('Process',(),{'pid':100})()
+        with patch.object(cal.subprocess,'Popen',side_effect=popen), patch.object(cal,'ApplicationThread',FakeThread), \
+             patch.object(cal,'external_log_write'), patch.object(cal,'cycle_realtek_adapter'), \
+             patch.object(cal,'_realtek_other_usb',set()), patch.object(cal.time,'sleep',side_effect=StopWorker):
+            with self.assertRaises(StopWorker):
+                cal.btc_thread_function()
+        return launched
+
     def test_btc_probe_refused_at_launch_is_not_an_attempt(self):
         cal.novelty_mode=True
         self.feed(ad(9,'Novel Sensor'),'BTC')

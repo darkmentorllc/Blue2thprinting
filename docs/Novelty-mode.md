@@ -346,6 +346,63 @@ eight minutes and the two Better Getter dongles were idle for most of the remain
 eighteen. With two Sonoffs and `MAX_BG = 2` there is no dongle left for Sniffle, so
 nothing was sniffed passively.
 
+## Second run on `pi0-2` that day: candidates never left the queue
+
+A 140-minute run on the move (17:59 to 20:19 UTC; 871 BLE and 82 BR/EDR
+addresses heard) was audited from `Logs/CAL.log` and the Better Getter captures.
+
+What held: discovery never stopped (every 10-minute window had new devices), all
+201 Realtek power cycles completed (median 5.3 s, always the dongle on USB
+`1-1.4.4`) and discovery was restarted after each, no device got more than three
+attempts, no category-skipped device was connected to, and there was no traceback.
+
+What did not: **none of 716 Better Getter attempts succeeded** (708 timeouts),
+against 7 of 67 on the morning walk. 95 % of the captures hold nothing but our own
+`CONNECT_IND`. The first attempt on a device came a median of 25 minutes after
+it was first heard; 358 of 403 first attempts came more than five minutes after.
+Two Sonoffs manage about five attempts a minute, more devices than that arrived,
+and nothing took a device out of the queue for having gone out of range. Before
+novelty mode the launcher did that on BlueZ's `InterfacesRemoved` (`[DEL]`),
+which BlueZ sends 30 s after it last saw a device. Taking candidates from the HCI
+monitor dropped it, and the review of the first version missed that.
+
+The fix is `CANDIDATE_STALE_S` in `central_app_launcher.py`. A candidate not
+heard for 30 s (BLE) or 60 s (BR/EDR) leaves its queue, with a
+`[DEL] ... (not heard for Ns)` line, until it is heard again. It keeps its attempt
+counts, and a device being probed is left alone. The check is made when a worker
+picks a candidate and again after the wait for a Better Getter dongle. With it,
+the first minutes of a stationary run on `pi0-2` gave 2 GATT successes in 9
+attempts; it has not yet been on a walk.
+
+Three log lines in that run looked like probes after a category skip. Two BLE
+devices were heard again 45 minutes after a `GATT_KNOWN` skip, by then without
+the name that had identified them (evidence is kept for ten minutes), and were
+probed long after that; the aging stops such probes. The third was only a line in
+`BTC_2THPRINT.log`: `launch_application()` had refused the launch. That line is no
+longer written for a candidate withdrawn during the Realtek power cycle.
+
+## A Realtek that loses its firmware
+
+Found on `pi0-3` (Pi Zero W, Raspberry Pi OS Trixie, kernel 6.18) on its first
+run. A minute in, after the first BR/EDR probe, the dongle stopped answering. The
+kernel reset it (`command tx timeout`, `Resetting usb device`), the firmware
+download then failed (`RTL: Read reg16 failed (-110)`), and it sat on its USB port
+with address `00:00:00:00:00:00`. The launcher finds its dongle by the DarkFirmware
+address, so `cycle_realtek_adapter()` reported "USB device not found", discovery
+stayed dead, and the LMP tool, started without `--hci`, used the built-in adapter.
+A power cycle of the port (`uhubctl`) brought the dongle back in two seconds.
+
+Now the launcher keeps pointing at the USB port it pinned while a device is still
+on it, so the power cycle before the next LMP probe recovers the dongle. A
+watchdog on the discovery side power cycles the port itself after two looks, 15 s
+apart, found the dongle there without its address, because without a BR/EDR device
+left to probe nothing else would. Power cycles are serialized. With several
+dongles, a BR/EDR device is not probed while ours is away, and no attempt is
+counted. Tried on `pi0-2` by detaching the driver from the dongle: the watchdog
+power cycled it 20 s later and discovery was running again after 28 s. It has not
+yet been tried on `pi0-3`, and `pi0-2` (kernel 6.12) logged no such reset in
+either run.
+
 ## State of `pi0-2` after this validation
 
 `~/Blue2thprinting` on the Pi was not modified. It is still the `master` checkout

@@ -80,6 +80,12 @@ REALTEK_FW_LOAD_TIMEOUT_S = 20  # max wait for firmware to load + BD address to 
 # After this many consecutive cycle failures (uhubctl missing, no PPPS, firmware
 # load timeout), stop attempting to cycle for the rest of the launcher's lifetime.
 REALTEK_MAX_CONSECUTIVE_CYCLE_FAILURES = 3
+# The discovery side looks for this launcher's Realtek this often, and power
+# cycles its port itself after this many looks in a row found the dongle on the
+# port but without its address. The BTC worker only cycles before an LMP probe,
+# so with no BR/EDR device left to probe a wedged dongle stayed dead.
+REALTEK_WATCHDOG_INTERVAL_S = 15
+REALTEK_WATCHDOG_MISSES = 2
 
 print_skipped = True
 print_verbose = True
@@ -102,6 +108,18 @@ max_total_attempts = 10
 
 # Last actual advertising/inquiry report, never a cached BlueZ property update.
 device_last_seen = {}
+# A queued candidate not heard for this long leaves its queue until it is heard
+# again. BlueZ used to do this for the launcher: it removes a device it has not
+# seen for TemporaryTimeout (30 s by default) and the launcher dropped it on
+# InterfacesRemoved ("[DEL]"). When candidates began to come from the HCI
+# monitor instead, nothing replaced that, so a candidate only ever left by
+# success, a category skip or the retry limit. On the move the workers then
+# spent their time on devices long out of range: on pi0-2 on 2026-11-17 the
+# first Better Getter attempt came a median of 25 minutes after the device was
+# first heard, and none of 716 attempts in 140 minutes succeeded.
+# BR/EDR gets longer: a device is reported once per inquiry, and every LMP
+# probe stops discovery for a Realtek power cycle.
+CANDIDATE_STALE_S = {"BLE": 30, "BTC": 60}
 DEPRIORITIZED_RECENCY_S = 60  # Covered-map value reads must still be nearby.
 
 ##################################################
@@ -292,7 +310,17 @@ def _init_serial_dongles():
 # every Nth LMP probe to forestall the firmware "command tx timeout" wedge.
 ##################################################
 
+_realtek_cycle_lock = threading.Lock()
+
+
 def cycle_realtek_adapter():
+    """One power cycle at a time: the BTC worker and the discovery watchdog can
+    both ask for one."""
+    with _realtek_cycle_lock:
+        _cycle_realtek_adapter()
+
+
+def _cycle_realtek_adapter():
     """Power-cycle the Realtek dongle's USB port via uhubctl, forcing a true
     cold-boot-like firmware reload.
 
@@ -797,21 +825,32 @@ ADAPTER_IFACE = "org.bluez.Adapter1"
 _realtek_hci_current_path = "/org/bluez/hci0"
 _realtek_path_lock = threading.Lock()
 
+def _usb_device_present(sysfs_id):
+    return os.path.isdir(f"/sys/bus/usb/devices/{sysfs_id}")
+
+
 def _realtek_sysfs_id():
     """Return the Realtek dongle's USB sysfs id (e.g. '1-1.3' or '1-1.2.3'),
     derived from the hci interface's `device` symlink so it's chip-agnostic
-    (works on RTL8761B `2550:8761`, RTL8852BU `0bda:a728`, etc.)."""
+    (works on RTL8761B `2550:8761`, RTL8852BU `0bda:a728`, etc.).
+
+    The dongle can be on its port without its address. When its firmware stops
+    answering, the kernel resets it ("command tx timeout", "Resetting usb
+    device"), the firmware download then fails ("RTL: Read reg16 failed
+    (-110)") and it reports 00:00:00:00:00:00. find_realtek_hci() no longer
+    sees it, yet a power cycle of that port is exactly what brings it back
+    (pi0-3, 2026-11-17: two seconds). So fall back to the port this launcher
+    pinned, as long as a USB device is still there.
+    """
     hci, _ = find_realtek_hci()
-    if not hci:
-        return None
-    try:
-        # Resolves to e.g. /sys/devices/.../usb1/1-1/1-1.3/1-1.3:1.0 — the USB
-        # interface; its parent dir is the USB device.
-        full_path = os.path.realpath(f"/sys/class/bluetooth/{hci}/device")
-    except OSError:
-        return None
-    sysfs_id = os.path.basename(os.path.dirname(full_path))
-    return sysfs_id if "." in sysfs_id else None
+    if hci:
+        sysfs_id = _hci_usb_id(hci)
+    else:
+        with _realtek_select_lock:
+            sysfs_id = _realtek_pinned_usb
+        if not sysfs_id or not _usb_device_present(sysfs_id):
+            return None
+    return sysfs_id if sysfs_id and "." in sysfs_id else None
 
 
 def _hub_supports_ppps(hub):
@@ -1096,6 +1135,31 @@ def _candidate_skip_reason(kind, bdaddr, atype):
     return _category_skip_reason(kind, bdaddr, atype)
 
 
+def _drop_stale_candidate(kind, bdaddr):
+    """Take a queued candidate that has gone quiet out of its queue.
+
+    True if it was dropped. It comes back as [NEW] with its next advertisement
+    or inquiry result, and keeps its attempt counts. A device Better Getter is
+    connected to right now is left alone: it stops advertising meanwhile.
+    """
+    if kind == "BLE":
+        with bg_inflight_bdaddrs_lock:
+            if bdaddr in bg_inflight_bdaddrs:
+                return False
+    queue, lock = (ble_bdaddrs, ble_bdaddrs_lock) if kind == "BLE" else (btc_bdaddrs, btc_bdaddrs_lock)
+    with lock:
+        seen = device_last_seen.get(bdaddr)
+        if seen is None or bdaddr not in queue:
+            return False
+        quiet = (datetime.datetime.now() - seen).total_seconds()
+        if quiet <= CANDIDATE_STALE_S[kind]:
+            return False
+        del queue[bdaddr]
+    if print_verbose:
+        print(f"[DEL] {kind} {bdaddr} (not heard for {quiet:.0f}s)")
+    return True
+
+
 def _refund_attempt_if_not_probed(kind, bdaddr, atype):
     """Undo the attempt counted for a pass that launched nothing.
 
@@ -1211,6 +1275,30 @@ async def _resolve_adapter(bus, adapter_path):
     return adapter_obj.get_interface(ADAPTER_IFACE)
 
 
+async def _realtek_watchdog(misses):
+    """One look at this launcher's Realtek. Returns the new count of looks in a
+    row that found it missing.
+
+    Missing while its USB device is still on the pinned port means the
+    controller has lost its firmware (see _realtek_sysfs_id); after
+    REALTEK_WATCHDOG_MISSES such looks the port is power cycled. A dongle that
+    is not on the port at all (unplugged) is waited for, not counted as a
+    failed cycle. A cycle already in progress is left to finish.
+    """
+    hci, _ = await asyncio.to_thread(find_realtek_hci)
+    if hci or _realtek_cycle_disabled or _realtek_cycle_lock.locked():
+        return 0
+    if not await asyncio.to_thread(_realtek_sysfs_id):
+        return 0
+    misses += 1
+    if misses < REALTEK_WATCHDOG_MISSES:
+        return misses
+    print(f"_realtek_watchdog: the Realtek is on its USB port without its {REALTEK_BDADDR_SENTINEL} address; "
+          f"power-cycling it at {datetime.datetime.now()}")
+    await asyncio.to_thread(cycle_realtek_adapter)
+    return 0
+
+
 async def _restart_discovery_after_cycle(bus):
     """Watch for adapter-cycle events from cycle_realtek_adapter() and reissue
     SetDiscoveryFilter + StartDiscovery on the (possibly renumbered) Realtek
@@ -1218,12 +1306,18 @@ async def _restart_discovery_after_cycle(bus):
 
     Called as a cancellable side-task from dbus_discovery_loop.
     """
+    idle = misses = 0
     while True:
         # A bounded async poll is cancellable; cancelling an executor wait on
         # Event.wait() otherwise hangs asyncio shutdown until the next USB cycle.
         while not _realtek_cycle_pending.is_set():
             await asyncio.sleep(0.25)
+            idle += 0.25
+            if idle >= REALTEK_WATCHDOG_INTERVAL_S:
+                idle = 0
+                misses = await _realtek_watchdog(misses)
         _realtek_cycle_pending.clear()
+        idle = misses = 0
         # bluetoothd registers /org/bluez/hciN's Adapter1 interface a few
         # seconds AFTER find_realtek_hci() succeeds at the kernel level. A
         # fixed-3s sleep racey the registration ~55% of the time in the NYC
@@ -1405,6 +1499,8 @@ def ble_thread_function():
                 state = ble_bdaddrs.get(bdaddr)
             if state is None:
                 continue
+            if _drop_stale_candidate("BLE", bdaddr):
+                continue
             total_for_addr = device_total_attempts.get(bdaddr, 0)
             reason = _candidate_skip_reason("BLE", bdaddr, state[0])
             if reason:
@@ -1452,6 +1548,11 @@ def ble_thread_function():
                     # round-robin distribution across the BG pool (Queue is FIFO).
                     bg_dongle_path = bg_dongle_queue.get()
                     if(print_verbose): tprint(f"BLE: Acquired BG dongle {bg_dongle_path} for {bdaddr}")
+                    # That wait can be long, and the candidate may have gone quiet in it.
+                    if _drop_stale_candidate("BLE", bdaddr):
+                        bg_dongle_queue.put(bg_dongle_path)
+                        _refund_attempt(bdaddr)
+                        continue
 
                     # Single-attempt-per-bdaddr gate. If another worker is already
                     # running a BG against this bdaddr (which happens when the outer
@@ -1602,6 +1703,8 @@ def btc_thread_function():
                 state = btc_bdaddrs.get(bdaddr)
             if state is None:
                 continue
+            if _drop_stale_candidate("BTC", bdaddr):
+                continue
             total_for_addr = device_total_attempts.get(bdaddr, 0)
             reason = _candidate_skip_reason("BTC", bdaddr, state[0])
             if reason:
@@ -1649,17 +1752,35 @@ def btc_thread_function():
                         _lmp_invocations_since_cycle += 1
                     if do_cycle:
                         cycle_realtek_adapter()
+                        # The cycle takes several seconds. A report in that time can
+                        # have withdrawn the candidate (a late EIR naming a skipped
+                        # category, say). launch_application() would refuse it
+                        # anyway, but only after BTC_2THPRINT.log had recorded an
+                        # attempt that never happened (pi0-2, 2026-11-17).
+                        with btc_bdaddrs_lock:
+                            withdrawn = bdaddr not in btc_bdaddrs
+                        if withdrawn or _category_skip_reason("BTC", bdaddr, state[0]):
+                            _refund_attempt(bdaddr)
+                            continue
+
+                    lmp_hci = None
+                    if _realtek_other_usb:
+                        # Several DarkFirmware dongles: the tool picks one by
+                        # manufacturer id, so name the one this launcher drives.
+                        # If that one is away, send nothing: without --hci the tool
+                        # would use another dongle, or the built-in adapter.
+                        lmp_hci, _ = find_realtek_hci()
+                        if not lmp_hci:
+                            print(f"BTC: this launcher's Realtek is away; not probing {bdaddr} through another adapter")
+                            _refund_attempt(bdaddr)
+                            continue
 
                     external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: LOG ENTRY FOR BDADDR: {bdaddr} {datetime.datetime.now()}")
                     # The launcher already runs as root (via setup_capture_helper_debian-based.sh's
                     # @reboot cron entry under root), so we don't prefix with sudo.
                     btc_2thprint_cmd = [darkfirmware_lmp_path, f"--target={bdaddr}"]
-                    if _realtek_other_usb:
-                        # Several DarkFirmware dongles: the tool picks one by
-                        # manufacturer id, so name the one this launcher drives.
-                        lmp_hci, _ = find_realtek_hci()
-                        if lmp_hci:
-                            btc_2thprint_cmd.append(f"--hci={lmp_hci}")
+                    if lmp_hci:
+                        btc_2thprint_cmd.append(f"--hci={lmp_hci}")
                     btc_2thprint_process = None
                     try:
                         btc_2thprint_process = launch_application(btc_2thprint_cmd, default_cwd, target=("BTC", bdaddr, "public"))
