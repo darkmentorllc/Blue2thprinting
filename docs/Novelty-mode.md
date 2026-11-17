@@ -131,6 +131,7 @@ one. Nothing derived from it is committed here. The name rules are therefore spl
 | --- | --- | --- |
 | `Scripts/novelty/data/names.json` | 127 rules: the public NamePrints and the generic name families (`Android*`, `GM_PEPS_*`, Sony/Bose model families, ...) | Part of this repository |
 | `Analysis/metadata/private/novelty_names.json` | 920 rules reviewed from the private NamePrints (102 Android, 4 Samsung phone, 169 vehicle, 645 audio) | **scp** from the analysis machine; never Git |
+| `Analysis/metadata/private/novelty_names_GATT.json` | Advertised names, and name families, of devices already fully GATT-enumerated in the local database (see below) | **scp** from the analysis machine; never Git |
 
 The launcher loads the private file when it is present and says so on its first
 lines (`... 127 public name rules, 920 private name rules from ...`). Without it
@@ -162,6 +163,51 @@ change; the importer refreshes tables, not algorithm code.
 and the generic name families come from the DM BT repository, which is also
 private, but not from `Analysis/metadata/private`. They are committed here because
 novelty mode cannot run without them.
+
+## Devices already fully GATT-enumerated
+
+Novelty mode also skips a device that advertises a name whose GATT database has
+been collected before. The names come from the local `bt2` database and are in a
+second private file, `Analysis/metadata/private/novelty_names_GATT.json`, loaded at
+launcher start like `novelty_names.json`. A match adds the reason `GATT_KNOWN`
+(`Skipped BLE ...: novelty:GATT_KNOWN`) and applies to BLE and BR/EDR alike.
+
+```bash
+venv/bin/python Scripts/novelty/build_gatt_names.py
+scp Analysis/metadata/private/novelty_names_GATT.json user@<pi>:Blue2thprinting/Analysis/metadata/private/
+```
+
+A device counts as fully enumerated when its services and characteristics were
+discovered, every service that spans more than its own declaration has
+characteristics, every characteristic with the Read property was answered (by a
+value or by an ATT error), and at least one value was actually read. Only
+advertised names are used (Complete or Shortened Local Name from LE advertising,
+scan responses and BR/EDR EIR), because the decision is made before connecting. A
+fully enumerated device that advertises no name cannot be skipped this way.
+
+Where many devices share a naming scheme with a per-device identifier, one
+NamePrint-style regex stands for the family instead of one entry per device, and so
+also covers members that have not been enumerated. Families are inferred from every
+advertised name in the database: an identifier is the rightmost run of hex digits
+(`Lamp_0A1B2C3D`) or of letters and digits (`Cam 3S 4GK7QZ`), or whatever varies
+between names of one length that share five characters at the same offset
+(`Unit 0A:1B:2C`). A family becomes a regex only if at least 8 database names fit
+it, at least 80% of them were each seen on one or two devices (a name shared by many
+devices is a model name, not an identifier), at least three characters vary, the
+fixed text is a usable anchor, the varying part is an identifier and not free text,
+and its enumerated members do not all have different GATT databases. Everything else
+stays an exact name. `--show-rejected` lists the families that were not generalized
+and why.
+
+The file's patterns and names are **case-sensitive** and are compared with the
+advertised name after Unicode NFKC normalization and trimming. Names shorter than
+three characters are left out (listed under `too_short`). The Chinese-vehicle veto
+still comes first: a retained name is not skipped even if it is in this file.
+
+The build of 2026-11-17 found 21,149 fully enumerated devices, 1,842 of which
+advertise a name (1,459 distinct names), and wrote 188 family regexes covering 750
+of those names plus 698 exact names. Together they match about 58,000 of the 153,000
+distinct advertised names in the database.
 
 ## Automated regression and QA
 
@@ -243,6 +289,39 @@ The independent recorder is a second process reading the same HCI monitor stream
 through its own evidence cache; each launch in the launcher log was checked against
 what it had heard about that address by then.
 
+## Field run of 2026-11-17 on `pi0-2`
+
+The first run after the boot switch was pulled and checked against its own HCI
+capture, replayed through the rules as an independent witness.
+
+| | |
+| --- | --- |
+| Discovery | Ran from 13:04:36 to 13:30:48 UTC, then stopped for the rest of the run (first bug below). Nothing was collected after that, which includes the walk. |
+| Seen while it ran | 239 identities: 80 connectable Apple, 11 Android, 5 audio, 1 vehicle, 25 eligible BLE, 3 eligible BR/EDR, 114 not connectable. |
+| Probes | 76 (66 Better Getter, 3 LMP, 7 SDP/GATT). None on a device with a category verdict at that moment; all 25 eligible BLE devices were probed; none more than three times; every Better Getter launch had `-A` and the right address type. |
+| Results | GATT collected from 7 of the 25 BLE devices; LMP from all 3 BR/EDR devices. 53 of 66 Better Getter attempts timed out, 36 of those on devices weaker than -85 dBm. |
+| Timing | A new device was probed within a second or two once the start-up backlog had cleared; during the backlog (15 devices, two dongles) the median wait was 39 s. |
+
+Two bugs were found and fixed, neither in the novelty rules:
+
+* **The launcher changed Realtek after a power cycle.** This Pi has four
+  DarkFirmware dongles, which all boot with the same BD address, and BlueZ
+  registers an adapter for only one. After the second power cycle the first poll
+  found one of the others (`hci4` -> `hci3`), `StartDiscovery` failed on it, and
+  discovery never resumed. The launcher now takes the dongle BlueZ manages, remembers
+  its USB port, and waits for that port to come back; it also tells the LMP tool
+  which dongle to use. Checked on the Pi with three power cycles in a row.
+* **`btc_sdp_gatt.py` wrote the L2CAP channel MTU as `l2cap_len`**, so the importer
+  refused both SDP files from this tree. This is the fix already on `parallel-LMP`
+  (`5c7f5735`), applied here as the same hunk. Corrected copies of the two files
+  were imported; the originals in the archive are unchanged.
+
+Seen but not changed: three failed attempts end a device for the run, so the
+strongest devices in range (the DFU fixture at -40 dBm among them) were spent within
+eight minutes and the two Better Getter dongles were idle for most of the remaining
+eighteen. With two Sonoffs and `MAX_BG = 2` there is no dongle left for Sniffle, so
+nothing was sniffed passively.
+
 ## State of `pi0-2` after this validation
 
 `~/Blue2thprinting` on the Pi was not modified. It is still the `master` checkout
@@ -253,6 +332,10 @@ The fixed novelty-mode tree is beside it in `~/Blue2thprinting-novelty`: `Script
 `docs/` and the Python parts of `Analysis/` from this branch, with `venv`,
 `bluez-5.66`, `Sniffle`, `Logs` and `Analysis/metadata/private` linked to the
 existing checkout, so logs land in the usual `~/Blue2thprinting/Logs`.
+
+The private name files are both installed, and the launcher's first lines name them
+(`... 920 private name rules ..., 189 name families and 698 names already
+GATT-enumerated ...`).
 
 **The Pi now boots into novelty mode.** Root's `@reboot` entry runs
 `~/Blue2thprinting-novelty/Scripts/runall.sh` (the previous crontab is in
@@ -273,10 +356,10 @@ bash ~/novelty_test/boot_switch.sh novelty
 Being `master`-based, this launcher uses one Realtek for discovery and LMP and two
 Sonoffs for Better Getter. All four Realteks on this Pi boot with the same address
 (`13:37:13:37:13:37`); only the old launcher gives the extra three their own. The
-launcher takes the one that enumerated last and leaves the others down. On the
-checked boot that was the TP-Link at USB `1-1.4.4`; in the earlier runs, which
-followed the old launcher, it was the weaker `0bda:a729` at `1-1.3`. Unplug the
-Realteks you do not want it to pick.
+launcher uses the one BlueZ registered and keeps to its USB port (see the field run
+above). So far that has been the TP-Link at USB `1-1.4.4`; in the runs that followed
+the old launcher it was the weaker `0bda:a729` at `1-1.3`. Unplug the Realteks you
+do not want it to use.
 
 `~/novelty_test` holds the helper scripts used here (`boot_switch.sh`,
 `stop_novelty.sh`, `start_novelty_boot_style.sh`, `start_old.sh`, `recorder.py`)
