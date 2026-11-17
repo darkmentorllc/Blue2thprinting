@@ -3,6 +3,7 @@
 Every name here is made up. The real file is built from the local database and
 lives only in Analysis/metadata/private.
 """
+from collections import OrderedDict
 import contextlib
 import io
 import json
@@ -354,6 +355,7 @@ class GattKnownRuleTests(unittest.TestCase):
             for name in stores:
                 stack.enter_context(patch.object(cal, name, {}))
             stack.enter_context(patch.object(cal, 'novelty_evidence', AdvertisementEvidence(self.rules)))
+            stack.enter_context(patch.object(cal, 'novelty_remembered', OrderedDict()))
             stack.enter_context(patch.object(cal, 'skip_these_addresses', []))
             for enabled in (True, False):
                 for kind, atype in (('BLE', 'random'), ('BTC', 'public')):

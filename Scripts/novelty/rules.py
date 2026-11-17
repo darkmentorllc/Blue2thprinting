@@ -197,9 +197,17 @@ class NoveltyRules:
         return frozenset(key for key, patterns in self.patterns.items()
                          if any(pattern.fullmatch(name) for pattern in patterns))
 
+    @staticmethod
+    def names(frames):
+        return [name for name in (data.decode('utf-8', errors='replace').strip('\x00 \t\r\n')
+                                  for kind, data in frames if kind in (8, 9)) if name]
+
+    def retained(self, frames):
+        """Is one of these names a brand that is probed whatever else it advertises?"""
+        return any(RETAINED.search(name) for name in self.names(frames))
+
     def classify(self, frames, address, address_type):
-        names = [name for name in (data.decode('utf-8', errors='replace').strip('\x00 \t\r\n')
-                                   for kind, data in frames if kind in (8, 9)) if name]
+        names = self.names(frames)
         # Retain Chinese vehicle brands even if they advertise a shared Apple
         # integration service. Otherwise enabling all categories defeats the veto.
         if any(RETAINED.search(name) for name in names):
@@ -336,6 +344,12 @@ class AdvertisementEvidence:
             while len(self.entries) > self.capacity:
                 self.entries.popitem(last=False)
             return verdict
+
+    def retained(self, address, address_type, transport):
+        """Does the evidence still held for this identity name a retained brand?"""
+        with self.lock:
+            entry = self.entries.get((address.lower(), address_type, transport))
+            return bool(entry) and self.rules.retained(tuple(self._live(entry[0], self.clock())))
 
     def reasons(self, address, address_type, transport):
         with self.lock:

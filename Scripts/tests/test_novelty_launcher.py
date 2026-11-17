@@ -3,6 +3,7 @@
 Only the operating-system process/radio boundary is faked. The same raw reports
 are exercised with novelty_mode both True and False on both transports.
 """
+from collections import OrderedDict
 import contextlib
 import io
 from pathlib import Path
@@ -35,6 +36,7 @@ class LauncherTests(unittest.TestCase):
         self.stack.enter_context(patch.object(cal,'gatt_force_read_bdaddrs',set()))
         self.stack.enter_context(patch.object(cal,'bg_inflight_bdaddrs',set()))
         self.stack.enter_context(patch.object(cal,'novelty_evidence',AdvertisementEvidence(NoveltyRules())))
+        self.stack.enter_context(patch.object(cal,'novelty_remembered',OrderedDict()))
         self.stack.enter_context(patch.object(cal,'novelty_mode',True))
         self.stack.enter_context(patch.object(cal,'skip_these_addresses',[]))
         self.stack.enter_context(patch.object(cal,'print_verbose',False))
@@ -175,7 +177,7 @@ class LauncherTests(unittest.TestCase):
             with self.subTest(path=withdraw):
                 cal.novelty_mode=True
                 for store in (cal.ble_bdaddrs,cal.device_connect_attempts,cal.device_total_attempts): store.clear()
-                cal.novelty_evidence.entries.clear()
+                cal.novelty_evidence.entries.clear();cal.novelty_remembered.clear()
                 self.feed(ad(9,'Novel Sensor'))
                 class LateQueue(Queue):
                     def get(queue,*args,**kwargs):
@@ -198,6 +200,45 @@ class LauncherTests(unittest.TestCase):
 
     def quiet_for(self, seconds, address=ADDRESS):
         cal.device_last_seen[address]=cal.datetime.datetime.now()-cal.datetime.timedelta(seconds=seconds)
+
+    def test_a_category_verdict_stands_for_the_run_after_its_evidence_has_expired(self):
+        """Evidence is forgotten ten minutes after it was last heard, and a weak
+        device's name is not in every report. A device skipped as headphones must
+        not come back as an ordinary candidate once its name has expired: that
+        happened on both Pis on 2026-11-17, and the device was probed."""
+        now=[1000.0]
+        for kind,atype,queue in (('BLE','random',cal.ble_bdaddrs),('BTC','public',cal.btc_bdaddrs)):
+            with self.subTest(kind=kind):
+                cal.novelty_evidence=AdvertisementEvidence(NoveltyRules(),clock=lambda: now[0])
+                self.feed(ad(9,'LE-WH-CH720N'),kind)
+                self.assertEqual(cal._candidate_skip_reason(kind,ADDRESS,atype),'novelty:AUDIO')
+                now[0]+=cal.novelty_evidence.lifetime+1                       # the name has expired
+                self.assertFalse(cal.novelty_evidence.reasons(ADDRESS,atype,kind))
+                self.feed(ad(1,b'\x06'),kind)                                  # heard again, without the name
+                self.assertNotIn(ADDRESS,queue)
+                self.assertEqual(cal._candidate_skip_reason(kind,ADDRESS,atype),'novelty:AUDIO')
+                cal.novelty_mode=False                                        # off means off
+                self.assertIsNone(cal._category_skip_reason(kind,ADDRESS,atype))
+                self.feed(ad(1,b'\x06'),kind)
+                self.assertIn(ADDRESS,queue)
+                cal.novelty_mode=True
+                queue.clear()
+
+    def test_a_retained_brand_name_overrides_an_earlier_verdict(self):
+        """A retained vehicle that first shows only a shared Apple service is skipped
+        as Apple until its name arrives. The verdict memory must not undo that."""
+        self.feed(sd(0xfd6f)+ad(255,b'\x4c\0\x10\x01'))
+        self.assertEqual(cal._candidate_skip_reason('BLE',ADDRESS,'random'),'novelty:APPLE')
+        self.feed(ad(9,'BYD Key'))
+        self.assertIsNone(cal._candidate_skip_reason('BLE',ADDRESS,'random'))
+        self.assertIn(ADDRESS,cal.ble_bdaddrs)
+        self.assertNotIn(('BLE',ADDRESS),cal.novelty_remembered)
+
+    def test_the_verdict_memory_is_bounded(self):
+        with patch.object(cal,'NOVELTY_REMEMBERED_MAX',3):
+            for n in range(5):
+                self.feed(ad(9,'LE-WH-CH720N'),address=f'ce:00:00:00:01:{n:02x}')
+        self.assertEqual(list(cal.novelty_remembered),[('BLE',f'ce:00:00:00:01:{n:02x}') for n in (2,3,4)])
 
     def test_a_candidate_that_has_gone_quiet_leaves_the_queue_until_heard_again(self):
         """Nothing else takes a device out of the queue when it goes out of range.
@@ -287,7 +328,7 @@ class LauncherTests(unittest.TestCase):
         for enabled in (True,False):
             with self.subTest(novelty_mode=enabled):
                 cal.novelty_mode=enabled
-                cal.ble_bdaddrs.clear();cal.novelty_evidence.entries.clear()
+                cal.ble_bdaddrs.clear();cal.novelty_evidence.entries.clear();cal.novelty_remembered.clear()
                 for event_type in (2,4,1):   # ADV_SCAN_IND, SCAN_RSP, ADV_DIRECT_IND
                     cal._handle_discovery_report(parse_event(legacy(ad(9,'Novel Sensor'),event_type=event_type))[0])
                 self.assertFalse(cal.ble_bdaddrs)
@@ -359,12 +400,13 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(cal.reprioritize_ble_gatt_value_bdaddr(ADDRESS),not enabled)
             self.assertEqual(ADDRESS in cal.gatt_force_read_bdaddrs,not enabled)
         cal.novelty_mode=True
-        self.feed(ad(9,'Novel Sensor'))
+        novel='ce:00:00:00:00:02'     # another device: the headphones above stay skipped for the run
+        self.feed(ad(9,'Novel Sensor'),address=novel)
         cal.ble_bdaddrs.clear()
-        cal.ble_gatt_value_deprioritized_bdaddrs[ADDRESS]=('random',-40)
+        cal.ble_gatt_value_deprioritized_bdaddrs[novel]=('random',-40)
         cal._promote_ble_fallbacks_for_capacity()
-        self.assertIn(ADDRESS,cal.ble_bdaddrs)
-        self.assertIn(ADDRESS,cal.gatt_force_read_bdaddrs)
+        self.assertIn(novel,cal.ble_bdaddrs)
+        self.assertIn(novel,cal.gatt_force_read_bdaddrs)
 
     def test_discovery_failure_is_a_nonzero_launcher_exit(self):
         with patch.object(sys,'argv',['central_app_launcher.py','--discovery-only']), \
@@ -388,7 +430,7 @@ class LauncherTests(unittest.TestCase):
             with self.subTest(novelty_mode=enabled):
                 cal.novelty_mode=enabled
                 for store in (cal.ble_bdaddrs,cal.ble_address_types): store.clear()
-                cal.novelty_evidence.entries.clear()
+                cal.novelty_evidence.entries.clear();cal.novelty_remembered.clear()
                 for _ in range(5): cal._handle_discovery_report(report(apple,'random'))
                 cal._handle_discovery_report(report(b'','public',connectable=False))   # empty SCAN_RSP
                 cal._handle_discovery_report(report(b'','public'))                     # evidence-free ADV
@@ -478,6 +520,7 @@ class MonitorLifecycleTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(cal,'ble_bdaddrs',{}), patch.object(cal,'device_connect_attempts',{}), \
              patch.object(cal,'device_total_attempts',{}), patch.object(cal,'device_last_seen',{}), \
              patch.object(cal,'novelty_evidence',AdvertisementEvidence(NoveltyRules())), \
+             patch.object(cal,'novelty_remembered',OrderedDict()), \
              patch.object(cal,'get_realtek_dbus_path',return_value='/org/bluez/hci1'), \
              patch.object(cal,'parse_monitor',side_effect=parse), patch.object(cal.traceback,'print_exc'), \
              patch.object(cal.asyncio,'get_running_loop',return_value=FakeLoop()), \

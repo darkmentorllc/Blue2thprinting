@@ -376,10 +376,17 @@ attempts; it has not yet been on a walk.
 
 Three log lines in that run looked like probes after a category skip. Two BLE
 devices were heard again 45 minutes after a `GATT_KNOWN` skip, by then without
-the name that had identified them (evidence is kept for ten minutes), and were
-probed long after that; the aging stops such probes. The third was only a line in
-`BTC_2THPRINT.log`: `launch_application()` had refused the launch. That line is no
-longer written for a candidate withdrawn during the Realtek power cycle.
+the name that had identified them, and were probed. Evidence is kept for ten
+minutes after it was last heard, and a weak device's name is not in every report;
+`pi0-3` showed the same thing within a quarter of an hour, a device probed three
+times ten minutes after it had been skipped. **A category verdict now stands for
+the rest of the run** (`novelty_remembered` in `central_app_launcher.py`, by
+transport and address, at most 20,000 of them): once an address has been skipped
+for a category it stays skipped when it is heard again without that evidence. The
+one exception is the retained-brand veto: a device that then advertises a retained
+vehicle name is probed, as before. The third line was only an entry in
+`BTC_2THPRINT.log`: `launch_application()` had refused the launch. That entry is
+no longer written for a candidate withdrawn during the Realtek power cycle.
 
 ## A Realtek that loses its firmware
 

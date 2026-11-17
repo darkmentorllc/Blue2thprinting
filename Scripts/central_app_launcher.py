@@ -23,6 +23,7 @@ import socket
 import threading
 import time
 import glob
+from collections import OrderedDict
 from queue import Queue
 from subprocess import TimeoutExpired
 import traceback
@@ -129,6 +130,17 @@ DEPRIORITIZED_RECENCY_S = 60  # Covered-map value reads must still be nearby.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 novelty_evidence = AdvertisementEvidence(NoveltyRules(REPO_ROOT / "Analysis/metadata/private"))
 novelty_lock = threading.RLock()
+# Category verdicts reached in this run, by (transport, address). The evidence
+# store forgets a field ten minutes after it was last heard, and the field that
+# identifies a device (often its name, in a scan response) is not in every
+# report. So a weak device skipped for a category came back ten minutes later
+# as an ordinary candidate and was probed (pi0-2 and pi0-3, 2026-11-17), all the
+# more once quiet candidates began to leave and re-enter the queue. An address
+# does not change hands within a run, so a verdict once reached stands, unless
+# the device then names a retained brand. The oldest go when it is full.
+novelty_remembered = OrderedDict()
+novelty_remembered_lock = threading.Lock()
+NOVELTY_REMEMBERED_MAX = 20000
 
 default_cwd = f"{REPO_ROOT}/"
 
@@ -1111,14 +1123,27 @@ def _ble_address_type(bdaddr, reported=None):
 def _category_skip_reason(kind, bdaddr, atype):
     if not novelty_mode:
         return None
-    reasons = set(novelty_evidence.reasons(bdaddr, atype, kind))
+    types = [atype]
     if kind == "BLE":
         # The same six octets reported under the other address type are the same
         # device with a mislabelled report, so what was heard there counts too.
         # (Two real devices sharing 48 bits do not happen; mislabelled reports do.)
-        for other in tuple(ble_address_types.get(bdaddr, ())):
-            if other != atype:
-                reasons |= novelty_evidence.reasons(bdaddr, other, kind)
+        types += [other for other in tuple(ble_address_types.get(bdaddr, ())) if other != atype]
+    reasons = set()
+    for each in types:
+        reasons |= novelty_evidence.reasons(bdaddr, each, kind)
+    key = (kind, bdaddr.lower())
+    with novelty_remembered_lock:
+        if reasons:
+            novelty_remembered[key] = frozenset(reasons)
+            novelty_remembered.move_to_end(key)
+            while len(novelty_remembered) > NOVELTY_REMEMBERED_MAX:
+                novelty_remembered.popitem(last=False)
+        elif key in novelty_remembered:
+            if any(novelty_evidence.retained(bdaddr, each, kind) for each in types):
+                del novelty_remembered[key]      # the retained brand's name outranks what came before it
+            else:
+                reasons = novelty_remembered[key]
     return "novelty:" + ",".join(sorted(reasons)) if reasons else None
 
 
