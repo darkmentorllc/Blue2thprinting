@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import threading
 import time
+import unicodedata
 import uuid
 
 DATA = Path(__file__).parent / 'data'
@@ -102,6 +103,17 @@ VENDOR_SERVICE_WILDCARDS = {
 AUDIO_SERVICES = frozenset(uuid16(v) for v in IDS['AUDIO_SERVICES'])
 NAME_CATEGORIES = ('ANDROID', 'SAMSUNG_PHONES', 'VEHICLES', 'AUDIO')
 PRIVATE_NAMES_FILE = 'novelty_names.json'
+# Advertised names of devices whose GATT database is already fully enumerated in
+# the local database (Scripts/novelty/build_gatt_names.py). Private, like the above.
+GATT_NAMES_FILE = 'novelty_names_GATT.json'
+GATT_KNOWN = 'GATT_KNOWN'
+
+
+def normalize_name(name):
+    """The form GATT-known names are compared in, at build time and at run time."""
+    if not isinstance(name, str):
+        return ''
+    return unicodedata.normalize('NFKC', name).strip('\x00 \t\r\n\x0b\x0c').strip()
 
 
 def _compile(rows):
@@ -125,6 +137,11 @@ class NoveltyRules:
     reviewed from the *private* NamePrints live outside this repository, in
     <private_dir>/novelty_names.json, and are copied to a capture node with scp.
     Without that file novelty mode still runs, with fewer name rules.
+
+    <private_dir>/novelty_names_GATT.json, when present, adds the GATT_KNOWN
+    category: the device advertises a name (or a name of a family) whose GATT
+    database has been fully enumerated before. Its patterns and names are
+    case-sensitive, unlike the category rules above.
     """
     def __init__(self, private_dir=None):
         self.patterns = dict(_bundled_patterns())
@@ -144,17 +161,38 @@ class NoveltyRules:
                     self.patterns[category] += compiled
                     self.private_name_rules += len(compiled)
                 self.private_file = private_file
+        self.gatt_patterns, self.gatt_names, self.gatt_file = (), frozenset(), None
+        if private_dir is not None:
+            gatt_file = Path(private_dir) / GATT_NAMES_FILE
+            if gatt_file.exists():
+                known = json.loads(gatt_file.read_text())
+                self.gatt_patterns = tuple(re.compile(row['pattern']) for row in known.get('patterns', ()))
+                self.gatt_names = frozenset(known.get('names', ()))
+                self.gatt_file = gatt_file
         self.name_categories = lru_cache(maxsize=1024)(self._name_categories)
 
     def describe(self):
         private = (f'{self.private_name_rules} private name rules from {self.private_file}'
                    if self.private_file else
                    f'no private name rules ({PRIVATE_NAMES_FILE} not found)')
-        return f'{self.public_name_rules} public name rules, {private}'
+        gatt = (f'{len(self.gatt_patterns)} name families and {len(self.gatt_names)} names already '
+                f'GATT-enumerated from {self.gatt_file}' if self.gatt_file else
+                f'no GATT-enumerated names ({GATT_NAMES_FILE} not found)')
+        return f'{self.public_name_rules} public name rules, {private}, {gatt}'
+
+    def gatt_known(self, name):
+        """Has a device advertising this name been fully GATT-enumerated before?"""
+        if not self.gatt_file:
+            return False
+        name = normalize_name(name)
+        return name in self.gatt_names or any(pattern.fullmatch(name) for pattern in self.gatt_patterns)
 
     def _name_categories(self, name):
-        return frozenset(key for key, patterns in self.patterns.items()
-                         if any(pattern.fullmatch(name) for pattern in patterns))
+        found = {key for key, patterns in self.patterns.items()
+                 if any(pattern.fullmatch(name) for pattern in patterns)}
+        if self.gatt_known(name):
+            found.add(GATT_KNOWN)
+        return frozenset(found)
 
     def classify(self, frames, address, address_type):
         names = [name for name in (data.decode('utf-8', errors='replace').strip('\x00 \t\r\n')
@@ -212,6 +250,8 @@ class NoveltyRules:
         reviewed = any(len(d) == length and d.startswith(prefix) for d in msds for length, prefix in PRODUCTS)
         reviewed |= any(fast_pair_audio(d) for d in sd16.get(0xfe2c, ()))
         reviewed |= uuid16(0x1853) in services and any(len(d) >= 3 for d in sd16.get(0xfe2c, ()))
+        if GATT_KNOWN in bits:
+            result.add(GATT_KNOWN)
         if not any(NON_AUDIO.search(n) for n in names) and (
                 'AUDIO' in bits or audio_appearance or sony or fp or reviewed or
                 companies & IDS['AUDIO_COMPANIES'] or oui in IDS['AUDIO_OUIS'] or
