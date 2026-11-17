@@ -4,9 +4,9 @@ This is a tool which coordinates the launching of various 2thprinting apps.
 The goal is to try and generally minimize contention for the scanning interface
 (which is the built-in hci0 used by the python BTC/BLE libraries).
 
-Device discovery is performed in-process via the BlueZ D-Bus API
-(org.bluez ObjectManager + Adapter1.StartDiscovery), replacing the older
-approach of tailing the stdout of a custom bluetoothctl. See issue #47.
+BlueZ controls discovery through Adapter1.StartDiscovery. A passive Linux HCI
+monitor supplies only advertising/scan-response and inquiry/EIR evidence to
+both workers. Cached names and post-connection data never drive novelty skips.
 '''
 # Activate venv before any other imports
 import os
@@ -17,21 +17,21 @@ activate_venv()
 
 import argparse
 import asyncio
-import csv
 import datetime
 import subprocess
+import socket
 import threading
 import time
 import glob
-import unicodedata
 from queue import Queue
 from subprocess import TimeoutExpired
 import traceback
 
-# BlueZ D-Bus discovery (replaces the inotify+bluetoothctl-log approach).
-from dbus_fast import BusType, MessageType, Variant
+# BlueZ controls discovery; raw HCI reports supply pre-connection evidence.
+from dbus_fast import BusType, Variant
 from dbus_fast.aio import MessageBus
-from dbus_fast.message import Message
+from novelty.rules import AdvertisementEvidence, NoveltyRules
+from novelty.discovery import open_monitor, parse_monitor
 
 ##################################################
 # BEGIN TESTING TOGGLES
@@ -43,7 +43,9 @@ Sniffle_thread_enabled = True
 
 lmp2thprint_enabled = True # When True, the BTC worker runs DarkFirmware_VSC_LMP (BlueZ Realtek-VSC) against discovered BR/EDR devices to capture LMP PDUs. The legacy ESP32 Braktooth + FTDI path has been removed.
 better_getter_enabled = True
-better_getter_skip_apple = True # When True, every Better_Getter.py launch gets -A (skip-apple), so BG early-exits (rc 0x0A) the moment it confirms an Apple device via Advertisement Company ID, LL_VERSION_IND, or the GATT Manufacturer Name. Belt-and-suspenders with the discovery-time APPLE_COMPANY_ID deprioritization below: a deprioritized Apple device that still reaches a BG launch via the fallback path won't waste a full ~20s enumeration timeout. Flip to False to fully enumerate Apple devices.
+# One switch for all reviewed pre-connection categories on BLE and BTC.
+# False removes category skips entirely; success/retry limits still apply.
+novelty_mode = True
 sdptool_enabled = False    # Legacy SDP path via the custom bluez-5.66 sdptool binary. Kept as a toggleable fallback for diagnostics; superseded by btc_sdp_gatt_enabled below.
 btc_sdp_gatt_enabled = True # When True, runs Scripts/btc_sdp_gatt.py for SDP enumeration plus GATT-over-BR/EDR enumeration via BlueZ kernel L2CAP sockets. Enable this OR sdptool_enabled, not both — they probe the same target on the same hci adapter and would race.
 
@@ -83,11 +85,6 @@ REALTEK_MAX_CONSECUTIVE_CYCLE_FAILURES = 3
 print_skipped = True
 print_verbose = True
 print_finished_bdaddrs = True
-# Per-update "Updated BLE/BTC RSSI (-NN) for AA:BB:..." lines are extremely
-# noisy in CAL.log (one per advertising packet that bluetoothd forwards via
-# PropertiesChanged). Off by default; flip to True to debug RSSI tracking
-# behaviour or the connect-attempt-decrement-on-rising-RSSI heuristic.
-print_rssi_updates = False
 sniffle_stdout_logging = False
 sniffle_log_rotate_in_seconds = 3600 # This will create a new log every hour if timeout=3600
 
@@ -99,33 +96,22 @@ sniffle_log_rotate_in_seconds = 3600 # This will create a new log every hour if 
 skip_these_addresses = []
 
 device_connect_attempts = {}
-max_connect_attempts = 3 # How many times to attempt connections before skipping the device thereafter
-                         # Note: can be reset by a device disappearing (BlueZ InterfacesRemoved)
-                         # and then being re-discovered (InterfacesAdded), which happens when a
-                         # device's signal drops below BlueZ's tracking threshold and then recovers.
-# Cumulative per-launcher-run attempt counter. NOT reset by InterfacesAdded re-fires
-# (so the Realtek-cycle-induced re-discovery loop can't bypass the cap by zeroing
-# device_connect_attempts via _device_added). Hard ceiling regardless of how many
-# times BlueZ removes and re-adds the device.
+max_connect_attempts = 3 # Failures remain capped across advertising updates/reappearance.
+# Cumulative ceiling still protects against structural-map/value deferral retries.
 device_total_attempts = {}
 max_total_attempts = 10
 
-# Last datetime we saw any D-Bus signal (InterfacesAdded or PropertiesChanged) for
-# each bdaddr. Updated by the discovery loop on every advert; consulted by the BLE
-# worker's deprioritized-fallback path to skip stale entries that BlueZ still has
-# cached but haven't actually been heard from in a while.
+# Last actual advertising/inquiry report, never a cached BlueZ property update.
 device_last_seen = {}
-# Reprioritization recency window: only fall back onto deprioritized bdaddrs that
-# we've still been hearing from within this many seconds. Otherwise an old Apple
-# device that wandered out of range still consumes connect attempts and burns
-# time we could spend on present devices.
-DEPRIORITIZED_RECENCY_S = 60
+DEPRIORITIZED_RECENCY_S = 60  # Covered-map value reads must still be nearby.
 
 ##################################################
 # Paths resolved from this file's location so the repo works from any clone path.
 ##################################################
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+novelty_evidence = AdvertisementEvidence(NoveltyRules(REPO_ROOT / "Analysis/metadata/private"))
+novelty_lock = threading.RLock()
 
 default_cwd = f"{REPO_ROOT}/"
 
@@ -167,10 +153,12 @@ ble_bdaddrs = {}
 ble_bdaddrs_lock = threading.Lock()
 btc_bdaddrs = {}
 btc_bdaddrs_lock = threading.Lock()
-ble_deprioritized_bdaddrs = {}
-ble_deprioritized_bdaddrs_lock = threading.Lock()
-btc_deprioritized_bdaddrs = {}
-btc_deprioritized_bdaddrs_lock = threading.Lock()
+# How often each LE address has been reported as "random" and as "public".
+# Controllers occasionally report a random-address device with the public type
+# (seen from both the Realtek and the Broadcom on pi0-2: the same iPhone, same
+# payload, a few percent of its reports, empty scan responses included). Those
+# are one device, not two: see _handle_discovery_report.
+ble_address_types = {}
 
 # Devices whose exact structural GATT map is already well covered. Their
 # first Better_Getter pass commits handle/UUID data and exits before ATT_READ;
@@ -204,7 +192,7 @@ _realtek_cycle_pending = threading.Event()
 _realtek_consecutive_cycle_failures = 0
 _realtek_cycle_disabled = False
 
-hostname = os.popen('hostname').read().strip()
+hostname = socket.gethostname()
 
 #####################################################################################
 # Single global serial port list for Sniffle sniffers or Better_Getter.py to share
@@ -303,13 +291,6 @@ def _init_serial_dongles():
                 better_getter_enabled = False
     finally:
         sniffle_init_done.set()
-
-# Kick off dongle init in the background so D-Bus discovery isn't blocked behind it.
-# If --discovery-only, skip entirely (already disabled the dependent flags above).
-if not _DISCOVERY_ONLY:
-    threading.Thread(target=_init_serial_dongles, daemon=True).start()
-else:
-    sniffle_init_done.set()
 
 ##################################################
 # Realtek adapter (hci0) cycle helper — invoked from btc_thread_function before
@@ -782,9 +763,14 @@ class ApplicationThread(threading.Thread):
                with start_sniffle_threads_condition:
                    start_sniffle_threads_condition.notify()
 
-def launch_application(cmd, target_cwd, stdout=None):
+def launch_application(cmd, target_cwd, stdout=None, target=None):
     try:
-        process = subprocess.Popen(cmd, cwd=target_cwd, stdout=stdout)
+        # Recheck immediately before spawning, including after a wait for a BG
+        # dongle or LMP completion. A late scan response must cancel stale work.
+        with novelty_lock:
+            if target and _category_skip_reason(*target):
+                return None
+            process = subprocess.Popen(cmd, cwd=target_cwd, stdout=stdout)
         print(f"PID: {process.pid}: central_app_launcher.py: launched {cmd}")
 #        raise BlockingIOError("FAKE I/O operation is blocked")
     except BlockingIOError as e:
@@ -813,28 +799,13 @@ def force_reboot():
 
 
 ##################################################
-# BlueZ D-Bus device discovery
+# BlueZ scan control with passive HCI discovery evidence
 ##################################################
-#
-# Replaces the legacy bluetoothctl-log + inotify approach. We talk to bluetoothd
-# directly over the system bus and react to:
-#   * org.freedesktop.DBus.ObjectManager.InterfacesAdded
-#       -> a new device showed up (mirrors the old [NEW] line)
-#   * org.freedesktop.DBus.ObjectManager.InterfacesRemoved
-#       -> a device went away (mirrors the old [DEL] line)
-#   * org.freedesktop.DBus.Properties.PropertiesChanged on org.bluez.Device1
-#       -> RSSI / ManufacturerData updates (mirrors the old [CHG] lines)
-#
-# BlueZ doesn't expose a single BLE-vs-BTC field on Device1, so we use the same
-# heuristic the rest of the BlueZ ecosystem uses: presence of the `Class`
-# property (Class of Device, only set for BR/EDR) means BTC; otherwise BLE.
-# AddressType ("public"/"random") is preserved as the first tuple element so
-# the BetterGetter "-P" branch in ble_thread_function still works unchanged.
+# BlueZ still owns StartDiscovery/StopDiscovery. Only raw HCI advertising and
+# inquiry/EIR reports populate the scheduler, so connected/cached names cannot
+# become pre-connection evidence. See novelty/discovery.py.
 
 ADAPTER_IFACE = "org.bluez.Adapter1"
-DEVICE_IFACE = "org.bluez.Device1"
-OM_IFACE = "org.freedesktop.DBus.ObjectManager"
-PROPS_IFACE = "org.freedesktop.DBus.Properties"
 
 # Realtek hci interface number, resolved dynamically by find_realtek_hci() — USB
 # rebind during cycle_realtek_adapter() renumbers the device (hci0 -> hci2 -> ...),
@@ -1005,644 +976,175 @@ def update_realtek_dbus_path(new_path):
     with _realtek_path_lock:
         _realtek_hci_current_path = new_path
 
-# Resolve the initial Realtek D-Bus path at module load. If the dongle isn't
+# Resolve the initial Realtek D-Bus path at launcher startup. If the dongle isn't
 # detected (e.g., not yet enumerated), fall back to /org/bluez/hci0 — the
 # discovery loop will retry and the cycle helper will re-resolve as needed.
-_initial_hci, _initial_path = find_realtek_hci()
-if _initial_path:
-    _realtek_hci_current_path = _initial_path
-    print(f"Realtek dongle resolved at module load: {_initial_path}")
-    _initial_sysfs = _realtek_sysfs_id()
-    _initial_hub, _initial_port = find_realtek_hub_and_port()
-    if _initial_hub:
-        print(f"Realtek hub {_initial_hub} port {_initial_port} supports PPPS — cycling will use uhubctl (Realtek sysfs id: {_initial_sysfs})")
-    else:
-        # No safe PPPS-capable candidate found by find_realtek_hub_and_port().
-        # Disable cycling upfront so the BTC worker doesn't waste time invoking
-        # uhubctl every probe just to fail.
-        _realtek_cycle_disabled = True
-        print(
-            f"WARN: no safe PPPS-capable hub found for Realtek (sysfs {_initial_sysfs}). "
-            f"Either the immediate parent hub is ganged/unsupported, or every PPPS-capable "
-            f"ancestor would also cut power to other devices (Sniffle dongles, ethernet, etc.). "
-            f"LMP cycling DISABLED for this run — move the dongle to a PPPS-capable hub with "
-            f"no other devices on it (or directly into the Pi's built-in VL805 port) to enable cycling."
-        )
-else:
-    print(f"WARN: Realtek dongle not yet visible at module load (no hci with BD addr {REALTEK_BDADDR_SENTINEL}); defaulting to /org/bluez/hci0")
-
-APPLE_COMPANY_ID = 0x004C  # Apple devices get deprioritized; we already have plenty of data on them.
-
-# ----------------------------------------------------------------------------
-# Adv-signature-based deprioritization
-# ----------------------------------------------------------------------------
-# In addition to the legacy "any device whose first MSD is Apple" rule, we
-# also deprioritize devices whose entire AD signature matches one for which
-# we already have full GATT data in the local bt2 database. The signature is
-# the set of stable (non-device-unique) AD fields we observed across our
-# pcap corpus — see Analysis/build_adv_signature_priority.py for how this
-# CSV is generated and the SIGNATURE_DESIGN doc-comment in that file for the
-# field definition.
-#
-# CSV format (one row per signature, '#'-prefixed lines are comments):
-#   <signature>,<deprioritized 0|1>,<bdaddr_count>
-# We only retain the signatures with deprioritized==1.
-
-ADV_SIGNATURE_CSV_PATH = str(REPO_ROOT / "Analysis/adv_signature_priority.csv")
-
-# Parsed deprioritized "anchor" signatures. Each entry is a tuple of
-#   (raw_signature_string, parsed_dict)
-# where parsed_dict maps key -> frozenset(values), e.g. for the row
-#   mfr=004c
-# we store ("mfr=004c", {"mfr": frozenset({"004c"})}). At lookup time we
-# do *subset* matching: a device's full signature matches the entry iff
-# every key=value pair in the entry is also present in the device's sig.
-# That way the CSV needs to carry only the *minimal* deprio signatures —
-# any superset device sig is automatically caught. See SIGNATURE_DESIGN
-# in Analysis/build_adv_signature_priority.py for the full rationale.
-_deprioritized_adv_signatures = []  # list[tuple[str, dict[str, frozenset]]]
-
-# BlueZ Device1 props arrive incrementally (an InterfacesAdded snapshot, then
-# PropertiesChanged for each later update). To compute the full signature on
-# every update we cache the relevant AD-derived properties per bdaddr and
-# merge into them as PropertiesChanged events arrive. The cache holds only
-# the keys that contribute to signatures.
-_SIG_RELEVANT_PROPS = (
-    "AdvertisingFlags", "UUIDs", "ServiceData", "ManufacturerData",
-    "Appearance", "TxPower",
-)
-_device_sig_props = {}  # {bdaddr: {prop_name: unwrapped_value}}
-_device_sig_props_lock = threading.Lock()
-
-# Suffix common to all UUID16/UUID32 forms of the BT base UUID. Anything
-# ending in this suffix is a 16- or 32-bit assigned-number UUID expanded
-# to UUID128 form by BlueZ; everything else is a true 128-bit custom UUID.
-_BT_BASE_UUID_SUFFIX = "-0000-1000-8000-00805f9b34fb"
-
-
-def _parse_signature_string(s):
-    """'k1=v1+v2|k2=v3' -> {'k1': frozenset({'v1','v2'}), 'k2': frozenset({'v3'})}.
-
-    Mirror of build_adv_signature_priority.parse_signature(); kept here as
-    a duplicate to avoid an import dependency on the Analysis tree at
-    runtime (this file ships standalone on the capture host).
-    """
-    out = {}
-    if not s:
-        return out
-    for part in s.split("|"):
-        k, sep, v = part.partition("=")
-        if not sep:
-            continue
-        out[k] = frozenset(v.split("+")) if v else frozenset()
-    return out
-
-
-def _load_deprioritized_adv_signatures(csv_path):
-    """Load the deprioritized-only subset of the signature CSV into the
-    module-level list, parsing each entry up-front for fast subset matching.
-    Safe to call before workers start."""
-    global _deprioritized_adv_signatures
-    if not os.path.exists(csv_path):
-        print(f"WARN: adv signature CSV not found at {csv_path} — "
-              f"signature-based deprioritization disabled. "
-              f"Run Analysis/build_adv_signature_priority.py to create it.")
-        return
-    deprio = []
-    total = 0
-    try:
-        with open(csv_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                # csv-without-csv: signatures don't contain commas (we use '+'
-                # for list separators inside signatures specifically so the
-                # outer CSV stays simple).
-                parts = line.split(",")
-                if len(parts) < 2:
-                    continue
-                sig, flag = parts[0], parts[1]
-                total += 1
-                try:
-                    if int(flag):
-                        deprio.append((sig, _parse_signature_string(sig)))
-                except ValueError:
-                    continue
-    except OSError as e:
-        print(f"WARN: failed to read {csv_path}: {e}")
-        return
-    _deprioritized_adv_signatures = deprio
-    print(f"Loaded {len(deprio)} deprioritized signatures (of {total} total) "
-          f"from {csv_path}")
-
-
-_load_deprioritized_adv_signatures(ADV_SIGNATURE_CSV_PATH)
-
-# ----------------------------------------------------------------------------
-# Name-signature-based deprioritization
-# ----------------------------------------------------------------------------
-# Analysis/build_name_signature_priority.py derives this set from names in the
-# local bt2 database. A name is included when any distinct BDADDR observed with
-# that same normalized name already has GATT characteristic-value data.
-#
-# CSV format:
-#   <hex UTF-8 normalized name>,<deprioritized 0|1>,<bdaddr_count>
-NAME_SIGNATURE_CSV_PATH = str(REPO_ROOT / "Analysis/name_signature_priority.csv")
-_deprioritized_name_signatures = set()
-
-
-def _normalize_device_name(name):
-    """Mirror build_name_signature_priority.normalize_name()."""
-    if not isinstance(name, str):
-        return ""
-    normalized = unicodedata.normalize("NFKC", name)
-    start = 0
-    end = len(normalized)
-    while start < end and (normalized[start].isspace() or normalized[start] == "\x00"):
-        start += 1
-    while end > start and (normalized[end - 1].isspace() or normalized[end - 1] == "\x00"):
-        end -= 1
-    return normalized[start:end]
-
-
-def _name_signature(name):
-    normalized = _normalize_device_name(name)
-    return normalized.encode("utf-8").hex() if normalized else ""
-
-
-def _load_deprioritized_name_signatures(csv_path):
-    """Load valid deprioritized name signatures, ignoring novel/comment rows."""
-    global _deprioritized_name_signatures
-    if not os.path.exists(csv_path):
-        print(f"WARN: name signature CSV not found at {csv_path} — "
-              f"name-based deprioritization disabled. "
-              f"Run Analysis/build_name_signature_priority.py to create it.")
-        return
-    deprio = set()
-    total = 0
-    try:
-        with open(csv_path, "r", newline="", encoding="utf-8") as f:
-            rows = csv.reader(line for line in f if not line.lstrip().startswith("#"))
-            for row in rows:
-                if len(row) < 2:
-                    continue
-                signature = row[0].strip().lower()
-                total += 1
-                try:
-                    enabled = int(row[1])
-                    decoded = bytes.fromhex(signature)
-                    decoded.decode("utf-8")
-                except (ValueError, UnicodeDecodeError):
-                    continue
-                if enabled and signature:
-                    deprio.add(signature)
-    except OSError as e:
-        print(f"WARN: failed to read {csv_path}: {e}")
-        return
-    _deprioritized_name_signatures = deprio
-    print(f"Loaded {len(deprio)} deprioritized name signatures "
-          f"(of {total} total) from {csv_path}")
-
-
-_load_deprioritized_name_signatures(NAME_SIGNATURE_CSV_PATH)
-
-
-def _unwrap(v):
-    if isinstance(v, Variant):
-        return v.value
-    return v
-
-
-def _classify_uuid(uuid_str):
-    """Return ('u16', 'u32', or 'u128', stripped_hex) for a BlueZ UUID.
-
-    BlueZ always renders UUIDs in 8-4-4-4-12 form. UUID16 and UUID32 forms
-    have the BT base suffix and zero-padded prefix; UUID128 (custom) does
-    not. None on parse failure.
-    """
-    if not isinstance(uuid_str, str):
-        return None, None
-    u = uuid_str.lower()
-    if u.endswith(_BT_BASE_UUID_SUFFIX):
-        prefix = u.split("-", 1)[0]
-        if len(prefix) != 8:
-            return None, None
-        if prefix.startswith("0000"):
-            return "u16", prefix[4:]
-        return "u32", prefix
-    return "u128", u.replace("-", "")
-
-
-def _compute_adv_signature(merged_props):
-    """Build the deterministic signature string from a Device1 props dict.
-
-    Mirror Analysis/build_adv_signature_priority.py:build_signature() —
-    field separator '|', key=value '=', list separator '+', sorted keys,
-    sorted list values. Fields with no value are omitted.
-
-    Returns "" when no signature-bearing props are present.
-    """
-    components = {
-        "fl": set(), "u16": set(), "u32": set(), "u128": set(),
-        "sd16": set(), "sd32": set(), "sd128": set(),
-        "mfr": set(), "ap": set(), "tx": set(),
-    }
-
-    flags = _unwrap(merged_props.get("AdvertisingFlags"))
-    if isinstance(flags, (bytes, bytearray)) and len(flags) >= 1:
-        # Mask reserved bits to match the pcap-side normalisation in
-        # build_adv_signature_priority.py:parse_packet().
-        components["fl"].add(f"{flags[0] & 0x1F:02x}")
-    elif isinstance(flags, list) and len(flags) >= 1:
-        try:
-            components["fl"].add(f"{int(flags[0]) & 0x1F:02x}")
-        except (TypeError, ValueError):
-            pass
-
-    uuids = _unwrap(merged_props.get("UUIDs")) or []
-    if isinstance(uuids, list):
-        for u in uuids:
-            kind, val = _classify_uuid(u)
-            if kind is not None:
-                components[kind].add(val)
-
-    sd = _unwrap(merged_props.get("ServiceData")) or {}
-    if isinstance(sd, dict):
-        for u in sd.keys():
-            kind, val = _classify_uuid(u)
-            if kind is not None:
-                # Map u16/u32/u128 -> sd16/sd32/sd128
-                components["sd" + kind[1:]].add(val)
-
-    md = _unwrap(merged_props.get("ManufacturerData")) or {}
-    if isinstance(md, dict):
-        for cid in md.keys():
-            try:
-                components["mfr"].add(f"{int(cid):04x}")
-            except (TypeError, ValueError):
-                continue
-
-    app = _unwrap(merged_props.get("Appearance"))
-    if app is not None:
-        try:
-            components["ap"].add(f"{int(app):04x}")
-        except (TypeError, ValueError):
-            pass
-
-    txp = _unwrap(merged_props.get("TxPower"))
-    if txp is not None:
-        try:
-            components["tx"].add(str(int(txp)))
-        except (TypeError, ValueError):
-            pass
-
-    parts = []
-    for k in sorted(components.keys()):
-        if not components[k]:
-            continue
-        parts.append(f"{k}={'+'.join(sorted(components[k]))}")
-    return "|".join(parts)
-
-
-def _update_sig_props_cache(bdaddr, props):
-    """Merge any signature-relevant entries from props into the cache.
-
-    Returns the merged dict (a copy you can safely pass to
-    _compute_adv_signature without further locking).
-    """
-    with _device_sig_props_lock:
-        cache = _device_sig_props.setdefault(bdaddr, {})
-        for k in _SIG_RELEVANT_PROPS:
-            if k in props:
-                cache[k] = props[k]
-        return dict(cache)
-
-
-def _classify(props):
-    """Return 'BTC' if Device1 props look like BR/EDR, else 'BLE'."""
-    return "BTC" if "Class" in props else "BLE"
-
-def _addr_type(props):
-    """Map BlueZ AddressType to the 'random'/'public' strings the rest of the launcher expects."""
-    v = props.get("AddressType")
-    if isinstance(v, Variant):
-        v = v.value
-    return v if v in ("random", "public") else "public"
-
-def _rssi(props):
-    v = props.get("RSSI")
-    if isinstance(v, Variant):
-        v = v.value
-    try:
-        return int(v) if v is not None else -80
-    except (TypeError, ValueError):
-        return -80
-
-def _address(props):
-    v = props.get("Address")
-    if isinstance(v, Variant):
-        v = v.value
-    return v.lower() if isinstance(v, str) else None
-
-def _device_name(props):
-    v = props.get("Name")
-    if isinstance(v, Variant):
-        v = v.value
-    return v if isinstance(v, str) else None
-
-def _manufacturer_keys(props):
-    v = props.get("ManufacturerData")
-    if isinstance(v, Variant):
-        v = v.value
-    if isinstance(v, dict):
-        return set(v.keys())
-    return set()
-
-def _move_to_deprioritized(bdaddr, kind, reason):
-    """Move bdaddr from the active dict to the deprioritized one.
-
-    Returns True if the move happened (i.e. the bdaddr was still active).
-    Used by both the legacy Apple-CID rule and the signature-CSV rule.
-    """
-    if kind == "BLE":
-        with ble_bdaddrs_lock:
-            if bdaddr in ble_bdaddrs:
-                (atype, rssi) = ble_bdaddrs[bdaddr]
-                with ble_deprioritized_bdaddrs_lock:
-                    ble_deprioritized_bdaddrs[bdaddr] = (atype, rssi, reason)
-                del ble_bdaddrs[bdaddr]
-                if(BLE_thread_enabled and print_verbose):
-                    print(f"Deprioritized BLE {atype} {bdaddr} due to {reason}")
-                return True
-    else:  # BTC
-        with btc_bdaddrs_lock:
-            if bdaddr in btc_bdaddrs:
-                (atype, rssi) = btc_bdaddrs[bdaddr]
-                with btc_deprioritized_bdaddrs_lock:
-                    btc_deprioritized_bdaddrs[bdaddr] = (atype, rssi, reason)
-                del btc_bdaddrs[bdaddr]
-                if(BTC_thread_enabled and print_verbose):
-                    print(f"Deprioritized BTC {atype} {bdaddr} due to {reason}")
-                return True
-    return False
-
-
-def _maybe_deprioritize(bdaddr, kind, mfr_keys):
-    """Mirror the legacy 0x004c (Apple) deprioritization behavior."""
-    if APPLE_COMPANY_ID not in mfr_keys:
-        return False
-    return _move_to_deprioritized(bdaddr, kind, f"ManufacturerData 0x{APPLE_COMPANY_ID:04x}")
-
-
-def _signature_subset_match(device_parsed, anchor_parsed):
-    """True if every (key, values) pair in anchor is present in device.
-
-    Anchor's values for a given key must all be in the device's values for
-    that key. Device may have *additional* keys and values; that's fine —
-    a shorter anchor subsuming a longer device sig is the whole point.
-    """
-    for k, vs in anchor_parsed.items():
-        dv = device_parsed.get(k)
-        if dv is None or not vs.issubset(dv):
-            return False
-    return True
-
-
-def _maybe_deprioritize_by_signature(bdaddr, kind, props):
-    """Deprioritize bdaddr if its current AD signature is a (non-strict)
-    superset of any deprio entry in the CSV.
-
-    `props` is the full Device1 prop dict (or just the changed subset).
-    We merge into the per-bdaddr cache before computing the signature so
-    that a PropertiesChanged delta still produces the full-state signature.
-    """
-    if not _deprioritized_adv_signatures:
-        return False
-    merged = _update_sig_props_cache(bdaddr, props)
-    sig = _compute_adv_signature(merged)
-    if not sig:
-        return False
-    device_parsed = _parse_signature_string(sig)
-    for anchor_sig, anchor_parsed in _deprioritized_adv_signatures:
-        if _signature_subset_match(device_parsed, anchor_parsed):
-            return _move_to_deprioritized(bdaddr, kind,
-                                          f"AdvSignature ⊇ {anchor_sig}")
-    return False
-
-
-def _maybe_deprioritize_by_name(bdaddr, kind, props):
-    """Deprioritize an active device whose BlueZ Name is already GATT-covered."""
-    if not _deprioritized_name_signatures:
-        return False
-    name = _device_name(props)
-    signature = _name_signature(name)
-    if not signature or signature not in _deprioritized_name_signatures:
-        return False
-    return _move_to_deprioritized(bdaddr, kind, f"Name {name!r}")
-
-def _device_added(path, props):
-    """Handle a newly-discovered device. props is the org.bluez.Device1 a{sv} dict."""
-    global device_connect_attempts, device_total_attempts
-    bdaddr = _address(props)
-    if bdaddr is None:
-        return
-    kind = _classify(props)
-    atype = _addr_type(props)
-    rssi = _rssi(props)
-    device_connect_attempts[bdaddr] = 0  # reset attempt counter on (re)appearance
-    device_total_attempts.setdefault(bdaddr, 0)  # cumulative; intentionally NOT reset on re-appearance
-    device_last_seen[bdaddr] = datetime.datetime.now()
-    # BlueZ can re-emit InterfacesAdded for the same device with different Device1
-    # property sets — e.g., a dual-mode device whose first advertisement was a BR/EDR
-    # inquiry response (Class present → BTC) and whose later LE advertisement omits
-    # Class (→ BLE). Keep the dicts mutually exclusive so the workers and log lines
-    # don't disagree about a device's kind.
-    if kind == "BLE":
-        with btc_bdaddrs_lock:
-            btc_bdaddrs.pop(bdaddr, None)
-        remains_value_deprioritized = False
-        with ble_gatt_value_deprioritized_bdaddrs_lock:
-            if bdaddr in ble_gatt_value_deprioritized_bdaddrs:
-                ble_gatt_value_deprioritized_bdaddrs[bdaddr] = (atype, rssi)
-                remains_value_deprioritized = True
-        if not remains_value_deprioritized:
-            with ble_bdaddrs_lock:
-                ble_bdaddrs[bdaddr] = (atype, rssi)
-            if(BLE_thread_enabled and print_verbose): print(f"[NEW] BLE {bdaddr} ({atype}, RSSI={rssi})")
-        elif BLE_thread_enabled and print_verbose:
+def _initialize_realtek():
+    global _realtek_hci_current_path, _realtek_cycle_disabled
+    _initial_hci, _initial_path = find_realtek_hci()
+    if _initial_path:
+        _realtek_hci_current_path = _initial_path
+        print(f"Realtek dongle resolved at startup: {_initial_path}")
+        _initial_sysfs = _realtek_sysfs_id()
+        _initial_hub, _initial_port = find_realtek_hub_and_port()
+        if _initial_hub:
+            print(f"Realtek hub {_initial_hub} port {_initial_port} supports PPPS — cycling will use uhubctl (Realtek sysfs id: {_initial_sysfs})")
+        else:
+            # No safe PPPS-capable candidate found by find_realtek_hub_and_port().
+            # Disable cycling upfront so the BTC worker doesn't waste time invoking
+            # uhubctl every probe just to fail.
+            _realtek_cycle_disabled = True
             print(
-                f"[NEW] BLE {bdaddr} ({atype}, RSSI={rssi}) remains "
-                "deprioritized for GATT value reads"
+                f"WARN: no safe PPPS-capable hub found for Realtek (sysfs {_initial_sysfs}). "
+                f"Either the immediate parent hub is ganged/unsupported, or every PPPS-capable "
+                f"ancestor would also cut power to other devices (Sniffle dongles, ethernet, etc.). "
+                f"LMP cycling DISABLED for this run — move the dongle to a PPPS-capable hub with "
+                f"no other devices on it (or directly into the Pi's built-in VL805 port) to enable cycling."
             )
     else:
-        with ble_bdaddrs_lock:
-            ble_bdaddrs.pop(bdaddr, None)
-        with btc_bdaddrs_lock:
-            btc_bdaddrs[bdaddr] = (atype, rssi)
-        if(BTC_thread_enabled and print_verbose): print(f"[NEW] BTC {bdaddr} ({atype}, RSSI={rssi})")
-    # If the seed/initial-snapshot already includes Apple ManufacturerData, deprioritize immediately.
-    _maybe_deprioritize(bdaddr, kind, _manufacturer_keys(props))
-    # Likewise, if the initial props already match a known-data signature.
-    _maybe_deprioritize_by_signature(bdaddr, kind, props)
-    # Name is an independent signal: either AD/EIR or a remote-name result can
-    # identify a family for which another address already yielded GATT values.
-    _maybe_deprioritize_by_name(bdaddr, kind, props)
+        print(f"WARN: Realtek dongle not yet visible at startup (no hci with BD addr {REALTEK_BDADDR_SENTINEL}); defaulting to /org/bluez/hci0")
 
-def _device_removed(path):
-    """Mirror the legacy [DEL] handling. We don't know the kind from the path alone, so try both dicts."""
-    # BlueZ device paths look like /org/bluez/hci0/dev_AA_BB_CC_DD_EE_FF
-    suffix = path.rsplit("/", 1)[-1]
-    if not suffix.startswith("dev_"):
+def _ble_address_type(bdaddr, reported=None):
+    """The address type this LE address is really using: the one most of its
+    reports carry (the first seen on a tie)."""
+    votes = ble_address_types.get(bdaddr)
+    return max(votes, key=votes.get) if votes else reported
+
+
+def _category_skip_reason(kind, bdaddr, atype):
+    if not novelty_mode:
+        return None
+    reasons = set(novelty_evidence.reasons(bdaddr, atype, kind))
+    if kind == "BLE":
+        # The same six octets reported under the other address type are the same
+        # device with a mislabelled report, so what was heard there counts too.
+        # (Two real devices sharing 48 bits do not happen; mislabelled reports do.)
+        for other in tuple(ble_address_types.get(bdaddr, ())):
+            if other != atype:
+                reasons |= novelty_evidence.reasons(bdaddr, other, kind)
+    return "novelty:" + ",".join(sorted(reasons)) if reasons else None
+
+
+def _candidate_skip_reason(kind, bdaddr, atype):
+    """Shared admission/selection gate; category off never disables history caps."""
+    if bdaddr.lower() in skip_these_addresses:
+        return "personal address"
+    if all_2thprints_done(kind, bdaddr):
+        return "already completed"
+    if device_connect_attempts.get(bdaddr, 0) >= max_connect_attempts:
+        return "retry limit"
+    if device_total_attempts.get(bdaddr, 0) >= max_total_attempts:
+        return "total retry limit"
+    return _category_skip_reason(kind, bdaddr, atype)
+
+
+def _refund_attempt_if_not_probed(kind, bdaddr, atype):
+    """Undo the attempt counted for a pass that launched nothing.
+
+    The workers count an attempt before they know whether a probe will start.
+    When the candidate was withdrawn in the meantime, or the last-moment
+    category check refused the launch, no connection was tried, so it must not
+    use up the device's retry budget.
+    """
+    queue, lock = (ble_bdaddrs, ble_bdaddrs_lock) if kind == "BLE" else (btc_bdaddrs, btc_bdaddrs_lock)
+    with lock:
+        still_queued = bdaddr in queue
+    if still_queued and not _category_skip_reason(kind, bdaddr, atype):
         return
-    bdaddr = suffix[4:].replace("_", ":").lower()
-    in_ble = False
-    in_btc = False
+    _refund_attempt(bdaddr)
+
+
+def _refund_attempt(bdaddr):
+    if device_connect_attempts.get(bdaddr, 0) > 0:
+        device_connect_attempts[bdaddr] -= 1
+    if device_total_attempts.get(bdaddr, 0) > 0:
+        device_total_attempts[bdaddr] -= 1
+
+
+def _all_ble_candidates_in_flight():
     with ble_bdaddrs_lock:
-        in_ble = bdaddr in ble_bdaddrs
-        if in_ble: del ble_bdaddrs[bdaddr]
-    with btc_bdaddrs_lock:
-        in_btc = bdaddr in btc_bdaddrs
-        if in_btc: del btc_bdaddrs[bdaddr]
-    # NOTE: intentionally do not purge the deprioritized dicts — see the legacy comment.
-    if in_ble and BLE_thread_enabled and print_verbose: print(f"[DEL] BLE {bdaddr}")
-    if in_btc and BTC_thread_enabled and print_verbose: print(f"[DEL] BTC {bdaddr}")
+        queued = set(ble_bdaddrs)
+    with bg_inflight_bdaddrs_lock:
+        return bool(queued) and queued <= bg_inflight_bdaddrs
 
-def _device_props_changed(path, changed):
-    """Handle RSSI / ManufacturerData updates on an existing Device1."""
-    global device_connect_attempts, device_total_attempts
-    suffix = path.rsplit("/", 1)[-1]
-    if not suffix.startswith("dev_"):
-        return
-    bdaddr = suffix[4:].replace("_", ":").lower()
-    # Any PropertiesChanged for a device path means we just heard from the device
-    # (BlueZ fires this for every advert seen with DuplicateData=true).
+
+def _handle_discovery_report(report):
+    """Only raw advertising, scan response or inquiry/EIR can admit candidates.
+
+    D-Bus Name/UUIDs may come from GATT, SDP or Remote Name Request. They are
+    deliberately never fed to this function, even when novelty mode is off.
+
+    An LE address is one candidate whatever address type a report gives it. The
+    evidence of both types decides whether it is skipped, and it is probed with
+    the type most of its reports carry: a stray "public" report for a random
+    address must neither bring a skipped device back as a second, evidence-free
+    candidate nor make Better_Getter connect with the wrong address type.
+    """
+    bdaddr, kind, atype = report.address, report.transport, report.address_type
+    with novelty_lock:
+        novelty_evidence.observe(bdaddr, atype, kind, report.frames)
+        candidate_type = atype
+        if kind == "BLE":
+            votes = ble_address_types.setdefault(bdaddr, {})
+            votes[atype] = votes.get(atype, 0) + 1
+            candidate_type = _ble_address_type(bdaddr)
+        reason = _candidate_skip_reason(kind, bdaddr, candidate_type)
     device_last_seen[bdaddr] = datetime.datetime.now()
-
-    # BLE->BTC promotion. BlueZ fires PropertiesChanged (not InterfacesAdded) when
-    # an existing Device1 gains its Class property — i.e., when a dual-mode device
-    # whose first advert was an LE-only adv (no Class) later sends a BR/EDR inquiry
-    # response. Without this promotion, such devices stay stuck in ble_bdaddrs (or
-    # ble_deprioritized_bdaddrs if they have Apple ManufacturerData) and the BTC
-    # worker never sees them. Done before the RSSI/ManufacturerData handlers below
-    # so the subsequent RSSI update lands in btc_bdaddrs.
-    if "Class" in changed:
-        promoted_state = None  # (atype, rssi) if promotion happens
-        with ble_bdaddrs_lock:
-            if bdaddr in ble_bdaddrs:
-                promoted_state = ble_bdaddrs.pop(bdaddr)
-        if promoted_state is None:
-            with ble_deprioritized_bdaddrs_lock:
-                if bdaddr in ble_deprioritized_bdaddrs:
-                    (atype, rssi, _vendor) = ble_deprioritized_bdaddrs.pop(bdaddr)
-                    promoted_state = (atype, rssi)
-        if promoted_state is not None:
-            with btc_bdaddrs_lock:
-                btc_bdaddrs[bdaddr] = promoted_state
-            device_connect_attempts[bdaddr] = 0
-            device_total_attempts.setdefault(bdaddr, 0)
-            if(BTC_thread_enabled): print(f"[PROMOTE BLE->BTC] {bdaddr} (atype={promoted_state[0]}, rssi={promoted_state[1]})")
-
-    # RSSI update
-    if "RSSI" in changed:
-        new_rssi = changed["RSSI"]
-        if isinstance(new_rssi, Variant):
-            new_rssi = new_rssi.value
-        try:
-            new_rssi = int(new_rssi)
-        except (TypeError, ValueError):
-            new_rssi = None
-        if new_rssi is not None:
-            with ble_bdaddrs_lock:
-                if bdaddr in ble_bdaddrs:
-                    (atype, old_rssi) = ble_bdaddrs[bdaddr]
-                    if old_rssi < new_rssi and device_connect_attempts.get(bdaddr, 0) > 1:
-                        print(f"Higher RSSI observed. Decrementing device_connect_attempts {bdaddr} to {device_connect_attempts[bdaddr]-1}")
-                        device_connect_attempts[bdaddr] -= 1
-                    ble_bdaddrs[bdaddr] = (atype, new_rssi)
-                    if(BLE_thread_enabled and print_rssi_updates): print(f"Updated BLE RSSI ({new_rssi}) for {bdaddr}")
+    device_connect_attempts.setdefault(bdaddr, 0)
+    device_total_attempts.setdefault(bdaddr, 0)
+    queue, lock = (ble_bdaddrs, ble_bdaddrs_lock) if kind == "BLE" else (btc_bdaddrs, btc_bdaddrs_lock)
+    with lock:
+        queued = queue.get(bdaddr)
+        if reason:
+            if queued is not None:
+                queue.pop(bdaddr, None)
+            if kind == "BLE":
+                with ble_gatt_value_deprioritized_bdaddrs_lock:
+                    if ble_gatt_value_deprioritized_bdaddrs.pop(bdaddr, None) is not None:
+                        gatt_force_read_bdaddrs.discard(bdaddr)
+            if queued is not None and print_skipped:
+                print(f"Skipped {kind} {bdaddr}: {reason}")
+            return
+        if queued is not None and queued[0] != candidate_type:
+            # Queued while the other type was ahead; probe with the right one.
+            queue[bdaddr] = queued = (candidate_type, queued[1])
+        if kind == "BLE":
+            with ble_gatt_value_deprioritized_bdaddrs_lock:
+                deferred = ble_gatt_value_deprioritized_bdaddrs.get(bdaddr)
+                if deferred is not None and deferred[0] != candidate_type:
+                    ble_gatt_value_deprioritized_bdaddrs[bdaddr] = (candidate_type, deferred[1])
+        if not report.connectable or atype != candidate_type:
+            return
+        state = (candidate_type, report.rssi)
+        if kind == "BLE":
             with ble_gatt_value_deprioritized_bdaddrs_lock:
                 if bdaddr in ble_gatt_value_deprioritized_bdaddrs:
-                    (atype, _old_rssi) = ble_gatt_value_deprioritized_bdaddrs[bdaddr]
-                    ble_gatt_value_deprioritized_bdaddrs[bdaddr] = (atype, new_rssi)
-            with btc_bdaddrs_lock:
-                if bdaddr in btc_bdaddrs:
-                    (atype, old_rssi) = btc_bdaddrs[bdaddr]
-                    if old_rssi < new_rssi and device_connect_attempts.get(bdaddr, 0) > 1:
-                        print(f"Higher RSSI observed. Decrementing device_connect_attempts {bdaddr} to {device_connect_attempts[bdaddr]-1}")
-                        device_connect_attempts[bdaddr] -= 1
-                    btc_bdaddrs[bdaddr] = (atype, new_rssi)
-                    if(BTC_thread_enabled and print_rssi_updates): print(f"Updated BTC RSSI ({new_rssi}) for {bdaddr}")
-
-    # ManufacturerData update — may arrive after the initial InterfacesAdded.
-    if "ManufacturerData" in changed:
-        # Determine which dict still holds this bdaddr (it may be in either).
-        kind = None
-        with ble_bdaddrs_lock:
-            if bdaddr in ble_bdaddrs: kind = "BLE"
-        if kind is None:
-            with btc_bdaddrs_lock:
-                if bdaddr in btc_bdaddrs: kind = "BTC"
-        if kind is not None:
-            _maybe_deprioritize(bdaddr, kind, _manufacturer_keys(changed))
-
-    # Re-evaluate the AD signature whenever any signature-bearing property
-    # changes — the same bdaddr can get a more-specific signature once
-    # later advertisements expose UUIDs / ServiceData / etc., and a more
-    # specific signature may newly match a deprioritized entry.
-    if any(k in changed for k in _SIG_RELEVANT_PROPS):
-        kind = None
-        with ble_bdaddrs_lock:
-            if bdaddr in ble_bdaddrs: kind = "BLE"
-        if kind is None:
-            with btc_bdaddrs_lock:
-                if bdaddr in btc_bdaddrs: kind = "BTC"
-        if kind is not None:
-            _maybe_deprioritize_by_signature(bdaddr, kind, changed)
-
-    # Name commonly arrives after InterfacesAdded (for example from an active
-    # scan response or BR/EDR remote-name request), so re-evaluate on updates.
-    if "Name" in changed:
-        kind = None
-        with ble_bdaddrs_lock:
-            if bdaddr in ble_bdaddrs: kind = "BLE"
-        if kind is None:
-            with btc_bdaddrs_lock:
-                if bdaddr in btc_bdaddrs: kind = "BTC"
-        if kind is not None:
-            _maybe_deprioritize_by_name(bdaddr, kind, changed)
+                    ble_gatt_value_deprioritized_bdaddrs[bdaddr] = state
+                    return
+        is_new = queued is None
+        queue[bdaddr] = state
+    if is_new and print_verbose:
+        print(f"[NEW] {kind} {bdaddr} ({candidate_type}, RSSI={report.rssi})")
 
 
-# Match rules registered with the bus daemon so it forwards the signals we care about.
-_DBUS_MATCH_RULES = [
-    "type='signal',sender='org.bluez',interface='org.freedesktop.DBus.ObjectManager',member='InterfacesAdded'",
-    "type='signal',sender='org.bluez',interface='org.freedesktop.DBus.ObjectManager',member='InterfacesRemoved'",
-    "type='signal',sender='org.bluez',interface='org.freedesktop.DBus.Properties',member='PropertiesChanged',path_namespace='/org/bluez'",
-]
+async def _monitor_discovery(monitor):
+    loop = asyncio.get_running_loop()
+    while True:
+        packet = await loop.sock_recv(monitor, 65541)
+        if not packet:
+            raise RuntimeError("HCI discovery monitor closed; refusing cached-property fallback")
+        # One unexpected packet must not end discovery (and with it the whole
+        # launcher) in the middle of a capture run. The old D-Bus router logged
+        # and carried on the same way.
+        try:
+            path = get_realtek_dbus_path()
+            index = int(path.rsplit("hci", 1)[1])
+            for report in parse_monitor(packet, index):
+                _handle_discovery_report(report)
+        except Exception as e:
+            print(f"_monitor_discovery: caught {type(e).__name__}: {e} (packet {packet[:64].hex()})")
+            traceback.print_exc()
 
-def _bus_message_router(msg):
-    """Single dispatcher for all bus signals we subscribed to via AddMatch."""
-    if msg.message_type != MessageType.SIGNAL:
-        return None
-    try:
-        if msg.interface == OM_IFACE and msg.member == "InterfacesAdded":
-            path, ifaces = msg.body
-            if DEVICE_IFACE in ifaces:
-                _device_added(path, ifaces[DEVICE_IFACE])
-        elif msg.interface == OM_IFACE and msg.member == "InterfacesRemoved":
-            path, ifaces = msg.body
-            if DEVICE_IFACE in ifaces:
-                _device_removed(path)
-        elif msg.interface == PROPS_IFACE and msg.member == "PropertiesChanged":
-            iface, changed, _invalidated = msg.body
-            # Match any Device1 path under any /org/bluez/hciN/dev_ — covers Realtek
-            # renumbering across cycles without needing to update a constant.
-            if iface == DEVICE_IFACE and msg.path and "/dev_" in msg.path:
-                _device_props_changed(msg.path, changed)
-    except Exception as e:
-        print(f"_bus_message_router: caught {type(e).__name__}: {e}")
-        traceback.print_exc()
-    return None
 
 async def _resolve_adapter(bus, adapter_path):
     """Introspect the given /org/bluez/hciN path and return the Adapter1 interface."""
@@ -1656,13 +1158,13 @@ async def _restart_discovery_after_cycle(bus):
     SetDiscoveryFilter + StartDiscovery on the (possibly renumbered) Realtek
     D-Bus path so adv-report flow resumes.
 
-    Called as a side-task from dbus_discovery_loop. Uses run_in_executor to wait
-    on a threading.Event without blocking the asyncio loop.
+    Called as a cancellable side-task from dbus_discovery_loop.
     """
-    loop = asyncio.get_event_loop()
     while True:
-        # Block in a thread until the BTC worker signals a cycle finished.
-        await loop.run_in_executor(None, _realtek_cycle_pending.wait)
+        # A bounded async poll is cancellable; cancelling an executor wait on
+        # Event.wait() otherwise hangs asyncio shutdown until the next USB cycle.
+        while not _realtek_cycle_pending.is_set():
+            await asyncio.sleep(0.25)
         _realtek_cycle_pending.clear()
         # bluetoothd registers /org/bluez/hciN's Adapter1 interface a few
         # seconds AFTER find_realtek_hci() succeeds at the kernel level. A
@@ -1724,45 +1226,32 @@ async def dbus_discovery_loop():
     adapter_path = get_realtek_dbus_path()
     adapter = await _resolve_adapter(bus, adapter_path)
 
-    # Subscribe to bus signals before triggering discovery so we don't miss the first batch.
-    bus.add_message_handler(_bus_message_router)
-    for rule in _DBUS_MATCH_RULES:
-        await bus.call(Message(
-            destination="org.freedesktop.DBus",
-            path="/org/freedesktop/DBus",
-            interface="org.freedesktop.DBus",
-            member="AddMatch",
-            signature="s",
-            body=[rule],
-        ))
-
-    # Seed from BlueZ's already-known devices (covers anything cached from a previous scan).
-    om_intro = await bus.introspect("org.bluez", "/")
-    om_obj = bus.get_proxy_object("org.bluez", "/", om_intro)
-    om = om_obj.get_interface(OM_IFACE)
-    managed = await om.call_get_managed_objects()
-    for path, ifaces in managed.items():
-        if DEVICE_IFACE in ifaces:
-            _device_added(path, ifaces[DEVICE_IFACE])
-
-    # Configure and start scanning. Transport=auto picks up both LE and BR/EDR.
-    # DuplicateData=true so we keep getting RSSI PropertiesChanged events.
-    await adapter.call_set_discovery_filter({
-        "Transport": Variant("s", "auto"),
-        "DuplicateData": Variant("b", True),
-    })
-    await adapter.call_start_discovery()
-    print(f"dbus_discovery_loop: StartDiscovery on {adapter_path} succeeded at {datetime.datetime.now()}")
-
-    # Side-task: when the BTC worker cycles the Realtek dongle (USB rebind +
-    # firmware reload + possible hci renumber), reissue StartDiscovery on the
-    # new adapter path so adv-report flow resumes.
-    asyncio.create_task(_restart_discovery_after_cycle(bus))
-
+    # Open the passive monitor before StartDiscovery so the first reports count.
+    # Failure is fatal: cached Device1 names/UUIDs cannot satisfy the on-air policy.
     try:
-        # Block forever; signal handlers do all the actual work.
-        await asyncio.Future()
+        monitor = open_monitor()
+    except BaseException:
+        bus.disconnect()
+        raise
+    monitor_task = asyncio.create_task(_monitor_discovery(monitor))
+
+    restart_task = None
+    try:
+        # BlueZ retains radio ownership. The monitor only observes HCI traffic.
+        await adapter.call_set_discovery_filter({
+            "Transport": Variant("s", "auto"),
+            "DuplicateData": Variant("b", True),
+        })
+        await adapter.call_start_discovery()
+        print(f"dbus_discovery_loop: StartDiscovery on {adapter_path} succeeded at {datetime.datetime.now()}")
+        restart_task = asyncio.create_task(_restart_discovery_after_cycle(bus))
+        await monitor_task
     finally:
+        monitor_task.cancel()
+        if restart_task:
+            restart_task.cancel()
+        await asyncio.gather(*(t for t in (monitor_task, restart_task) if t), return_exceptions=True)
+        monitor.close()
         try:
             adapter = await _resolve_adapter(bus, get_realtek_dbus_path())
             await adapter.call_stop_discovery()
@@ -1775,23 +1264,15 @@ async def dbus_discovery_loop():
 # BLE-handling thread
 ##################################################
 
-def reprioritize_ble_bdaddr(bdaddr):
-    with ble_bdaddrs_lock:
-        type = ""
-        rssi = -80
-        with ble_deprioritized_bdaddrs_lock:
-            if(bdaddr in ble_deprioritized_bdaddrs):
-                (type, rssi, vendor) = ble_deprioritized_bdaddrs[bdaddr]
-                del ble_deprioritized_bdaddrs[bdaddr]
-                ble_bdaddrs[bdaddr] = (type, rssi)
-                print(f"Reprioritized {type} {bdaddr} ({rssi})")
-
 def reprioritize_ble_gatt_value_bdaddr(bdaddr):
     """Promote one covered-map device for a forced value-reading reconnect."""
     with ble_bdaddrs_lock:
         with ble_gatt_value_deprioritized_bdaddrs_lock:
             state = ble_gatt_value_deprioritized_bdaddrs.pop(bdaddr, None)
             if state is None:
+                return False
+            if _candidate_skip_reason("BLE", bdaddr, state[0]):
+                gatt_force_read_bdaddrs.discard(bdaddr)
                 return False
             ble_bdaddrs[bdaddr] = state
             gatt_force_read_bdaddrs.add(bdaddr)
@@ -1819,23 +1300,6 @@ def _promote_ble_fallbacks_for_capacity():
         seconds=DEPRIORITIZED_RECENCY_S
     )
     for _ in range(slots_to_fill):
-        # Address/name/advertisement deprioritization is an earlier phase:
-        # these devices still need their structural GATT map, so they rank
-        # ahead of devices whose maps are already known and only need values.
-        with ble_deprioritized_bdaddrs_lock:
-            preconnect_candidates = sorted(
-                (
-                    (bdaddr, state[1])
-                    for bdaddr, state in ble_deprioritized_bdaddrs.items()
-                    if device_last_seen.get(bdaddr, datetime.datetime.min) >= cutoff
-                ),
-                key=lambda item: item[1],
-                reverse=True,
-            )
-        if preconnect_candidates:
-            reprioritize_ble_bdaddr(preconnect_candidates[0][0])
-            continue
-
         with ble_gatt_value_deprioritized_bdaddrs_lock:
             value_candidates = sorted(
                 (
@@ -1853,30 +1317,18 @@ def _promote_ble_fallbacks_for_capacity():
         break
 
 
-def reprioritize_btc_bdaddr(bdaddr):
-    with ble_bdaddrs_lock:
-        type = ""
-        rssi = -80
-        with btc_deprioritized_bdaddrs_lock:
-            if(bdaddr in btc_deprioritized_bdaddrs):
-                (type, rssi, vendor) = btc_deprioritized_bdaddrs[bdaddr]
-                del btc_deprioritized_bdaddrs[bdaddr]
-                btc_bdaddrs[bdaddr] = (type, rssi)
-                print(f"Reprioritized {type} {bdaddr} ({rssi})")
-
 # Function for the first thread
 def ble_thread_function():
     global device_connect_attempts, device_total_attempts
     ble_external_tool_threads = []
     while True:
         # If fewer ready normal addresses exist than currently-free BG dongles,
-        # fill the spare capacity from pre-connect deprioritized work first,
-        # then from covered-map value reads. With N dongles and N-1 ready normal
+        # fill the spare capacity from covered-map value reads. With N dongles and N-1 ready normal
         # devices this intentionally starts one deferred device in parallel.
         _promote_ble_fallbacks_for_capacity()
         # Get the BDADDRs sorted in descending order of their RSSI, so we process higher RSSI first.
         # Snapshot under lock to avoid 'dictionary changed size during iteration' against the
-        # D-Bus discovery callbacks which run on the asyncio main thread.
+        # HCI discovery callbacks which run on the asyncio main thread.
         with ble_bdaddrs_lock:
             sorted_ble_bdaddrs = sorted(ble_bdaddrs.keys(), key=lambda x: ble_bdaddrs[x][1], reverse=True)
 
@@ -1885,18 +1337,21 @@ def ble_thread_function():
             print(f"sorted_ble_bdaddrs = {sorted_ble_bdaddrs}")
 
         skip_count = int(0)
+        launched_this_pass = False
         for bdaddr in sorted_ble_bdaddrs:
             # Skip devices that may be traveling with us, to not waste time on them
             # Only try collecting data from a given bd_addr max_connect_attempts times before skipping forever thereafter
             # This is so that we don't waste time trying to get info from something that will never give it to us,
             # when we could be spending that time trying new devices
+            with ble_bdaddrs_lock:
+                state = ble_bdaddrs.get(bdaddr)
+            if state is None:
+                continue
             total_for_addr = device_total_attempts.get(bdaddr, 0)
-            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts) or (total_for_addr >= max_total_attempts)):
+            reason = _candidate_skip_reason("BLE", bdaddr, state[0])
+            if reason:
                 if(print_skipped):
-                    if total_for_addr >= max_total_attempts:
-                        print(f"BLE: Total attempts cap reached for {bdaddr} ({total_for_addr}/{max_total_attempts}), skipping")
-                    else:
-                        print(f"BLE: Max connect attempts exceeded for {bdaddr}, skipping")
+                    print(f"BLE: Skipped {bdaddr}: {reason}")
                 skip_count += 1
                 if(print_skipped):
                     print(f"BLE: skip_count = {skip_count} of {len(sorted_ble_bdaddrs)}")
@@ -1908,9 +1363,15 @@ def ble_thread_function():
                     _promote_ble_fallbacks_for_capacity()
 
                 continue
-            else:
-                device_connect_attempts[bdaddr] += 1
-                device_total_attempts[bdaddr] = total_for_addr + 1
+            # A Better_Getter run still in flight for this address is the same
+            # attempt, not a new one. Counting it again let a single 20-second
+            # run use up the whole retry budget whenever a spare dongle let this
+            # loop come back round, and nothing resets that budget any more.
+            with bg_inflight_bdaddrs_lock:
+                if bdaddr in bg_inflight_bdaddrs:
+                    continue
+            device_connect_attempts[bdaddr] += 1
+            device_total_attempts[bdaddr] = total_for_addr + 1
 
             if(print_verbose): print(f"BLE Address: {bdaddr}")
 
@@ -1949,6 +1410,7 @@ def ble_thread_function():
                     if already_running:
                         if(print_verbose): tprint(f"BLE: BG worker already in flight for {bdaddr}; releasing {bg_dongle_path}")
                         bg_dongle_queue.put(bg_dongle_path)
+                        _refund_attempt(bdaddr)
                         continue
 
                     # Pre-initialize so that if open(sniffle_append_stdout) below
@@ -1970,8 +1432,13 @@ def ble_thread_function():
                                 gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-P", "-2"]
                             else:
                                 gatt_cmd = ["python3", "-u", BG_exec_path, "-q", serial_port, pcap_output, f"-b={bdaddr}", "-2"]
-                            # Skip-apple: BG will early-exit (rc 0x0A) on confirmed Apple devices.
-                            if(better_getter_skip_apple):
+                            # Skip-apple is one of the skipping mechanisms novelty mode
+                            # switches on: with -A, BG early-exits (rc 0x0A) as soon as it
+                            # confirms an Apple device from the advertisement Company ID,
+                            # LL_VERSION_IND or the GATT Manufacturer Name. It backs up the
+                            # advertisement rules for an Apple device they did not catch.
+                            # Off means no skipping at all, so no -A either.
+                            if(novelty_mode):
                                 gatt_cmd.append("-A")
                             with ble_gatt_value_deprioritized_bdaddrs_lock:
                                 force_value_reads = bdaddr in gatt_force_read_bdaddrs
@@ -1983,11 +1450,9 @@ def ble_thread_function():
                                     f"{bdaddr} {datetime.datetime.now()}",
                                 )
                             try:
-                                if(sniffle_stdout_logging):
-                                    sniffle_append_stdout = open(f"{BG_output_pcap_path}/Sniffle_stdout.log", "a")
-                                else:
-                                    sniffle_append_stdout = open(f"/dev/null", "a")
-                                gatt_process = launch_application(gatt_cmd, default_cwd, stdout=sniffle_append_stdout)
+                                stdout_path = f"{BG_output_pcap_path}/Sniffle_stdout.log" if sniffle_stdout_logging else "/dev/null"
+                                with open(stdout_path, "a") as sniffle_append_stdout:
+                                    gatt_process = launch_application(gatt_cmd, default_cwd, stdout=sniffle_append_stdout, target=("BLE", bdaddr, type))
                             except BlockingIOError as e:
                                 print(f"Caught BlockingIOError while launching GATT application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
                                 # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -2008,6 +1473,7 @@ def ble_thread_function():
                                 try:
                                     gatt_thread.start()
                                     launched_thread = gatt_thread
+                                    launched_this_pass = True
                                     ble_external_tool_threads.append(gatt_thread)
                                 except Exception as e:
                                     print(f"Caught an exception while starting GATT thread: {e}")
@@ -2021,6 +1487,7 @@ def ble_thread_function():
                         with bg_inflight_bdaddrs_lock:
                             bg_inflight_bdaddrs.discard(bdaddr)
                         bg_dongle_queue.put(bg_dongle_path)
+                        _refund_attempt_if_not_probed("BLE", bdaddr, state[0])
                         if(print_verbose): tprint(f"BLE: No GATT thread started for {bdaddr}; returned BG dongle {bg_dongle_path} to queue")
 
             # Reap any finished threads to bound memory growth, but do NOT block on running ones —
@@ -2030,6 +1497,13 @@ def ble_thread_function():
             ble_external_tool_threads = [t for t in ble_external_tool_threads if not t.is_terminated]
 
         print(f"Finished one complete loop through sorted_ble_bdaddrs {datetime.datetime.now()}")
+
+        # Every queued address is still being probed and this pass started nothing:
+        # wait quietly for a run to finish or a new candidate to arrive, instead of
+        # spinning through the loop (and the log) once per iteration.
+        while(not launched_this_pass and _all_ble_candidates_in_flight()):
+            _promote_ble_fallbacks_for_capacity()
+            time.sleep(1)
 
         # Sleep-poll until the dictionary has entries to process before proceeding again.
         # The original 'while ... pass' busy-wait was tolerable when the main thread blocked
@@ -2052,14 +1526,13 @@ def btc_thread_function():
     while True:
         # Get the BDADDRs sorted in descending order of their RSSI, so we process higher RSSI first.
         # Snapshot under lock to avoid 'dictionary changed size during iteration' against the
-        # D-Bus discovery callbacks which run on the asyncio main thread.
+        # HCI discovery callbacks which run on the asyncio main thread.
         with btc_bdaddrs_lock:
             sorted_btc_bdaddrs = sorted(btc_bdaddrs.keys(), key=lambda x: btc_bdaddrs[x][1], reverse=True)
 
         if(print_verbose):
             print(f"Begin loop through sorted_btc_bdaddrs {datetime.datetime.now()}")
             print(f"sorted_btc_bdaddrs = {sorted_btc_bdaddrs}")
-            print(f"btc_deprioritized_bdaddrs = {btc_deprioritized_bdaddrs}")
 
         skip_count = 0
         for bdaddr in sorted_btc_bdaddrs:
@@ -2067,25 +1540,20 @@ def btc_thread_function():
             # Only try collecting data from a given bd_addr max_connect_attempts times before skipping forever thereafter
             # This is so that we don't waste time trying to get info from something that will never give it to us,
             # when we could be spending that time trying new devices
+            with btc_bdaddrs_lock:
+                state = btc_bdaddrs.get(bdaddr)
+            if state is None:
+                continue
             total_for_addr = device_total_attempts.get(bdaddr, 0)
-            if((str(bdaddr).lower() in skip_these_addresses) or (device_connect_attempts[bdaddr] >= max_connect_attempts) or (total_for_addr >= max_total_attempts)):
+            reason = _candidate_skip_reason("BTC", bdaddr, state[0])
+            if reason:
                 if(print_skipped):
-                    if total_for_addr >= max_total_attempts:
-                        print(f"BTC: Total attempts cap reached for {bdaddr} ({total_for_addr}/{max_total_attempts}), skipping")
-                    else:
-                        print(f"BTC: Max connect attempts exceeded for {bdaddr}, skipping")
+                    print(f"BTC: Skipped {bdaddr}: {reason}")
                 skip_count += 1
                 if(print_skipped):
                     print(f"BTC: skip_count = {skip_count} of {len(sorted_btc_bdaddrs)}")
                 # Delete it otherwise it will just keep coming up over and over again in the while True loop
                 locked_delete_from_dict(btc_bdaddrs, btc_bdaddrs_lock, bdaddr)
-
-                if(skip_count == len(sorted_btc_bdaddrs) and len(btc_deprioritized_bdaddrs) > 0):
-                    print("BTC: Everything's being skipped. We could go ahead and do some deprioritized bdaddrs now...")
-                    print(btc_deprioritized_bdaddrs)
-                    bdaddr = list(btc_deprioritized_bdaddrs.keys())[0] # Grab a single bdaddr
-                    reprioritize_btc_bdaddr(bdaddr)
-                    print(btc_deprioritized_bdaddrs)
 
                 continue
             else:
@@ -2098,6 +1566,7 @@ def btc_thread_function():
             # race the same ACL link setup — observed 482 "Failed to create
             # connection: I/O error" + 445 SDP EBUSY events in the NYC capture.
             lmp_thread_to_join = None
+            launched_btc_probe = False
 
             if(lmp2thprint_enabled):
                 skip_sub_process = False
@@ -2129,7 +1598,7 @@ def btc_thread_function():
                     btc_2thprint_cmd = [darkfirmware_lmp_path, f"--target={bdaddr}"]
                     btc_2thprint_process = None
                     try:
-                        btc_2thprint_process = launch_application(btc_2thprint_cmd, default_cwd)
+                        btc_2thprint_process = launch_application(btc_2thprint_cmd, default_cwd, target=("BTC", bdaddr, "public"))
                     except BlockingIOError as e:
                         print(f"Caught BlockingIOError while launching LMP2thprint application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
                         # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -2144,6 +1613,7 @@ def btc_thread_function():
                             btc_2thprint_thread.start()
                             btc_external_tool_threads.append(btc_2thprint_thread)
                             lmp_thread_to_join = btc_2thprint_thread
+                            launched_btc_probe = True
                         except Exception as e:
                             print(f"Caught an exception while starting LMP2thprint thread: {e}")
                             # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -2183,7 +1653,7 @@ def btc_thread_function():
                                         f"--bdaddr={bdaddr}", "--quiet-print",
                                         "--no-interactive-pairing"]
                     try:
-                        btc_sdp_gatt_process = launch_application(btc_sdp_gatt_cmd, default_cwd)
+                        btc_sdp_gatt_process = launch_application(btc_sdp_gatt_cmd, default_cwd, target=("BTC", bdaddr, "public"))
                     except BlockingIOError as e:
                         print(f"Caught BlockingIOError while launching btc_sdp_gatt: {e}")
                         force_reboot()
@@ -2197,6 +1667,7 @@ def btc_thread_function():
                         try:
                             btc_sdp_gatt_thread.start()
                             btc_external_tool_threads.append(btc_sdp_gatt_thread)
+                            launched_btc_probe = True
                         except Exception as e:
                             print(f"Caught an exception while starting btc_sdp_gatt thread: {e}")
                             force_reboot()
@@ -2224,7 +1695,7 @@ def btc_thread_function():
                     output_file = open(f"{sdptool_log_path}/{bdaddr}_sdp.xml", "a") # redirect stdout to an output XML file
                     sdpprint_cmd = [sdptool_exec_path, "browse", "--xml", bdaddr]
                     try:
-                        sdpprint_process = launch_application(sdpprint_cmd, default_cwd, stdout=output_file) # There should be no special CWD requirements
+                        sdpprint_process = launch_application(sdpprint_cmd, default_cwd, stdout=output_file, target=("BTC", bdaddr, "public")) # There should be no special CWD requirements
                     except BlockingIOError as e:
                         print(f"Caught BlockingIOError while launching application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
                         # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
@@ -2239,10 +1710,14 @@ def btc_thread_function():
                         try:
                             sdpprint_thread.start()
                             btc_external_tool_threads.append(sdpprint_thread)
+                            launched_btc_probe = True
                         except Exception as e:
                             print(f"Caught an exception while starting SDPprint thread: {e}")
                             # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                             force_reboot()
+
+            if not launched_btc_probe:
+                _refund_attempt_if_not_probed("BTC", bdaddr, state[0])
 
             # Wait for all threads to finish, before moving to the next bd_addr
             for thread in btc_external_tool_threads:
@@ -2762,6 +2237,14 @@ def main():
         help="Run only the BlueZ D-Bus discovery loop; do not spawn the BLE/BTC/Sniffle worker threads. Useful for verifying scanning in isolation.",
     )
     args = parser.parse_args()
+    _initialize_realtek()
+    if not args.discovery_only:
+        threading.Thread(target=_init_serial_dongles, daemon=True).start()
+    else:
+        sniffle_init_done.set()
+    print(f"novelty_mode={novelty_mode}: advertisement-only BLE/BTC category skips are "
+          f"{'ON' if novelty_mode else 'OFF (success and retry limits still apply)'}; "
+          f"{novelty_evidence.rules.describe()}")
 
     if args.discovery_only:
         print("--discovery-only set: BLE, BTC, and Sniffle worker threads will NOT be started.")
@@ -2781,7 +2264,7 @@ def main():
     except Exception as e:
         print("Exception occurred in dbus_discovery_loop:", str(e))
         traceback.print_exc()
-        quit()
+        raise SystemExit(1) from e
 
 if __name__ == "__main__":
     main()

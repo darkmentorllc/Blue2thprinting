@@ -1,0 +1,10 @@
+{
+  "commit": "6ec633354695f471de4101454bb053bdcfc39bb0",
+  "sha256": {
+    "tools/skip-filters/reviewed_names.json": "0e856f0bab97a890b3d3e43980ef855df5e4decc90817793bee969361933a848",
+    "app/src/main/java/com/darkmentor/domain/interactor/VendorRegistry.kt": "57fc957f1be35e327bbb4056b49d82ab7d0253fce17b1bb3f6075f6d01ef23d5",
+    "app/src/main/java/com/darkmentor/domain/interactor/VendorIdentifier.kt": "4693076c113fc806d19252de1496df59694a8958bf67ea36b437e8277e9b599f",
+    "app/src/main/java/com/darkmentor/domain/interactor/AdvertisementCategorySkips.kt": "87590ba1cb7b485b2d0382d65d00224dc1748e0c1154e06dc0465a569f8b5400",
+    "app/src/main/java/com/darkmentor/domain/interactor/AdvertisementAudioSignatures.kt": "d3f2f43ba9cacf6b736b73aee36fe337d25d49cda0a9b1144beb36cc8e6918c2"
+  }
+}

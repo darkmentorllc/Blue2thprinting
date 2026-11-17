@@ -1,0 +1,526 @@
+{
+  "research_date": "2026-11-16",
+  "source": "docs/skip-android-research-20261116.md; docs/skip-vehicles-research-20261116.md; docs/skip-headphones-speakers-research-20261116.md",
+  "notes": [
+    "Only advertising/scan-response names qualify.",
+    "Chinese vehicle brands and generic vehicle Appearance are deliberately excluded per user direction.",
+    "Finite reviewed regexes; legacy SQL backslash runs normalized; no description keyword matching at runtime."
+  ],
+  "categories": {
+    "ANDROID": [
+      {
+        "pattern": "^Galaxy S9\\+$",
+        "source": "Samsung Galaxy S9+ Phone"
+      },
+      {
+        "pattern": "^OPPO Reno7 Z 5G$",
+        "source": "OPPO Reno7 Z 5G cell phone (https://www.oppo.com/en/smartphones/series-reno/reno7-z-5g/specs/)"
+      },
+      {
+        "pattern": "^Galaxy A10e$",
+        "source": "Samsung Galaxy A10e Phone"
+      },
+      {
+        "pattern": "^Galaxy A11$",
+        "source": "Samsung Galaxy A11 Phone"
+      },
+      {
+        "pattern": "^Galaxy A12$",
+        "source": "Samsung Galaxy A12 Phone"
+      },
+      {
+        "pattern": "^Galaxy A21$",
+        "source": "Samsung Galaxy A21 Phone"
+      },
+      {
+        "pattern": "^Galaxy A30$",
+        "source": "Samsung Galaxy A30 Phone"
+      },
+      {
+        "pattern": "^Galaxy A32$",
+        "source": "Samsung Galaxy A32 Phone"
+      },
+      {
+        "pattern": "^Galaxy A40$",
+        "source": "Samsung Galaxy A40 Phone"
+      },
+      {
+        "pattern": "^Galaxy J2$",
+        "source": "Samsung Galaxy J2 Phone"
+      },
+      {
+        "pattern": "^Galaxy J5$",
+        "source": "Samsung Galaxy J5 Phone"
+      },
+      {
+        "pattern": "^Galaxy J6$",
+        "source": "Samsung Galaxy J6 Phone"
+      },
+      {
+        "pattern": "^Galaxy J7$",
+        "source": "Samsung Galaxy J7 Phone"
+      },
+      {
+        "pattern": "^Galaxy Note Fan Edition$",
+        "source": "Samsung Galaxy Note Fan Edition Phone"
+      },
+      {
+        "pattern": "^Galaxy Note10 5G$",
+        "source": "Samsung Galaxy Note10 5G Phone"
+      },
+      {
+        "pattern": "^Galaxy Note8$",
+        "source": "Samsung Galaxy Note8 Phone"
+      },
+      {
+        "pattern": "^Galaxy Quantum3$",
+        "source": "Samsung Galaxy Quantum3 Phone"
+      },
+      {
+        "pattern": "^Galaxy S10 5G$",
+        "source": "Samsung Galaxy S10 5G Phone"
+      },
+      {
+        "pattern": "^Galaxy S10$",
+        "source": "Samsung Galaxy S10 Phone"
+      },
+      {
+        "pattern": "^Galaxy S10e$",
+        "source": "Samsung Galaxy S10e Phone"
+      },
+      {
+        "pattern": "^Galaxy S21 5G$",
+        "source": "Samsung Galaxy S21 5G Phone"
+      },
+      {
+        "pattern": "^Galaxy S21 FE 5G$",
+        "source": "Samsung Galaxy S21 FE 5G Phone"
+      },
+      {
+        "pattern": "^Galaxy S22 Ultra$",
+        "source": "Samsung Galaxy S22 Ultra Phone"
+      },
+      {
+        "pattern": "^Galaxy S6$",
+        "source": "Samsung Galaxy S6 Phone"
+      },
+      {
+        "pattern": "^Galaxy S8$",
+        "source": "Samsung Galaxy S8 Phone"
+      },
+      {
+        "pattern": "^Galaxy S9$",
+        "source": "Samsung Galaxy S9 Phone"
+      },
+      {
+        "pattern": "^Android.*$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Samsung )?Galaxy (?:[AJMFCE][0-9]{1,2}[a-z]?|Note ?(?:[2-9]|10|20)(?:[+]| Ultra| Lite| FE)?|Z ?(?:Flip|Fold)[2-8]?|XCover[0-9A-Za-z ]*|Quantum[1-4]?|Folder ?2?)(?: 5G| LTE| Pro| Prime| Core| Plus|[+])?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:OnePlus (?:[3-9]|1[0-5])(?:T|R|RT)?(?: Pro)?(?: 5G)?|OnePlus Nord(?: ?[2-5]| CE ?[2-5]?(?: Lite)?| N(?:10|20|30|100|200|300))?(?: 5G)?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Motorola )?(?:moto (?:e[0-9]{1,2}|z[1-4]|x[1-4])(?: play| power| plus)?|motorola (?:edge|razr)(?: [0-9A-Za-z+ -]+)?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:HUAWEI (?:Mate [0-9]{1,2}|P[0-9]{1,2}|Y[0-9]|nova [0-9]{1,2})(?:[a-z]| Pro| Plus| lite| Ultra| Prime| [0-9]{4}| 5G)*|HONOR (?:[0-9]{1,3}|Magic[0-9])(?: Lite| Pro| 5G)?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:OPPO (?:A[0-9]{1,3}[a-z]?|F[0-9]{1,2}|K[0-9]{1,2}|R[0-9]{1,2}[a-z]?|Reno[0-9]{0,2}|Find [NX][0-9]{1,2})(?: Pro| Lite| Neo| Plus| Z| 5G| [0-9]{4})*)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Xiaomi (?:1[0-7]|Mi [0-9]{1,2})|Redmi (?:Note )?[0-9]{1,2}[A-Z]?|POCO [CFMX][0-9]{1,2}|vivo [VYXT][0-9]{1,3}[a-z]?|realme (?:[0-9]{1,2}|C[0-9]{1,2}|GT[0-9]?))(?: Pro| Plus| Ultra| Lite| 5G|[+])*$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LG (?:G[2-8]|V(?:10|20|30|40|50|60)|K(?:20|30|40|50|51|52|61)|Q[0-9]{1,2}|Stylo ?[2-6]|Velvet|Wing)|(?:Samsung )?SM-(?:G150NK|G150N0|G155S|A136U1?|A146U1?|A156U1?))$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:REVVL (?:6(?:x)?(?: Pro)?(?: 5G)?|7(?: Pro)?(?: 5G)?|V[+]?(?: 5G)?)|Celero ?5G(?: 2[.]0|[+])?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Sony )?Xperia (?:[15](?: [IVX]+)?|10(?: [IVX]+)?|XZ[1-3]?|Z[1-5])$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Nothing Phone|CMF Phone) ?[1-3]?(?: ?\\([1-3][a-z]?\\))?(?: Pro)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:Fairphone [2-6]|ASUS (?:ZenFone|ROG Phone) [0-9]{1,2}(?: Pro| Ultra)?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:(?:Samsung|Google|Motorola|TCL|OnePlus|LG) )?(?:T434D|T513W|T513Z|T513V|T513SP|T702Z|T702M|T704V|T807D|T807E|T807M|T767W|T779W|GVU6C|GE2AE|GWKK3|G9BQD|G1MNW|GKV4X|G2YBB|GR83Y|GGH2X|GGX8B|G9FPL|XT2413V|XT2415\\-1|XT2453\\-3|NE2217|CPH2419|KB2007|LE2117|LE2127|CPH2389|LGL83BL|LM\\-K520|LM\\-K525|LM\\-K200|LM\\-Q630|LG\\-M470|LG\\-M470F|LG\\-TP450|LM\\-V405|LM\\-V409N|LM\\-G900|LM\\-G900N|LM\\-G910N|TMAF035G|WTCELERO5G|Celero5G)$",
+        "source": "Exact phone codes: Google supported-device snapshot and T-Mobile smartphone list linked in Android proposal"
+      },
+      {
+        "pattern": "^TCL 30 (?:5G|XE 5G|XL|SE|Z|V 5G|LE)$",
+        "source": "TCL official 30-series support catalog: https://support.tcl.com/en_US/product-downloads-30-series (verified 2026-11-16)"
+      }
+    ],
+    "SAMSUNG_PHONES": [],
+    "VEHICLES": [
+      {
+        "pattern": "^Audi_MMI_[0-9]{4}$",
+        "source": "Audi Multi Media Interface (not sure why the minority uses underscores instead of spaces)"
+      },
+      {
+        "pattern": "^Audi MMI [0-9]{4}$",
+        "source": "Audi Multi Media Interface"
+      },
+      {
+        "pattern": "^CATBTNT-[0-9]{2} [A-Z]{3}[0-9]{5}$",
+        "source": "Caterpillar(CAT) heavy equipment BT keyless-start (https://fccid.io/PQMA5S4/User-Manual/Exhibit-D-Users-Manual-per-2-1033-b3-3137980.pdf)"
+      },
+      {
+        "pattern": "^SC 400D-[A-F0-9]{4}$",
+        "source": "Cobra SC 400D dash cam (https://www.cobra.com/products/sc400d, last 4 are first 4 of BDADDR, endian-swapped, because they probably have their BDADDR backwards!)"
+      },
+      {
+        "pattern": "^GM_PEPS_VKM[1234]$",
+        "source": "General Motors passive-entry-passive-start (PEPS) system (made by ALPSALPINE CO,.LTD based on BDADDR, GM confirmed by UUID16)"
+      },
+      {
+        "pattern": "^Porsche BT [0-9]{4}$",
+        "source": "Porsche Bluetooth"
+      },
+      {
+        "pattern": "^Rivian Sensor [1-4]$",
+        "source": "Rivian Truck"
+      },
+      {
+        "pattern": "(?-i:^S[0-9a-f]{16}C$)",
+        "source": "Tesla Model 3/Y"
+      },
+      {
+        "pattern": "^Tesla Model S.*$",
+        "source": "Tesla Model S"
+      },
+      {
+        "pattern": "^Tesla Model X.*$",
+        "source": "Tesla Model X"
+      },
+      {
+        "pattern": "^VW BT [0-9]{4}$",
+        "source": "Volkswagon in-vehicle bluetooth"
+      },
+      {
+        "pattern": "^SC 100$",
+        "source": "Cobra SC 100 dash cam (https://www.cobra.com/products/sc100)"
+      },
+      {
+        "pattern": "^SC 200$",
+        "source": "Cobra SC 200 dash cam (https://www.cobra.com/products/sc200)"
+      },
+      {
+        "pattern": "^SC 201$",
+        "source": "Cobra SC 201 dash cam (https://www.cobra.com/products/sc201)"
+      },
+      {
+        "pattern": "^SC 400$",
+        "source": "Cobra SC 400 dash cam (https://www.cobra.com/products/sc400)"
+      },
+      {
+        "pattern": "^FIXD$",
+        "source": "FIXD Car Bluetooth-to-ODBII Adapter (https://www.fixd.com/)"
+      },
+      {
+        "pattern": "^GM_PEPS_VKM$",
+        "source": "General Motors passive-entry-passive-start (PEPS) system (made by ALPSALPINE CO,.LTD based on BDADDR, GM confirmed by UUID16)"
+      },
+      {
+        "pattern": "^VM-201$",
+        "source": "MEIDI VM-201 Low profile Bluetooth FM Transmitter (https://web.archive.org/web/20250720172304/https://www.meiditech.com/products/meidi-low-profile-bluetooth-fm-transmitter?variant=30261813575765)"
+      },
+      {
+        "pattern": "^VM-207$",
+        "source": "MEIDI VM-207 Smart Bluetooth FM Transmitter (https://web.archive.org/web/20250720170122/https://www.meiditech.com/collections/fm-transmitter/products/meidi-smart-bluetooth-fm-transmitter?variant=30261903818837)"
+      },
+      {
+        "pattern": "^VM-208$",
+        "source": "MEIDI VM-208 Smart Bluetooth FM Transmitter (https://web.archive.org/web/20250720170126/https://www.meiditech.com/collections/fm-transmitter/products/meidi-gooseneck-fm-transmitter?variant=31028074086485)"
+      },
+      {
+        "pattern": "^OBDBLE$",
+        "source": "Nonda ODBII-to-BT car monitor"
+      },
+      {
+        "pattern": "^Zus$",
+        "source": "Nonda ODBII-to-BT car monitor (https://www.nonda.co/products/smart-vehicle-health-monitor-mini)"
+      },
+      {
+        "pattern": "^OBDLink CX$",
+        "source": "OBD Solutions, LLC. ODBII-to-BT car monitor (https://www.obdlink.com/products/obdlink-cx/)"
+      },
+      {
+        "pattern": "^ow[0-9]{6}$",
+        "source": "OneWheel scooter/monocycle (https://web.archive.org/web/20260514183337/https://onewheel.com/)"
+      },
+      {
+        "pattern": "^Rivian Camp Speaker$",
+        "source": "The Rivian Camp Speaker is a portable Bluetooth audio speaker and lantern that docks and charges inside a Rivian vehicle (com.rivian.android.consumer); https://assets.ctfassets.net/2md5qhoeajym/7D51UsZjCmH8aYQXWDDRFr/8f62c0c956cc0a30da706868da2806c3/camp-speaker-guide-en-us-20250130.pdf."
+      },
+      {
+        "pattern": "^Rivian Phone Key$",
+        "source": "Rivian Phone Key"
+      },
+      {
+        "pattern": "^Tesla Keyfob$",
+        "source": "Tesla Keyfob"
+      },
+      {
+        "pattern": "^TOYOTA 4Runner$",
+        "source": "TOYOTA 4Runner"
+      },
+      {
+        "pattern": "^TOYOTA Camry$",
+        "source": "TOYOTA Camry"
+      },
+      {
+        "pattern": "^TOYOTA Corolla$",
+        "source": "TOYOTA Corolla"
+      },
+      {
+        "pattern": "^TOYOTA Highlander$",
+        "source": "TOYOTA Highlander"
+      },
+      {
+        "pattern": "^TOYOTA Rav 4$",
+        "source": "TOYOTA Rav 4"
+      },
+      {
+        "pattern": "^TOYOTA RAV4$",
+        "source": "TOYOTA RAV4"
+      },
+      {
+        "pattern": "^TOYOTA SIENNA$",
+        "source": "TOYOTA SIENNA"
+      },
+      {
+        "pattern": "^OBDII$",
+        "source": "Unknown brand (could be white-label), but highly likely ODBII-to-BT car monitor (sometimes ZUS Smart Vehicle Health Monitor Lite\" per https://nonda.zendesk.com/hc/en-us/articles/360052449552-How-to-look-for-the-device-in-the-Bluetooth-settings-)\""
+      },
+      {
+        "pattern": "^OBDeleven 2$",
+        "source": "Voltas IT ODBII-to-BT car monitor (https://obdeleven.com/en/home/187-stand-alone-0758277987851.html)"
+      },
+      {
+        "pattern": "^GM_PEPS_[A-Za-z0-9_]+$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^VM-(?:201|207|208)(?:-BLE)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Tesla (?:Model [S3XY](?: .*)?|Cybertruck|Keyfob|TPMS(?: .*)?)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Rivian Key [0-9]+$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^VW (?:BT ----|Radio|PHONE)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^HandsFreeLink$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Ford Audio$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Uconnect(?: [0-9A-Za-z]+)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^TOYOTA (?:Tacoma|Tundra|Venza|bZ4X|Grand Highlander|Digital Key|Touch)$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:TELLURIDE|Carnival|K5) Digital Key$",
+        "source": "Kia vehicle digital key; exact observed model names. https://owners.kia.com/us/en/digital-key.html; 2026-11-17 field-miss review."
+      },
+      {
+        "pattern": "^(?:Palisade|Sonata|IONIQ ?5) Digital Key$",
+        "source": "Hyundai vehicle digital key; exact observed model names. https://owners.hyundaiusa.com/us/en/resources/technology-and-navigation/introducing-all-new-digital-key; 2026-11-17 field-miss review."
+      }
+    ],
+    "AUDIO": [
+      {
+        "pattern": "^Echo Buds [A-Z0-9]{4}$",
+        "source": "Amazon Echo Buds Headphones"
+      },
+      {
+        "pattern": "^OutlierAirV3 \\(SX:.*$",
+        "source": "Creative Outlier Air v3 earbuds (https://web.archive.org/web/20251115001040/https://us.creative.com/p/headphones-headsets/creative-outlier-air-v3)"
+      },
+      {
+        "pattern": "^HONOR Earbuds X6$",
+        "source": "HUAWEI HONOR Earbuds X6 (https://web.archive.org/web/20250711133449/https://www.honor.com/global/audio/honor-earbuds-x6/)"
+      },
+      {
+        "pattern": "^Galaxy Buds \\([A-F0-9]{4}\\)$",
+        "source": "Samsung Galaxy Buds Headphones"
+      },
+      {
+        "pattern": "^Galaxy Buds Live \\([A-F0-9]{4}\\)$",
+        "source": "Samsung Galaxy Buds Live Headphones"
+      },
+      {
+        "pattern": "^Galaxy Buds Pro \\([A-F0-9]{4}\\)$",
+        "source": "Samsung Galaxy Buds Pro Headphones"
+      },
+      {
+        "pattern": "^Galaxy Buds\\+ \\([A-F0-9]{4}\\)$",
+        "source": "Samsung Galaxy Buds+ Headphones"
+      },
+      {
+        "pattern": "^FLOW 8 LE$",
+        "source": "Behringer Flow 8 digital mixer (https://web.archive.org/web/20250708082324/https://www.behringer.com/product.html?modelCode=0603-AEW)"
+      },
+      {
+        "pattern": "^Wingman Rem$",
+        "source": "Bushnell Wingman (v1) speaker remote (https://web.archive.org/web/20250517173531/https://www.bushnellgolf.com/products/parts/replacement-remote-wingman-speaker/)"
+      },
+      {
+        "pattern": "^Wingman Remote$",
+        "source": "Bushnell Wingman (v1) speaker remote (https://web.archive.org/web/20250517173531/https://www.bushnellgolf.com/products/parts/replacement-remote-wingman-speaker/)"
+      },
+      {
+        "pattern": "^JBL RACE TWS-LE$",
+        "source": "JBL RACE TWS headphones (https://www.jbl.com/new-arrivals/ENDURANCE-RACE-.html)"
+      },
+      {
+        "pattern": "^Rivian Camp Speaker$",
+        "source": "The Rivian Camp Speaker is a portable Bluetooth audio speaker and lantern that docks and charges inside a Rivian vehicle (com.rivian.android.consumer); https://assets.ctfassets.net/2md5qhoeajym/7D51UsZjCmH8aYQXWDDRFr/8f62c0c956cc0a30da706868da2806c3/camp-speaker-guide-en-us-20250130.pdf."
+      },
+      {
+        "pattern": "^Sabbat X12 Pro$",
+        "source": "Sabbat X12 Pro wireless earbuds (https://www.scarbir.com/tws/sabbat-x12-pro-review, Note: BT Classic)"
+      },
+      {
+        "pattern": "^OpenFit by Shokz$",
+        "source": "Shokz OpenFit Headphones (https://shokz.com/products/openfit)"
+      },
+      {
+        "pattern": "^OpenMove by Shokz$",
+        "source": "Shokz OpenMove bone conduction headphones (https://shokz.com/products/openmove)"
+      },
+      {
+        "pattern": "^LE-OpenRun Pro$",
+        "source": "Shokz OpenRun Pro bone conduction headphones (https://shokz.com/products/openrunpro)"
+      },
+      {
+        "pattern": "^Venue-Tile$",
+        "source": "Skullcandy Venue ANC Headphones with Tile tracking (based on https://support.skullcandy.com/hc/en-us/articles/360008276534-Venue-Noise-Canceling-Wireless (no GATT confirmation yet))"
+      },
+      {
+        "pattern": "^LE_WF-1000XM3$",
+        "source": "Sony WF-1000XM3 headphones (https://web.archive.org/web/20240329114250/https://www.sony.com/et/electronics/truly-wireless/wf-1000xm3)"
+      },
+      {
+        "pattern": "^LE_WF-1000XM4$",
+        "source": "Sony WF-1000XM4 headphones (https://web.archive.org/web/20210924221912/https://www.sony.com/et/electronics/truly-wireless/wf-1000xm4)"
+      },
+      {
+        "pattern": "^LE_WF-C500$",
+        "source": "Sony WF-C500 headphones (https://web.archive.org/web/20231129161244/https://electronics.sony.com/audio/headphones/truly-wireless-earbuds/p/wfc500-b)"
+      },
+      {
+        "pattern": "^LE_WH-1000XM2$",
+        "source": "Sony WH-1000XM2 headphones (https://web.archive.org/web/20240520135039/https://www.sony.com/electronics/support/wireless-headphones-bluetooth-headphones/wh-1000xm2/manuals)"
+      },
+      {
+        "pattern": "^LE_WH-1000XM3$",
+        "source": "Sony WH-1000XM3 headphones (https://www.sony.com/electronics/support/wireless-headphones-bluetooth-headphones/wh-1000xm3/manuals)"
+      },
+      {
+        "pattern": "^LE_WH-1000XM4$",
+        "source": "Sony WH-1000XM4 headphones (https://www.sony.com/electronics/support/wireless-headphones-bluetooth-headphones/wh-1000xm4/manuals)"
+      },
+      {
+        "pattern": "^LE_WH-1000XM5$",
+        "source": "Sony WH-1000XM5 headphones (https://web.archive.org/web/20251015160751/https://www.sony.com/electronics/support/wireless-headphones-bluetooth-headphones/wh-1000xm5/manuals)"
+      },
+      {
+        "pattern": "^Between 3ANC$",
+        "source": "Status Between 3ANC headphones (https://web.archive.org/web/20250627042543/https://www.status.co/products/between-3anc)"
+      },
+      {
+        "pattern": "^UA \\| JBL TWS Streak LE$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_](?:P-)?)?Bose (?:QC|QuietComfort|QuietControl|NC 700|SoundLink|SoundTouch|Soundbar|Sport|SoundSport|SoundWear|Frames|Ultra Open|S1 Pro|Flex|Revolve|Micro|Color|AE2)[0-9A-Za-z ()+_-]*$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_])?(?:Sony )?(?:WH|WF|WI|SRS|GTK|LSPX|HT|MHC)-[A-Z0-9-]+(?: ?\\(h[.]ear\\))?(?:[-_ ]LE)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_])?LinkBuds(?: S| Fit| Open)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^.*(?:AirPods(?: Pro| Max)?|HomePod)(?: [0-9]| \\([0-9]\\))?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Beats(?: Fit Pro| Studio Buds(?:[+])?| Studio[3-4]?| Solo[3-4]?| Flex| Pill| Powerbeats Pro)(?: Wireless)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Pixel Buds(?: [AP]ro(?: 2)?| A-Series)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Galaxy Buds(?:[234]|[+]?)?(?: Pro| Live| FE| Core)?(?: Pro| FE)?(?: LE| \\([A-F0-9]{4}\\))?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_])?JBL (?:Charge|Flip|Go|Clip|Xtreme|Pulse|PartyBox|Tune|Live|Club|Tour|Endurance|Reflect|Vibe|Wave|Free|Soundgear|EON|PRX)[0-9A-Za-z +_-]*$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_])?Jabra (?:Elite|Evolve|Speak|Talk|Move)[0-9A-Za-z +_-]*$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:LE[-_])?(?:soundcore|Skullcandy) [A-Za-z0-9 +_-]+$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^Sonos(?: [A-Za-z0-9 +_-]+)?$",
+        "source": "Bounded advertising-name family reviewed in the 2026-11-16 proposals"
+      },
+      {
+        "pattern": "^(?:[^\\r\\n]+['’]s )?Pixel Buds Pro 2$",
+        "source": "Google Pixel Buds Pro 2 earbuds; owner-prefixed local bt2 aliases. https://store.google.com/product/pixel_buds_pro_2; 2026-11-17 field-miss review."
+      },
+      {
+        "pattern": "^Bose SL Flex SE 2(?: [A-Z])?$",
+        "source": "Bose SoundLink Flex Portable Speaker SE (2nd Gen); observed SL alias. https://support.bose.com/article/soundlink-flex-portable-speaker-2nd-gen-software-and-firmware-versions?language=en_US; 2026-11-17 field-miss review."
+      },
+      {
+        "pattern": "^tcl_B14S45H0_[0-9A-F]{4}$",
+        "source": "TCL S45H soundbar; bounded observed radio alias, model attribution inferred. https://www.tcl.com/global/en/soundbar/s45h; 2026-11-17 field-miss review."
+      }
+    ]
+  }
+}
