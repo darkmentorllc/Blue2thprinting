@@ -101,7 +101,7 @@ Two of the BR/EDR collection tools in this branch now emit BTIDES JSON directly 
 
   (BDADDR is dash-delimited in the filename so the files are portable to filesystems that reject `:`.) `btc_sdp_gatt.py` also de-duplicates against existing records in the same file within a 5-minute window, so re-runs against the same device don't unbounded-grow the file.
 
-- **`bluez-5.66/tools/DarkFirmware_VSC_LMP`** — invoked per BR/EDR device by `central_app_launcher.py` (via the `lmp2thprint_enabled` switch). Uses a BlueZ + Realtek custom-firmware vendor-specific command to capture LMP PDUs. Writes one BTIDES file per device:
+- **`Scripts/DarkFirmware_VSC_LMP`** (built from `Scripts/DarkFirmware_VSC_LMP_src/`) — invoked per BR/EDR device by `central_app_launcher.py` (via the `lmp2thprint_enabled` switch). Uses a BlueZ + Realtek custom-firmware vendor-specific command to capture LMP PDUs. Writes one BTIDES file per device:
   - `Logs/DarkFirmwareLMPLog/<bdaddr>.btides`
 
 Because both already produce BTIDES JSON, importing is a single call to `BTIDES-to-SQL` — no separate conversion step.
@@ -150,10 +150,10 @@ mysql -u user -pa -D bt2 -e "SELECT bdaddr, lmp_version, device_BT_CID FROM LMP_
 
 ## Importing SDP data from sdptool XML files (deprecated)
 
-> **⚠️ Deprecated.** The `sdptool`-based SDP collection path is no longer used in this branch. `central_app_launcher.py` defaults to `btc_sdp_gatt_enabled = True` and explicitly comments `sdptool_enabled = False`, with a note that the two paths race when both enabled. The XML-import flow below is retained only for back-importing legacy `Logs/sdptool/*_sdp.xml` files captured by older revisions. New collection writes BTIDES directly to `Logs/btc_sdp_gatt/` — see the section above.
+> **⚠️ Deprecated.** The `sdptool`-based SDP collection path is no longer used in this branch. `central_app_launcher.py` collects SDP with `Scripts/btc_sdp_gatt.py` (`btc_sdp_gatt_enabled = True`); the customized `sdptool`, the `bluez-5.66` source tree it was built from, and the launcher setting that ran it have been removed. The XML-import flow below is retained only for back-importing legacy `Logs/sdptool/*_sdp.xml` files captured by older revisions. New collection writes BTIDES directly to `Logs/btc_sdp_gatt/` — see the section above.
 
 
-`central_app_launcher.py` saves `sdptool` output as per-device XML files named `{BDADDR}_sdp.xml` under `Logs/sdptool/`. The Rust `sdp-to-BTIDES` converter produces a BTIDES JSON file from either a single XML file or a directory of them; pipe that JSON through `BTIDES-to-SQL` to import into MySQL.
+Older revisions of `central_app_launcher.py` saved `sdptool` output as per-device XML files named `{BDADDR}_sdp.xml` under `Logs/sdptool/`. The Rust `sdp-to-BTIDES` converter produces a BTIDES JSON file from either a single XML file or a directory of them; pipe that JSON through `BTIDES-to-SQL` to import into MySQL.
 
 **Import a single device's SDP file:**
 

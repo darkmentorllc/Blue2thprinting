@@ -35,7 +35,9 @@ wait_for_powered_adapter || { echo "start_bluetoothctl.sh aborted: adapter never
 if [ -e "$LINKAGE_FILE" ]; then
     rm "$LINKAGE_FILE"
 fi
-# Had to move over to my custom bluetoothctl to find out which are BTC vs. BLE devices!
-RESULT=$(unbuffer "$REPO_ROOT/bluez-5.66/client/bluetoothctl" scan on > ${LOGPATH}/${DATE}_${HN}.txt &)
+# This used to run a customized bluetoothctl from the bluez-5.66 tree, which marked
+# devices as BTC or BLE. That tree is gone (central_app_launcher.py tells the two
+# apart itself), so this diagnostic wrapper runs the system bluetoothctl.
+RESULT=$(unbuffer bluetoothctl scan on > ${LOGPATH}/${DATE}_${HN}.txt &)
 #Re-link to the file so it can be found by other scripts
 ln -s ${LOGPATH}/${DATE}_${HN}.txt $LINKAGE_FILE

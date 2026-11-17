@@ -34,7 +34,11 @@ The setup helper also runs `Scripts/manage_capture_host_tuning.py`. It changes t
 
   bluetoothd reads this when it starts. The helper restarts it, unless capture is running, in which case the setting applies after the next reboot. Do not use a discovery RSSI filter for this instead: with one, the kernel reports every advertisement rather than each advertiser once per scan.
 
-* **Less than 1 GB of RAM, with the swap file managed by `dphys-swapfile`: a 2 GB swap file** (`CONF_SWAPSIZE=2048` in `/etc/dphys-swapfile`), so that neither the compile stages of the setup nor several collectors running at once depend on fitting in a Pi Zero's 427 MB. It is skipped if the disk has too little free space, and on images that manage swap some other way.
+* **Less than 1 GB of RAM: a 2 GB swap file**, so that neither the compile stages of the setup nor several collectors running at once depend on fitting in a Pi Zero's 427 MB. How it is set depends on what manages swap:
+  * `dphys-swapfile` (Raspberry Pi OS up to Bookworm): `CONF_SWAPSIZE=2048` in `/etc/dphys-swapfile`, and the swap file is rebuilt straight away.
+  * `rpi-swap` (Raspberry Pi OS Trixie onwards, which otherwise gives a Pi Zero about 430 MB of compressed-RAM swap): a drop-in, `/etc/rpi/swap.conf.d/80-blue2thprinting-swapfile.conf`, with `Mechanism=swapfile` and `FixedSizeMiB=2048`. **It only takes effect at the next boot.** On such a Pi run `sudo ./setup_capture_helper_debian-based.sh --tune-host` and reboot *before* the full setup, so that the compile stages have the swap.
+
+  It is skipped if the disk has too little free space, if a swap mechanism has already been chosen by hand, and on images that manage swap some other way.
 
 One more thing helps on a single-core Pi and is not done by the setup helper, because it restarts networking: NetworkManager's Bluetooth plugin listens to every BlueZ D-Bus signal, and during capture took 11 to 17 % of a Pi Zero's CPU for nothing. A capture node does not use Bluetooth networking, so the plugin can be set aside (and later restored with `dpkg-divert --remove`):
 

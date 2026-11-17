@@ -3,8 +3,9 @@
 
 * A single-core host cannot keep up with LE discovery scanning all the time, so
   BlueZ is told to scan 90 ms in every 300 ms (/etc/bluetooth/main.conf, [LE]).
-* A host with less than 1 GB of RAM whose swap file is managed by
-  dphys-swapfile gets a 2 GB swap file.
+* A host with less than 1 GB of RAM gets a 2 GB swap file, through whichever of
+  dphys-swapfile (Raspberry Pi OS up to Bookworm) or rpi-swap (Trixie onwards)
+  manages swap there. With rpi-swap it takes effect at the next boot.
 
 Each is skipped where it does not apply and left alone where it is already in
 place. docs/Capture.md has the reasons. --check reports without changing anything.
@@ -22,11 +23,23 @@ import sys
 
 MAIN_CONF = Path("/etc/bluetooth/main.conf")
 SWAP_CONF = Path("/etc/dphys-swapfile")
+RPI_SWAP_CONF = Path("/etc/rpi/swap.conf")
+RPI_SWAP_DROPIN = Path("/etc/rpi/swap.conf.d/80-blue2thprinting-swapfile.conf")
 BACKUP_DIR = Path("/var/backups/blue2thprinting")
 
 # Units of 0.625 ms: scan for 90 ms in every 300 ms.
 LE_DISCOVERY_SCAN = {"ScanIntervalDiscovery": 480, "ScanWindowDiscovery": 144}
 SWAP_MB = 2048
+# swap.conf(5), "Ensuring a traditional fixed-size swapfile is used".
+RPI_SWAP_TEXT = f"""\
+# Written by Blue2thprinting's Scripts/manage_capture_host_tuning.py.
+# A plain {SWAP_MB} MiB swap file instead of the default compressed-RAM swap.
+[Main]
+Mechanism=swapfile
+
+[File]
+FixedSizeMiB={SWAP_MB}
+"""
 SMALL_RAM_BYTES = 1 << 30
 MIB = 1 << 20
 
@@ -118,6 +131,37 @@ def dphys_swapfile():
     return shutil.which("dphys-swapfile", path=os.environ.get("PATH", "") + os.pathsep + "/usr/sbin:/sbin")
 
 
+def rpi_swap_set_by_hand():
+    """The rpi-swap file other than ours that already chooses a mechanism, or None."""
+    dropins = sorted(RPI_SWAP_DROPIN.parent.glob("*.conf")) if RPI_SWAP_DROPIN.parent.is_dir() else []
+    for path in [RPI_SWAP_CONF, *dropins]:
+        if path != RPI_SWAP_DROPIN and re.search(r"(?m)^\s*Mechanism\s*=", path.read_text()):
+            return path
+    return None
+
+
+def tune_rpi_swap(check: bool) -> str:
+    present = RPI_SWAP_DROPIN.read_text() if RPI_SWAP_DROPIN.is_file() else None
+    if present == RPI_SWAP_TEXT:
+        return f"already set ({SWAP_MB} MB swap file in {RPI_SWAP_DROPIN})"
+    by_hand = rpi_swap_set_by_hand()
+    if by_hand:
+        return f"{by_hand} already chooses a swap mechanism; left as configured"
+    free = shutil.disk_usage("/var").free
+    needed = (SWAP_MB + 1024) * MIB
+    if free < needed:
+        return (f"{free // MIB} MB free on the disk; a {SWAP_MB} MB swap file wants {needed // MIB} MB free, "
+                "so swap was left alone")
+    if check:
+        return f"would write {RPI_SWAP_DROPIN} for a {SWAP_MB} MB swap file"
+    saved = f" (previous file saved to {save_backup(RPI_SWAP_DROPIN, present)})" if present is not None else ""
+    RPI_SWAP_DROPIN.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    RPI_SWAP_DROPIN.write_text(RPI_SWAP_TEXT)
+    RPI_SWAP_DROPIN.chmod(0o644)
+    return (f"wrote {RPI_SWAP_DROPIN} for a {SWAP_MB} MB swap file{saved}; "
+            "REBOOT for it to take effect (rpi-swap only builds the file during early boot)")
+
+
 def ram_bytes() -> int:
     return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
 
@@ -175,9 +219,11 @@ def tune_swap(check: bool) -> str:
     ram = ram_bytes()
     if ram >= SMALL_RAM_BYTES:
         return f"{ram // MIB} MB of RAM; swap left alone"
+    if RPI_SWAP_CONF.is_file():
+        return tune_rpi_swap(check)
     tool = dphys_swapfile()
     if not SWAP_CONF.is_file() or not tool:
-        return "swap is not managed by dphys-swapfile here; left alone"
+        return "swap is managed by neither dphys-swapfile nor rpi-swap here; left alone"
     original = SWAP_CONF.read_text()
     desired, reason = swap_plan(original)
     if desired is None:

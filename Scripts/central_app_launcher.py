@@ -46,8 +46,7 @@ better_getter_enabled = True
 # One switch for all reviewed pre-connection categories on BLE and BTC.
 # False removes category skips entirely; success/retry limits still apply.
 novelty_mode = True
-sdptool_enabled = False    # Legacy SDP path via the custom bluez-5.66 sdptool binary. Kept as a toggleable fallback for diagnostics; superseded by btc_sdp_gatt_enabled below.
-btc_sdp_gatt_enabled = True # When True, runs Scripts/btc_sdp_gatt.py for SDP enumeration plus GATT-over-BR/EDR enumeration via BlueZ kernel L2CAP sockets. Enable this OR sdptool_enabled, not both — they probe the same target on the same hci adapter and would race.
+btc_sdp_gatt_enabled = True # When True, runs Scripts/btc_sdp_gatt.py for SDP enumeration plus GATT-over-BR/EDR enumeration via BlueZ kernel L2CAP sockets. (It replaced the customized bluez-5.66 sdptool, which is gone.)
 
 # Number of Sonoff dongles to reserve for Better_Getter.py (round-robin). Remaining
 # dongles are allocated to Sniffle per the channel-separation rules in
@@ -118,18 +117,15 @@ default_cwd = f"{REPO_ROOT}/"
 BG_exec_path = str(REPO_ROOT / "Scripts/BG/Better_Getter.py")
 BG_output_pcap_path = str(REPO_ROOT / "Logs/BetterGetter")
 
-sdptool_exec_path = str(REPO_ROOT / "bluez-5.66/tools/sdptool")
-sdptool_log_path = str(REPO_ROOT / "Logs/sdptool")
-
 # Standalone SDP + GATT-over-BR/EDR enumerator. Writes its own .btides files
-# under Logs/btc_sdp_gatt/, so we don't need to redirect stdout to a file
-# the way sdptool does.
+# under Logs/btc_sdp_gatt/.
 btc_sdp_gatt_path = str(REPO_ROOT / "Scripts/btc_sdp_gatt.py")
 btc_sdp_gatt_log_dir = str(REPO_ROOT / "Logs/btc_sdp_gatt")
 
 # LMP fingerprinting tool (BlueZ + Realtek custom firmware via Xeno VSC).
-# Builds against bluez-5.66 + libbluetooth; binary lives next to the other tools.
-darkfirmware_lmp_path = str(REPO_ROOT / "bluez-5.66/tools/DarkFirmware_VSC_LMP")
+# Built from Scripts/DarkFirmware_VSC_LMP_src/ against the system libbluetooth.
+# The binary locates <repo>/Logs from its own path, so it must stay in Scripts/.
+darkfirmware_lmp_path = str(REPO_ROOT / "Scripts/DarkFirmware_VSC_LMP")
 btides_lmp_dir = str(REPO_ROOT / "Logs/DarkFirmwareLMPLog")
 
 btc2thprint_log_path = str(REPO_ROOT / "Logs/BTC_2THPRINT.log")
@@ -141,11 +137,10 @@ sniffle_path = str(REPO_ROOT / "Sniffle/sniffle_receiver_rust")  # Rust drop-in 
 sniffle_pcap_log_folder = str(REPO_ROOT / "Logs/sniffle")
 
 # Ensure the per-tool log directories exist before workers try to write into them.
-# Without this, btc_thread_function() crashes on its first BTC device with
-# FileNotFoundError opening Logs/sdptool/<bdaddr>_sdp.xml, taking the whole BTC
-# worker thread down silently. (Other dirs added defensively for symmetry — fresh
-# clones / new hostnames otherwise hit the same trap on first use.)
-for _d in (BG_output_pcap_path, sdptool_log_path, btides_lmp_dir, sniffle_pcap_log_folder, btc_sdp_gatt_log_dir):
+# Without this a worker crashes with FileNotFoundError on its first device and
+# takes its whole thread down silently; fresh clones and new hostnames would
+# otherwise hit that on first use.
+for _d in (BG_output_pcap_path, btides_lmp_dir, sniffle_pcap_log_folder, btc_sdp_gatt_log_dir):
     os.makedirs(_d, exist_ok=True)
 
 # Define a dictionary to store BDADDRs and their RSSI values
@@ -630,14 +625,6 @@ class ApplicationThread(threading.Thread):
                            if(all_2thprints_done("BTC", self.bdaddr)):
                                locked_delete_from_dict(btc_bdaddrs, btc_bdaddrs_lock, self.bdaddr)
                                if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {self.bdaddr} from btc_bdaddrs!")
-                    elif(self.info_type == "SDP"):
-                       external_log_write(sdpprint_log_path, f"SDPPRINTING SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
-                       with sdp_success_bdaddrs_lock:
-                           sdp_success_bdaddrs[self.bdaddr] = 1
-                           if(print_finished_bdaddrs): print(f"Successful SDPPrinting of {self.bdaddr}!")
-                           if(all_2thprints_done("BTC", self.bdaddr)):
-                               locked_delete_from_dict(btc_bdaddrs, btc_bdaddrs_lock, self.bdaddr)
-                               if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {self.bdaddr} from btc_bdaddrs!")
                     elif(self.info_type == "BTC_SDP_GATT"):
                        external_log_write(sdpprint_log_path, f"BTC_SDP_GATT SUCCESS FOR: {self.bdaddr} {datetime.datetime.now()}")
                        with sdp_success_bdaddrs_lock:
@@ -700,8 +687,6 @@ class ApplicationThread(threading.Thread):
                                self._bg_dongle_needs_usbreset = True
                     elif(self.info_type == "LMP2thprint"):
                        external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
-                    elif(self.info_type == "SDP"):
-                       external_log_write(sdpprint_log_path, f"SDPPRINTING FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "BTC_SDP_GATT"):
                        external_log_write(sdpprint_log_path, f"BTC_SDP_GATT FAILURE 0x{retCode:02x} FOR: {self.bdaddr} {datetime.datetime.now()}")
                     elif(self.info_type == "Sniffle"):
@@ -743,8 +728,6 @@ class ApplicationThread(threading.Thread):
                        self._bg_dongle_needs_usbreset = True
             elif(self.info_type == "LMP2thprint"):
                external_log_write(btc2thprint_log_path, f"BTC_2THPRINT: FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
-            elif(self.info_type == "SDP"):
-               external_log_write(sdpprint_log_path, f"SDPPRINTING FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "BTC_SDP_GATT"):
                external_log_write(sdpprint_log_path, f"BTC_SDP_GATT FAILURE TIMEOUT FOR: {self.bdaddr} {datetime.datetime.now()}")
             elif(self.info_type == "Sniffle"):
@@ -1707,10 +1690,8 @@ def btc_thread_function():
             if lmp_thread_to_join is not None:
                 lmp_thread_to_join.join()
 
-            # SDP path: prefer btc_sdp_gatt.py (richer output, also does GATT-over-BR/EDR)
-            # over the legacy sdptool. Both feed sdp_success_bdaddrs, so all_2thprints_done()
-            # works regardless of which tool got the data. Running both against the same
-            # target would race on the L2CAP/SDP PSM, so this is a single elif chain.
+            # SDP path: btc_sdp_gatt.py, which also does GATT-over-BR/EDR. It feeds
+            # sdp_success_bdaddrs, which all_2thprints_done() reads.
             if(btc_sdp_gatt_enabled):
                 skip_sub_process = False
                 with sdp_success_bdaddrs_lock:
@@ -1751,50 +1732,6 @@ def btc_thread_function():
                             launched_btc_probe = True
                         except Exception as e:
                             print(f"Caught an exception while starting btc_sdp_gatt thread: {e}")
-                            force_reboot()
-            elif(sdptool_enabled):
-                skip_sub_process = False
-                with sdp_success_bdaddrs_lock:
-                    if(bdaddr in sdp_success_bdaddrs.keys()):
-                        if(print_finished_bdaddrs): print(f"We've already successfully SDPPrinted {bdaddr}! Skipping!")
-                        # Remove it from further consideration (it could have just been added in by a [DEL] -> [NEW] sequence)
-                        if(all_2thprints_done("BTC", bdaddr)):
-                            locked_delete_from_dict(btc_bdaddrs, btc_bdaddrs_lock, bdaddr)
-                            if(print_finished_bdaddrs): print(f"All 2thprints collected! Deleting {bdaddr} from btc_bdaddrs!")
-                        skip_sub_process = True # We can't just 'continue' here for generalism, for if we add more stuff beyond this
-
-                if(not skip_sub_process and bdaddr in btc_bdaddrs): # Double check that bdaddr hasn't been deleted out of btc_bdaddrs by a [DEL]
-                    external_log_write(sdpprint_log_path, f"SDPPRINTING ATTEMPT FOR: {bdaddr} {datetime.datetime.now()}")
-                    # Defense in depth: the module-level os.makedirs(sdptool_log_path)
-                    # above already runs at import time, but Logs/sdptool/.gitkeep was
-                    # deleted in master commit e28726e — so a checkout of master that
-                    # doesn't include the module-level guard (or a worker that races
-                    # with someone deleting the directory) would otherwise crash here
-                    # with FileNotFoundError. exist_ok=True makes this a no-op when
-                    # the directory already exists, which is the common case.
-                    os.makedirs(sdptool_log_path, exist_ok=True)
-                    output_file = open(f"{sdptool_log_path}/{bdaddr}_sdp.xml", "a") # redirect stdout to an output XML file
-                    sdpprint_cmd = [sdptool_exec_path, "browse", "--xml", bdaddr]
-                    try:
-                        sdpprint_process = launch_application(sdpprint_cmd, default_cwd, stdout=output_file, target=("BTC", bdaddr, "public")) # There should be no special CWD requirements
-                    except BlockingIOError as e:
-                        print(f"Caught BlockingIOError while launching application: {e}") # This seems to be due to a rare error while attempting a fork() within Popen()
-                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                        force_reboot()
-                    except Exception as e:
-                        print(f"Caught an exception while launching SDP application: {e}")
-                        # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
-                        force_reboot()
-
-                    if(sdpprint_process != None):
-                        sdpprint_thread = ApplicationThread(sdpprint_process, bdaddr, info_type="SDP", timeout=15)
-                        try:
-                            sdpprint_thread.start()
-                            btc_external_tool_threads.append(sdpprint_thread)
-                            launched_btc_probe = True
-                        except Exception as e:
-                            print(f"Caught an exception while starting SDPprint thread: {e}")
-                            # This doesn't seem to ever resolve itself for hours after it eventually occurs (which takes about 5 hours). So I need to just reboot to resolve it
                             force_reboot()
 
             if not launched_btc_probe:
