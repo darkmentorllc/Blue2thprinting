@@ -944,6 +944,12 @@ static int match_conn_complete(const uint8_t *p, int len, void *ctx) {
     return len >= EVT_CONN_COMPLETE_SIZE && bacmp(&cc->bdaddr, (const bdaddr_t *)ctx) == 0;
 }
 
+static int match_remote_version(const uint8_t *p, int len, void *ctx) {
+    const evt_read_remote_version_complete *rv = (const void *)p;
+    return len >= EVT_READ_REMOTE_VERSION_COMPLETE_SIZE &&
+           btohs(rv->handle) == *(const uint16_t *)ctx;
+}
+
 // Same as hci_create_connection(), minus the 10-event limit (see above).
 static int create_connection_until(int dd, const bdaddr_t *ba, uint16_t ptype,
                                    uint16_t clkoffset, uint8_t rswitch,
@@ -1046,23 +1052,37 @@ static void run_state_machine(int dev) {
     // cached version from the kernel up front gives us a clean record before
     // any injected requests can disrupt the link. Wait briefly for the
     // kernel-initiated exchange to land in the cache.
+    //
+    // The kernel disconnects an ACL that no L2CAP channel uses about 2 s after it
+    // comes up, so this must not hold up the LMP requests below: it uses our own
+    // request loop (libbluetooth's hci_read_remote_version() was observed to miss
+    // the Complete event and burn its whole timeout) with a 1 s cap. If it fails,
+    // LMP_VERSION_REQ below gets the version instead.
     usleep(500 * 1000);
     {
-        struct hci_version vinfo;
-        memset(&vinfo, 0, sizeof(vinfo));
-        if (hci_read_remote_version(dev, htobs(g_handle), &vinfo, 5000) >= 0) {
+        read_remote_version_cp cp;
+        evt_read_remote_version_complete rv;
+        uint16_t handle = g_handle;
+        cp.handle = htobs(g_handle);
+        if (hci_req_until(dev, OGF_LINK_CTL, OCF_READ_REMOTE_VERSION, &cp,
+                          READ_REMOTE_VERSION_CP_SIZE, EVT_READ_REMOTE_VERSION_COMPLETE,
+                          match_remote_version, &handle, &rv, sizeof(rv), 1000) >= 0 &&
+            rv.status == 0) {
+            uint16_t manufacturer = btohs(rv.manufacturer);
+            uint16_t lmp_subver = btohs(rv.lmp_subver);
             unsigned char p5[5];
-            p5[0] = vinfo.lmp_ver;
-            p5[1] = (unsigned char)(vinfo.manufacturer & 0xFF);
-            p5[2] = (unsigned char)((vinfo.manufacturer >> 8) & 0xFF);
-            p5[3] = (unsigned char)(vinfo.lmp_subver & 0xFF);
-            p5[4] = (unsigned char)((vinfo.lmp_subver >> 8) & 0xFF);
-            fprintf(stderr, "[+] hci_read_remote_version: ver=0x%02x mfr=0x%04x subver=0x%04x\n",
-                    p5[0], vinfo.manufacturer, vinfo.lmp_subver);
+            p5[0] = rv.lmp_ver;
+            p5[1] = (unsigned char)(manufacturer & 0xFF);
+            p5[2] = (unsigned char)((manufacturer >> 8) & 0xFF);
+            p5[3] = (unsigned char)(lmp_subver & 0xFF);
+            p5[4] = (unsigned char)((lmp_subver >> 8) & 0xFF);
+            fprintf(stderr, "[+] Read Remote Version: ver=0x%02x mfr=0x%04x subver=0x%04x\n",
+                    p5[0], manufacturer, lmp_subver);
             btides_append(btides_lmp_version_res(p5));
             gAllRequiredResponses |= RR_LMP_VERSION_RES;
         } else {
-            fprintf(stderr, "[!] hci_read_remote_version failed: %s\n", strerror(errno));
+            fprintf(stderr, "[!] Read Remote Version failed: %s\n",
+                    errno ? strerror(errno) : "non-zero status");
         }
     }
 
