@@ -81,6 +81,7 @@ class Host:
     def __init__(self, tmp_path, monkeypatch, cores=1, ram_mb=427, free_mb=20000,
                  main_conf=MAIN_CONF, swap_conf=SWAP_CONF, capture_running=False):
         self.main, self.swap = tmp_path / "main.conf", tmp_path / "dphys-swapfile"
+        self.rpi_conf, self.rpi_dropin = tmp_path / "rpi/swap.conf", tmp_path / "rpi/swap.conf.d/80-b2p.conf"
         self.backups, self.commands = tmp_path / "backups", []
         for path, text in ((self.main, main_conf), (self.swap, swap_conf)):
             if text is not None:
@@ -93,6 +94,8 @@ class Host:
         monkeypatch.setattr(MODULE, "MAIN_CONF", self.main)
         monkeypatch.setattr(MODULE, "SWAP_CONF", self.swap)
         monkeypatch.setattr(MODULE, "BACKUP_DIR", self.backups)
+        monkeypatch.setattr(MODULE, "RPI_SWAP_CONF", self.rpi_conf)
+        monkeypatch.setattr(MODULE, "RPI_SWAP_DROPIN", self.rpi_dropin)
         monkeypatch.setattr(MODULE, "ram_bytes", lambda: ram_mb * MODULE.MIB)
         monkeypatch.setattr(MODULE.os, "cpu_count", lambda: cores)
         monkeypatch.setattr(MODULE.os, "geteuid", lambda: 0)
@@ -167,3 +170,56 @@ def test_a_failed_swap_rebuild_is_reported_and_swap_is_turned_back_on(tmp_path, 
     assert MODULE.main() == 1
     assert host.commands[-3:] == ["dphys-swapfile swapoff", "dphys-swapfile setup", "dphys-swapfile swapon"]
     assert "rebuilt at the next boot" in capsys.readouterr().err
+
+
+# The swap.conf that the rpi-swap package installs: everything commented out.
+RPI_SWAP_CONF = "[Main]\n#Mechanism=auto\n\n[File]\n#Path=/var/swap\n#FixedSizeMiB=\n\n[Zram]\n#FixedSizeMiB=\n"
+
+
+def rpi_swap_host(tmp_path, monkeypatch, conf=RPI_SWAP_CONF, **kwargs):
+    host = Host(tmp_path, monkeypatch, swap_conf=None, **kwargs)
+    host.rpi_conf.parent.mkdir()
+    host.rpi_conf.write_text(conf)
+    return host
+
+
+def test_rpi_swap_gets_a_swap_file_drop_in_once_and_says_to_reboot(tmp_path, monkeypatch, capsys):
+    host = rpi_swap_host(tmp_path, monkeypatch)
+    assert MODULE.main() == 0
+    assert host.rpi_dropin.read_text() == MODULE.RPI_SWAP_TEXT
+    assert "Mechanism=swapfile\n" in MODULE.RPI_SWAP_TEXT and "FixedSizeMiB=2048\n" in MODULE.RPI_SWAP_TEXT
+    assert host.rpi_conf.read_text() == RPI_SWAP_CONF                      # the package's file is not edited
+    assert not any("swap" in command for command in host.commands)        # nothing is rebuilt while running
+    assert "REBOOT" in capsys.readouterr().out
+    before = host.rpi_dropin.stat().st_mtime_ns
+    assert MODULE.main() == 0
+    assert host.rpi_dropin.stat().st_mtime_ns == before and "already set" in capsys.readouterr().out
+
+
+def test_rpi_swap_chosen_by_hand_or_short_of_disk_is_left_alone(tmp_path, monkeypatch, capsys):
+    host = rpi_swap_host(tmp_path, monkeypatch, conf=RPI_SWAP_CONF.replace("#Mechanism=auto", "Mechanism=zram"))
+    assert MODULE.main() == 0
+    assert not host.rpi_dropin.exists() and "left as configured" in capsys.readouterr().out
+
+    host = Host(tmp_path, monkeypatch, swap_conf=None)
+    host.rpi_conf.write_text(RPI_SWAP_CONF)
+    host.rpi_dropin.parent.mkdir()
+    (host.rpi_dropin.parent / "90-mine.conf").write_text("[Main]\nMechanism = none\n")
+    assert MODULE.main() == 0
+    assert not host.rpi_dropin.exists() and "90-mine.conf" in capsys.readouterr().out
+    (host.rpi_dropin.parent / "90-mine.conf").unlink()
+
+    host = Host(tmp_path, monkeypatch, swap_conf=None, free_mb=2500)
+    assert MODULE.main() == 0
+    assert not host.rpi_dropin.exists() and "left alone" in capsys.readouterr().out
+
+    host = Host(tmp_path, monkeypatch, swap_conf=None, ram_mb=8000, cores=4)
+    assert MODULE.main() == 0
+    assert not host.rpi_dropin.exists()
+
+
+def test_rpi_swap_check_only_reports(tmp_path, monkeypatch, capsys):
+    host = rpi_swap_host(tmp_path, monkeypatch)
+    monkeypatch.setattr(MODULE.sys, "argv", ["manage_capture_host_tuning.py", "--check"])
+    assert MODULE.main() == 0
+    assert not host.rpi_dropin.exists() and "would write" in capsys.readouterr().out

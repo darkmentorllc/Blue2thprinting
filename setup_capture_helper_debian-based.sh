@@ -86,18 +86,20 @@ enter_venv(){
         echo "Blue2thprinting: failed to activate the capture virtual environment."
         exit 1
     fi
-    # --find-links lets pip prefer prebuilt wheels under wheels/ over source builds.
-    # This is what saves Pi Zero W (armv6l) installs from a ~90-min dbus-fast source
-    # compile — PyPI/piwheels don't publish armv6l wheels for dbus-fast, so we ship
-    # one ourselves. Add a wheel for any new architecture/Python combo by running
-    # `pip wheel dbus-fast -w wheels/$(python3 -c 'import platform;print(platform.machine())')/`
-    # on that platform once and committing the result.
+    # A dbus-fast source compile takes ~90 min on a Pi Zero W (armv6l), so it must
+    # come as a wheel there. If a platform has none on its package indexes, add one
+    # by running
+    # `pip wheel dbus-fast==<pin> -w wheels/$(python3 -c 'import platform;print(platform.machine())')/`
+    # on that platform once and committing the result: --find-links below makes
+    # pip prefer a wheel under wheels/<machine>/ when that folder exists.
     # dbus-fast and pyyaml are version-pinned: pip resolves to the newest version
     # available across ALL sources, so an unpinned dbus-fast resolves to whatever
-    # PyPI currently lists (no armv6l wheel) instead of our cached 4.0.4. pyyaml
-    # 6.0.2 is the newest piwheels armv6l/cp311 build; 6.0.3 has no armv6l wheel
-    # yet. Bump these pins only when you've confirmed a matching armv6l wheel
-    # exists (or ship a new one under wheels/armv6l/).
+    # PyPI currently lists, which may have no armv6l wheel yet. dbus-fast 5.2.0 is
+    # on piwheels for armv6l with both Python 3.11 (Bookworm) and 3.13 (Trixie);
+    # the 4.0.4 that was pinned before has no armv6l wheel for Python 3.13, so a
+    # Trixie Pi Zero would have compiled it. pyyaml 6.0.2 is on piwheels for both
+    # too. Bump these pins only when you've confirmed a matching armv6l wheel
+    # exists for every Python in use (or ship one under wheels/armv6l/).
     # jsonschema + colorama are required by Scripts/btc_sdp_gatt.py via the
     # shared TME.* package under Analysis/. jsonschema is pinned to 4.23 because
     # TME_BTIDES_base uses a constructor that older distro-packaged versions
@@ -107,8 +109,11 @@ enter_venv(){
     # googleapiclient are intentionally NOT installed here — they're only
     # needed for BTIDALPOOL features and add ~10 MB; install them via
     # setup_analysis_helper_debian-based.sh if you need that path.
-    if ! pip install --find-links "$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')" \
-        gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast==4.0.4 \
+    local WHEEL_DIR="$BASE_PATH/wheels/$(python3 -c 'import platform;print(platform.machine())')"
+    local FIND_LINKS=()
+    [ -d "$WHEEL_DIR" ] && FIND_LINKS=(--find-links "$WHEEL_DIR")
+    if ! pip install "${FIND_LINKS[@]}" \
+        gmplot intelhex inotify inotify_simple pyserial mysql-connector dbus-fast==5.2.0 \
         jsonschema==4.23 colorama pyyaml==6.0.2; then
         echo "Blue2thprinting: failed to install capture Python dependencies."
         exit 1
