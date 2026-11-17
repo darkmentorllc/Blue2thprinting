@@ -9,7 +9,7 @@
 #
 # What it does (idempotent):
 #   1. Stops running B2P processes (central_app_launcher / sniff_receiver /
-#      Better_Getter / DarkFirmware_VSC_LMP / btmon / sdptool / btc_sdp_gatt).
+#      Better_Getter / DarkFirmware_VSC_LMP / btmon / btc_sdp_gatt).
 #   2. Removes ONLY the B2P entry from root's crontab. All other crontab
 #      entries are preserved verbatim. A backup is written to
 #      /tmp/crontab.root.b2pbak before mutation.
@@ -58,9 +58,7 @@ pkill -f 'Scripts/central_app_launcher\.py' 2>/dev/null || true
 pkill -f 'Sniffle/python_cli/sniff_receiver\.py' 2>/dev/null || true
 pkill -f 'Sniffle/sniffle_receiver_rust' 2>/dev/null || true   # Rust drop-in replacement
 pkill -f 'Scripts/BG/Better_Getter\.py' 2>/dev/null || true
-pkill -f 'bluez-5\.66/tools/DarkFirmware_VSC_LMP' 2>/dev/null || true
-pkill -f 'bluez-5\.66/tools/sdptool' 2>/dev/null || true
-pkill -f 'bluez-5\.66/monitor/btmon' 2>/dev/null || true
+pkill -f 'Scripts/DarkFirmware_VSC_LMP( |$)' 2>/dev/null || true
 pkill -f 'Scripts/btc_sdp_gatt\.py' 2>/dev/null || true
 # Wrapper bash scripts. These spend most of their time in sleep, then launch
 # their corresponding python/binary tool. Kill them too so they don't relaunch
@@ -73,7 +71,6 @@ pkill -f 'Scripts/start_gpspipe\.sh' 2>/dev/null || true
 # Generic fallbacks for the system-installed copies the helper scripts may
 # have invoked. killall returns nonzero if nothing matched; that's fine.
 killall btmon 2>/dev/null || true
-killall sdptool 2>/dev/null || true
 echo "  Done."
 
 ##########################################################################

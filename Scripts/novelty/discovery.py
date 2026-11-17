@@ -2,8 +2,8 @@
 
 Linux HCI_CHANNEL_MONITOR does not send HCI commands, claim a controller, or
 change BlueZ discovery. Socket failures propagate instead of silently falling
-back to cached Device1 properties. Wire layouts: bluez-5.66/lib/hci.h and
-bluez-5.66/monitor/bt.h in this checkout.
+back to cached Device1 properties. Wire layouts: lib/hci.h and monitor/bt.h
+in the BlueZ sources.
 """
 from dataclasses import dataclass
 import socket

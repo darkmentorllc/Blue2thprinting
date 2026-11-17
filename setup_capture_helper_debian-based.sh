@@ -58,7 +58,7 @@ install_prerequs(){
     # Suppress the faux-GUI prompt
     echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install tshark
-    sudo apt-get install -y python3-pip python3-venv python3-docutils mariadb-server gpsd gpsd-clients expect git net-tools openssh-server libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl bluez rustc cargo
+    sudo apt-get install -y python3-pip python3-venv mariadb-server gpsd gpsd-clients expect git net-tools openssh-server gcc libc6-dev pkg-config libbluetooth-dev libjson-c-dev zstd usbutils rfkill uhubctl bluez rustc cargo
     if [ $? != 0 ]; then
         echo ""
         echo "Blue2thprinting: AN ERROR OCCURRED with prerequisite software installation. Resolve error messages above."
@@ -151,16 +151,11 @@ configure_scripts() {
 
     print_banner "Creating Logs/ directory tree."
     #### Logs/ is .gitignored, so a fresh `git clone` produces a checkout
-    #### without it. The custom-compiled sdptool opens
-    #### $BASE_PATH/Logs/SDPprint.log unconditionally on every invocation
-    #### (including its own --help self-test below) and exits 1 with
-    #### "Failed to open the file." if the directory is missing. Pre-create
-    #### Logs/ and the per-tool subdirs central_app_launcher.py expects so
-    #### the install-from-scratch path doesn't depend on any tool having
-    #### been run previously.
+    #### without it. Pre-create Logs/ and the per-tool subdirs
+    #### central_app_launcher.py expects so the install-from-scratch path
+    #### doesn't depend on any tool having been run previously.
     mkdir -p "$BASE_PATH/Logs" \
              "$BASE_PATH/Logs/BetterGetter" \
-             "$BASE_PATH/Logs/sdptool" \
              "$BASE_PATH/Logs/btc_sdp_gatt" \
              "$BASE_PATH/Logs/DarkFirmwareLMPLog"
     echo "  Created $BASE_PATH/Logs/ + per-tool subdirs."
@@ -176,88 +171,17 @@ configure_scripts() {
 }
 
 compile_toolz() {
-    print_banner "Compiling the customized BlueZ sdptool."
-    #### sdptool: logs every invocation so we can compare how many SDP browses
-    ####          succeeded vs. failed. The system sdptool from the bluez apt
-    ####          package can't be substituted because it lacks our logging.
-    #### btmon:   not built — Scripts/start_btmon.sh uses /usr/bin/btmon from
-    ####          the bluez apt package. The Btsnoop format it writes is
-    ####          identical to what bluez-5.66/monitor/btmon would produce.
-    #### gatttool: not built — deprecated in favor of BetterGetter.py.
-    #### bluetoothctl: not built — discovery is now in-process via BlueZ
-    ####          D-Bus inside central_app_launcher.py (issue #47), so the
-    ####          custom bluetoothctl scan tail is no longer on the runtime
-    ####          path. The Scripts/start_bluetoothctl.sh wrapper is kept
-    ####          around for ad-hoc diagnostics; if you need it, run it
-    ####          against the system-installed bluetoothctl.
-    cd $BASE_PATH/bluez-5.66
-    ### BlueZ Configuration ###
-    # config.status is the autotools completion sentinel, not Makefile. A Makefile
-    # without config.status leaves autotools in a half-configured state where
-    # 'make' tries to re-invoke ./config.status --recheck and fails with Error 127.
-    if [ ! -f "$BASE_PATH/bluez-5.66/config.status" ]; then
-        if [ -f "$BASE_PATH/bluez-5.66/Makefile" ]; then
-            print_tool_working "  Stale Makefile without config.status detected; cleaning before reconfigure."
-            make distclean >/dev/null 2>&1 || true
-        fi
-        # Discover udev directory. BlueZ 5.66's configure errors out with
-        # "udev directory is required" when --with-udevdir is missing AND
-        # `pkg-config --variable=udevdir udev` returns empty — which happens
-        # on Debian Trixie / Raspbian Bookworm because the udev.pc that ships
-        # there doesn't expose udevdir. Probe the live filesystem instead so
-        # this works on usr-merged (/usr/lib/udev) and pre-merge (/lib/udev)
-        # layouts alike.
-        UDEV_DIR="$(pkg-config --variable=udevdir udev 2>/dev/null || true)"
-        if [ -z "$UDEV_DIR" ] || [ ! -d "$UDEV_DIR" ]; then
-            if [ -d "/usr/lib/udev" ]; then
-                UDEV_DIR="/usr/lib/udev"
-            elif [ -d "/lib/udev" ]; then
-                UDEV_DIR="/lib/udev"
-            else
-                echo "  Could not locate a udev directory (tried pkg-config, /usr/lib/udev, /lib/udev)."
-                echo "  Install systemd / udev or pass --with-udevdir manually, then re-run."
-                exit 1
-            fi
-        fi
-        print_tool_working "  Beginning configuration (udevdir=$UDEV_DIR)."
-        # --disable-systemd: BlueZ's configure also wants a systemd system-unit
-        # directory by default (`checking systemd system unit dir... error:
-        # systemd system unit directory is required` on Trixie/Bookworm where
-        # the systemd.pc doesn't expose systemdsystemunitdir). We don't ship
-        # any systemd units (the launcher runs from a root @reboot crontab
-        # entry), so disable that integration entirely.
-        ./configure --prefix=/usr --mandir=/usr/share/man --sysconfdir=/etc --localstatedir=/var --enable-experimental --enable-deprecated --disable-systemd --with-udevdir="$UDEV_DIR"
-    else
-        echo "  config.status present. Configuration already succeeded."
-    fi
-    if [ $? != 0 ]; then
-        echo "  Something went wrong with the ./configure. Look for an error message, correct it, and try again."
-        exit 1
-    fi
-    ### Compilation ###
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/sdptool" ]; then
-    print_tool_working "  Beginning compilation (only the targets we need)."
-    # The dependency closure of tools/sdptool is six small C files
-    # (tools/sdptool.c, src/sdp-xml.c, lib/{bluetooth,hci,sdp,uuid}.c). cc1
-    # peaks well under 100 MB on each, so just use nproc — no memory math
-    # needed. The previous 600 MB/job budget was sized for the full BlueZ
-    # build (client/player.c / client/adv_monitor.c / mesh/* could each push
-    # cc1 to ~500 MB), and would now misclassify a 1 GB Pi 4 as -j1.
-    jobs=$(nproc 2>/dev/null || echo 2)
-    print_tool_working "  Building with make -j${jobs}."
-    # Targeted build: only the dependency closure of tools/sdptool. Skips the
-    # bulk of BlueZ targets (client/bluetoothctl, monitor/btmon, profiles,
-    # mesh, the dozens of tools we don't use, the test suite).
-    make -j"${jobs}" tools/sdptool
-    print_tool_working "  Testing sdptool runs successfully. If you see the help output, it's working."
-    $BASE_PATH/bluez-5.66/tools/sdptool --help
-    if [ $? != 0 ]; then
-        echo "  Something went wrong with the compilation. Look for an error message, correct it, and try again."
-        exit 1
-    fi
-    else
-        echo "  sdptool already exists, skipping recompilation."
-    fi
+    #### The capture path compiles one C tool. What is not built here:
+    #### sdptool:  gone. Scripts/btc_sdp_gatt.py collects SDP (and GATT over
+    ####           BR/EDR) through the kernel's L2CAP sockets, so the customized
+    ####           bluez-5.66 source tree this repository used to carry, and the
+    ####           development packages only its build needed, were removed.
+    #### btmon:    Scripts/start_btmon.sh uses /usr/bin/btmon from the bluez
+    ####           apt package.
+    #### gatttool: deprecated in favor of BetterGetter.py.
+    #### bluetoothctl: discovery is in-process via BlueZ D-Bus inside
+    ####           central_app_launcher.py (issue #47). Scripts/start_bluetoothctl.sh
+    ####           is kept for ad-hoc diagnostics and runs the system bluetoothctl.
     # System btmon (provided by the 'bluez' apt package) is what start_btmon.sh
     # invokes. Surface a clear error here if it didn't get installed.
     if [ ! -x /usr/bin/btmon ]; then
@@ -271,24 +195,25 @@ compile_toolz() {
     # Standalone compile against the system libbluetooth + json-c. The tool
     # uses only public BlueZ HCI APIs (hci_open_dev / hci_send_cmd /
     # hci_create_connection / hci_read_remote_version / etc) which all live
-    # in libbluetooth.so from the libbluetooth-dev package, so it does not
-    # need the BlueZ source tree. Compile is ~1s on a Pi.
-    cd "$BASE_PATH/bluez-5.66"
-    if [ ! -f "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP" ] || \
-       [ "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP.c" -nt \
-         "$BASE_PATH/bluez-5.66/tools/DarkFirmware_VSC_LMP" ]; then
-        gcc -O2 -Wall -o tools/DarkFirmware_VSC_LMP \
-            tools/DarkFirmware_VSC_LMP.c \
+    # in libbluetooth.so from the libbluetooth-dev package. The binary goes in
+    # Scripts/, where central_app_launcher.py runs it from and from where it
+    # finds Logs/.
+    cd "$BASE_PATH/Scripts"
+    if [ ! -f DarkFirmware_VSC_LMP ] || \
+       [ DarkFirmware_VSC_LMP_src/DarkFirmware_VSC_LMP.c -nt DarkFirmware_VSC_LMP ]; then
+        gcc -O2 -Wall -o DarkFirmware_VSC_LMP \
+            DarkFirmware_VSC_LMP_src/DarkFirmware_VSC_LMP.c \
             $(pkg-config --cflags --libs json-c) \
             -lbluetooth -lpthread
         if [ $? != 0 ]; then
             echo "  Compilation of DarkFirmware_VSC_LMP failed. Resolve the error above and try again."
             exit 1
         fi
-        echo "  Built tools/DarkFirmware_VSC_LMP."
+        echo "  Built Scripts/DarkFirmware_VSC_LMP."
     else
         echo "  DarkFirmware_VSC_LMP is up to date."
     fi
+    cd "$BASE_PATH"
 }
 
 tune_capture_host() {

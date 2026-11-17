@@ -25,10 +25,8 @@ pkill -f 'Scripts/BG/Better_Getter\.py'               2>/dev/null
 pkill -f 'Scripts/btc_sdp_gatt\.py'                   2>/dev/null
 
 # Native binaries
-pkill -f 'bluez-5\.66/tools/DarkFirmware_VSC_LMP'     2>/dev/null
-pkill -f 'bluez-5\.66/tools/sdptool'                  2>/dev/null
-killall btmon                                          2>/dev/null  # system /usr/bin/btmon (post cf9ae7f) + any legacy bluez-5.66/monitor/btmon
-killall sdptool                                        2>/dev/null  # belt-and-braces in case anyone is running the system sdptool
+pkill -f 'Scripts/DarkFirmware_VSC_LMP( |$)'          2>/dev/null
+killall btmon                                          2>/dev/null  # system /usr/bin/btmon
 
 # Wrapper bash scripts spawned by runall.sh. These spend most of their time
 # in `sleep N` waiting to launch the worker, so killing the worker alone
