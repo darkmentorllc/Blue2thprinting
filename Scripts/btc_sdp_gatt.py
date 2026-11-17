@@ -412,11 +412,16 @@ def _make_pdu_dict(raw_pdu, direction, l2cap_mtu, unix_time_milli):
     pdu_id, tid, plen = struct.unpack(">BHH", raw_pdu[:5])
     body = raw_pdu[5:5 + plen]
     raw_data_hex_str = bytes_to_hex_str(body)
+    # l2cap_len is the length of the L2CAP payload that carried this PDU: the
+    # 5-byte SDP header plus the parameters. The channel's MTU used to be put
+    # here, and the BTIDES-to-SQL importers reject that (l2cap_len must be
+    # param_len + 5), so no SDP file this script wrote could be imported.
+    l2cap_len = 5 + plen
     if pdu_id == type_SDP_ERROR_RSP:
         error_code = struct.unpack(">H", body[:2])[0] if len(body) >= 2 else 0
-        entry = ff_SDP_ERROR_RSP(direction, l2cap_mtu, 0x0040, tid, plen, error_code)
+        entry = ff_SDP_ERROR_RSP(direction, l2cap_len, 0x0040, tid, plen, error_code)
     else:
-        entry = ff_SDP_Common(pdu_id, direction, l2cap_mtu, 0x0040, tid, plen, raw_data_hex_str)
+        entry = ff_SDP_Common(pdu_id, direction, l2cap_len, 0x0040, tid, plen, raw_data_hex_str)
     entry["time"] = {"unix_time_milli": unix_time_milli}
     return entry
 
