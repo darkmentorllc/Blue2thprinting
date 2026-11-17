@@ -934,10 +934,21 @@ def realtek_hub_supports_ppps():
     hub, _ = find_realtek_hub_and_port()
     return hub is not None
 
-def find_realtek_hci():
-    """Return ('hciN', '/org/bluez/hciN') for the Realtek custom-firmware dongle,
-    or (None, None) if not present. Identified by the leetspeak BD address that
-    DarkFirmware_real_i sets, which is stable across reboots and power cycles.
+# Which Realtek this launcher drives. DarkFirmware_real_i gives every dongle the
+# same BD address, so on a host with several of them the address alone does not
+# say which is which, and BlueZ registers an Adapter1 for only one of them. The
+# launcher therefore remembers the USB port of the one it chose and keeps to it:
+# after a power cycle the dongle comes back on that port, possibly as another
+# hciN. Without this, the first poll after a cycle found one of the *other*
+# dongles (pi0-2, 2026-11-17: hci4 -> hci3), BlueZ had no adapter for it, and
+# discovery never resumed for the rest of the run.
+_realtek_pinned_usb = None
+_realtek_other_usb = set()
+_realtek_select_lock = threading.Lock()
+
+
+def _sentinel_hcis():
+    """Every hciN carrying the DarkFirmware BD address, in `hciconfig` order.
 
     Parses `hciconfig` output rather than /sys/class/bluetooth/<hci>/address —
     that sysfs attribute is not exposed on Raspbian Bookworm 6.12 kernels, so
@@ -946,10 +957,10 @@ def find_realtek_hci():
     try:
         result = subprocess.run(["hciconfig"], capture_output=True, text=True, timeout=5)
     except (FileNotFoundError, subprocess.TimeoutExpired):
-        return None, None
+        return []
     if result.returncode != 0:
-        return None, None
-    current_hci = None
+        return []
+    found, current_hci = [], None
     for line in result.stdout.splitlines():
         # Adapter section headers ("hciN:") are flush-left; property lines are tab-indented.
         if line and not line[0].isspace() and ":" in line:
@@ -962,8 +973,72 @@ def find_realtek_hci():
             except IndexError:
                 continue
             if addr == target:
-                return current_hci, f"/org/bluez/{current_hci}"
-    return None, None
+                found.append(current_hci)
+    return found
+
+
+def _hci_usb_id(hci):
+    """USB sysfs id of the device behind hciN (e.g. '1-1.4.4'), or None."""
+    try:
+        full_path = os.path.realpath(f"/sys/class/bluetooth/{hci}/device")
+    except OSError:
+        return None
+    sysfs_id = os.path.basename(os.path.dirname(full_path))
+    return sysfs_id or None
+
+
+def _bluez_manages(hci):
+    """Does bluetoothd expose an Adapter1 for hciN? None when it cannot be told."""
+    try:
+        result = subprocess.run(
+            ["busctl", "--system", "get-property", "org.bluez", f"/org/bluez/{hci}",
+             "org.bluez.Adapter1", "Address"],
+            capture_output=True, text=True, timeout=5,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    return result.returncode == 0
+
+
+def find_realtek_hci():
+    """Return ('hciN', '/org/bluez/hciN') for the Realtek custom-firmware dongle
+    this launcher drives, or (None, None) if it is not present right now.
+
+    Identified by the leetspeak BD address that DarkFirmware_real_i sets, which
+    is stable across reboots and power cycles. With one such dongle that is all
+    there is to it. With several, the one BlueZ manages is chosen the first
+    time, and from then on only the dongle on that USB port is returned; while
+    it is away (re-enumerating after a power cycle) the answer is (None, None),
+    never one of the others. A dongle that turns up on a port not seen before
+    is taken to be ours, moved."""
+    global _realtek_pinned_usb
+    candidates = _sentinel_hcis()
+    if not candidates:
+        return None, None
+    ports = {hci: _hci_usb_id(hci) for hci in candidates}
+    with _realtek_select_lock:
+        if _realtek_pinned_usb is None:
+            chosen = candidates[0]
+            if len(candidates) > 1:
+                managed = {hci: _bluez_manages(hci) for hci in candidates}
+                if any(managed.values()):
+                    chosen = next(hci for hci in candidates if managed[hci])
+                elif all(answer is False for answer in managed.values()):
+                    return None, None     # bluetoothd has not registered one yet; ask again
+                others = sorted(port for hci, port in ports.items() if hci != chosen and port)
+                print(f"find_realtek_hci: {len(candidates)} dongles carry {REALTEK_BDADDR_SENTINEL}; "
+                      f"using {chosen} on USB {ports[chosen]} and leaving {others} alone")
+                _realtek_other_usb.update(others)
+            _realtek_pinned_usb = ports[chosen]
+            return chosen, f"/org/bluez/{chosen}"
+        for hci in candidates:
+            if ports[hci] == _realtek_pinned_usb:
+                return hci, f"/org/bluez/{hci}"
+        moved = [hci for hci in candidates if ports[hci] not in _realtek_other_usb]
+        if moved:
+            _realtek_pinned_usb = ports[moved[0]]
+            return moved[0], f"/org/bluez/{moved[0]}"
+        return None, None
 
 def get_realtek_dbus_path():
     """Thread-safe accessor for the current Realtek D-Bus path."""
@@ -1596,6 +1671,12 @@ def btc_thread_function():
                     # The launcher already runs as root (via setup_capture_helper_debian-based.sh's
                     # @reboot cron entry under root), so we don't prefix with sudo.
                     btc_2thprint_cmd = [darkfirmware_lmp_path, f"--target={bdaddr}"]
+                    if _realtek_other_usb:
+                        # Several DarkFirmware dongles: the tool picks one by
+                        # manufacturer id, so name the one this launcher drives.
+                        lmp_hci, _ = find_realtek_hci()
+                        if lmp_hci:
+                            btc_2thprint_cmd.append(f"--hci={lmp_hci}")
                     btc_2thprint_process = None
                     try:
                         btc_2thprint_process = launch_application(btc_2thprint_cmd, default_cwd, target=("BTC", bdaddr, "public"))
