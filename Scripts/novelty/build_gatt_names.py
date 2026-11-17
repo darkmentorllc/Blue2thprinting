@@ -8,6 +8,14 @@ device names from the local database), so it is written to
 Analysis/metadata/private/ and copied to a capture node with scp, like
 novelty_names.json. Nothing here is committed to this repository.
 
+Nothing but the database is required. Analysis/metadata/private is ignored by
+Git and is created if it is missing. The two optional inputs are read from the
+output's directory when they are there, and their content is never copied into
+the output: novelty_names.json (private category rules; without it only the
+public rules decide which names are left to the other rules) and
+novelty_names_GATT_families.json (hand-written families). The script refuses
+to write to a place inside this repository that Git does not ignore.
+
     venv/bin/python Scripts/novelty/build_gatt_names.py
 
 "Fully enumerated" means, for one (address, address type):
@@ -50,6 +58,19 @@ names stay as exact names:
     that fails this is never retried in a wider or narrower form.
 
 A family already covered by a wider accepted one is dropped.
+
+Two things take precedence over the inference:
+
+  * Names the other novelty rules already skip (the category rules, or the
+    retained-vehicle veto that would stop this file's entry from ever
+    applying) are left out, so this list and those rules never overlap on an
+    enumerated name. At run time this list is consulted last.
+  * Hand-written families in novelty_names_GATT_families.json, next to the
+    output, are taken as given: {"families": [{"pattern": "^...$", "note": "..."}]}.
+    They are for families the checks above refuse, or that have too few
+    examples to be inferred. One is used only while it matches an enumerated
+    name that the other rules do not already skip; the rest are listed under
+    "unused_families".
 """
 import argparse
 from collections import Counter, defaultdict
@@ -57,13 +78,15 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from novelty.rules import GATT_NAMES_FILE, normalize_name
+from novelty.rules import GATT_NAMES_FILE, NoveltyRules, RETAINED, normalize_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PRIVATE_DIR = REPO_ROOT / 'Analysis/metadata/private'
+FAMILIES_FILE = 'novelty_names_GATT_families.json'
 
 MIN_FAMILY_NAMES = 8     # distinct database names that must fit a family
 MIN_UNIQUE = 0.8         # share of those names seen on at most two devices
@@ -347,38 +370,123 @@ def infer(known, corpus, signatures=None):
             if not any(j != i and (other['database_names'], -j) > (record['database_names'], -i) and
                        all(matchers[j].fullmatch(name) for name in record['_names'])
                        for j, other in enumerate(accepted))]
-    for record in kept + rejected:
-        del record['_names']
     kept_matchers = [re.compile(record['pattern']) for record in kept]
     leftover = sorted(name for name in known if not any(m.fullmatch(name) for m in kept_matchers))
     return kept, leftover, rejected
 
 
-def build(known, corpus, signatures=None, counts=None):
-    """The JSON document for novelty_names_GATT.json."""
+def curated_families(entries, known, corpus):
+    """Hand-written families: (records for those in use, patterns not in use)."""
+    records, unused = [], []
+    for entry in entries:
+        pattern = entry['pattern']
+        if not (pattern.startswith('^') and pattern.endswith('$')):
+            raise ValueError(f'A family pattern must be anchored with ^ and $: {pattern}')
+        matcher = re.compile(pattern)
+        members = sorted(name for name in known if matcher.fullmatch(name))
+        if not members:
+            unused.append(pattern)
+            continue
+        record = {'pattern': pattern,
+                  'database_names': sum(1 for name in corpus if matcher.fullmatch(name)),
+                  'enumerated_devices': len({device for name in members for device in known[name]}),
+                  'example': members[0], 'inferred_by': 'curated', '_names': members}
+        if entry.get('note'):
+            record['note'] = entry['note']
+        records.append(record)
+    return records, unused
+
+
+def already_skipped_by(rules):
+    """A test for names the other novelty rules deal with, given NoveltyRules(dir, gatt=False)."""
+    def already_skipped(name):
+        return bool(RETAINED.search(name) or
+                    rules.classify(((9, name.encode('utf-8')),), '00:00:00:00:00:00', 'random'))
+    return already_skipped
+
+
+def build(known, corpus, signatures=None, counts=None, curated=(), already_skipped=None):
+    """The JSON document for novelty_names_GATT.json, and the rejected families."""
     usable = {name: devices for name, devices in known.items() if len(name) >= MIN_NAME_LENGTH}
     too_short = sorted(name for name in known if name not in usable)
-    accepted, leftover, rejected = infer(usable, corpus, signatures)
-    matchers = [re.compile(record['pattern']) for record in accepted]
+    held = {}
+
+    def elsewhere(name):
+        """Is this name already dealt with by the other novelty rules?"""
+        if already_skipped is None:
+            return False
+        if name not in held:
+            held[name] = bool(already_skipped(name))
+        return held[name]
+
+    redundant = {name for name in usable if elsewhere(name)}
+    usable = {name: devices for name, devices in usable.items() if name not in redundant}
+
+    chosen, unused = curated_families(curated, usable, corpus)
+    chosen_matchers = [re.compile(record['pattern']) for record in chosen]
+    remaining = {name: devices for name, devices in usable.items()
+                 if not any(m.fullmatch(name) for m in chosen_matchers)}
+    inferred, leftover, rejected = infer(remaining, corpus, signatures)
+    # An inferred family adds nothing when a hand-written one covers all of its
+    # names that the other rules do not already hold. (That is how a hand-written
+    # family with an exception for those names replaces a wider inferred one.)
+    inferred = [record for record in inferred
+                if not any(all(m.fullmatch(name) for name in record['_names'] if not elsewhere(name))
+                           for m in chosen_matchers)]
+    patterns = sorted(chosen + inferred, key=lambda record: (-record['database_names'], record['pattern']))
+    for record in patterns + rejected:
+        record.pop('_names', None)
+    matchers = [re.compile(record['pattern']) for record in patterns]
     covered = sum(any(m.fullmatch(name) for m in matchers) for name in usable)
-    return {
+    document = {
         'generated': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'source': 'local bt2 database: advertised names (LE advertising/scan response, BR/EDR EIR) '
                   'of devices whose GATT enumeration ran to the end',
         'matching': 'patterns are full-match regexes, names are exact; both are case-sensitive and '
-                    'apply to the NFKC-normalized, trimmed advertised name',
-        'counts': dict(counts or {}, enumerated_names=len(known), patterns=len(accepted),
-                       names_covered_by_patterns=covered, exact_names=len(leftover),
-                       names_too_short_to_use=len(too_short)),
-        'patterns': accepted,
+                    'apply to the NFKC-normalized, trimmed advertised name. Consulted only for a '
+                    'device that no other novelty rule skips.',
+        'counts': dict(counts or {}, enumerated_names=len(known), patterns=len(patterns),
+                       hand_written_patterns=len(chosen), names_covered_by_patterns=covered,
+                       exact_names=len(leftover), names_too_short_to_use=len(too_short),
+                       names_left_to_the_other_rules=len(redundant)),
+        'patterns': patterns,
         'names': leftover,
         'too_short': too_short,
-    }, rejected
+    }
+    if unused:
+        document['unused_families'] = unused
+    return document, rejected
 
 
 # --------------------------------------------------------------------------
 # Database
 # --------------------------------------------------------------------------
+
+def would_be_committed(path, repo_root=REPO_ROOT):
+    """Is path inside the repository at a place Git does not ignore?"""
+    path = Path(path).resolve()
+    try:
+        path.relative_to(Path(repo_root).resolve())
+    except ValueError:
+        return False                       # outside the repository
+    try:
+        result = subprocess.run(['git', '-C', str(repo_root), 'check-ignore', '-q', str(path)],
+                                capture_output=True, timeout=10)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False                       # no Git here, nothing to commit to
+    return result.returncode == 1          # 0 ignored, 1 not ignored, 128 not a repository
+
+
+def prepare_output(path, repo_root=REPO_ROOT):
+    """Create the output's directory, unless the file could end up in a commit."""
+    path = Path(path)
+    if would_be_committed(path, repo_root):
+        raise SystemExit(f'{path} is inside this repository and is not ignored by Git. This file holds '
+                         'device names from the local database: write it to Analysis/metadata/private '
+                         '(the default) or somewhere outside the repository.')
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
 
 def load_database(cursor):
     """Return (known, corpus, signatures, counts) from an open bt2 cursor."""
@@ -436,10 +544,7 @@ def main():
     parser.add_argument('--db-password', default='a')
     parser.add_argument('--db-name', default='bt2')
     args = parser.parse_args()
-    output = Path(args.output)
-    if not output.parent.is_dir():
-        raise SystemExit(f'{output.parent} does not exist. This file holds device names from the local '
-                         'database and belongs in the private metadata directory, not in this repository.')
+    output = prepare_output(args.output)
 
     sys.path.insert(0, str(REPO_ROOT / 'Analysis'))
     from handle_venv import activate_venv
@@ -455,10 +560,15 @@ def main():
         cursor.close()
         connection.close()
 
-    document, rejected = build(known, corpus, signatures, counts)
+    families_file = output.parent / FAMILIES_FILE
+    curated = json.loads(families_file.read_text())['families'] if families_file.exists() else ()
+    rules = NoveltyRules(output.parent, gatt=False)
+    document, rejected = build(known, corpus, signatures, counts, curated, already_skipped_by(rules))
     output.write_text(json.dumps(document, indent=1, ensure_ascii=False) + '\n')
     print(json.dumps(document['counts'], indent=1))
     print(f'wrote {output}')
+    for pattern in document.get('unused_families', ()):
+        print(f'hand-written family not in use: {pattern}')
     if args.show_rejected:
         for record in sorted(rejected, key=lambda r: -r['database_names']):
             if record['rejected'] != 'few names':

@@ -167,10 +167,125 @@ class InferenceTests(unittest.TestCase):
             self.assertTrue(re.fullmatch(record['pattern'], record['example']))
             self.assertNotIn('_names', record)
 
-    def test_builder_writes_only_into_an_existing_private_directory(self):
-        with tempfile.TemporaryDirectory() as d, patch.object(sys, 'argv', ['build', '--output', f'{d}/missing/x.json']):
+    def test_hand_written_families_are_taken_as_given(self):
+        """For families the inference refuses or cannot see: too few names, model
+        numbers, members with different GATT databases."""
+        few = ['Hub-0A1B2C', 'Hub-3D4E5F', 'Hub-6A7B8C']                   # too few to infer
+        models = [f'Speaker {n}B' for n in range(510, 600, 10)]            # shared by many devices
+        inferable = lamps(12)
+        known = {few[0]: [dev(1)], models[0]: [dev(2)], inferable[0]: [dev(3)], 'Lone Thing': [dev(4)]}
+        corpus = corpus_of((few, 1), (models, 25), (inferable, 1), (['Lone Thing'], 1))
+        curated = [{'pattern': r'^Hub-[0-9A-F]{6}$', 'note': 'smart hub'},
+                   {'pattern': r'^Speaker [0-9]{3}B$'},
+                   {'pattern': r'^Nothing Like This [0-9]+$'}]
+        document, _ = builder.build(known, corpus, curated=curated)
+        by_pattern = {record['pattern']: record for record in document['patterns']}
+        self.assertEqual(by_pattern[r'^Hub-[0-9A-F]{6}$']['inferred_by'], 'curated')
+        self.assertEqual(by_pattern[r'^Hub-[0-9A-F]{6}$']['note'], 'smart hub')
+        self.assertEqual(by_pattern[r'^Hub-[0-9A-F]{6}$']['database_names'], 3)
+        self.assertEqual(by_pattern[r'^Speaker [0-9]{3}B$']['database_names'], len(models))
+        self.assertEqual(by_pattern[r'^Lamp_[0-9A-F]{4}$']['inferred_by'], 'id')     # inference still runs
+        self.assertEqual(document['names'], ['Lone Thing'])
+        self.assertEqual(document['unused_families'], [r'^Nothing Like This [0-9]+$'])
+        self.assertEqual(document['counts']['hand_written_patterns'], 2)
+        self.assertNotIn('unused_families', builder.build(known, corpus, curated=curated[:2])[0])
+
+    def test_hand_written_family_replaces_an_inferred_one_it_covers(self):
+        names = lamps(12)
+        document, _ = builder.build({names[0]: [dev(1)]}, corpus_of((names, 1)),
+                                    curated=[{'pattern': r'^Lamp_[0-9A-Fa-f]+$'}])
+        self.assertEqual([record['pattern'] for record in document['patterns']], [r'^Lamp_[0-9A-Fa-f]+$'])
+
+    def test_hand_written_family_must_be_an_anchored_valid_regex(self):
+        for bad in ('Hub-[0-9A-F]{6}', '^Hub-[0-9A-F]{6}', '^Hub-[0-9A-F{6}$'):
+            with self.subTest(pattern=bad), self.assertRaises((ValueError, re.error)):
+                builder.build({'Hub-0A1B2C': [dev(1)]}, {'Hub-0A1B2C': 1}, curated=[{'pattern': bad}])
+
+    def test_names_the_other_rules_already_skip_are_left_out(self):
+        """This list and the category rules must not both hold the same device."""
+        skipped = builder.already_skipped_by(NoveltyRules())
+        for name in ('GM_PEPS_VKM3', 'Galaxy Watch', 'Joao’s iPhone', 'LE-WH-CH720N', 'Polestar 3'):
+            self.assertTrue(skipped(name), name)       # a category rule, or the retained-vehicle veto
+        for name in ('Kitchen Scale', 'Lamp_0A1B', 'Hub-0A1B2C'):
+            self.assertFalse(skipped(name), name)
+        wearables = [f'Galaxy Watch7 ({(i * 2749 + 4099) % 65536:04X})' for i in range(12)]
+        hubs = lamps(12, 'Hub_')
+        known = {wearables[0]: [dev(1)], 'LE-WH-CH720N': [dev(2)], 'Kitchen Scale': [dev(3)], hubs[0]: [dev(4)]}
+        corpus = corpus_of((wearables, 1), (hubs, 1), (['LE-WH-CH720N', 'Kitchen Scale'], 4))
+        document, _ = builder.build(known, corpus, already_skipped=skipped,
+                                    curated=[{'pattern': r'^Galaxy Watch[0-9] \([0-9A-F]{4}\)$'}])
+        self.assertEqual(document['names'], ['Kitchen Scale'])
+        self.assertEqual([record['pattern'] for record in document['patterns']], [r'^Hub_[0-9A-F]{4}$'])
+        self.assertEqual(document['unused_families'], [r'^Galaxy Watch[0-9] \([0-9A-F]{4}\)$'])
+        self.assertEqual(document['counts']['names_left_to_the_other_rules'], 2)
+        # Nothing the document holds is something the other rules would have skipped.
+        for name in document['names'] + [record['example'] for record in document['patterns']]:
+            self.assertFalse(skipped(name), name)
+
+    def test_hand_written_family_with_an_exception_replaces_the_wider_inferred_one(self):
+        """The other rules hold one model of a family. A hand-written family that
+        leaves that model out must replace the inferred family that includes it,
+        so that no name is matched by both lists."""
+        held = [f'Strip_H9990_{(i * 2749 + 4099) % 65536:04X}' for i in range(10)]
+        # Few names per model, so only the family across models can be inferred.
+        free = [f'Strip_H{model}_{(i * 977 + 4099 + k * 131) % 65536:04X}'
+                for k, model in enumerate(('1A01', '1B02', '1C03', '1D04', '1E05')) for i in range(4)]
+        known = {free[0]: [dev(1)], free[9]: [dev(2)]}
+        corpus = corpus_of((held, 1), (free, 1))
+        skipped = lambda name: name.startswith('Strip_H9990_')
+        wide = [r['pattern'] for r in builder.build(known, corpus, already_skipped=skipped)[0]['patterns']]
+        self.assertTrue(any(all(re.fullmatch(p, n) for n in held) for p in wide))        # the problem
+        exception = r'^Strip_H(?!9990_)[0-9A-F]{4}_[0-9A-F]{4}$'
+        document, _ = builder.build(known, corpus, already_skipped=skipped, curated=[{'pattern': exception}])
+        self.assertEqual([r['pattern'] for r in document['patterns']], [exception])
+        self.assertFalse(any(re.fullmatch(exception, n) for n in held))
+        self.assertTrue(all(re.fullmatch(exception, n) for n in free))
+
+    def test_output_goes_only_where_git_cannot_commit_it(self):
+        """The file holds device names from the local database. Most checkouts have
+        no Analysis/metadata/private; it is ignored by Git, so it is simply created."""
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            repo = Path(d) / 'repo'
+            (repo / 'Scripts').mkdir(parents=True)
+            (repo / '.gitignore').write_text('private\n')
+            if subprocess.run(['git', 'init', '-q', str(repo)], capture_output=True).returncode:
+                self.skipTest('git is not available')
+            private = repo / 'Analysis/metadata/private' / GATT_NAMES_FILE
+            self.assertFalse(builder.would_be_committed(private, repo))
+            self.assertEqual(builder.prepare_output(private, repo), private)
+            self.assertTrue(private.parent.is_dir())                       # created for the user
+            tracked = repo / 'Scripts/novelty/data' / GATT_NAMES_FILE
+            self.assertTrue(builder.would_be_committed(tracked, repo))
             with self.assertRaises(SystemExit):
-                builder.main()
+                builder.prepare_output(tracked, repo)
+            self.assertFalse(tracked.parent.exists())
+            outside = Path(d) / 'elsewhere/out' / GATT_NAMES_FILE
+            self.assertEqual(builder.prepare_output(outside, repo), outside)
+            self.assertTrue(outside.parent.is_dir())
+        # In this checkout the default location is ignored and the data directory is not.
+        self.assertFalse(builder.would_be_committed(builder.PRIVATE_DIR / GATT_NAMES_FILE))
+
+    def test_private_inputs_are_optional_and_never_copied_into_the_output(self):
+        """Without novelty_names.json only the public rules decide what is left to
+        the other rules; with it, the private rules' own text still stays out."""
+        names = lamps(12)
+        known = {names[0]: [dev(1)], 'GM_PEPS_VKM3': [dev(2)], 'Secret Gadget 7': [dev(3)], 'Kitchen Scale': [dev(4)]}
+        corpus = corpus_of((names, 1), (['GM_PEPS_VKM3', 'Secret Gadget 7', 'Kitchen Scale'], 2))
+        with tempfile.TemporaryDirectory() as d:
+            public_only = builder.already_skipped_by(NoveltyRules(d, gatt=False))      # nothing private there
+            document, _ = builder.build(known, corpus, already_skipped=public_only)
+            self.assertEqual(document['names'], ['Kitchen Scale', 'Secret Gadget 7'])
+            secret = r'^Secret Gadget [0-9]$'
+            (Path(d) / 'novelty_names.json').write_text(json.dumps(
+                {'categories': {'AUDIO': [{'pattern': secret, 'source': 'a private description'}]}}))
+            with_private = builder.already_skipped_by(NoveltyRules(d, gatt=False))
+            document, _ = builder.build(known, corpus, already_skipped=with_private)
+            self.assertEqual(document['names'], ['Kitchen Scale'])
+            text = json.dumps(document)
+            for private_text in (secret, 'Secret Gadget', 'a private description'):
+                self.assertNotIn(private_text, text)
+            self.assertEqual(document['counts']['names_left_to_the_other_rules'], 2)
 
 
 class GattKnownRuleTests(unittest.TestCase):
@@ -198,9 +313,25 @@ class GattKnownRuleTests(unittest.TestCase):
         self.assertEqual(self.classify('  Lamp_0A1B '), {GATT_KNOWN})
         self.assertEqual(self.classify('Ｌａｍｐ_0A1B'), {GATT_KNOWN})     # NFKC, as the builder stores it
 
-    def test_it_adds_to_the_other_categories(self):
-        frames = ad_frames(ad(9, 'Kitchen Scale') + ad(255, bytes.fromhex('4c001005')))
-        self.assertEqual(self.rules.classify(frames, ADDRESS, 'random'), {GATT_KNOWN, 'APPLE'})
+    def test_it_is_consulted_only_when_nothing_else_skips_the_device(self):
+        """The list is the last resort, so no name is ever checked against both it
+        and a rule that has already decided."""
+        looked_up = []
+        real = self.rules._gatt_known
+        self.rules.gatt_known = lambda name: looked_up.append(name) or real(name)
+        apple = ad_frames(ad(9, 'Kitchen Scale') + ad(255, bytes.fromhex('4c001005')))
+        self.assertEqual(self.rules.classify(apple, ADDRESS, 'random'), {'APPLE'})
+        self.assertEqual(self.classify('Galaxy Watch'), {'SAMSUNG'})
+        self.assertEqual(self.classify('GM_PEPS_VKM3'), {'VEHICLES'})
+        self.assertEqual(looked_up, [])
+        self.assertEqual(self.classify('Kitchen Scale'), {GATT_KNOWN})
+        self.assertFalse(self.classify('Novel Sensor'))
+        self.assertEqual(looked_up, ['Kitchen Scale', 'Novel Sensor'])
+
+    def test_the_file_can_be_ignored(self):
+        rules = NoveltyRules(self.dir.name, gatt=False)
+        self.assertIsNone(rules.gatt_file)
+        self.assertFalse(rules.classify(ad_frames(ad(9, 'Kitchen Scale')), ADDRESS, 'random'))
 
     def test_retained_vehicle_brands_are_still_never_skipped(self):
         self.assertTrue(self.rules.gatt_known('Polestar 3'))
@@ -255,6 +386,16 @@ class InstalledFileTests(unittest.TestCase):
         self.assertTrue(all(len(name) >= builder.MIN_NAME_LENGTH for name in document['names']))
         self.assertTrue(all(rules.gatt_known(name) for name in document['names']))
         self.assertEqual(sorted(document['names']), document['names'])
+
+    @unittest.skipUnless(HAVE_GATT_NAMES, f'{GATT_NAMES_FILE} is not installed in Analysis/metadata/private')
+    def test_installed_file_does_not_overlap_the_other_rules(self):
+        """No exact name, and no family's example, is something the category rules
+        (or the retained-vehicle veto) already deal with."""
+        document = json.loads((PRIVATE_DIR / GATT_NAMES_FILE).read_text())
+        skipped = builder.already_skipped_by(NoveltyRules(PRIVATE_DIR, gatt=False))
+        overlapping = [name for name in document['names'] + [r['example'] for r in document['patterns']]
+                       if skipped(name)]
+        self.assertEqual(overlapping, [])
 
     def test_the_file_is_never_part_of_this_repository(self):
         scripts = Path(__file__).resolve().parents[1]

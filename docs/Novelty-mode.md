@@ -201,13 +201,36 @@ and why.
 
 The file's patterns and names are **case-sensitive** and are compared with the
 advertised name after Unicode NFKC normalization and trimming. Names shorter than
-three characters are left out (listed under `too_short`). The Chinese-vehicle veto
-still comes first: a retained name is not skipped even if it is in this file.
+three characters are left out (listed under `too_short`).
 
-The build of 2026-11-17 found 21,149 fully enumerated devices, 1,842 of which
-advertise a name (1,459 distinct names), and wrote 188 family regexes covering 750
-of those names plus 698 exact names. Together they match about 58,000 of the 153,000
-distinct advertised names in the database.
+The builder needs nothing but the database. `Analysis/metadata/private` is ignored
+by Git and is created if it is missing. `novelty_names.json` and the hand-written
+families file are read from the output's directory when they are there; without
+`novelty_names.json` only the public rules decide which names are left to the other
+rules. Neither file's content is copied into the output. The builder refuses to
+write to a place inside the repository that Git does not ignore.
+
+**The list never does the other rules' work.** The builder leaves out every
+enumerated name that the category rules already skip, or that the Chinese-vehicle
+veto would stop from applying, and the launcher looks a name up in this list only
+for a device that nothing else has skipped. So no device is checked against both.
+
+**Hand-written families.** `Analysis/metadata/private/novelty_names_GATT_families.json`
+(`{"families": [{"pattern": "^...$", "note": "..."}]}`) holds families to take as
+given: ones with too few examples to infer, ones whose varying part is a number or a
+model code, and ones whose enumerated members have different GATT databases. The
+aim is to skip devices that are likely the same type as one already enumerated,
+rather than to list individual names. A hand-written family is used only while it
+matches an enumerated name the other rules do not already skip, and it replaces any
+inferred family it covers. Where the category rules hold part of a naming scheme,
+write the family with an exception for that part (a negative lookahead), so the two
+lists stay disjoint.
+
+The build of 2026-11-17 found 21,150 fully enumerated devices, 1,843 of which
+advertise a name (1,460 distinct names). 323 of those names are left to the other
+rules. The file holds 265 family regexes (123 hand-written, 142 inferred) covering
+902 of the rest, plus 224 exact names. It matches about 38,700 of the 153,000
+distinct advertised names in the database, none of which another rule also matches.
 
 ## Automated regression and QA
 

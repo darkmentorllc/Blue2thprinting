@@ -142,8 +142,13 @@ class NoveltyRules:
     category: the device advertises a name (or a name of a family) whose GATT
     database has been fully enumerated before. Its patterns and names are
     case-sensitive, unlike the category rules above.
+
+    That list is the last resort. It is consulted only for a device that nothing
+    else has skipped, and its builder leaves out every name the other rules
+    already skip, so the two never do the same work twice. gatt=False ignores the
+    file; the builder uses that to ask what the other rules skip on their own.
     """
-    def __init__(self, private_dir=None):
+    def __init__(self, private_dir=None, gatt=True):
         self.patterns = dict(_bundled_patterns())
         self.public_name_rules = sum(len(v) for v in self.patterns.values())
         self.private_name_rules = 0
@@ -162,7 +167,7 @@ class NoveltyRules:
                     self.private_name_rules += len(compiled)
                 self.private_file = private_file
         self.gatt_patterns, self.gatt_names, self.gatt_file = (), frozenset(), None
-        if private_dir is not None:
+        if private_dir is not None and gatt:
             gatt_file = Path(private_dir) / GATT_NAMES_FILE
             if gatt_file.exists():
                 known = json.loads(gatt_file.read_text())
@@ -170,6 +175,7 @@ class NoveltyRules:
                 self.gatt_names = frozenset(known.get('names', ()))
                 self.gatt_file = gatt_file
         self.name_categories = lru_cache(maxsize=1024)(self._name_categories)
+        self.gatt_known = lru_cache(maxsize=1024)(self._gatt_known)
 
     def describe(self):
         private = (f'{self.private_name_rules} private name rules from {self.private_file}'
@@ -180,7 +186,7 @@ class NoveltyRules:
                 f'no GATT-enumerated names ({GATT_NAMES_FILE} not found)')
         return f'{self.public_name_rules} public name rules, {private}, {gatt}'
 
-    def gatt_known(self, name):
+    def _gatt_known(self, name):
         """Has a device advertising this name been fully GATT-enumerated before?"""
         if not self.gatt_file:
             return False
@@ -188,11 +194,8 @@ class NoveltyRules:
         return name in self.gatt_names or any(pattern.fullmatch(name) for pattern in self.gatt_patterns)
 
     def _name_categories(self, name):
-        found = {key for key, patterns in self.patterns.items()
-                 if any(pattern.fullmatch(name) for pattern in patterns)}
-        if self.gatt_known(name):
-            found.add(GATT_KNOWN)
-        return frozenset(found)
+        return frozenset(key for key, patterns in self.patterns.items()
+                         if any(pattern.fullmatch(name) for pattern in patterns))
 
     def classify(self, frames, address, address_type):
         names = [name for name in (data.decode('utf-8', errors='replace').strip('\x00 \t\r\n')
@@ -250,13 +253,15 @@ class NoveltyRules:
         reviewed = any(len(d) == length and d.startswith(prefix) for d in msds for length, prefix in PRODUCTS)
         reviewed |= any(fast_pair_audio(d) for d in sd16.get(0xfe2c, ()))
         reviewed |= uuid16(0x1853) in services and any(len(d) >= 3 for d in sd16.get(0xfe2c, ()))
-        if GATT_KNOWN in bits:
-            result.add(GATT_KNOWN)
         if not any(NON_AUDIO.search(n) for n in names) and (
                 'AUDIO' in bits or audio_appearance or sony or fp or reviewed or
                 companies & IDS['AUDIO_COMPANIES'] or oui in IDS['AUDIO_OUIS'] or
                 services & AUDIO_SERVICES):
             result.add('AUDIO')
+        # Last resort: only a device nothing else skips is looked up among the
+        # names already GATT-enumerated.
+        if not result and self.gatt_file and any(self.gatt_known(name) for name in names):
+            result.add(GATT_KNOWN)
         return frozenset(result)
 
 
